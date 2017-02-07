@@ -342,7 +342,7 @@
 #endif /* PPP_SUPPORT */
 
 /* no read/write/close for socket */
-#define LWIP_POSIX_SOCKETS_IO_NAMES 0
+//#define LWIP_POSIX_SOCKETS_IO_NAMES 0
 #define LWIP_NETIF_API  1
 
 /* MEMP_NUM_SYS_TIMEOUT: the number of simulateously active timeouts. */

@@ -89,6 +89,8 @@ int rt_application_init(void)
         2048, RT_THREAD_PRIORITY_MAX/3, 20);
     if (tid != RT_NULL) rt_thread_startup(tid);
 
+	
+	
     return 0;
 }
 

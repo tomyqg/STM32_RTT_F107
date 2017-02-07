@@ -21,11 +21,21 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32_eth.h"
 #include "stm32f10x_rcc.h"
+/*****************************************************************************/
+/*  History:                                                                 */
+/*****************************************************************************/
+/*  Date       * Author          * Changes                                   */
+/*****************************************************************************/
+/*  2017-02-07 * shengfeng.dong  * 修改RMII_MODE和STM32_ETH_IO_REMAP宏的模式 */
+/*             *                 * 修改PA8(MCO)引脚为PA1                     */
+/*****************************************************************************/
 
 /* STM32F107 ETH dirver options */
 #define CHECKSUM_BY_HARDWARE    0       /* don't ues hardware checksum. */
-#define RMII_MODE               0       /* 0: MII MODE, 1: RMII MODE. */
-#define STM32_ETH_IO_REMAP      1       /* 0: default,  1: remap RXD to PDx. */
+//#define RMII_MODE               0       /* 0: MII MODE, 1: RMII MODE. */
+#define RMII_MODE               1       /* 0: MII MODE, 1: RMII MODE. */
+//#define STM32_ETH_IO_REMAP      1       /* 0: default,  1: remap RXD to PDx. */
+#define STM32_ETH_IO_REMAP      0       /* 0: default,  1: remap RXD to PDx. */
 #define USE_MCO                 1       /* 0: disable,  1: PA8(MCO) out 25Mhz(MII) or 50Mhz(RMII). */
 
 /** @addtogroup STM32_ETH_Driver
@@ -3566,7 +3576,8 @@ static void GPIO_Configuration(void)
 
     /* MCO pin configuration------------------------------------------------- */
     /* Configure MCO (PA8) as alternate function push-pull */
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+//    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
     GPIO_Init(GPIOA, &GPIO_InitStructure);

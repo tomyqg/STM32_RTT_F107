@@ -7,14 +7,13 @@
 #include "zigbee.h"
 #include <rthw.h>
 
-extern struct rt_device serial2;
-extern struct rt_device serial1;
+extern struct rt_device serial4;		//串口4为Zigbee收发串口
 
 /*extern*/ ecu_info ecu;
 
 #define RD_DELAY 	(RT_TICK_PER_SECOND)
 #define WR_DELAY	(RT_TICK_PER_SECOND)
-#define ZIGBEE_SERIAL (serial1)
+#define ZIGBEE_SERIAL (serial4)
 
 void clear_zbmodem(void)		//清空串口缓冲区的数据
 {
@@ -39,7 +38,10 @@ int openzigbee(void)
 	return result;
 }
 
-//复位zigbee模块
+//复位zigbee模块  通过PC7的电平置高置低然后达到复位的效果
+
+
+
 
 int zb_shortaddr_cmd(int shortaddr, char *buff, int length)		//zigbee 短地址报头
 {
@@ -314,7 +316,6 @@ int zb_turnoff_rptid(int short_addr)			//关闭单个逆变器上报ID功能
 {
 	unsigned char sendbuff[512] = {'\0'};
 	int i=0;
-//	char data[256];
 	int check=0;
 	printmsg("Turn off report id");
 

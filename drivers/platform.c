@@ -13,11 +13,11 @@
 #endif /* RT_USING_DFS */
 
 /*
- * SPI1_MOSI: PA7
- * SPI1_MISO: PA6
- * SPI1_SCK : PA5
+ * SPI1_MOSI: PA7		PA5
+ * SPI1_MISO: PA6		PA4
+ * SPI1_SCK : PA5		PA6
  *
- * CS0: PA4  SD card.
+ * CS0: PA4  SD card.	PA3
 */
 static void rt_hw_spi_init(void)
 {
