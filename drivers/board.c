@@ -16,6 +16,7 @@
 #include <rtthread.h>
 #include "board.h"
 #include "usart.h"
+#include "ds1302z_rtc.h"
 
 /**
  * @addtogroup STM32
@@ -67,7 +68,8 @@ void rt_hw_board_init(void)
     /* Configure the SysTick */
     SysTick_Config( SystemCoreClock / RT_TICK_PER_SECOND );
 
-    rt_hw_usart_init();
+    rt_hw_usart_init();		//串口初始化
+    rt_hw_rtc_init();		//实时时钟初始化
     rt_console_set_device(RT_CONSOLE_DEVICE_NAME);
 }
 

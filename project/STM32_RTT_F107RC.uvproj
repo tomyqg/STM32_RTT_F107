@@ -437,19 +437,9 @@
               <FilePath>..\drivers\dataqueue.c</FilePath>
             </File>
             <File>
-              <FileName>msd.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\drivers\msd.c</FilePath>
-            </File>
-            <File>
               <FileName>platform.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\drivers\platform.c</FilePath>
-            </File>
-            <File>
-              <FileName>rt_stm32f10x_spi.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\drivers\rt_stm32f10x_spi.c</FilePath>
             </File>
             <File>
               <FileName>stm32_eth.c</FileName>
@@ -472,9 +462,19 @@
               <FilePath>..\drivers\serial.c</FilePath>
             </File>
             <File>
-              <FileName>stm32f1_rtc.c</FileName>
+              <FileName>ds1302z_rtc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\drivers\stm32f1_rtc.c</FilePath>
+              <FilePath>..\drivers\ds1302z_rtc.c</FilePath>
+            </File>
+            <File>
+              <FileName>board_io_spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\drivers\board_io_spi.c</FilePath>
+            </File>
+            <File>
+              <FileName>led.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\drivers\led.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -670,6 +670,11 @@
               <FileName>timer.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\rtt\src\timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>udelay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\rtt\src\udelay.c</FilePath>
             </File>
           </Files>
         </Group>

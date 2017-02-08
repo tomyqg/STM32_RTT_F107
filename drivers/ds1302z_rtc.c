@@ -1,5 +1,5 @@
 /*
- * File      : stm32f1_rtc.c
+ * File      : ds1302z_rtc.c
  * This file is part of RT-Thread RTOS
  * COPYRIGHT (C) 2009, RT-Thread Development Team
  *
@@ -12,11 +12,13 @@
  * 2009-01-05     Bernard      the first version.
  * 2011-11-26     aozima       implementation time.
  * 2015-07-16     FlyM         rename rtc to stm32f1_rtc. remove finsh export function
+ * 2017-02-08	  DSF		   rename rtc to ds1302z_rtc. adapt rtc ds1302z
  */
 
 #include <rtthread.h>
 #include <time.h>
 #include <string.h>
+#include <rthw.h>
 #include <stm32f10x.h>
 
 #define DS1302CLK GPIO_Pin_0   //与时钟线相连的芯片的管脚
@@ -32,13 +34,13 @@ void ds1302_writebyte(unsigned char dat)
 	GPIO_InitTypeDef GPIO_InitStructure;
 	
 	GPIO_ResetBits(GPIOC,DS1302CLK);		
-	rt_thread_delay(1);
+	rt_hw_us_delay(2);
 	
 	GPIO_InitStructure.GPIO_Pin =  DS1302DAT;     
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz; 
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
-	rt_thread_delay(1);			
+	rt_hw_us_delay(2);			
 	for(i=0; i<8; i++){
 		sda = dat & 0x01;
 		if(sda)
@@ -48,11 +50,11 @@ void ds1302_writebyte(unsigned char dat)
 		{
 			GPIO_ResetBits(GPIOC,DS1302DAT);
 		}
-		rt_thread_delay(1);			
+		rt_hw_us_delay(2);			
 		GPIO_SetBits(GPIOC,DS1302CLK);	
-		rt_thread_delay(1);			
+		rt_hw_us_delay(2);			
 		GPIO_ResetBits(GPIOC,DS1302CLK);	
-		rt_thread_delay(1);			
+		rt_hw_us_delay(1);			
 		dat >>= 1;
 	}
 }
@@ -66,16 +68,16 @@ unsigned char ds1302_readbyte(void)
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz; 
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
-	rt_thread_delay(1);
+	rt_hw_us_delay(2);
 
 	for(i=0; i<8; i++){
 		dat >>= 1;
 		if(1 == GPIO_ReadInputDataBit(GPIOC, DS1302DAT))
 			dat |= 0x80;
 		GPIO_SetBits(GPIOC,DS1302CLK);	
-		rt_thread_delay(1);			
+		rt_hw_us_delay(2);			
 		GPIO_ResetBits(GPIOC,DS1302CLK);	
-		rt_thread_delay(1);	
+		rt_hw_us_delay(2);	
 	}
 
 	return dat;
@@ -86,17 +88,17 @@ unsigned char ds1302_read(unsigned char cmd)
 	unsigned char data;
 
 	GPIO_ResetBits(GPIOC,DS1302RST);	
-	rt_thread_delay(1);	
+	rt_hw_us_delay(1);	
 	GPIO_ResetBits(GPIOC,DS1302CLK);	
-	rt_thread_delay(1);	
+	rt_hw_us_delay(1);	
 	GPIO_SetBits(GPIOC,DS1302RST);		
-	rt_thread_delay(1);	
+	rt_hw_us_delay(1);	
 	ds1302_writebyte(cmd);
-	rt_thread_delay(1);	
+	rt_hw_us_delay(2);	
 	data = ds1302_readbyte();
-	rt_thread_delay(1);	
+	rt_hw_us_delay(1);	
 	GPIO_SetBits(GPIOC,DS1302CLK);		
-	rt_thread_delay(1);	
+	rt_hw_us_delay(1);	
 	GPIO_ResetBits(GPIOC,DS1302RST);	
 
 	return data;
@@ -105,17 +107,17 @@ unsigned char ds1302_read(unsigned char cmd)
 void ds1302_write(unsigned char cmd, unsigned char data)
 {
 	GPIO_ResetBits(GPIOC,DS1302RST);	
-	rt_thread_delay(1);
+	rt_hw_us_delay(1);
 	GPIO_ResetBits(GPIOC,DS1302CLK);	
-	rt_thread_delay(1);
+	rt_hw_us_delay(1);
 	GPIO_SetBits(GPIOC,DS1302RST);		
-	rt_thread_delay(1);
+	rt_hw_us_delay(1);
 
 	ds1302_writebyte(cmd);
 	ds1302_writebyte(data);
-	rt_thread_delay(1);
+	rt_hw_us_delay(1);
 	GPIO_SetBits(GPIOC,DS1302CLK);	
-	rt_thread_delay(1);
+	rt_hw_us_delay(1);
 	GPIO_ResetBits(GPIOC,DS1302RST);	
 }
 

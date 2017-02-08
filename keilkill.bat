@@ -24,5 +24,6 @@ del *.iex /s
 del *.htm /s
 del *.sct /s
 del *.map /s
- 
+del *.uvopt /s
+del *.uvgui.yn /s
 exit

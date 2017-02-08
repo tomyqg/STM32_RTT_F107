@@ -1,5 +1,5 @@
 /*
- * File      : stm32f1_rtc.h
+ * File      : led.h
  * This file is part of RT-Thread RTOS
  * COPYRIGHT (C) 2009, RT-Thread Development Team
  *
@@ -12,9 +12,13 @@
  * 2009-01-05     Bernard      the first version
  */
 
-#ifndef __STM32F1_RTC_H__
-#define __STM32F1_RTC_H__
+#ifndef __LED_H__
+#define __LED_H__
 
-void rt_hw_rtc_init(void);
+#include <rtthread.h>
+
+void rt_hw_led_init(void);
+void rt_hw_led_on();
+void rt_hw_led_off();
 
 #endif
