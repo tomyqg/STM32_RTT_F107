@@ -432,6 +432,11 @@
               <FilePath>..\drivers\completion.c</FilePath>
             </File>
             <File>
+              <FileName>stm32_eth.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\drivers\stm32_eth.c</FilePath>
+            </File>
+            <File>
               <FileName>dataqueue.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\drivers\dataqueue.c</FilePath>
@@ -440,11 +445,6 @@
               <FileName>platform.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\drivers\platform.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32_eth.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\drivers\stm32_eth.c</FilePath>
             </File>
             <File>
               <FileName>stm32f10x_it.c</FileName>
@@ -475,6 +475,11 @@
               <FileName>led.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\drivers\led.c</FilePath>
+            </File>
+            <File>
+              <FileName>board_i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\drivers\board_i2c.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -765,6 +770,21 @@
               <FileName>spi_flash_w25qxx.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\components\DeviceDrivers\spi_flash_w25qxx.c</FilePath>
+            </File>
+            <File>
+              <FileName>i2c_core.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\DeviceDrivers\i2c_core.c</FilePath>
+            </File>
+            <File>
+              <FileName>i2c_dev.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\DeviceDrivers\i2c_dev.c</FilePath>
+            </File>
+            <File>
+              <FileName>i2c-bit-ops.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\DeviceDrivers\i2c-bit-ops.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -14,11 +14,11 @@
 #endif /* RT_USING_DFS */
 
 /*
- * SPI1_MOSI: PA7		PA5
- * SPI1_MISO: PA6		PA4
- * SPI1_SCK : PA5		PA6
+ * SPI1_MOSI: PA5
+ * SPI1_MISO: PA4
+ * SPI1_SCK : PA6
  *
- * CS0: PA4  SD card.	PA3
+ * CS0: PA3
 */
 static void rt_hw_spi_init(void)
 {
@@ -38,7 +38,7 @@ static void rt_hw_spi_init(void)
         GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 
-        /* spi21: PG10 */
+        /* spi10: PA3 */
         spi_cs.gpio_base = GPIOA_BASE;
         spi_cs.gpio_pin = GPIO_Pin_3;
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
