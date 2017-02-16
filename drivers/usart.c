@@ -686,7 +686,7 @@ void rt_hw_usart_init(void)
 #if defined(RT_USING_UART4)
     uart = &uart4;
 
-    config.baud_rate = BAUD_RATE_115200;
+    config.baud_rate = BAUD_RATE_38400;
 
     serial4.ops    = &stm32_uart_ops;
     serial4.config = config;
@@ -710,7 +710,7 @@ void rt_hw_usart_init(void)
 
     NVIC_Configuration(uart);
 
-    /* register UART4 device */
+    /* register UART5 device */
     rt_hw_serial_register(&serial5, "uart5",
                           RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX |
                           RT_DEVICE_FLAG_INT_TX |   RT_DEVICE_FLAG_DMA_RX,

@@ -71,7 +71,7 @@
 #define RT_CONSOLEBUF_SIZE	128
 
 // <string name="RT_CONSOLE_DEVICE_NAME" description="console device name" default="uart3" />
-#define RT_CONSOLE_DEVICE_NAME	"uart5"
+#define RT_CONSOLE_DEVICE_NAME	"uart1"
 // </section>
 
 // <section name="RT_USING_COMPONENTS_INIT" description="Using components init" default="false" >

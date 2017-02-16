@@ -6,6 +6,8 @@
 #include "debug.h"
 #include "zigbee.h"
 #include <rthw.h>
+#include <stm32f10x.h>
+#include "resolve.h"
 
 extern struct rt_device serial4;		//¥Æø⁄4Œ™Zigbee ’∑¢¥Æø⁄
 
@@ -18,30 +20,51 @@ extern struct rt_device serial4;		//¥Æø⁄4Œ™Zigbee ’∑¢¥Æø⁄
 void clear_zbmodem(void)		//«Âø’¥Æø⁄ª∫≥Â«¯µƒ ˝æ›
 {
 	//«Âø’ª∫≥Â∆˜¥˙¬Î
-	//°£°£°£°£
-	
-	rt_thread_delay(RD_DELAY);
+	//°£°£°£
+	rt_thread_delay(RT_TICK_PER_SECOND);
 }
 
 int openzigbee(void)
 {
 	int result = 0;
+	GPIO_InitTypeDef GPIO_InitStructure;
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC,ENABLE);
+    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_7;
+    GPIO_Init(GPIOC, &GPIO_InitStructure);
+	GPIO_SetBits(GPIOC, GPIO_Pin_7);		//…Ë÷√“˝Ω≈Œ™∏ﬂµÁ∆Ω ‰≥ˆ£¨ πƒ‹Zigbbeƒ£øÈ
+	
 	result = ZIGBEE_SERIAL.open(&ZIGBEE_SERIAL,RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX |
                           RT_DEVICE_FLAG_INT_TX |   RT_DEVICE_FLAG_DMA_RX);
 	if(result)
 	{
-		rt_kprintf("open serial 2 failed : %d\r\n",result);
+		rt_kprintf("open serial 4 failed : %d\r\n",result);
 	}else
 	{
-		rt_kprintf("open serial 2 success\r\n");
+		rt_kprintf("open serial 4 success\r\n");
 	}
 	return result;
 }
 
 //∏¥Œªzigbeeƒ£øÈ  Õ®π˝PC7µƒµÁ∆Ω÷√∏ﬂ÷√µÕ»ª∫Û¥ÔµΩ∏¥Œªµƒ–ßπ˚
+void zigbee_reset(void)
+{
+	//œ»…Ë÷√PC7Œ™µÕµÁ∆Ω£¨»ª∫Û‘Ÿ…Ë÷√Œ™∏ﬂµÁ∆Ω¥ÔµΩ∏¥Œªµƒπ¶ƒ‹
+	GPIO_InitTypeDef GPIO_InitStructure;
 
-
-
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC,ENABLE);
+  GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_7;
+  GPIO_Init(GPIOC, &GPIO_InitStructure);
+	
+	GPIO_ResetBits(GPIOC, GPIO_Pin_7);		//…Ë÷√“˝Ω≈Œ™µÕµÁ∆Ω ‰≥ˆ
+	rt_thread_delay(RT_TICK_PER_SECOND);
+	GPIO_SetBits(GPIOC, GPIO_Pin_7);		//…Ë÷√“˝Ω≈Œ™∏ﬂµÁ∆Ω ‰≥ˆ
+	rt_thread_delay(RT_TICK_PER_SECOND * 10);
+}
 
 int zb_shortaddr_cmd(int shortaddr, char *buff, int length)		//zigbee ∂Ãµÿ÷∑±®Õ∑
 {
@@ -248,7 +271,7 @@ int zb_get_id(char *data)			//ªÒ»°ƒÊ±‰∆˜ID
 {
 	int size;
 
-	rt_thread_delay( RD_DELAY );
+	rt_thread_delay( RD_DELAY * 10 );
 	size = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data, 255);
 	
 	if(size > 0)
@@ -400,6 +423,12 @@ int zb_get_inverter_shortaddress_single(inverter_info *inverter)			//ªÒ»°µ•Ã®÷∏∂
 
 }
 
+//◊ÈÕ¯(¡ÓƒÊ±‰∆˜…œ±®ID,≤¢∂‘¥Ê‘⁄”⁄ID±Ì÷–µƒƒÊ±‰∆˜Ω¯––∞Û∂®)
+int zb_turnon_limited_rtpid(inverter_info *firstinverter)
+{
+	
+	return 0;
+}
 
 int zb_turnon_rtpid(inverter_info *firstinverter)			//ø™∆ÙƒÊ±‰∆˜◊‘∂Ø…œ±®ID
 {
@@ -750,120 +779,113 @@ int zb_broadcast_cmd(char *buff, int length)		//zigbeeπ„≤•∞¸Õ∑
 
 int zb_query_inverter_info(inverter_info *inverter)		//«Î«ÛƒÊ±‰∆˜µƒª˙–Õ¬Î
 {
-	int  ret;
+	int i = 0;
 	char sendbuff[256];
-	char data[256];
-//	unsigned short check = 0x00;
+	char recvbuff[256];
 	
-	print2msg("Query inverter information",inverter->inverterid);
-	clear_zbmodem();			//∑¢ÀÕ÷∏¡Ó«∞œ»«Âø’ª∫≥Â«¯
-	sendbuff[0] = 0xFB;
-	sendbuff[1] = 0xFB;
-	sendbuff[2] = 0x02;
-	sendbuff[3] = 0x01;
-	sendbuff[4] = 0x06;
-	sendbuff[5] = 0xDC;
-	sendbuff[6] = 0x01;
-	sendbuff[7] = 0x00;
-	sendbuff[8] = 0x00;
-	sendbuff[9] = 0x00;
-	sendbuff[10] = 0x00;
-//	for(i=2; i<9; i++)
-//		check = check + sendbuff[i];
-//	sendbuff[9] = check >> 8;		//CHK
-//	sendbuff[10] = check;		//CHK
-	sendbuff[11] = 0x25;		//CRC
-	sendbuff[12] = 0x97;		//CRC
-	sendbuff[13] = 0xFE;
-	sendbuff[14] = 0xFE;
-	
-	zb_send_cmd(inverter, sendbuff, 15);
-	ret = zb_get_reply(data,inverter);
+	clear_zbmodem();
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0x06;
+	sendbuff[i++] = 0xDC;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0xFE;
+	sendbuff[i++] = 0xFE;
+	zb_send_cmd(inverter, sendbuff, i);
+	print2msg("Query Inverter's Model and Version", inverter->inverterid);
 
-	if((0x01 == data[2])&&(0x02 == data[3])&&(22 == ret)&&(0xFB == data[0])&&(0xFB == data[1])&&(0xDC == data[7])&&(0xFE == data[20])&&(0xFE == data[21]))
-	{
-//		inverter->model = data[9];
-		inverter->version = data[8]*256+data[9];
+	if ((16 == zb_get_reply(recvbuff, inverter))
+			&& (0xFB == recvbuff[0])
+			&& (0xFB == recvbuff[1])
+			&& (0xDC == recvbuff[3])
+			&& (0xFE == recvbuff[14])
+			&& (0xFE == recvbuff[15])) {
+		inverter->model = recvbuff[4];
+		inverter->version = recvbuff[5]*256 + recvbuff[6];
 		return 1;
 	}
-	else
-	{
-		return -1;
-	}
+
+	return -1;
 }
 
 int zb_query_data(inverter_info *inverter)		//«Î«ÛƒÊ±‰∆˜ µ ± ˝æ›
 {
-	int ret;
+	int i=0, ret;
 	char sendbuff[256];
 	char data[256];
-//	int signalstrength;
-//	unsigned short check=0x00;
-	
 
+/*  //ƒ£ƒ‚ƒÊ±‰∆˜ ˝æ› K1-K80
+	char test_data_BB[80] = {0x05, 0x16, 0x13, 0xFC, 0x00, 0x00, 0x00, 0x47, 0x4C, 0x6E,
+							 0xF0, 0x00, 0x29, 0x32, 0x80, 0x25, 0x82, 0x81, 0x27, 0xA1,
+							 0xBD, 0x28, 0x47, 0x60, 0x27, 0xFF, 0x9D, 0x04, 0xF2, 0xD4,
+							 0xEF, 0xD5, 0x04, 0xCF, 0x21, 0x97, 0xC5, 0x04, 0x84, 0x4F,
+							 0xB8, 0x7F, 0x04, 0xD6, 0xD4, 0x78, 0xFC, 0x00, 0x2E, 0x57,
+							 0x00, 0x19, 0xC1, 0x00, 0x17, 0xF7, 0x02, 0xD9, 0xD6, 0x02,
+							 0xCD, 0xE1, 0x02, 0xCC, 0x5F, 0x01, 0x66, 0x74, 0x01, 0x5F,
+							 0xB9, 0x01, 0x5F, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+*/
 	print2msg("Query inverter data",inverter->inverterid);
-	clear_zbmodem();			//∑¢ÀÕ÷∏¡Ó«∞£¨œ»«Âø’ª∫≥Â«¯
-	sendbuff[0] = 0xFA;
-	sendbuff[1] = 0xFB;
-	sendbuff[2] = 0x02;			//–¬º”µƒ‘¥µÿ÷∑
-	sendbuff[3] = 0x01;			//–¬º”µƒƒø±Íµÿ÷∑
-	sendbuff[4] = 0x06;
-	sendbuff[5] = 0xBB;
-	sendbuff[6] = 0x01;
-	if(0==inverter->no_last_flag)
-		sendbuff[7]=0x00;
-	else
-		sendbuff[7]=0x11;
-	sendbuff[8] = 0x00;
-	sendbuff[9] = 0x00;
-	sendbuff[10] = 0x00;
-//	for(i=2; i<9; i++)
-//		check = check + sendbuff[i];
-//	sendbuff[9] = check >> 8;		//CHK
-//	sendbuff[10] = check;		//CHK
-	sendbuff[11] = 0x42;		//CRC
-	sendbuff[12] = 0x30;		//CRC
-	sendbuff[13] = 0xFE;		//TAIL
-	sendbuff[14] = 0xFE;		//TAIL
-
+	clear_zbmodem();			//∑¢ÀÕ÷∏¡Ó«∞,œ»«Âø’ª∫≥Â«¯
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0x06;
+	sendbuff[i++] = 0xBB;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0xFE;
+	sendbuff[i++] = 0xFE;
 	
-	zb_send_cmd(inverter, sendbuff, 15);
+	zb_send_cmd(inverter, sendbuff, i);
 	ret = zb_get_reply(data,inverter);
 
-	//ret=34Œ™ƒÊ±‰∆˜,“ª∞„≤ªª·Ω¯»Î
-	if((34 == ret)&&(0xFB == data[0])&&(0xFB == data[1])&&(0xFE == data[32])&&(0xFE == data[33]))
+/*	//ÃÊªª≥…ƒ£ƒ‚ ˝æ›
+	for (i=0; i<80; i++) {
+		data[4+i] = test_data_BB[i];
+	}
+*/
+
+	if((88 == ret)&&(0xFB == data[0])&&(0xFB == data[1])&&(0xFE == data[86])&&(0xFE == data[87]))
 	{
-		inverter->no_last_flag =1;
+
+		//≤‚ ‘YC1000≤π∞¸π¶ƒ‹
+		if (inverter->shortaddr == 2733 || inverter->shortaddr == 48945) {
+			inverter->dataflag = 0;
+			return -1;
+		}
+
 		inverter->no_getdata_num = 0;	//“ªµ©Ω” ’µΩ ˝æ›æÕ«Â0,ZK
-		inverter->dataflag = 1;	//Ω” ’µΩ ˝æ›æÕ÷√1
+		inverter->dataflag = 1;	//Ω” ’µΩ ˝æ›æÕ÷√Œ™1
 
 		if(1==inverter->model)
-		{
-//			resolvedata_500(&data[6], inverter);
-		}
+			resolvedata_250(&data[4], inverter);
 		else if(2==inverter->model)
-		{
-//			resolvedata_250(&data[6], inverter);
-		}
+			resolvedata_250(&data[4], inverter);
+		else if(3==inverter->model)
+			resolvedata_500(&data[4], inverter);
+		else if(4==inverter->model)
+			resolvedata_500(&data[4], inverter);
+		else if(5==inverter->model)
+			resolvedata_1000(&data[4], inverter);
+		else if(6==inverter->model)
+			resolvedata_1000(&data[4], inverter);
 		else
-		{
-//			resolvedata_250(&data[6], inverter);
-		}
+			{;}
 
-		return 1;
-	}
-	else if((0x01 == data[2])&&(0x02 == data[3])&&(74 == ret)&&(0xFB == data[0])&&(0xFB == data[1])&&(0xFE == data[72])&&(0xFE == data[73]))
-	{
-		inverter->no_getdata_num = 0;	//“ªµ©Ω” ’µΩ ˝æ›æÕ«Â0,ZK
-		inverter->dataflag = 1;	//Ω” ’µΩ ˝æ›æÕ÷√1
-//		resolvedata_optimizer_YC500(&data[8], inverter);
-//		save_optimizer_data(inverter,ecu.broadcast_time);
-		inverter->no_last_flag=0;
 		return 1;
 	}
 	else
 	{
-		inverter->no_last_flag=1;
 		inverter->dataflag = 0;		//√ª”–Ω” ’µΩ ˝æ›æÕ÷√Œ™0
 		return -1;
 	}
@@ -946,12 +968,11 @@ int zb_set_protect_parameter(inverter_info *inverter, char *protect_parameter)		
 		return -1;
 }
 
-int zb_query_protect_parameter(inverter_info *inverter, char *protect_data_DA_reply)		//¥Ê¥¢≤Œ ˝≤È—ØDD÷∏¡Ó
+int zb_query_protect_parameter(inverter_info *inverter, char *protect_data_DD_reply)		//¥Ê¥¢≤Œ ˝≤È—ØDD÷∏¡Ó
 {
-	int i=0, ret;
-	unsigned char sendbuff[512]={'\0'};
-	unsigned short check=0x00;
-	/*
+	int i=0,ret;
+	char sendbuff[256];
+	
 	sendbuff[i++] = 0xFB;
 	sendbuff[i++] = 0xFB;
 	sendbuff[i++] = 0x06;
@@ -965,30 +986,18 @@ int zb_query_protect_parameter(inverter_info *inverter, char *protect_data_DA_re
 	sendbuff[i++] = 0x00;
 	sendbuff[i++] = 0xFE;
 	sendbuff[i++] = 0xFE;
-	*/
 	
-	clear_zbmodem();			//∑¢ÀÕ÷∏¡Ó«∞,œ»«Âø’ª∫≥Â«¯
-	sendbuff[0] = 0xFB;			//HEAD
-	sendbuff[1] = 0xFB;			//HEAD
-	sendbuff[2] = 0x06;			//LENGTH
-	sendbuff[3] = 0x00;
-	sendbuff[4] = 0x00;
-	sendbuff[5] = 0XDD;			//CMD
-	sendbuff[6] = 0x11;		//DATA
-	sendbuff[7] = 0x04;
-	sendbuff[8] = 0x01;
-	for(i=2; i<9; i++)
-		check = check + sendbuff[i];
-	sendbuff[9] = check >> 8;	//CHK
-	sendbuff[10] = check;		//CHK
-	sendbuff[11] = 0xFE;		//TAIL
-	sendbuff[12] = 0xFE;		//TAIL
-
-	zb_send_cmd(inverter, (char *)sendbuff, 13);
 	print2msg(inverter->inverterid, "Query protect parameter");
-
-	ret = zb_get_reply(protect_data_DA_reply,inverter);
-	if((29 == ret) && (0xDA == protect_data_DA_reply[5]) && (0xFB == protect_data_DA_reply[0]) && (0xFB == protect_data_DA_reply[1]) && (0xFE == protect_data_DA_reply[27]) && (0xFE == protect_data_DA_reply[28]))
+	zb_send_cmd(inverter, sendbuff, i);
+	ret = zb_get_reply(protect_data_DD_reply,inverter);
+	if((33 == ret) && (0xDD == protect_data_DD_reply[3]) && (0xFB == protect_data_DD_reply[0]) && (0xFB == protect_data_DD_reply[1]) && (0xFE == protect_data_DD_reply[31]) && (0xFE == protect_data_DD_reply[32]))
+		return 1;
+	if((58 == ret) &&
+				(0xFB == protect_data_DD_reply[0]) &&
+				(0xFB == protect_data_DD_reply[1]) &&
+				(0xDA == protect_data_DD_reply[3]) &&
+				(0xFE == protect_data_DD_reply[56]) &&
+				(0xFE == protect_data_DD_reply[57]))
 		return 1;
 	else
 		return -1;
@@ -998,88 +1007,73 @@ int zb_afd_broadcast(void)		//AFDπ„≤•÷∏¡Ó
 {
 	int i=0;
 	char sendbuff[256];
-//	char data[256];
-	unsigned short check=0x00;
-
 	
-	sendbuff[0] = 0xFB;
-	sendbuff[1] = 0xFB;
-	sendbuff[2] = 0x07;
-	sendbuff[3] = 0x00;
-	sendbuff[4] = 0x00;
-	sendbuff[5] = 0xAF;
-	sendbuff[6] = 0x00;
-	sendbuff[7] = 0x00;
-	sendbuff[8] = 0x05;
-	sendbuff[9] = 0x01;
-	for(i=2; i<10; i++){
-		check = check + sendbuff[i];
-	}
-	sendbuff[10] = check >> 8;		//CHK
-	sendbuff[11] = check;		//CHK
-	sendbuff[12] = 0xFE;
-	sendbuff[13] = 0xFE;
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0x07;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0xAF;
+	sendbuff[i++] = 0xFF;
+	sendbuff[i++] = 0xFF;
+	sendbuff[i++] = 0x05;
+	sendbuff[i++] = 0x01;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0xFE;
+	sendbuff[i++] = 0xFE;
 	
-	zb_broadcast_cmd(sendbuff, 14);
+	zb_broadcast_cmd(sendbuff, i);
 
 	return 1;
 }
 
 int zb_turnon_inverter_broadcast(void)		//ø™ª˙÷∏¡Óπ„≤•,OK
 {
-//	int i=0, ret;
+	int i=0;
 	char sendbuff[256];
-//	char data[256];
-//	unsigned short check=0x00;
 	
-	sendbuff[0] = 0xFA;
-	sendbuff[1] = 0xFB;
-	sendbuff[2] = 0x02;
-	sendbuff[3] = 0x01;
-	sendbuff[4] = 0x06;
-	sendbuff[5] = 0xC1;
-	sendbuff[6] = 0x00;
-	sendbuff[7] = 0x00;
-	sendbuff[8] = 0x00;
-	sendbuff[9] = 0x00;
-	sendbuff[10] = 0x00;
-	sendbuff[11] = 0x00;		//CHK
-	sendbuff[12] = 0x00;		//CHK
-	sendbuff[13] = 0xFE;
-	sendbuff[14] = 0xFE;
-
-	zb_broadcast_cmd(sendbuff, 15);
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0x06;
+	sendbuff[i++] = 0xA1;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0xFE;
+	sendbuff[i++] = 0xFE;
+	
+	zb_broadcast_cmd(sendbuff, i);
 	return 1;
 }
 
 int zb_boot_single(inverter_info *inverter)		//ø™ª˙÷∏¡Óµ•≤•,OK
 {
-	int  ret;
+	int i=0, ret;
 	char sendbuff[256];
 	char data[256];
-//	unsigned short check=0x00;
-
-	sendbuff[0] = 0xFA;
-	sendbuff[1] = 0xFB;
-	sendbuff[2] = 0x02;
-	sendbuff[3] = 0x01;
-	sendbuff[4] = 0x06;
-	sendbuff[5] = 0xC3;
-	sendbuff[6] = 0x00;
-	sendbuff[7] = 0x00;
-	sendbuff[8] = 0x00;
-	sendbuff[9] = 0x00;
-	sendbuff[10] = 0x00;
-	sendbuff[11] = 0x00;		//CHK
-	sendbuff[12] = 0x00;		//CHK
-	sendbuff[13] = 0xFE;
-	sendbuff[14] = 0xFE;
-
-
-	zb_send_cmd(inverter, sendbuff, 15);
+	
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0x06;
+	sendbuff[i++] = 0xC1;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0xFE;
+	sendbuff[i++] = 0xFE;
+	
+	zb_send_cmd(inverter, sendbuff, i);
 	ret = zb_get_reply(data,inverter);
-
-	if((15 == ret) && (0xDE == data[5]) && (0xFB == data[0]) && (0xFB == data[1]) && (0xFE == data[13]) && (0xFE == data[14]))
+	if((13 == ret) && (0xDE == data[3]) && (0xFB == data[0]) && (0xFB == data[1]) && (0xFE == data[11]) && (0xFE == data[12]))
 		return 1;
 	else
 		return -1;
@@ -1087,59 +1081,50 @@ int zb_boot_single(inverter_info *inverter)		//ø™ª˙÷∏¡Óµ•≤•,OK
 
 int zb_shutdown_broadcast(void)		//πÿª˙÷∏¡Óπ„≤•,OK
 {
+	int i=0;
 	char sendbuff[256];
-//	char data[256];
-//	unsigned short check=0x00;
-
 	
-	sendbuff[0] = 0xFA;
-	sendbuff[1] = 0xFB;
-	sendbuff[2] = 0x02;
-	sendbuff[3] = 0x01;
-	sendbuff[4] = 0x06;
-	sendbuff[5] = 0xC0;
-	sendbuff[6] = 0x00;
-	sendbuff[7] = 0x00;
-	sendbuff[8] = 0x00;
-	sendbuff[9] = 0x00;
-	sendbuff[10] = 0x00;
-	sendbuff[11] = 0x00;		//CHK
-	sendbuff[12] = 0x00;		//CHK
-	sendbuff[13] = 0xFE;
-	sendbuff[14] = 0xFE;
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0x06;
+	sendbuff[i++] = 0xA2;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0xFE;
+	sendbuff[i++] = 0xFE;
 	
-	zb_broadcast_cmd(sendbuff, 15);
+	zb_broadcast_cmd(sendbuff, i);
 	return 1;
 }
 
 int zb_shutdown_single(inverter_info *inverter)		//πÿª˙÷∏¡Óµ•≤•,OK
 {
-	int  ret;
+	int i=0, ret;
 	char sendbuff[256];
 	char data[256];
-//	unsigned short check=0x00;
 	
-	sendbuff[0] = 0xFA;
-	sendbuff[1] = 0xFB;
-	sendbuff[2] = 0x02;
-	sendbuff[3] = 0x01;
-	sendbuff[4] = 0x06;
-	sendbuff[5] = 0xC2;
-	sendbuff[6] = 0x00;
-	sendbuff[7] = 0x00;
-	sendbuff[8] = 0x00;
-	sendbuff[9] = 0x00;
-	sendbuff[10] = 0x00;
-	sendbuff[11] = 0x00;		//CHK
-	sendbuff[12] = 0x00;		//CHK
-	sendbuff[13] = 0xFE;
-	sendbuff[14] = 0xFE;
-
-
-	zb_send_cmd(inverter, sendbuff, 15);
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0x06;
+	sendbuff[i++] = 0xC2;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0xFE;
+	sendbuff[i++] = 0xFE;
+	
+	zb_send_cmd(inverter, sendbuff, i);
 	ret = zb_get_reply(data,inverter);
-
-	if((15 == ret) && (0xDE == data[5]) && (0xFB == data[0]) && (0xFB == data[1]) && (0xFE == data[13]) && (0xFE == data[14]))
+	if((13 == ret) && (0xDE == data[3]) && (0xFB == data[0]) && (0xFB == data[1]) && (0xFE == data[11]) && (0xFE == data[12]))
 		return 1;
 	else
 		return -1;
@@ -1173,7 +1158,6 @@ int zb_clear_gfdi_broadcast(void)		//«Â≥˝GFDIπ„≤•,OK
 {
 	int i=0;
 	char sendbuff[256];
-//	char data[256];
 
 	sendbuff[i++] = 0xFB;
 	sendbuff[i++] = 0xFB;
@@ -1189,93 +1173,81 @@ int zb_clear_gfdi_broadcast(void)		//«Â≥˝GFDIπ„≤•,OK
 	sendbuff[i++] = 0xFE;
 	sendbuff[i++] = 0xFE;
 
-	zb_broadcast_cmd(sendbuff, 13);
+	zb_broadcast_cmd(sendbuff, i);
 	return 1;
 }
 
 int zb_clear_gfdi(inverter_info *inverter)		//«Â≥˝GFDI,OK
 {
-	int i=0;
+	int i=0, ret;
 	char sendbuff[256];
-//	char data[256];
-	unsigned short check=0x00;
-
-	sendbuff[0] = 0xFB;
-	sendbuff[1] = 0xFB;
-	sendbuff[2] = 0x06;
-	sendbuff[3] = 0x00;
-	sendbuff[4] = 0x00;
-	sendbuff[5] = 0xA5;
-	sendbuff[6] = 0x11;
-	sendbuff[7] = 0x04;
-	sendbuff[8] = 0x01;
-
-	for(i=2; i<9; i++)
-		check = check + sendbuff[i];
-
-	sendbuff[9] = check >> 8;		//CHK
-	sendbuff[10] = check;		//CHK
-	sendbuff[11] = 0xFE;
-	sendbuff[12] = 0xFE;
+	char data[256];
 	
-	zb_send_cmd(inverter, sendbuff, 13);
-
-	return -1;
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0x06;
+	sendbuff[i++] = 0xCF;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0xFE;
+	sendbuff[i++] = 0xFE;
+	
+	zb_send_cmd(inverter, sendbuff, i);
+	ret = zb_get_reply(data,inverter);
+	if((13 == ret) && (0xDE == data[3]) && (0xFB == data[0]) && (0xFB == data[1]) && (0xFE == data[11]) && (0xFE == data[12]))
+		return 1;
+	else
+		return -1;
 }
 
 int zb_ipp_broadcast(void)		//IPPπ„≤•
 {
 	int i=0;
 	char sendbuff[256];
-//	char data[256];
-	unsigned short check=0x00;
 
-	sendbuff[0] = 0xFB;
-	sendbuff[1] = 0xFB;
-	sendbuff[2] = 0x07;
-	sendbuff[3] = 0x00;
-	sendbuff[4] = 0x00;
-	sendbuff[5] = 0xC1;
-	sendbuff[6] = 0x00;
-	sendbuff[7] = 0x00;
-	sendbuff[8] = 0x05;
-	sendbuff[9] = 0x01;
-	for(i=2; i<10; i++)
-		check = check + sendbuff[i];
-	sendbuff[10] = check >> 8;		//CHK
-	sendbuff[11] = check;		//CHK
-	sendbuff[12] = 0xFE;
-	sendbuff[13] = 0xFE;
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0x06;
+	sendbuff[i++] = 0xA5;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0xFE;
+	sendbuff[i++] = 0xFE;
 
-	zb_broadcast_cmd(sendbuff, 14);
+	zb_broadcast_cmd(sendbuff, i);
 	return 1;
 }
 
-int zb_ipp_single(inverter_info *inverter)		//IPPµ•≤•,‘› ±≤ª”√,ZK
+int zb_ipp_single(inverter_info *inverter)		//IPPµ•≤•
 {
 	int i=0;
 	char sendbuff[256];
-//	char data[256];
-	unsigned short check=0x00;
 
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0xFB;
+	sendbuff[i++] = 0x06;
+	sendbuff[i++] = 0xC5;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0xFE;
+	sendbuff[i++] = 0xFE;
 
-	sendbuff[0] = 0xFB;
-	sendbuff[1] = 0xFB;
-	sendbuff[2] = 0x06;
-	sendbuff[3] = 0x00;
-	sendbuff[4] = 0x00;
-	sendbuff[5] = 0xC2;
-	sendbuff[6] = 0x00;
-	sendbuff[7] = 0x04;
-	sendbuff[8] = 0x01;
-	for(i=2; i<9; i++)
-		check = check + sendbuff[i];
-	sendbuff[9] = check >> 8;		//CHK
-	sendbuff[10] = check;		//CHK
-	sendbuff[11] = 0xFE;
-	sendbuff[12] = 0xFE;
-
-	zb_send_cmd(inverter, sendbuff, 13);
+	zb_send_cmd(inverter, sendbuff, i);
 	return 1;
 }
 
@@ -1375,4 +1347,114 @@ int zb_voltage_protectime_single(inverter_info *inverter)		//«∑—π±£ª§ ±º‰µ•≤•
 
 	zb_send_cmd(inverter, sendbuff, i);
 	return 1;
+}
+
+int process_gfdi(inverter_info *firstinverter)
+{
+	
+	return 0;
+}
+
+int compare_protect_data(char *set_protect_data, char *actual_protect_data)				//±»ΩœƒÊ±‰∆˜∑µªÿµƒ‘§…Ë÷µ∫Õ“≥√Ê…œ ‰»Îµƒ‘§…Ë÷µ
+{
+	int i;
+
+	for(i=0; i<12; i++)
+	{
+		if(set_protect_data[i] != actual_protect_data[i])
+			return -1;
+	}
+
+	return 0;
+}
+
+int resolve_presetdata(inverter_info *inverter, char * protect_data_result)	//?????????????
+{
+	float temp;
+
+	/*if(1 == ecu.type)
+		temp = (presetdata[0]*256 + presetdata[1])/2.90345;
+	else
+		temp = (presetdata[0]*256 + presetdata[1])/1.48975;
+	if((temp-(int)temp)>0.5)
+		inverter->protect_vl1 = (int)temp +1;
+	else
+		inverter->protect_vl1 = (int)temp;
+
+	if(1 == ecu.type)
+		temp = (presetdata[2]*256 + presetdata[3])/2.90345;
+	else
+		temp = (presetdata[2]*256 + presetdata[3])/1.48975;
+	if((temp-(int)temp)>0.5)
+		inverter->protect_vu1 = (int)temp +1;
+	else
+		inverter->protect_vu1 = (int)temp;*/
+
+	/*
+	if(1 == ecu.type)
+		temp = (protect_data_result[4]*256 + protect_data_result[5])/2.90345;
+	else
+		temp = (protect_data_result[4]*256 + protect_data_result[5])/1.48975;
+	if((temp-(int)temp)>0.5)
+		inverter->protect_voltage_min = (int)temp +1;
+	else
+		inverter->protect_voltage_min = (int)temp;
+
+	if(1 == ecu.type)
+		temp = (protect_data_result[6]*256 + protect_data_result[7])/2.90345;
+	else
+		temp = (protect_data_result[6]*256 + protect_data_result[7])/1.48975;
+	if((temp-(int)temp)>0.5)
+		inverter->protect_voltage_max = (int)temp +1;
+	else
+		inverter->protect_voltage_max = (int)temp;
+
+	if(1 == ecu.type)
+		inverter->protect_frequency_min = 600-protect_data_result[8];
+	else
+		inverter->protect_frequency_min = 500-protect_data_result[8];
+	if(1 == ecu.type)
+		inverter->protect_frequency_max = 600+protect_data_result[9];
+	else
+		inverter->protect_frequency_max = 500+protect_data_result[9];
+	inverter->recovery_time = protect_data_result[10]*256 + protect_data_result[11];
+*/
+	if((1==inverter->model)||(2==inverter->model)||(3==inverter->model)||(4==inverter->model))	//??????
+		temp = (protect_data_result[3]*65536 + protect_data_result[4]*256 + protect_data_result[5])/26204.64;
+	if((5==inverter->model)||(6==inverter->model))
+		temp = (protect_data_result[3]*65536 + protect_data_result[4]*256 + protect_data_result[5])/11614.45;
+
+	if((temp-(int)temp)>0.5)
+		inverter->protect_voltage_min = (int)temp +1;
+	else
+		inverter->protect_voltage_min = (int)temp;
+
+	if((1==inverter->model)||(2==inverter->model)||(3==inverter->model)||(4==inverter->model))	//??????
+		temp = (protect_data_result[6]*65536 + protect_data_result[7]*256 + protect_data_result[8])/26204.64;
+	if((5==inverter->model)||(6==inverter->model))
+		temp = (protect_data_result[6]*65536 + protect_data_result[7]*256 + protect_data_result[8])/11614.45;
+	if((temp-(int)temp)>0.5)
+		inverter->protect_voltage_max = (int)temp +1;
+	else
+		inverter->protect_voltage_max = (int)temp;
+
+	if((1==inverter->model)||(2==inverter->model)||(3==inverter->model)||(4==inverter->model))
+		inverter->protect_frequency_min = 223750/(protect_data_result[9]*256 + protect_data_result[10]);
+	if((5==inverter->model)||(6==inverter->model))
+		inverter->protect_frequency_min = 256000/(protect_data_result[9]*256 + protect_data_result[10]);
+
+	if((1==inverter->model)||(2==inverter->model)||(3==inverter->model)||(4==inverter->model))
+		inverter->protect_frequency_max = 223750/(protect_data_result[11]*256 + protect_data_result[12]);
+	if((5==inverter->model)||(6==inverter->model))
+		inverter->protect_frequency_max = 256000/(protect_data_result[11]*256 + protect_data_result[12]);
+
+	inverter->recovery_time = protect_data_result[13]*256 + protect_data_result[14];
+
+	return 1;
+}
+
+int process_protect_data(inverter_info *firstinverter)
+{
+	
+	return 0;
 }

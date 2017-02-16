@@ -31,14 +31,14 @@ void rt_hw_led_init(void)
     GPIO_Init(led1_gpio, &GPIO_InitStructure);
 }
 
-void rt_hw_led_on()
-{
-    GPIO_SetBits(led1_gpio, led1_pin);
-}
-
-void rt_hw_led_off()
+void rt_hw_led_on(void)
 {
     GPIO_ResetBits(led1_gpio, led1_pin);
+}
+
+void rt_hw_led_off(void)
+{
+    GPIO_SetBits(led1_gpio, led1_pin);
 }
 
 #ifdef RT_USING_FINSH

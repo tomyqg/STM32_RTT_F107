@@ -3,6 +3,7 @@
 #include "variation.h"
 
 int openzigbee(void);
+void zigbee_reset(void);
 int zb_shortaddr_cmd(int shortaddr, char *buff, int length);		//zigbee 短地址报头
 int zb_shortaddr_reply(char *data,int shortaddr,char *id);			//读取逆变器的返回帧,短地址模式
 int zb_get_reply(char *data,inverter_info *inverter);			//读取逆变器的返回帧
