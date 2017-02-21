@@ -68,7 +68,7 @@ void zigbee_reset(void)
 
 int zb_shortaddr_cmd(int shortaddr, char *buff, int length)		//zigbee ¶ÌµØÖ·±¨Í·
 {
-	unsigned char sendbuff[512] = {'\0'};
+	unsigned char sendbuff[50] = {'\0'};
 	int i;
 	int check=0;
 	sendbuff[0]  = 0xAA;
@@ -161,8 +161,9 @@ int zb_get_reply(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷µÄ·µ»ØÖ¡
 		}
 		printhexmsg("Reply", data_all, temp_size);
 		rt_sprintf(inverterid,"%02x%02x%02x%02x%02x%02x",data_all[6],data_all[7],data_all[8],data_all[9],data_all[10],data_all[11]);
-		if((size>0)&&(0xFC==data_all[0])&&(0xFC==data_all[1])&&(data_all[2]==inverter->shortaddr/256)&&(data_all[3]==inverter->shortaddr%256)&&(data_all[5]==0xA5)&&(0==rt_strcmp(inverter->inverterid,inverterid)))
+		if((size>0)&&(0xFC==data_all[0])&&(0xFC==data_all[1])&&(data_all[2]==inverter->shortaddr/256)&&(data_all[3]==inverter->shortaddr%256)&&(0==rt_strcmp(inverter->id,inverterid)))
 		{
+			inverter->raduis=data_all[5];
 			inverter->signalstrength=data_all[4];
 			return size;
 		}
@@ -198,7 +199,7 @@ int zb_get_reply_update_start(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷
 		}
 		printhexmsg("Reply", data_all, temp_size);
 		rt_sprintf(inverterid,"%02x%02x%02x%02x%02x%02x",data_all[6],data_all[7],data_all[8],data_all[9],data_all[10],data_all[11]);
-		if((size>0)&&(0xFC==data_all[0])&&(0xFC==data_all[1])&&(data_all[2]==inverter->shortaddr/256)&&(data_all[3]==inverter->shortaddr%256)&&(data_all[5]==0xA5)&&(0==rt_strcmp(inverter->inverterid,inverterid)))
+		if((size>0)&&(0xFC==data_all[0])&&(0xFC==data_all[1])&&(data_all[2]==inverter->shortaddr/256)&&(data_all[3]==inverter->shortaddr%256)&&(data_all[5]==0xA5)&&(0==rt_strcmp(inverter->id,inverterid)))
 		{
 			return size;
 		}
@@ -234,7 +235,7 @@ int zb_get_reply_restore(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷Ô¶³Ì¸
 		printhexmsg("Reply", data_all, temp_size);
 		rt_sprintf(inverterid,"%02x%02x%02x%02x%02x%02x",data_all[6],data_all[7],data_all[8],data_all[9],data_all[10],data_all[11]);
 
-		if((size>0)&&(0xFC==data_all[0])&&(0xFC==data_all[1])&&(data_all[2]==inverter->shortaddr/256)&&(data_all[3]==inverter->shortaddr%256)&&(data_all[5]==0xA5)&&(0==rt_strcmp(inverter->inverterid,inverterid)))
+		if((size>0)&&(0xFC==data_all[0])&&(0xFC==data_all[1])&&(data_all[2]==inverter->shortaddr/256)&&(data_all[3]==inverter->shortaddr%256)&&(data_all[5]==0xA5)&&(0==rt_strcmp(inverter->id,inverterid)))
 		{
 			return size;
 		}
@@ -396,12 +397,12 @@ int zb_get_inverter_shortaddress_single(inverter_info *inverter)			//»ñÈ¡µ¥Ì¨Ö¸¶
 	sendbuff[13] = check%256;
 	sendbuff[14] = 0x06;
 
-	sendbuff[15]=((inverter->inverterid[0]-0x30)*16+(inverter->inverterid[1]-0x30));
-	sendbuff[16]=((inverter->inverterid[2]-0x30)*16+(inverter->inverterid[3]-0x30));
-	sendbuff[17]=((inverter->inverterid[4]-0x30)*16+(inverter->inverterid[5]-0x30));
-	sendbuff[18]=((inverter->inverterid[6]-0x30)*16+(inverter->inverterid[7]-0x30));
-	sendbuff[19]=((inverter->inverterid[8]-0x30)*16+(inverter->inverterid[9]-0x30));
-	sendbuff[20]=((inverter->inverterid[10]-0x30)*16+(inverter->inverterid[11]-0x30));
+	sendbuff[15]=((inverter->id[0]-0x30)*16+(inverter->id[1]-0x30));
+	sendbuff[16]=((inverter->id[2]-0x30)*16+(inverter->id[3]-0x30));
+	sendbuff[17]=((inverter->id[4]-0x30)*16+(inverter->id[5]-0x30));
+	sendbuff[18]=((inverter->id[6]-0x30)*16+(inverter->id[7]-0x30));
+	sendbuff[19]=((inverter->id[8]-0x30)*16+(inverter->id[9]-0x30));
+	sendbuff[20]=((inverter->id[10]-0x30)*16+(inverter->id[11]-0x30));
 
 //	strcpy(&sendbuff[15],inverter->inverterid);
 
@@ -412,7 +413,7 @@ int zb_get_inverter_shortaddress_single(inverter_info *inverter)			//»ñÈ¡µ¥Ì¨Ö¸¶
 
 	rt_sprintf(inverterid,"%02x%02x%02x%02x%02x%02x",data[4],data[5],data[6],data[7],data[8],data[9]);
 
-	if((11 == ret)&&(0xFF == data[2])&&(0==rt_strcmp(inverter->inverterid,inverterid)))
+	if((11 == ret)&&(0xFF == data[2])&&(0==rt_strcmp(inverter->id,inverterid)))
 	{
 		inverter->shortaddr = data[0]*256 + data[1];
 //		update_inverter_addr(inverter->inverterid,inverter->shortaddr);
@@ -538,12 +539,12 @@ int zb_change_inverter_panid_single(inverter_info *inverter)	//µ¥µã¸Ä±äÄæ±äÆ÷µÄP
 	sendbuff[12] = check/256;
 	sendbuff[13] = check%256;
 	sendbuff[14] = 0x06;
-	sendbuff[15]=((inverter->inverterid[0]-0x30)*16+(inverter->inverterid[1]-0x30));
-	sendbuff[16]=((inverter->inverterid[2]-0x30)*16+(inverter->inverterid[3]-0x30));
-	sendbuff[17]=((inverter->inverterid[4]-0x30)*16+(inverter->inverterid[5]-0x30));
-	sendbuff[18]=((inverter->inverterid[6]-0x30)*16+(inverter->inverterid[7]-0x30));
-	sendbuff[19]=((inverter->inverterid[8]-0x30)*16+(inverter->inverterid[9]-0x30));
-	sendbuff[20]=((inverter->inverterid[10]-0x30)*16+(inverter->inverterid[11]-0x30));
+	sendbuff[15]=((inverter->id[0]-0x30)*16+(inverter->id[1]-0x30));
+	sendbuff[16]=((inverter->id[2]-0x30)*16+(inverter->id[3]-0x30));
+	sendbuff[17]=((inverter->id[4]-0x30)*16+(inverter->id[5]-0x30));
+	sendbuff[18]=((inverter->id[6]-0x30)*16+(inverter->id[7]-0x30));
+	sendbuff[19]=((inverter->id[8]-0x30)*16+(inverter->id[9]-0x30));
+	sendbuff[20]=((inverter->id[10]-0x30)*16+(inverter->id[11]-0x30));
 	
 	ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0, sendbuff, 21);
 	printhexmsg("sendbuff",sendbuff,21);
@@ -575,12 +576,12 @@ int zb_restore_inverter_panid_channel_single_0x8888_0x10(inverter_info *inverter
 	sendbuff[12] = check/256;
 	sendbuff[13] = check%256;
 	sendbuff[14] = 0x06;
-	sendbuff[15]=((inverter->inverterid[0]-0x30)*16+(inverter->inverterid[1]-0x30));
-	sendbuff[16]=((inverter->inverterid[2]-0x30)*16+(inverter->inverterid[3]-0x30));
-	sendbuff[17]=((inverter->inverterid[4]-0x30)*16+(inverter->inverterid[5]-0x30));
-	sendbuff[18]=((inverter->inverterid[6]-0x30)*16+(inverter->inverterid[7]-0x30));
-	sendbuff[19]=((inverter->inverterid[8]-0x30)*16+(inverter->inverterid[9]-0x30));
-	sendbuff[20]=((inverter->inverterid[10]-0x30)*16+(inverter->inverterid[11]-0x30));
+	sendbuff[15]=((inverter->id[0]-0x30)*16+(inverter->id[1]-0x30));
+	sendbuff[16]=((inverter->id[2]-0x30)*16+(inverter->id[3]-0x30));
+	sendbuff[17]=((inverter->id[4]-0x30)*16+(inverter->id[5]-0x30));
+	sendbuff[18]=((inverter->id[6]-0x30)*16+(inverter->id[7]-0x30));
+	sendbuff[19]=((inverter->id[8]-0x30)*16+(inverter->id[9]-0x30));
+	sendbuff[20]=((inverter->id[10]-0x30)*16+(inverter->id[11]-0x30));
 
 	ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0, sendbuff, 21);
 	printhexmsg("sendbuff",sendbuff,21);
@@ -794,16 +795,18 @@ int zb_query_inverter_info(inverter_info *inverter)		//ÇëÇóÄæ±äÆ÷µÄ»úĞÍÂë
 	sendbuff[i++] = 0x00;
 	sendbuff[i++] = 0x00;
 	sendbuff[i++] = 0x00;
-	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0xE2;
 	sendbuff[i++] = 0xFE;
 	sendbuff[i++] = 0xFE;
 	zb_send_cmd(inverter, sendbuff, i);
-	print2msg("Query Inverter's Model and Version", inverter->inverterid);
+	print2msg("Query Inverter's Model and Version", inverter->id);
 
 	if ((16 == zb_get_reply(recvbuff, inverter))
 			&& (0xFB == recvbuff[0])
 			&& (0xFB == recvbuff[1])
+			&& (0x09 == recvbuff[2])
 			&& (0xDC == recvbuff[3])
+			//&& (0xDC == recvbuff[5])
 			&& (0xFE == recvbuff[14])
 			&& (0xFE == recvbuff[15])) {
 		inverter->model = recvbuff[4];
@@ -820,17 +823,7 @@ int zb_query_data(inverter_info *inverter)		//ÇëÇóÄæ±äÆ÷ÊµÊ±Êı¾İ
 	char sendbuff[256];
 	char data[256];
 
-/*  //Ä£ÄâÄæ±äÆ÷Êı¾İ K1-K80
-	char test_data_BB[80] = {0x05, 0x16, 0x13, 0xFC, 0x00, 0x00, 0x00, 0x47, 0x4C, 0x6E,
-							 0xF0, 0x00, 0x29, 0x32, 0x80, 0x25, 0x82, 0x81, 0x27, 0xA1,
-							 0xBD, 0x28, 0x47, 0x60, 0x27, 0xFF, 0x9D, 0x04, 0xF2, 0xD4,
-							 0xEF, 0xD5, 0x04, 0xCF, 0x21, 0x97, 0xC5, 0x04, 0x84, 0x4F,
-							 0xB8, 0x7F, 0x04, 0xD6, 0xD4, 0x78, 0xFC, 0x00, 0x2E, 0x57,
-							 0x00, 0x19, 0xC1, 0x00, 0x17, 0xF7, 0x02, 0xD9, 0xD6, 0x02,
-							 0xCD, 0xE1, 0x02, 0xCC, 0x5F, 0x01, 0x66, 0x74, 0x01, 0x5F,
-							 0xB9, 0x01, 0x5F, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-*/
-	print2msg("Query inverter data",inverter->inverterid);
+	print2msg("Query inverter data",inverter->id);
 	clear_zbmodem();			//·¢ËÍÖ¸ÁîÇ°,ÏÈÇå¿Õ»º³åÇø
 	sendbuff[i++] = 0xFB;
 	sendbuff[i++] = 0xFB;
@@ -842,39 +835,30 @@ int zb_query_data(inverter_info *inverter)		//ÇëÇóÄæ±äÆ÷ÊµÊ±Êı¾İ
 	sendbuff[i++] = 0x00;
 	sendbuff[i++] = 0x00;
 	sendbuff[i++] = 0x00;
-	sendbuff[i++] = 0x00;
+	sendbuff[i++] = 0xC1;
 	sendbuff[i++] = 0xFE;
 	sendbuff[i++] = 0xFE;
 	
 	zb_send_cmd(inverter, sendbuff, i);
 	ret = zb_get_reply(data,inverter);
 
-/*	//Ìæ»»³ÉÄ£ÄâÊı¾İ
-	for (i=0; i<80; i++) {
-		data[4+i] = test_data_BB[i];
-	}
-*/
 
 	if((88 == ret)&&(0xFB == data[0])&&(0xFB == data[1])&&(0xFE == data[86])&&(0xFE == data[87]))
 	{
+		inverter->no_getdata_num = 0;	//?????????0,ZK
+		inverter->dataflag = 1;	//????????1
 
-		//²âÊÔYC1000²¹°ü¹¦ÄÜ
-		if (inverter->shortaddr == 2733 || inverter->shortaddr == 48945) {
-			inverter->dataflag = 0;
-			return -1;
-		}
+		if(7==inverter->model)
+			resolvedata_600(&data[4], inverter);
 
-		inverter->no_getdata_num = 0;	//Ò»µ©½ÓÊÕµ½Êı¾İ¾ÍÇå0,ZK
-		inverter->dataflag = 1;	//½ÓÊÕµ½Êı¾İ¾ÍÖÃÎª1
-
-		if(1==inverter->model)
-			resolvedata_250(&data[4], inverter);
-		else if(2==inverter->model)
-			resolvedata_250(&data[4], inverter);
-		else if(3==inverter->model)
-			resolvedata_500(&data[4], inverter);
-		else if(4==inverter->model)
-			resolvedata_500(&data[4], inverter);
+//		if(1==inverter->model)
+//			resolvedata_250(&data[4], inverter);
+//		else if(2==inverter->model)
+//			resolvedata_250(&data[4], inverter);
+//		else if(3==inverter->model)
+//			resolvedata_500(&data[4], inverter);
+//		else if(4==inverter->model)
+//			resolvedata_500(&data[4], inverter);
 		else if(5==inverter->model)
 			resolvedata_1000(&data[4], inverter);
 		else if(6==inverter->model)
@@ -958,7 +942,7 @@ int zb_set_protect_parameter(inverter_info *inverter, char *protect_parameter)		
 	sendbuff[i++] = 0xFE;
 	sendbuff[i++] = 0xFE;
 	
-	print2msg(inverter->inverterid,"Set protect parameters");
+	print2msg(inverter->id,"Set protect parameters");
 	printhexmsg("Set protect parameters", sendbuff, i);
 	zb_send_cmd(inverter, sendbuff, i);
 	ret = zb_get_reply(data,inverter);
@@ -987,7 +971,7 @@ int zb_query_protect_parameter(inverter_info *inverter, char *protect_data_DD_re
 	sendbuff[i++] = 0xFE;
 	sendbuff[i++] = 0xFE;
 	
-	print2msg(inverter->inverterid, "Query protect parameter");
+	print2msg(inverter->id, "Query protect parameter");
 	zb_send_cmd(inverter, sendbuff, i);
 	ret = zb_get_reply(protect_data_DD_reply,inverter);
 	if((33 == ret) && (0xDD == protect_data_DD_reply[3]) && (0xFB == protect_data_DD_reply[0]) && (0xFB == protect_data_DD_reply[1]) && (0xFE == protect_data_DD_reply[31]) && (0xFE == protect_data_DD_reply[32]))

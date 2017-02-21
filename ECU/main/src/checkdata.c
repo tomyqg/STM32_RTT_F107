@@ -1,15 +1,13 @@
-
 #include "checkdata.h"
 
-int ecu_type = 1;	//1:SAA; 2:NA; 3:MX
-
+int ecu_type;	//1:SAA; 2:NA; 3:MX
 /*
-int get_ecu_type()			//ÔÚ³õÊ¼»¯initinverter()º¯Êýµ÷ÓÃ
+int get_ecu_type()			//??????initinverter()??????
 {
 	FILE *fp;
 	char version[256] = {'\0'};
 	
-	fp = fopen("/etc/yuneng/version.conf", "r");
+	fp = fopen("/etc/yuneng/area.conf", "r");
 	if(fp)
 	{
 		fgets(version, sizeof(version), fp);
@@ -26,9 +24,9 @@ int get_ecu_type()			//ÔÚ³õÊ¼»¯initinverter()º¯Êýµ÷ÓÃ
 	
 	return 0;
 }
-*/
 
-int check_yc200_yc250(struct inverter_info_t *inverter)		//ÔÚ½âÎöº¯ÊýµÄ×îºóµ÷ÓÃ
+*/
+int check_yc200_yc250(struct inverter_info_t *inverter)		//??????????€?????
 {
 	if(inverter->dv > 1500)
 		inverter->dv = 1500;
@@ -94,7 +92,7 @@ int check_yc200_yc250(struct inverter_info_t *inverter)		//ÔÚ½âÎöº¯ÊýµÄ×îºóµ÷ÓÃ
 	return 0;
 }
 
-int check_yc500(struct inverter_info_t *inverter)		//ÔÚ½âÎöº¯ÊýµÄ×îºóµ÷ÓÃ
+int check_yc500(struct inverter_info_t *inverter)		//??????????€?????
 {
 	if(inverter->dv > 1500)
 		inverter->dv = 1500;
@@ -112,10 +110,10 @@ int check_yc500(struct inverter_info_t *inverter)		//ÔÚ½âÎöº¯ÊýµÄ×îºóµ÷ÓÃ
 		inverter->di = 0;
 	if(inverter->dib < 0)
 		inverter->dib = 0;
-	if(inverter->op > 300)
-		inverter->op = 300;
-	if(inverter->opb > 300)
-		inverter->opb = 300;
+	if(inverter->op > 999)
+		inverter->op = 999;
+	if(inverter->opb > 999)
+		inverter->opb = 999;
 	if(inverter->op < 0)
 		inverter->op = 0;
 	if(inverter->opb < 0)
@@ -176,7 +174,7 @@ int check_yc500(struct inverter_info_t *inverter)		//ÔÚ½âÎöº¯ÊýµÄ×îºóµ÷ÓÃ
 	return 0;
 }
 
-int check_yc1000(struct inverter_info_t *inverter)		//ÔÚ½âÎöº¯ÊýµÄ×îºóµ÷ÓÃ
+int check_yc1000(struct inverter_info_t *inverter)		//??????????€?????
 {
 	if(inverter->dv > 1500)
 		inverter->dv = 1500;
@@ -282,54 +280,7 @@ int check_yc1000(struct inverter_info_t *inverter)		//ÔÚ½âÎöº¯ÊýµÄ×îºóµ÷ÓÃ
 	return 0;
 }
 
-int check_optimizer_YC500(struct inverter_info_t *inverter)
-{
-	printmsg((char *)"Check Optimizer_YC500");
-
-	if(inverter->output_voltage > 999)
-		inverter->output_voltage = 999;
-
-	if(inverter->output_current > 999)
-		inverter->output_current = 999;
-
-	if(inverter->output_power > 999)
-		inverter->output_power = 999;
-
-	if(inverter->output_energy_optimizer > 9999999)
-		inverter->output_energy_optimizer = 9999999;
-
-	if(inverter->temperature > 899)
-		inverter->temperature = 899;
-
-	if(inverter->input_voltage_pv1 > 999)
-		inverter->input_voltage_pv1 = 999;
-
-	if(inverter->input_current_pv1 > 999)
-		inverter->input_current_pv1 = 999;
-
-	if(inverter->input_power_pv1 > 999)
-		inverter->input_power_pv1 = 999;
-
-	if(inverter->input_energy_pv1 > 9999999)
-		inverter->input_energy_pv1 = 9999999;
-
-	if(inverter->input_voltage_pv2 > 999)
-		inverter->input_voltage_pv2 = 999;
-
-	if(inverter->input_current_pv2 > 999)
-		inverter->input_current_pv2 = 999;
-
-	if(inverter->input_power_pv2 > 999)
-		inverter->input_power_pv2 = 999;
-
-	if(inverter->input_energy_pv2 > 9999999)
-		inverter->input_energy_pv2 = 9999999;
-
-	return 0;
-}
-
-
-/*void modify_data(struct inverter_info_t *inverter)	//¹¹Ôì´íÎóµÄÊý¾Ý£¬ÓÃÓÚ²âÊÔ
+/*void modify_data(struct inverter_info_t *inverter)	//??€????????????????
 {
 //	inverter->dv = -1;
 //	inverter->di = -1;
@@ -341,7 +292,7 @@ int check_optimizer_YC500(struct inverter_info_t *inverter)
 
 }
 
-void modify_data_yc500(struct inverter_info_t *inverter)	//¹¹Ôì´íÎóµÄÊý¾Ý£¬ÓÃÓÚ²âÊÔ
+void modify_data_yc500(struct inverter_info_t *inverter)	//??€????????????????
 {
 //	inverter->dv = -1;
 //	inverter->dvb = -1;
@@ -356,3 +307,4 @@ void modify_data_yc500(struct inverter_info_t *inverter)	//¹¹Ôì´íÎóµÄÊý¾Ý£¬ÓÃÓÚ²
 //	inverter->curgenerationb = -1;
 
 }*/
+

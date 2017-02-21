@@ -45,7 +45,7 @@
 //#define RT_USING_UART5
 
 
-#define RT_USING_SPI1
+//#define RT_USING_SPI1
 
 void rt_hw_board_init(void);
 void rt_hw_usart_init(void);

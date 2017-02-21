@@ -56,7 +56,9 @@ time_t time(time_t *t)
     {
         if (rt_device_open(device, 0) == RT_EOK)
         {
+					
             rt_device_control(device, RT_DEVICE_CTRL_RTC_GET_TIME, &time_now);
+					rt_kprintf("time:%d\n",time_now);
             rt_device_close(device);
         }
     }
@@ -88,7 +90,7 @@ rt_err_t set_date(rt_uint32_t year, rt_uint32_t month, rt_uint32_t day)
 
     /* get current time */
     now = time(RT_NULL);
-
+		rt_kprintf("%d %d %d\n",year,month,day);
     /* lock scheduler. */
     rt_enter_critical();
     /* converts calendar time time into local time. */
@@ -105,7 +107,7 @@ rt_err_t set_date(rt_uint32_t year, rt_uint32_t month, rt_uint32_t day)
 
     /* converts the local time in time to calendar time. */
     now = mktime(&tm_new);
-
+		rt_kprintf("%d\n",now);
     device = rt_device_find("rtc");
     if (device == RT_NULL)
     {

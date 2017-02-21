@@ -69,8 +69,9 @@ void rt_hw_board_init(void)
     SysTick_Config( SystemCoreClock / RT_TICK_PER_SECOND );
 
     rt_hw_usart_init();		//串口初始化
-    //rt_hw_rtc_init();		//实时时钟初始化
+    rt_hw_rtc_init();		//实时时钟初始化
     rt_console_set_device(RT_CONSOLE_DEVICE_NAME);
+
 }
 
 /*@}*/
