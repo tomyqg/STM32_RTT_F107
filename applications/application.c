@@ -39,6 +39,15 @@ extern int lwip_system_init(void);
 #include "led.h"
 #include "main-thread.h"
 
+#ifdef W25QXX		
+#include "w25q64flash.h"
+#endif
+
+#ifdef EEPROM		
+#include "Flash_24L512.h"
+#endif
+
+
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t led_stack[200];
 static struct rt_thread led_thread;
@@ -71,25 +80,13 @@ void rt_init_thread_entry(void* parameter)
         extern void rt_platform_init(void);
         rt_platform_init();
     }
-
-    /* Filesystem Initialization */
-#if defined(RT_USING_DFS) && defined(RT_USING_DFS_ELMFAT)
-	/* initialize the device file system */
-	dfs_init();
-
-	/* initialize the elm chan FatFS file system*/
-	elm_init();
-    
-    /* mount sd card fat partition 1 as root directory */
-    if (dfs_mount("flash", "/", "elm", 0, 0) == 0)
-    {
-        rt_kprintf("File System initialized!\n");
-    }
-    else
-    {
-        rt_kprintf("File System initialzation failed!\n");
-    }
-#endif /* RT_USING_DFS && RT_USING_DFS_ELMFAT */
+#ifdef W25QXX		
+	  SPI_init();
+#endif
+		
+#ifdef EEPROM		
+	  EEPROM_Init();
+#endif
 
 #ifdef RT_USING_LWIP
 	/* initialize lwip stack */

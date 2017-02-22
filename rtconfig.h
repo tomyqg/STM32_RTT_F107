@@ -63,7 +63,7 @@
 // <bool name="RT_USING_SERIAL" description="Using Serial" default="true" />
 #define RT_USING_SERIAL
 
-//#define RT_USING_SPI
+#define RT_USING_SPI
 
 /* SECTION: Console options */
 #define RT_USING_CONSOLE
@@ -164,5 +164,10 @@
 #define RT_USING_RTT_CMSIS
 // <bool name="RT_USING_BSP_CMSIS" description="Using CMSIS in BSP" default="true" />
 // #define RT_USING_BSP_CMSIS
+
+
+#define W25QXX	
+#define EEPROM
+
 
 #endif
