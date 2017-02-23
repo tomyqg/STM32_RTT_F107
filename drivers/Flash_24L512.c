@@ -45,6 +45,8 @@
 #define  Write_24L256_Ctrl  0xA0
 #define  Read_24L256_Ctrl   0xA1
 
+static rt_mutex_t EEPROM_lock = RT_NULL;
+
 /*****************************************************************************/
 /*                                                                           */
 /*  Function Implementations                                                 */
@@ -158,24 +160,28 @@ void Write_24L512_Byte(unsigned int ucWRAddress,unsigned char uiWRData)
 	unsigned char ucLowAddress;
 	unsigned char ucHighAddress;
 	unsigned char ucData;
-
-	ucLowAddress = (unsigned char)(ucWRAddress & 0x00ff);
-	ucHighAddress = (unsigned char)(ucWRAddress >>8);
-	ucData = uiWRData;
-	Clr_EEPROM_WP;
-	I2CStart();
-	I2CSendByte(Write_24L256_Ctrl);
-	I2CReceiveACK();
-	I2CSendByte(ucHighAddress);
-	I2CReceiveACK();
-	I2CSendByte(ucLowAddress);
-	I2CReceiveACK();
-	I2CSendByte(ucData);
-	I2CReceiveACK();
-	I2CStop();
-	I2CDelay(45000);
-	Set_EEPROM_WP;
-	I2CDelay(1000);
+	rt_err_t result = rt_mutex_take(EEPROM_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
+	{
+		ucLowAddress = (unsigned char)(ucWRAddress & 0x00ff);
+		ucHighAddress = (unsigned char)(ucWRAddress >>8);
+		ucData = uiWRData;
+		Clr_EEPROM_WP;
+		I2CStart();
+		I2CSendByte(Write_24L256_Ctrl);
+		I2CReceiveACK();
+		I2CSendByte(ucHighAddress);
+		I2CReceiveACK();
+		I2CSendByte(ucLowAddress);
+		I2CReceiveACK();
+		I2CSendByte(ucData);
+		I2CReceiveACK();
+		I2CStop();
+		I2CDelay(45000);
+		Set_EEPROM_WP;
+		I2CDelay(1000);
+	}
+	rt_mutex_release(EEPROM_lock);
 }
 
 void Write_24L512_nByte(unsigned int ucWRAddress,unsigned char Counter,unsigned char *Data_Ptr)
@@ -184,30 +190,34 @@ void Write_24L512_nByte(unsigned int ucWRAddress,unsigned char Counter,unsigned 
 	unsigned char ucHighAddress;
 	unsigned char *p;
 	unsigned char DataCounter;
-
-	ucLowAddress = (unsigned char)(ucWRAddress & 0x00ff);
-	ucHighAddress = (unsigned char)(ucWRAddress >>8);
-	p = Data_Ptr;
-	DataCounter = Counter;
-	Clr_EEPROM_WP;
-	I2CStart();
-	I2CSendByte(Write_24L256_Ctrl);
-	I2CReceiveACK();
-	I2CSendByte(ucHighAddress);
-	I2CReceiveACK();
-	I2CSendByte(ucLowAddress);
-	I2CReceiveACK();
-	while(DataCounter)
+	rt_err_t result = rt_mutex_take(EEPROM_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
 	{
-		I2CSendByte(*p);
+		ucLowAddress = (unsigned char)(ucWRAddress & 0x00ff);
+		ucHighAddress = (unsigned char)(ucWRAddress >>8);
+		p = Data_Ptr;
+		DataCounter = Counter;
+		Clr_EEPROM_WP;
+		I2CStart();
+		I2CSendByte(Write_24L256_Ctrl);
 		I2CReceiveACK();
-		p++;
-		DataCounter--;
+		I2CSendByte(ucHighAddress);
+		I2CReceiveACK();
+		I2CSendByte(ucLowAddress);
+		I2CReceiveACK();
+		while(DataCounter)
+		{
+			I2CSendByte(*p);
+			I2CReceiveACK();
+			p++;
+			DataCounter--;
+		}
+		I2CStop();
+		I2CDelay(45000);
+		Set_EEPROM_WP;
+		I2CDelay(1000);
 	}
-	I2CStop();
-	I2CDelay(45000);
-	Set_EEPROM_WP;
-	I2CDelay(1000);
+	rt_mutex_release(EEPROM_lock);
 }
 
 unsigned char Read_24L512_Byte(unsigned int ucRDAddress)
@@ -215,60 +225,69 @@ unsigned char Read_24L512_Byte(unsigned int ucRDAddress)
 	unsigned char ucLowAddress;
 	unsigned char ucHighAddress;
 	unsigned char uiDataReg;
+	rt_err_t result = rt_mutex_take(EEPROM_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
+	{	
+		ucLowAddress = (unsigned char)(ucRDAddress & 0x00ff);
+		ucHighAddress = (unsigned char)(ucRDAddress >>8);
+		I2CStart();
+		I2CSendByte(Write_24L256_Ctrl);
+		I2CReceiveACK();
+		I2CSendByte(ucHighAddress);
+		I2CReceiveACK();
+		I2CSendByte(ucLowAddress);
+		I2CReceiveACK();
 
-	ucLowAddress = (unsigned char)(ucRDAddress & 0x00ff);
-	ucHighAddress = (unsigned char)(ucRDAddress >>8);
-	I2CStart();
-	I2CSendByte(Write_24L256_Ctrl);
-	I2CReceiveACK();
-	I2CSendByte(ucHighAddress);
-	I2CReceiveACK();
-	I2CSendByte(ucLowAddress);
-	I2CReceiveACK();
-
-	I2CStart();
-	I2CSendByte(Read_24L256_Ctrl);
-	I2CReceiveACK();
-	uiDataReg = I2CReceiveByte();
-	I2CStop();
-	I2CDelay(1000);
+		I2CStart();
+		I2CSendByte(Read_24L256_Ctrl);
+		I2CReceiveACK();
+		uiDataReg = I2CReceiveByte();
+		I2CStop();
+		I2CDelay(1000);
+	}
+	rt_mutex_release(EEPROM_lock);
 	return (uiDataReg);
 }
 
 void Read_24L512_nByte(unsigned int ucRDAddress,unsigned char Counter, unsigned char *Data_Ptr)
 {
+
 	unsigned char ucLowAddress;
 	unsigned char ucHighAddress;
 	unsigned char *p;
 	unsigned char DataCounter;
-
-	ucLowAddress = (unsigned char)(ucRDAddress & 0x00ff);
-	ucHighAddress = (unsigned char)(ucRDAddress >>8);
-	p = Data_Ptr;
-	DataCounter = Counter;
-	I2CStart();
-	I2CSendByte(Write_24L256_Ctrl);
-	I2CReceiveACK();
-	I2CSendByte(ucHighAddress);
-	I2CReceiveACK();
-	I2CSendByte(ucLowAddress);
-	I2CReceiveACK();
-
-	I2CStart();
-	I2CSendByte(Read_24L256_Ctrl);
-	I2CReceiveACK();
-	while(DataCounter != 0)
+	rt_err_t result = rt_mutex_take(EEPROM_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
 	{
-		*p = I2CReceiveByte();
-		if(DataCounter >1)
+		ucLowAddress = (unsigned char)(ucRDAddress & 0x00ff);
+		ucHighAddress = (unsigned char)(ucRDAddress >>8);
+		p = Data_Ptr;
+		DataCounter = Counter;
+		I2CStart();
+		I2CSendByte(Write_24L256_Ctrl);
+		I2CReceiveACK();
+		I2CSendByte(ucHighAddress);
+		I2CReceiveACK();
+		I2CSendByte(ucLowAddress);
+		I2CReceiveACK();
+
+		I2CStart();
+		I2CSendByte(Read_24L256_Ctrl);
+		I2CReceiveACK();
+		while(DataCounter != 0)
 		{
-			I2CAcknowledge();
+			*p = I2CReceiveByte();
+			if(DataCounter >1)
+			{
+				I2CAcknowledge();
+			}
+			p++;
+			DataCounter--;
 		}
-		p++;
-		DataCounter--;
+		I2CStop();
+		I2CDelay(1000);
 	}
-	I2CStop();
-	I2CDelay(1000);
+	rt_mutex_release(EEPROM_lock);
 }
 
 void EEPROM_Init(void)
@@ -290,6 +309,12 @@ void EEPROM_Init(void)
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;   //推挽输出
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;   //最高输出速率50MHz
 	GPIO_Init(WP_GPIO, &GPIO_InitStructure);
+	
+	EEPROM_lock = rt_mutex_create("EEPROM_lock", RT_IPC_FLAG_FIFO);
+	if (EEPROM_lock == RT_NULL)
+	{
+		rt_kprintf("Initialize EEPROM successful!\n");
+	}
 }
 
 
@@ -307,8 +332,24 @@ void EEPROMWriteTest()
 	Write_24L512_nByte(0x000000,10,sendbuff);
 	rt_kprintf("write date on address 0x000000:%s\n",sendbuff);
 }
+void ReadE(unsigned int ucRDAddress,unsigned char Counter)
+{
+	unsigned char recvbuff[256];
+	Read_24L512_nByte(ucRDAddress,Counter,recvbuff);
+	rt_kprintf("read date on address 0x%06x:%s\n",ucRDAddress,recvbuff);
+}
+
+void WriteE(unsigned int ucRDAddress,unsigned char Counter, unsigned char *Data_Ptr)
+{
+	Write_24L512_nByte(ucRDAddress,Counter,Data_Ptr);
+	rt_kprintf("write date on address 0x%06x:%s\n",ucRDAddress,Data_Ptr);
+}
+
 
 FINSH_FUNCTION_EXPORT(EEPROMReadTest, EEPROM Read Test.)
 FINSH_FUNCTION_EXPORT(EEPROMWriteTest, EEPROM Write Test.)
+FINSH_FUNCTION_EXPORT(ReadE, read EEPROM ucRDAddress[U32] Counter[U8].)
+FINSH_FUNCTION_EXPORT(WriteE, write EEPROM ucRDAddress[U32] Counter[U8] Data_Ptr[U8 *].)
+
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef __VARIATION_H__
 #define __VARIATION_H__
 
-#define MAXINVERTERCOUNT 999	//最大的逆变器数
+#define MAXINVERTERCOUNT 50	//最大的逆变器数
 #define RECORDLENGTH 100		//子记录的长度
 #define RECORDTAIL 100			//大记录的结尾，包括发电量、时间等信息
 #define TNUIDLENGTH 7			//逆变器3501ID的长度

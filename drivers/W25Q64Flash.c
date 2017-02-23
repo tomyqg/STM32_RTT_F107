@@ -45,6 +45,9 @@
 #define W25X_alKBErase      0xc7
 #define FlashTestAdd        0x000000
 
+
+static rt_mutex_t Flash_lock = RT_NULL;
+
 /*****************************************************************************/
 /*                                                                           */
 /*  Function Implementations                                                 */
@@ -130,82 +133,111 @@ void SPI_Write_Enable(void)
 void SPI_Read_nBytes(U32 Dst_Addr, U8 nBytes,U8 *header)//num=1,2
 {
 	U8 i;
-
-	GPIO_ResetBits(CS_GPIO, CS_PIN);										             //enable device
-	SPI_Send_Byte(W25X_ReadData);						             //read command
-	SPI_Send_Byte((U8)((Dst_Addr & 0xFFFFFF) >> 16));		     //send 3 address bytes
-	SPI_Send_Byte((U8)((Dst_Addr & 0xFFFF) >> 8));
-	SPI_Send_Byte((U8)(Dst_Addr & 0xFF));
-	for (i = 0; i < nBytes; i++)			                         //read until no_bytes is reached
+	rt_err_t result = rt_mutex_take(Flash_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
 	{
-		*(header+i) = SPI_Get_Byte();					         //receive byte and store at address 80H - FFH
+		GPIO_ResetBits(CS_GPIO, CS_PIN);										             //enable device
+		SPI_Send_Byte(W25X_ReadData);						             //read command
+		SPI_Send_Byte((U8)((Dst_Addr & 0xFFFFFF) >> 16));		     //send 3 address bytes
+		SPI_Send_Byte((U8)((Dst_Addr & 0xFFFF) >> 8));
+		SPI_Send_Byte((U8)(Dst_Addr & 0xFF));
+		for (i = 0; i < nBytes; i++)			                         //read until no_bytes is reached
+		{
+			*(header+i) = SPI_Get_Byte();					         //receive byte and store at address 80H - FFH
+		}
+		GPIO_SetBits(CS_GPIO, CS_PIN);									                 //disable device
 	}
-	GPIO_SetBits(CS_GPIO, CS_PIN);									                 //disable device
+	rt_mutex_release(Flash_lock);
 }
 
 void SPI_Write_nBytes(U32 Dst_Addr, U8 nBytes, U8 *header)
 {	
 	U8 i, byte;
-
-	GPIO_ResetBits(CS_GPIO, CS_PIN);					                                 //enable device
-	SPI_Write_Enable();				                                 //set WEL
-	GPIO_ResetBits(CS_GPIO, CS_PIN);
-	SPI_Send_Byte(W25X_PageProgram); 		                         //send Byte Program command
-	SPI_Send_Byte((U8)((Dst_Addr & 0xFFFFFF) >> 16));	         //send 3 address bytes
-	SPI_Send_Byte((U8)((Dst_Addr & 0xFFFF) >> 8));
-	SPI_Send_Byte((U8)(Dst_Addr & 0xFF));
-	
-	for (i = 0; i < nBytes; i++)
+	rt_err_t result = rt_mutex_take(Flash_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
 	{
-		byte = *(header+i);
-		SPI_Send_Byte(byte);		                                 //send byte to be programmed
-	}	
-	GPIO_SetBits(CS_GPIO, CS_PIN);				                                     //disable device
+		GPIO_ResetBits(CS_GPIO, CS_PIN);					                                 //enable device
+		SPI_Write_Enable();				                                 //set WEL
+		GPIO_ResetBits(CS_GPIO, CS_PIN);
+		SPI_Send_Byte(W25X_PageProgram); 		                         //send Byte Program command
+		SPI_Send_Byte((U8)((Dst_Addr & 0xFFFFFF) >> 16));	         //send 3 address bytes
+		SPI_Send_Byte((U8)((Dst_Addr & 0xFFFF) >> 8));
+		SPI_Send_Byte((U8)(Dst_Addr & 0xFF));
+		
+		for (i = 0; i < nBytes; i++)
+		{
+			byte = *(header+i);
+			SPI_Send_Byte(byte);		                                 //send byte to be programmed
+		}	
+		GPIO_SetBits(CS_GPIO, CS_PIN);			//disable device		
+	}
+	rt_mutex_release(Flash_lock);
 }
 
 void SPI_Erase_Block(U32 Dst_Addr)
 {
-	GPIO_ResetBits(CS_GPIO, CS_PIN);										             //enable device
-	SPI_Write_Enable();									             //set WEL
-	GPIO_ResetBits(CS_GPIO, CS_PIN);
-	SPI_Send_Byte(W25X_64KBErase);			                         //send Sector Erase command
-	SPI_Send_Byte((U8)((Dst_Addr & 0xFFFFFF) >> 16)); 	         //send 3 address bytes
-	SPI_Send_Byte((U8)((Dst_Addr & 0xFFFF) >> 8));
-	SPI_Send_Byte((U8)(Dst_Addr & 0xFF));
-	GPIO_SetBits(CS_GPIO, CS_PIN);					                                 //disable device
+	rt_err_t result = rt_mutex_take(Flash_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
+	{
+		GPIO_ResetBits(CS_GPIO, CS_PIN);										             //enable device
+		SPI_Write_Enable();									             //set WEL
+		GPIO_ResetBits(CS_GPIO, CS_PIN);
+		SPI_Send_Byte(W25X_64KBErase);			                         //send Sector Erase command
+		SPI_Send_Byte((U8)((Dst_Addr & 0xFFFFFF) >> 16)); 	         //send 3 address bytes
+		SPI_Send_Byte((U8)((Dst_Addr & 0xFFFF) >> 8));
+		SPI_Send_Byte((U8)(Dst_Addr & 0xFF));
+		GPIO_SetBits(CS_GPIO, CS_PIN);			//disable device
+	}
+	rt_mutex_release(Flash_lock);	
 }
 
 void SPI_Erase_Half_Block(U32 Dst_Addr)
 {
-	GPIO_ResetBits(CS_GPIO, CS_PIN);										             //enable device
-	SPI_Write_Enable();									             //set WEL
-	GPIO_ResetBits(CS_GPIO, CS_PIN);
-	SPI_Send_Byte(W25X_32KBErase);			                         //send Sector Erase command
-	SPI_Send_Byte((U8)((Dst_Addr & 0xFFFFFF) >> 16)); 	         //send 3 address bytes
-	SPI_Send_Byte((U8)((Dst_Addr & 0xFFFF) >> 8));
-	SPI_Send_Byte((U8)(Dst_Addr & 0xFF));
-	GPIO_SetBits(CS_GPIO, CS_PIN);					                                 //disable device
+	rt_err_t result = rt_mutex_take(Flash_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
+	{
+		GPIO_ResetBits(CS_GPIO, CS_PIN);										             //enable device
+		SPI_Write_Enable();									             //set WEL
+		GPIO_ResetBits(CS_GPIO, CS_PIN);
+		SPI_Send_Byte(W25X_32KBErase);			                         //send Sector Erase command
+		SPI_Send_Byte((U8)((Dst_Addr & 0xFFFFFF) >> 16)); 	         //send 3 address bytes
+		SPI_Send_Byte((U8)((Dst_Addr & 0xFFFF) >> 8));
+		SPI_Send_Byte((U8)(Dst_Addr & 0xFF));
+		GPIO_SetBits(CS_GPIO, CS_PIN);					                                 //disable device
+	}
+	rt_mutex_release(Flash_lock);	
 }
 
 void SPI_Erase_Sector(U32 Dst_Addr)
 {
-	GPIO_ResetBits(CS_GPIO, CS_PIN);										             //enable device
-	SPI_Write_Enable();									             //set WEL
-	GPIO_ResetBits(CS_GPIO, CS_PIN);
-	SPI_Send_Byte(W25X_4KBErase);			                         //send Sector Erase command
-	SPI_Send_Byte((U8)((Dst_Addr & 0xFFFFFF) >> 16)); 	         //send 3 address bytes
-	SPI_Send_Byte((U8)((Dst_Addr & 0xFFFF) >> 8));
-	SPI_Send_Byte((U8)(Dst_Addr & 0xFF));
-	GPIO_SetBits(CS_GPIO, CS_PIN);					                                 //disable device
+	rt_err_t result = rt_mutex_take(Flash_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
+	{
+		GPIO_ResetBits(CS_GPIO, CS_PIN);										             //enable device
+		SPI_Write_Enable();									             //set WEL
+		GPIO_ResetBits(CS_GPIO, CS_PIN);
+		SPI_Send_Byte(W25X_4KBErase);			                         //send Sector Erase command
+		SPI_Send_Byte((U8)((Dst_Addr & 0xFFFFFF) >> 16)); 	         //send 3 address bytes
+		SPI_Send_Byte((U8)((Dst_Addr & 0xFFFF) >> 8));
+		SPI_Send_Byte((U8)(Dst_Addr & 0xFF));
+		GPIO_SetBits(CS_GPIO, CS_PIN);					                                 //disable device
+	}
+	rt_mutex_release(Flash_lock);
+		
 }
 
 void SPI_Erase_All(void)
 {
-	GPIO_ResetBits(CS_GPIO, CS_PIN);										             //enable device
-	SPI_Write_Enable();									             //set WEL
-	GPIO_ResetBits(CS_GPIO, CS_PIN);
-	SPI_Send_Byte(W25X_alKBErase);			                         //send Sector Erase command
-	GPIO_SetBits(CS_GPIO, CS_PIN);					                                 //disable device
+	rt_err_t result = rt_mutex_take(Flash_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
+	{
+		GPIO_ResetBits(CS_GPIO, CS_PIN);										             //enable device
+		SPI_Write_Enable();									             //set WEL
+		GPIO_ResetBits(CS_GPIO, CS_PIN);
+		SPI_Send_Byte(W25X_alKBErase);			                         //send Sector Erase command
+		GPIO_SetBits(CS_GPIO, CS_PIN);					                                 //disable device
+	}
+	rt_mutex_release(Flash_lock);
 }
 
 void SPI_erase(U32 address,U16 numbers,U8 mode)
@@ -282,6 +314,12 @@ void SPI_init(void)
 //	GPIO_SetBits(CLK_GPIO, CLK_PIN);							                         //set clock to High initial state for SPI operation mode 3	
 	GPIO_SetBits(CS_GPIO, CS_PIN);
 	SPI_WriteW25X_Disable();
+	/* Initialize W25Q32BV mutex lock  */
+	Flash_lock = rt_mutex_create("Flash_lock", RT_IPC_FLAG_FIFO);
+	if (Flash_lock == RT_NULL)
+	{
+		rt_kprintf("Initialize W25Q32BV successful!\n");
+	}
 }
 
 
@@ -293,6 +331,7 @@ void FlashReadTest()
 	SPI_Read_nBytes(0x000000, 10,recvbuff);
 	rt_kprintf("read date on address 0x000000:%s\n",recvbuff);
 }
+
 void FlashWriteTest()
 {
 	unsigned char sendbuff[11] = "YuNeng APS";
@@ -306,7 +345,30 @@ void FlashEraseTest()
 	rt_kprintf("erase date on address 0x000000\n");
 }
 
+void ReadF(U32 Dst_Addr, U8 nBytes)
+{
+	unsigned char recvbuff[256];
+	SPI_Read_nBytes(Dst_Addr, nBytes,recvbuff);
+	rt_kprintf("read date on address 0x%06x:%s\n",Dst_Addr,recvbuff);
+}
+
+void WriteF(U32 Dst_Addr, U8 nBytes, U8 *header)
+{
+	SPI_Write_nBytes(Dst_Addr, nBytes, header);
+	rt_kprintf("write date on address 0x%06x:%s\n",Dst_Addr,header);
+}
+
+void EraseSectorF(U32 Dst_Addr)
+{
+	SPI_Erase_Sector(Dst_Addr);
+	rt_kprintf("erase date on address 0x%06x\n",Dst_Addr);
+}
+
 FINSH_FUNCTION_EXPORT(FlashReadTest, Flash Read Test.)
 FINSH_FUNCTION_EXPORT(FlashWriteTest, Flash Write Test.)
 FINSH_FUNCTION_EXPORT(FlashEraseTest, Flash Erase Test.)
+FINSH_FUNCTION_EXPORT(ReadF, read flash Dst_Addr[U32] nBytes[U8].)
+FINSH_FUNCTION_EXPORT(WriteF, write flash Dst_Addr[U32] nBytes[U8] header[U8 *].)
+FINSH_FUNCTION_EXPORT(EraseSectorF, erase flash sector Dst_Addr[U32].)
+
 #endif

@@ -131,7 +131,7 @@ int rt_application_init(void)
     }
 		
 		/* init main thread */
-    /*result = rt_thread_init(&main_thread,
+    result = rt_thread_init(&main_thread,
                             "main",
                             main_thread_entry,
                             RT_NULL,
@@ -143,7 +143,7 @@ int rt_application_init(void)
     {
         rt_thread_startup(&main_thread);
     }
-		*/
+		
 	
     return 0;
 }

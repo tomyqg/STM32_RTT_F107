@@ -20,7 +20,6 @@ extern struct rt_device serial4;		//串口4为Zigbee收发串口
 void clear_zbmodem(void)		//清空串口缓冲区的数据
 {
 	//清空缓冲器代码
-	//。。。
 	rt_thread_delay(RT_TICK_PER_SECOND);
 }
 
@@ -28,22 +27,26 @@ int openzigbee(void)
 {
 	int result = 0;
 	GPIO_InitTypeDef GPIO_InitStructure;
+	rt_device_t new;
 
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC,ENABLE);
-    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_7;
-    GPIO_Init(GPIOC, &GPIO_InitStructure);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC,ENABLE);
+	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_7;
+	GPIO_Init(GPIOC, &GPIO_InitStructure);
 	GPIO_SetBits(GPIOC, GPIO_Pin_7);		//设置引脚为高电平输出，使能Zigbbe模块
 	
-	result = ZIGBEE_SERIAL.open(&ZIGBEE_SERIAL,RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX |
-                          RT_DEVICE_FLAG_INT_TX |   RT_DEVICE_FLAG_DMA_RX);
-	if(result)
+	new = rt_device_find("uart4");		//寻找zigbee串口并配置模式
+	if (new != RT_NULL)
 	{
-		rt_kprintf("open serial 4 failed : %d\r\n",result);
-	}else
-	{
-		rt_kprintf("open serial 4 success\r\n");
+		result = rt_device_open(new, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_STREAM);
+		if(result)
+		{
+			rt_kprintf("open serial 4 failed : %d\r\n",result);
+		}else
+		{
+			rt_kprintf("open serial 4 success\r\n");
+		}
 	}
 	return result;
 }
