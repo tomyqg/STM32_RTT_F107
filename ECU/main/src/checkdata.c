@@ -1,31 +1,14 @@
 #include "checkdata.h"
 
 int ecu_type;	//1:SAA; 2:NA; 3:MX
-/*
-int get_ecu_type()			//??????initinverter()??????
+
+int get_ecu_type()			//在初始化initinverter()函数调用
 {
-	FILE *fp;
-	char version[256] = {'\0'};
-	
-	fp = fopen("/etc/yuneng/area.conf", "r");
-	if(fp)
-	{
-		fgets(version, sizeof(version), fp);
-		if('\n' == version[strlen(version)-1])
-			version[strlen(version)-1] = '\0';
-		if(!strncmp(&version[strlen(version)-2], "MX", 2))
-			ecu_type = 3;
-		else if(!strncmp(&version[strlen(version)-2], "NA", 2))
-			ecu_type = 2;
-		else
-			ecu_type = 1;
-		fclose(fp);
-	}
-	
+
+	ecu_type = 1;
 	return 0;
 }
 
-*/
 int check_yc200_yc250(struct inverter_info_t *inverter)		//??????????�?????
 {
 	if(inverter->dv > 1500)

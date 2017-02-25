@@ -35,7 +35,7 @@ void printhexdatamsg(char *msg, int data)		//打印16进制数据,ZK
 void printfloatmsg(char *msg, float data)		//打印实数
 {
 #ifdef DEBUG
-	rt_kprintf("main==>%s: %f!\n", msg, data);
+	rt_kprintf("main==>%s: %d!\n", msg, data);
 #endif
 }
 
