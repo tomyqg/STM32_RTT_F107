@@ -2,6 +2,7 @@
 #define __ZIGBEE_H__
 #include "variation.h"
 
+int select(int timeout);			//zigbee串口数据检测 返回0 表示串口没有数据  返回1表示串口有数据
 int openzigbee(void);
 void zigbee_reset(void);
 int zb_shortaddr_cmd(int shortaddr, char *buff, int length);		//zigbee 短地址报头

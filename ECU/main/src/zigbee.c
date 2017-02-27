@@ -18,10 +18,47 @@ extern int processpower(inverter_info *firstinverter);
 #define WR_DELAY	(RT_TICK_PER_SECOND) //Ð´Êý¾ÝÑÓÊ±
 #define ZIGBEE_SERIAL (serial4)
 
+extern int zigbeeReadFlag;
+static int readtimeoutflag = 0;
+//¶¨Ê±Æ÷³¬Ê±º¯Êý
+static void readtimeout1(void* parameter)
+{
+	readtimeoutflag = 1;
+}
+
+int select(int timeout)			//zigbee´®¿ÚÊý¾Ý¼ì²â ·µ»Ø0 ±íÊ¾´®¿ÚÃ»ÓÐÊý¾Ý  ·µ»Ø1±íÊ¾´®¿ÚÓÐÊý¾Ý
+{
+	
+	rt_timer_t readtimer;
+	readtimer = rt_timer_create("read", /* ¶¨Ê±Æ÷Ãû×ÖÎª read */
+					readtimeout1, /* ³¬Ê±Ê±»Øµ÷µÄ´¦Àíº¯Êý */
+					RT_NULL, /* ³¬Ê±º¯ÊýµÄÈë¿Ú²ÎÊý */
+					timeout*RT_TICK_PER_SECOND, /* ¶¨Ê±Ê±¼ä³¤¶È,ÒÔOS TickÎªµ¥Î»*/
+					 RT_TIMER_FLAG_ONE_SHOT); /* µ¥ÖÜÆÚ¶¨Ê±Æ÷ */
+	if (readtimer != RT_NULL) rt_timer_start(readtimer);
+	readtimeoutflag = 0;
+	while(1)
+	{
+		if(readtimeoutflag)
+		{
+			rt_timer_delete(readtimer);
+			return 0;
+		}else 
+		{
+			if(zigbeeReadFlag == 1)	//´®¿ÚÊý¾Ý¼à²â,Èç¹ûÓÐÊý¾ÝÔò·µ»Ø1
+			{
+				rt_timer_delete(readtimer);
+				rt_thread_delay(RT_TICK_PER_SECOND/5);
+				return 1;
+			}
+		}
+	}
+}
+
 void clear_zbmodem(void)		//Çå¿Õ´®¿Ú»º³åÇøµÄÊý¾Ý
 {
 	char data[256];
-	//Çå¿Õ»º³åÆ÷´úÂë
+	//Çå¿Õ»º³åÆ÷´úÂë	Í¨¹ý½«½ÓÊÕ»º³åÇøµÄËùÓÐÊý¾Ý¶¼¶ÁÈ¡³öÀ´£¬´Ó¶øÇå¿ÕÊý¾Ý
 	ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data, 255);
 	rt_thread_delay(RT_TICK_PER_SECOND/10);
 }
@@ -45,10 +82,10 @@ int openzigbee(void)
 		result = rt_device_open(new, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_INT_RX);
 		if(result)
 		{
-			rt_kprintf("open serial 4 failed : %d\r\n",result);
+			rt_kprintf("open Zigbee failed : %d\r\n",result);
 		}else
 		{
-			rt_kprintf("open serial 4 success\r\n");
+			rt_kprintf("open Zigbee success\r\n");
 		}
 	}
 
@@ -121,10 +158,17 @@ int zb_shortaddr_reply(char *data,int shortaddr,char *id)			//¶ÁÈ¡Äæ±äÆ÷µÄ·µ»ØÖ¡
 	char inverterid[13] = {'\0'};
 	int temp_size,size;
 	
-	rt_thread_delay( RD_DELAY );
-	temp_size = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data_all, 255);
-	if(temp_size > 0)
+	if(select(2) <= 0)
 	{
+		printmsg("Get reply time out");
+	
+		return -1;
+	}
+	else
+	{
+		//rt_thread_delay(RT_TICK_PER_SECOND/5);
+		temp_size = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data_all, 255);
+	
 		size = temp_size -12;
 
 		for(i=0;i<size;i++)
@@ -135,18 +179,13 @@ int zb_shortaddr_reply(char *data,int shortaddr,char *id)			//¶ÁÈ¡Äæ±äÆ÷µÄ·µ»ØÖ¡
 		rt_sprintf(inverterid,"%02x%02x%02x%02x%02x%02x",data_all[6],data_all[7],data_all[8],data_all[9],data_all[10],data_all[11]);
 		if((size>0)&&(0xFC==data_all[0])&&(0xFC==data_all[1])&&(data_all[2]==shortaddr/256)&&(data_all[3]==shortaddr%256)&&(data_all[5]==0xA5)&&(0==rt_strcmp(id,inverterid)))
 		{
-				return size;
+			return size;
 		}
 		else
 		{
 			return -1;
 		}
-	}else
-	{
-		rt_kprintf("serial2.read failed \r\n");
-		return -1;
 	}
-
 }
 
 
@@ -157,10 +196,16 @@ int zb_get_reply(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷µÄ·µ»ØÖ¡
 	char inverterid[13] = {'\0'};
 	int temp_size,size;
 	
-	rt_thread_delay( RD_DELAY );
-	temp_size = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data_all, 255);
-	if(temp_size > 0)
+	if(select(2) <= 0)
 	{
+		printmsg("Get reply time out");
+		inverter->signalstrength=0;
+		return -1;
+	}
+	else
+	{
+		//rt_thread_delay(RT_TICK_PER_SECOND/2);
+		temp_size = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data_all, 255);
 		size = temp_size -12;
 
 		for(i=0;i<size;i++)
@@ -180,12 +225,8 @@ int zb_get_reply(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷µÄ·µ»ØÖ¡
 			inverter->signalstrength=0;
 			return -1;
 		}
-	}else
-	{
-		rt_kprintf("serial4.read failed \r\n");
-		return -1;
 	}
-	
+
 }
 
 int zb_get_reply_update_start(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷Ô¶³Ì¸üÐÂµÄUpdate_start·µ»ØÖ¡£¬ZK£¬·µ»ØÏìÓ¦Ê±¼ä¶¨Îª10Ãë
@@ -195,10 +236,15 @@ int zb_get_reply_update_start(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷
 	char inverterid[13] = {'\0'};
 	int temp_size,size;
 
-	rt_thread_delay( RD_DELAY );
-	temp_size = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data_all, 255);
-	if(temp_size>0)
+	if(select(10) <= 0)
 	{
+		printmsg("Get reply time out");
+		return -1;
+	}
+	else
+	{
+		//rt_thread_delay(RT_TICK_PER_SECOND/5);
+		temp_size = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data_all, 255);
 		size = temp_size -12;
 
 		for(i=0;i<size;i++)
@@ -215,10 +261,6 @@ int zb_get_reply_update_start(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷
 		{
 			return -1;
 		}
-	}else
-	{
-		rt_kprintf("serial1.read failed \r\n");
-		return -1;
 	}
 
 }
@@ -230,12 +272,17 @@ int zb_get_reply_restore(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷Ô¶³Ì¸
 	char inverterid[13] = {'\0'};
 	int temp_size,size;
 
-	rt_thread_delay( RD_DELAY );
-	temp_size = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data_all, 255);
-	if(temp_size > 0)
+	if(select(200) <= 0)
 	{
+		printmsg("Get reply time out");
+		return -1;
+	}
+	else
+	{
+		//rt_thread_delay(RT_TICK_PER_SECOND/5);
+		temp_size = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data_all, 255);
 		size = temp_size -12;
-
+		
 		for(i=0;i<size;i++)
 		{
 			data[i]=data_all[i+12];
@@ -251,10 +298,6 @@ int zb_get_reply_restore(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷Ô¶³Ì¸
 		{
 			return -1;
 		}	
-	}else
-	{
-		rt_kprintf("serial1.read failed \r\n");
-		return -1;
 	}
 }
 
@@ -262,37 +305,39 @@ int zb_get_reply_from_module(char *data)			//¶ÁÈ¡zigbeeÄ£¿éµÄ·µ»ØÖ¡
 {
 	int size;
 
-	rt_thread_delay( RD_DELAY*2 );
-	size = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data, 255);
-	
-	if(size > 0)
+	if(select(2) <= 0)
 	{
-		printhexmsg("Reply", data, size);
-		return size;
+		printmsg("Get reply time out");
+		return -1;
 	}else
 	{
-		rt_kprintf("serial4.read failed \r\n");
-		return -1;
-	}
+		//rt_thread_delay(RT_TICK_PER_SECOND/4);
+		size = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data, 255);
+		if(size > 0)
+		{
+			printhexmsg("Reply", data, size);
+			return size;
+		}else
+		{
+			return -1;
+		}
+	}	
 }
 
 int zb_get_id(char *data)			//»ñÈ¡Äæ±äÆ÷ID
 {
 	int size;
 
-	rt_thread_delay( RD_DELAY * 10 );
-	size = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data, 255);
-	
-	if(size > 0)
-	{
-		printhexmsg("Reply", data, size);
-		return size;
-	}else
-	{
-		rt_kprintf("serial1.read failed \r\n");
+	if(select(30) <= 0){
+		printmsg("Get id time out");
 		return -1;
 	}
-
+	else{
+		//rt_thread_delay(RT_TICK_PER_SECOND/5);
+		size = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data, 255);
+		printhexmsg("Reply", data, size);
+		return size;
+	}
 }
 
 int zb_turnoff_limited_rptid(int short_addr,inverter_info *inverter)			//¹Ø±ÕÏÞ¶¨µ¥¸öÄæ±äÆ÷ÉÏ±¨ID¹¦ÄÜ
@@ -628,7 +673,7 @@ int zb_change_ecu_panid(void)
 	ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0, sendbuff, 15);
 	printhexmsg("Set ECU PANID and Channel", (char *)sendbuff, 15);
 
-	if ((9 == zb_get_reply_from_module(recvbuff))
+	if ((3 == zb_get_reply_from_module(recvbuff))
 			&& (0xAB == recvbuff[0])
 			&& (0xCD == recvbuff[1])
 			&& (0xEF == recvbuff[2])) {
@@ -666,7 +711,7 @@ int zb_restore_ecu_panid_0x8888(void)			//»Ö¸´ECUµÄPANIDÎª0x8888,ZK
 	ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0, sendbuff, 15);
 	printhexmsg("sendbuff",(char *)sendbuff,15);
 	ret = zb_get_reply_from_module(data);
-	if((9 == ret)&&(0xAB == data[0])&&(0xCD == data[1])&&(0xEF == data[2]))
+	if((3 == ret)&&(0xAB == data[0])&&(0xCD == data[1])&&(0xEF == data[2]))
 		return 1;
 	else
 		return -1;
@@ -702,11 +747,10 @@ int zb_restore_ecu_panid_0xffff(int channel)
 	printhexmsg("Change ECU channel (PANID:0xFFFF)", (char *)sendbuff, 15);
 
 	//½ÓÊÕ·´À¡
-	if ((9 == zb_get_reply_from_module(recvbuff))
+	if ((3 == zb_get_reply_from_module(recvbuff))
 			&& (0xAB == recvbuff[0])
 			&& (0xCD == recvbuff[1])
 			&& (0xEF == recvbuff[2])) {
-		rt_kprintf("success!\n");
 		return 1;
 	}
 
@@ -850,11 +894,11 @@ int zb_query_data(inverter_info *inverter)		//ÇëÇóÄæ±äÆ÷ÊµÊ±Êý¾Ý
 	zb_send_cmd(inverter, sendbuff, i);
 	ret = zb_get_reply(data,inverter);
 
-	rt_kprintf("%d\n",ret);
+	
 	if((88 == ret)&&(0xFB == data[0])&&(0xFB == data[1])&&(0xFE == data[86])&&(0xFE == data[87]))
 	{
-		inverter->no_getdata_num = 0;	//?????????0,ZK
-		inverter->dataflag = 1;	//????????1
+		inverter->no_getdata_num = 0;	//Ò»µ©½ÓÊÕµ½Êý¾Ý¾ÍÇå0,ZK
+		inverter->dataflag = 1;	//½ÓÊÕµ½Êý¾ÝÖÃÎª1
 
 		/*if(7==inverter->model)
 			resolvedata_600(&data[4], inverter);
@@ -1733,10 +1777,15 @@ int zb_off_report_id_and_bind(int short_addr)
 int zigbeeRecvMsg(char *data, int timeout_sec)
 {
 	int count;
-	rt_thread_delay( RD_DELAY );
-	count = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data, 255);
-	printhexmsg("Reply", data, count);
-	return count;
+	if (select(timeout_sec) <= 0) {
+		printmsg("Get reply time out");
+		return -1;
+	} else {
+		
+		count = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data, 255);
+		printhexmsg("Reply", data, count);
+		return count;
+	}
 }
 
 
@@ -1773,7 +1822,7 @@ void Zbinvchone(char *inverter_id, int channel)	//¸ü¸ÄÄæ±äÆ÷panidºÍÐÅµÀ ÆäÖÐpani
 }
 FINSH_FUNCTION_EXPORT(Zbinvchone,zb_change_inverter_channel_one inverter_id[char *12] channel[int].)
 
-/*void Zbgetshadd(char *inverter_id)	//»ñÈ¡Äæ±äÆ÷¶ÌµØÖ·
+void Zbgetshadd(char *inverter_id)	//»ñÈ¡Äæ±äÆ÷¶ÌµØÖ·
 {
 	inverter_info inverter;
 	rt_memset(&inverter,0x00,sizeof(inverter));
@@ -1781,7 +1830,7 @@ FINSH_FUNCTION_EXPORT(Zbinvchone,zb_change_inverter_channel_one inverter_id[char
 	zb_get_inverter_shortaddress_single(&inverter);
 }
 FINSH_FUNCTION_EXPORT(Zbgetshadd,zb_get_inverter_shortaddress_single inverter_id[char *12].)
-*/	
+
 void Zbgetdata(char *inverter_id)	//»ñÈ¡Êý¾Ý
 {
 	inverter_info inverter;

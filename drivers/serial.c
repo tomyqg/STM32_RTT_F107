@@ -37,6 +37,11 @@
 #include <rthw.h>
 #include <rtthread.h>
 #include <rtdevice.h>
+#include "board.h"
+
+#if defined(RT_USING_UART4)
+extern int zigbeeReadFlag;
+#endif
 
 /*
  * Serial poll routines
@@ -568,6 +573,14 @@ static rt_size_t rt_serial_write(struct rt_device *dev,
 
     serial = (struct rt_serial_device *)dev;
 
+	//新增  如果是zigbee串口uart4 则清除就收到数据标志
+#if defined(RT_USING_UART4)
+	if(rt_strncmp("uart4",dev->parent.name,5))
+	{
+		zigbeeReadFlag = 0;
+	}
+#endif
+	//-----------------------------------------
     if (dev->open_flag & RT_DEVICE_FLAG_INT_TX)
     {
         return _serial_int_tx(serial, buffer, size);

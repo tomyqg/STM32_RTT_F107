@@ -49,6 +49,10 @@
 #define UART5_GPIO_RX        GPIO_Pin_2
 #define UART5_GPIO_2           GPIOD
 
+#if defined(RT_USING_UART4)
+int zigbeeReadFlag = 0;
+#endif
+
 /* STM32 uart driver */
 struct stm32_uart
 {
@@ -415,7 +419,9 @@ void UART4_IRQHandler(void)
 {
     /* enter interrupt */
     rt_interrupt_enter();
-
+	//新增  如果是zigbee串口uart4 则设置就收到数据标志
+	zigbeeReadFlag = 1;
+	//------------------------------------
     uart_isr(&serial4);
 
     /* leave interrupt */
