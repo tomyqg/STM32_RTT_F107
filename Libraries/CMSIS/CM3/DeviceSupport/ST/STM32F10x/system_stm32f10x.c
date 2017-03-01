@@ -1028,7 +1028,7 @@ static void SetSysClockTo72(void)
     RCC->CFGR |= (uint32_t)RCC_CFGR_PPRE1_DIV2;
 
 #ifdef STM32F10X_CL
-#if(0)		//¶­óÏ·é 20170217  modify	
+#if(1)		//¶­óÏ·é 20170217  modify	
 
     /* Configure PLLs ------------------------------------------------------*/
     /* PLL2 configuration: PLL2CLK = (HSE / 5) * 8 = 40 MHz */

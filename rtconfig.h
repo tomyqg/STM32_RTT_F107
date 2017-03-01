@@ -113,6 +113,10 @@
 #define RT_LWIP_TCP
 /* Enable DNS */
 #define RT_LWIP_DNS
+//#define RT_LWIP_DHCP
+
+#define RT_LWIP_DEBUG
+
 
 /* the number of simulatenously active TCP connections*/
 #define RT_LWIP_TCP_PCB_NUM	5

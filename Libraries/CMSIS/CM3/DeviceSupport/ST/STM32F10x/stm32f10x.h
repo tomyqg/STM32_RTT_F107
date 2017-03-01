@@ -114,9 +114,9 @@
   */           
 #if !defined  HSE_VALUE
  #ifdef STM32F10X_CL   
-  //#define HSE_VALUE    ((uint32_t)25000000) /*!< Value of the External oscillator in Hz */
+  #define HSE_VALUE    ((uint32_t)25000000) /*!< Value of the External oscillator in Hz */
   //因为我们使用的晶振为8MHz,所以这边的晶振由25MHz改为8MHz
-  #define HSE_VALUE    ((uint32_t)8000000) /*!< Value of the External oscillator in Hz */
+  //#define HSE_VALUE    ((uint32_t)8000000) /*!< Value of the External oscillator in Hz */
  #else 
   #define HSE_VALUE    ((uint32_t)8000000) /*!< Value of the External oscillator in Hz */
  #endif /* STM32F10X_CL */
@@ -8336,3 +8336,4 @@ typedef struct
   */
 
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/
+

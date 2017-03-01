@@ -896,6 +896,11 @@
               <FileType>1</FileType>
               <FilePath>..\Test\src\tcpClient.c</FilePath>
             </File>
+            <File>
+              <FileName>tcpServer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Test\src\tcpServer.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

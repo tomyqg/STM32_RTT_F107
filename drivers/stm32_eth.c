@@ -36,7 +36,7 @@
 #define RMII_MODE               1       /* 0: MII MODE, 1: RMII MODE. */
 //#define STM32_ETH_IO_REMAP      1       /* 0: default,  1: remap RXD to PDx. */
 #define STM32_ETH_IO_REMAP      0       /* 0: default,  1: remap RXD to PDx. */
-#define USE_MCO                 1       /* 0: disable,  1: PA8(MCO) out 25Mhz(MII) or 50Mhz(RMII). */
+#define USE_MCO                 0       /* 0: disable,  1: PA8(MCO) out 25Mhz(MII) or 50Mhz(RMII). */
 
 /** @addtogroup STM32_ETH_Driver
   * @brief ETH driver modules
@@ -3393,23 +3393,23 @@ static void NVIC_Configuration(void)
 /*
  * GPIO Configuration for ETH
     AF Output Push Pull:
-    - ETH_MDC   : PC1
-    - ETH_MDIO  : PA2
-    - ETH_TX_EN : PB11
-    - ETH_TXD0  : PB12
-    - ETH_TXD1  : PB13
-    - ETH_TXD2  : PC2
-    - ETH_TXD3  : PB8
-    - ETH_PPS_OUT / ETH_RMII_PPS_OUT: PB5
+    - ETH_MDC   : PC1   存在
+    - ETH_MDIO  : PA2	存在
+    - ETH_TX_EN : PB11	存在
+    - ETH_TXD0  : PB12	存在
+    - ETH_TXD1  : PB13	存在
+    - ETH_TXD2  : PC2   
+    - ETH_TXD3  : PB8   
+    - ETH_PPS_OUT / ETH_RMII_PPS_OUT: PB5		
 
     Input (Reset Value):
-    - ETH_MII_TX_CLK: PC3
-    - ETH_MII_RX_CLK / ETH_RMII_REF_CLK: PA1
-    - ETH_MII_CRS: PA0
-    - ETH_MII_COL: PA3
-    - ETH_MII_RX_DV / ETH_RMII_CRS_DV: PA7
-    - ETH_MII_RXD0: PC4
-    - ETH_MII_RXD1: PC5
+    - ETH_MII_TX_CLK: PC3		
+    - ETH_MII_RX_CLK / ETH_RMII_REF_CLK: PA1  存在
+    - ETH_MII_CRS: PA0		
+    - ETH_MII_COL: PA3		
+    - ETH_MII_RX_DV / ETH_RMII_CRS_DV: PA7  存在
+    - ETH_MII_RXD0: PC4   	存在
+    - ETH_MII_RXD1: PC5		存在
     - ETH_MII_RXD2: PB0
     - ETH_MII_RXD3: PB1
     - ETH_MII_RX_ER: PB10
@@ -3503,6 +3503,9 @@ static void GPIO_Configuration(void)
         /* RXD1 */
         GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
         GPIO_Init(GPIOC, &GPIO_InitStructure);
+		//ETH_RMII_REF_CLK   add
+	 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+		GPIO_Init(GPIOA, &GPIO_InitStructure);
 
 #if (RMII_MODE == 0)
         /* RXD2 */
@@ -3576,12 +3579,13 @@ static void GPIO_Configuration(void)
 
     /* MCO pin configuration------------------------------------------------- */
     /* Configure MCO (PA8) as alternate function push-pull */
-//    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
     GPIO_Init(GPIOA, &GPIO_InitStructure);
 #endif /* USE_MCO */
+ 
+			
 }
 
 void rt_hw_stm32_eth_init()
