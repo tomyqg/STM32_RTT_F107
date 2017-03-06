@@ -445,12 +445,7 @@ struct stm32_uart uart5 =
 {
     UART5,
     UART5_IRQn,
-    {
-        DMA2_Channel4,
-        DMA2_FLAG_GL4,
-        DMA2_Channel4_IRQn,
-        0,
-    },
+    NULL,
 };
 struct rt_serial_device serial5;
 
@@ -465,15 +460,6 @@ void UART5_IRQHandler(void)
     rt_interrupt_leave();
 }
 
-void DMA2_Channel4_IRQHandler(void) {
-    /* enter interrupt */
-    rt_interrupt_enter();
-
-    dma_rx_done_isr(&serial5);
-
-    /* leave interrupt */
-    rt_interrupt_leave();
-}
 #endif /* RT_USING_UART5 */
 
 
@@ -692,7 +678,7 @@ void rt_hw_usart_init(void)
 #if defined(RT_USING_UART4)
     uart = &uart4;
 
-    config.baud_rate = BAUD_RATE_57600;
+    config.baud_rate = BAUD_RATE_115200;
 
     serial4.ops    = &stm32_uart_ops;
     serial4.config = config;
@@ -719,7 +705,7 @@ void rt_hw_usart_init(void)
     /* register UART5 device */
     rt_hw_serial_register(&serial5, "uart5",
                           RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX |
-                          RT_DEVICE_FLAG_INT_TX |   RT_DEVICE_FLAG_DMA_RX,
+                          RT_DEVICE_FLAG_INT_TX ,
                           uart);
 #endif /* RT_USING_UART5 */
 

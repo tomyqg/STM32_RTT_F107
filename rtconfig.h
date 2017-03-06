@@ -71,7 +71,7 @@
 #define RT_CONSOLEBUF_SIZE	128
 
 // <string name="RT_CONSOLE_DEVICE_NAME" description="console device name" default="uart3" />
-#define RT_CONSOLE_DEVICE_NAME	"uart1"
+#define RT_CONSOLE_DEVICE_NAME	"uart4"
 // </section>
 
 // <section name="RT_USING_COMPONENTS_INIT" description="Using components init" default="false" >
@@ -113,7 +113,6 @@
 #define RT_LWIP_TCP
 /* Enable DNS */
 #define RT_LWIP_DNS
-//#define RT_LWIP_DHCP
 
 #define RT_LWIP_DEBUG
 
@@ -125,7 +124,7 @@
 #define RT_LWIP_IPADDR0	192
 #define RT_LWIP_IPADDR1	168
 #define RT_LWIP_IPADDR2	1
-#define RT_LWIP_IPADDR3	30
+#define RT_LWIP_IPADDR3	230
 
 /* gateway address of target*/
 #define RT_LWIP_GWADDR0	192
@@ -153,7 +152,8 @@
 #define RT_LWIP_TCP_SND_BUF	8192
 /* TCP receive window. */
 #define RT_LWIP_TCP_WND		8192
-
+#define CHECKSUM_BY_HARDWARE
+#define RT_LWIP_DHCP      
 #define CHECKSUM_CHECK_TCP              0
 #define CHECKSUM_CHECK_IP               0
 #define CHECKSUM_CHECK_UDP              0
@@ -170,8 +170,34 @@
 // #define RT_USING_BSP_CMSIS
 
 
+/** @defgroup PHY_Setting 
+  * @{
+  */ 
+	#define LAN8720A_PHY
+	/** 	
+  * @brief  For LAN8720A  
+  */  
+	#ifdef LAN8720A_PHY
+		#define PHY_ADDRESS       0x00/* Relative to STM3210C-EVAL Board */
+		#define PHY_SR                           31         /*!< Tranceiver Status Register */
+		#define PHY_Speed_Status            ((u16)0x0004)       /*!< Configured information of Speed: 10Mbps */
+		#define PHY_Duplex_Status           ((u16)0x0010)       /*!< Configured information of Duplex: Full-duplex */
+	#endif
+	//#define DP83848_PHY
+	/** 
+	 * @brief  For DP83848  
+  */  
+	#ifdef DP83848_PHY
+		#define PHY_ADDRESS       0x1F/* Relative to STM3210C-EVAL Board */
+		#define PHY_SR                           16         /*!< Tranceiver Status Register */
+		#define PHY_Speed_Status            ((uint16_t)0x0002)    /*!< Configured information of Speed: 10Mbps */
+		#define PHY_Duplex_Status           ((uint16_t)0x0004)    /*!< Configured information of Duplex: Full-duplex */
+	#endif
+/**
+  * @}
+  */
+  
 #define W25QXX	
 #define EEPROM
-
 
 #endif

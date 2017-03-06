@@ -27,7 +27,7 @@
 #endif
 
 #ifdef RT_USING_LWIP
-#include <stm32_eth.h>
+#include <eth@stm32.h>
 #include <netif/ethernetif.h>
 extern int lwip_system_init(void);
 #endif

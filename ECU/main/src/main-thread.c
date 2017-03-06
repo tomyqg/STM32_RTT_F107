@@ -133,7 +133,7 @@ int init_inverter(inverter_info *inverter)
 int init_all(inverter_info *inverter)
 {
 
-	openzigbee();
+	//openzigbee();
 	init_ecu();
 	//init_inverter(inverter);
 
