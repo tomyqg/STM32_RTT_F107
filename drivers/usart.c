@@ -52,6 +52,10 @@
 #if defined(RT_USING_UART4)
 int zigbeeReadFlag = 0;
 #endif
+#if defined(RT_USING_UART1)
+int WiFiReadFlag = 0;
+#endif
+
 
 /* STM32 uart driver */
 struct stm32_uart
@@ -308,6 +312,9 @@ void USART1_IRQHandler(void)
 {
     /* enter interrupt */
     rt_interrupt_enter();
+	//新增  如果是WIFI串口uart1 则设置就收到数据标志
+	WiFiReadFlag = 1;
+	//------------------------------------
 
     uart_isr(&serial1);
 
@@ -628,7 +635,7 @@ void rt_hw_usart_init(void)
 
 #if defined(RT_USING_UART1)
     uart = &uart1;
-    config.baud_rate = BAUD_RATE_115200;
+    config.baud_rate = BAUD_RATE_57600;
 
     serial1.ops    = &stm32_uart_ops;
     serial1.config = config;

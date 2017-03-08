@@ -19,27 +19,27 @@ extern int processpower(inverter_info *firstinverter);
 #define ZIGBEE_SERIAL (serial4)
 
 extern int zigbeeReadFlag;
-static int readtimeoutflag = 0;
+static int zigbeereadtimeoutflag = 0;
 //¶¨Ê±Æ÷³¬Ê±º¯Êı
-static void readtimeout1(void* parameter)
+static void readtimeout_Zigbee(void* parameter)
 {
-	readtimeoutflag = 1;
+	zigbeereadtimeoutflag = 1;
 }
 
-int select(int timeout)			//zigbee´®¿ÚÊı¾İ¼ì²â ·µ»Ø0 ±íÊ¾´®¿ÚÃ»ÓĞÊı¾İ  ·µ»Ø1±íÊ¾´®¿ÚÓĞÊı¾İ
+int selectZigbee(int timeout)			//zigbee´®¿ÚÊı¾İ¼ì²â ·µ»Ø0 ±íÊ¾´®¿ÚÃ»ÓĞÊı¾İ  ·µ»Ø1±íÊ¾´®¿ÚÓĞÊı¾İ
 {
 	
 	rt_timer_t readtimer;
 	readtimer = rt_timer_create("read", /* ¶¨Ê±Æ÷Ãû×ÖÎª read */
-					readtimeout1, /* ³¬Ê±Ê±»Øµ÷µÄ´¦Àíº¯Êı */
+					readtimeout_Zigbee, /* ³¬Ê±Ê±»Øµ÷µÄ´¦Àíº¯Êı */
 					RT_NULL, /* ³¬Ê±º¯ÊıµÄÈë¿Ú²ÎÊı */
 					timeout*RT_TICK_PER_SECOND, /* ¶¨Ê±Ê±¼ä³¤¶È,ÒÔOS TickÎªµ¥Î»*/
 					 RT_TIMER_FLAG_ONE_SHOT); /* µ¥ÖÜÆÚ¶¨Ê±Æ÷ */
 	if (readtimer != RT_NULL) rt_timer_start(readtimer);
-	readtimeoutflag = 0;
+	zigbeereadtimeoutflag = 0;
 	while(1)
 	{
-		if(readtimeoutflag)
+		if(zigbeereadtimeoutflag)
 		{
 			rt_timer_delete(readtimer);
 			return 0;
@@ -158,7 +158,7 @@ int zb_shortaddr_reply(char *data,int shortaddr,char *id)			//¶ÁÈ¡Äæ±äÆ÷µÄ·µ»ØÖ¡
 	char inverterid[13] = {'\0'};
 	int temp_size,size;
 	
-	if(select(2) <= 0)
+	if(selectZigbee(2) <= 0)
 	{
 		printmsg("Get reply time out");
 	
@@ -196,7 +196,7 @@ int zb_get_reply(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷µÄ·µ»ØÖ¡
 	char inverterid[13] = {'\0'};
 	int temp_size,size;
 	
-	if(select(2) <= 0)
+	if(selectZigbee(2) <= 0)
 	{
 		printmsg("Get reply time out");
 		inverter->signalstrength=0;
@@ -236,7 +236,7 @@ int zb_get_reply_update_start(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷
 	char inverterid[13] = {'\0'};
 	int temp_size,size;
 
-	if(select(10) <= 0)
+	if(selectZigbee(10) <= 0)
 	{
 		printmsg("Get reply time out");
 		return -1;
@@ -272,7 +272,7 @@ int zb_get_reply_restore(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷Ô¶³Ì¸
 	char inverterid[13] = {'\0'};
 	int temp_size,size;
 
-	if(select(200) <= 0)
+	if(selectZigbee(200) <= 0)
 	{
 		printmsg("Get reply time out");
 		return -1;
@@ -305,7 +305,7 @@ int zb_get_reply_from_module(char *data)			//¶ÁÈ¡zigbeeÄ£¿éµÄ·µ»ØÖ¡
 {
 	int size;
 
-	if(select(2) <= 0)
+	if(selectZigbee(2) <= 0)
 	{
 		printmsg("Get reply time out");
 		return -1;
@@ -328,7 +328,7 @@ int zb_get_id(char *data)			//»ñÈ¡Äæ±äÆ÷ID
 {
 	int size;
 
-	if(select(30) <= 0){
+	if(selectZigbee(30) <= 0){
 		printmsg("Get id time out");
 		return -1;
 	}
@@ -1777,7 +1777,7 @@ int zb_off_report_id_and_bind(int short_addr)
 int zigbeeRecvMsg(char *data, int timeout_sec)
 {
 	int count;
-	if (select(timeout_sec) <= 0) {
+	if (selectZigbee(timeout_sec) <= 0) {
 		printmsg("Get reply time out");
 		return -1;
 	} else {

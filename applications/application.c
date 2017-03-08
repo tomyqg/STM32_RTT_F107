@@ -47,6 +47,7 @@ extern int lwip_system_init(void);
 #include "Flash_24L512.h"
 #endif
 
+#include "usr_wifi232.h"
 
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t led_stack[200];
@@ -87,6 +88,26 @@ void rt_init_thread_entry(void* parameter)
 #ifdef EEPROM		
 	  EEPROM_Init();
 #endif
+		
+	/* Filesystem Initialization */
+#if defined(RT_USING_DFS) && defined(RT_USING_DFS_ELMFAT)
+	/* initialize the device file system */
+	dfs_init();
+
+	/* initialize the elm chan FatFS file system*/
+	elm_init();
+    
+    /* mount sd card fat partition 1 as root directory */
+    if (dfs_mount("sd0", "/", "elm", 0, 0) == 0)
+    {
+        rt_kprintf("File System initialized!\n");
+    }
+    else
+    {
+        rt_kprintf("File System initialzation failed!\n");
+    }
+#endif /* RT_USING_DFS && RT_USING_DFS_ELMFAT */
+
 
 #ifdef RT_USING_LWIP
 	/* initialize lwip stack */
@@ -131,6 +152,7 @@ int rt_application_init(void)
     }
 		
 		/* init main thread */
+		/*
     result = rt_thread_init(&main_thread,
                             "main",
                             main_thread_entry,
@@ -143,8 +165,10 @@ int rt_application_init(void)
     {
         rt_thread_startup(&main_thread);
     }
+		*/
 		
-	
+		
+		WiFi_Open();
     return 0;
 }
 
