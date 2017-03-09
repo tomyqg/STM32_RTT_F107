@@ -23,6 +23,8 @@ typedef unsigned int U32;
 /*  Function Declarations                                                    */
 /*                                                                           */
 /*****************************************************************************/
+void SPI_Send_Byte(U8 out);
+U8 SPI_Get_Byte(void);
 void SPI_Wait_Busy(void);
 void SPI_Write_Enable(void);		//写使能
 void SPI_Read_nBytes(U32 Dst_Addr, U8 nBytes,U8 *header);//从flash芯片读取数据

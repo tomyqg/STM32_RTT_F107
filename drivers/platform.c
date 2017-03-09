@@ -8,7 +8,7 @@
 #endif /* RT_USING_LWIP */
 
 #ifdef RT_USING_SPI
-#include "board_io_spi.h"
+#include "rt_stm32f10x_spi.h"
 
 #if defined(RT_USING_DFS) && defined(RT_USING_DFS_ELMFAT)
 #include "spi_flash_w25qxx.h"
@@ -23,33 +23,35 @@
  */
 static void rt_hw_spi_init(void)
 {
-#ifdef RT_USING_IO_SPI1
+#ifdef RT_USING_SPI1
     /* register spi bus */
-		rt_hw_io_spi_init();
+    {
+        static struct stm32_spi_bus stm32_spi;
+        stm32_spi_register(SPI1, &stm32_spi, "spi1");
+    }
 
     /* attach cs */
     {
         static struct rt_spi_device spi_device;
-        extern struct stm32_spi_cs  spi_cs;
+        static struct stm32_spi_cs  spi_cs;
 
         GPIO_InitTypeDef GPIO_InitStructure;
 
         GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-
+			
         /* spi21: PG10 */
-        spi_cs.gpio_base = GPIOA_BASE;
-        spi_cs.gpio_pin = GPIO_Pin_3;
+        spi_cs.GPIOx = GPIOA;
+        spi_cs.GPIO_Pin = GPIO_Pin_3;
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
 
-        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
-				GPIO_Init(GPIOA, &GPIO_InitStructure);  
-				GPIO_SetBits(GPIOA, GPIO_Pin_3);
-        
+        GPIO_InitStructure.GPIO_Pin = spi_cs.GPIO_Pin;
+        GPIO_SetBits(spi_cs.GPIOx, spi_cs.GPIO_Pin);
+        GPIO_Init(spi_cs.GPIOx, &GPIO_InitStructure);
 
-        rt_spi_bus_attach_device(&spi_device, "spi10", "iospi1", (void*)&spi_cs);
+        rt_spi_bus_attach_device(&spi_device, "spi20", "spi1", (void*)&spi_cs);
     }
-#endif /* RT_USING_IO_SPI1 */
+#endif /* RT_USING_SPI1 */
 }
 #endif /* RT_USING_SPI */
 
@@ -61,8 +63,7 @@ void rt_platform_init(void)
     rt_hw_spi_init();
 
 #if defined(RT_USING_DFS) && defined(RT_USING_DFS_ELMFAT)
-
-    w25qxx_init("flash","spi10");
+    w25qxx_init("flash","spi20");
 #endif /* RT_USING_DFS && RT_USING_DFS_ELMFAT */
 #endif // RT_USING_SPI
 	
@@ -71,5 +72,5 @@ void rt_platform_init(void)
     rt_hw_stm32_eth_init();
 #endif /* RT_USING_LWIP */
 
-	EXTIX_Init();		 	//外部中断初始化
+//	EXTIX_Init();		 	//外部中断初始化
 }

@@ -97,8 +97,8 @@ void rt_init_thread_entry(void* parameter)
 	/* initialize the elm chan FatFS file system*/
 	elm_init();
     
-    /* mount sd card fat partition 1 as root directory */
-    if (dfs_mount("sd0", "/", "elm", 0, 0) == 0)
+    /* mount flash fat partition 1 as root directory */
+    if (dfs_mount("flash", "/", "elm", 0, 0) == 0)
     {
         rt_kprintf("File System initialized!\n");
     }
@@ -152,8 +152,7 @@ int rt_application_init(void)
     }
 		
 		/* init main thread */
-		/*
-    result = rt_thread_init(&main_thread,
+		result = rt_thread_init(&main_thread,
                             "main",
                             main_thread_entry,
                             RT_NULL,
@@ -165,10 +164,10 @@ int rt_application_init(void)
     {
         rt_thread_startup(&main_thread);
     }
-		*/
 		
 		
-		WiFi_Open();
+		
+		//WiFi_Open();
     return 0;
 }
 

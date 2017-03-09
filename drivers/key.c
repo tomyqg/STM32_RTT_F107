@@ -46,7 +46,7 @@ void EXTI9_5_IRQHandler(void)
 	rt_thread_delay(RT_TICK_PER_SECOND/100);//消除抖动
 	if(KEY_Reset==1)	 	 
 	{				 
-		rt_kprintf("EXTI9_5_IRQHandler\n");  //添加恢复出厂设置的功能
+		//rt_kprintf("EXTI9_5_IRQHandler\n");  //添加恢复出厂设置的功能
 		//。。。。。。
 	}
 	EXTI_ClearITPendingBit(EXTI_Line9); //清除LINE9上的中断标志位z  

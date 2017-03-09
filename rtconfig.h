@@ -64,6 +64,7 @@
 #define RT_USING_SERIAL
 
 #define RT_USING_SPI
+#define RT_USING_SPI1
 
 /* SECTION: Console options */
 #define RT_USING_CONSOLE
@@ -71,7 +72,7 @@
 #define RT_CONSOLEBUF_SIZE	128
 
 // <string name="RT_CONSOLE_DEVICE_NAME" description="console device name" default="uart3" />
-#define RT_CONSOLE_DEVICE_NAME	"uart4"
+#define RT_CONSOLE_DEVICE_NAME	"uart1"
 // </section>
 
 // <section name="RT_USING_COMPONENTS_INIT" description="Using components init" default="false" >
@@ -84,22 +85,20 @@
 #define FINSH_USING_SYMTAB
 #define FINSH_USING_DESCRIPTION
 
-/* SECTION: device filesystem */
-#define RT_USING_DFS
-#define RT_USING_DFS_ELMFAT
-/* Reentrancy (thread safe) of the FatFs module.  */
-#define RT_DFS_ELM_REENTRANT
-/* Number of volumes (logical drives) to be used. */
-#define RT_DFS_ELM_DRIVES			2
-/* #define RT_DFS_ELM_USE_LFN			1 */
-#define RT_DFS_ELM_MAX_LFN			255
-/* Maximum sector size to be handled. */
-#define RT_DFS_ELM_MAX_SECTOR_SIZE  512
-
-/* the max number of mounted filesystem */
-#define DFS_FILESYSTEMS_MAX			2
-/* the max number of opened files 		*/
-#define DFS_FD_MAX					4
+/* SECTION: device filesystem */  
+#define RT_USING_DFS   
+#define RT_USING_DFS_ELMFAT  
+#define RT_DFS_ELM_REENTRANT  
+#define RT_DFS_ELM_WORD_ACCESS  
+#define RT_DFS_ELM_DRIVES           1  
+#define RT_DFS_ELM_USE_LFN          0 //这里一般设置为0,不使用长文件名,否则需要加入另外的源文件才能编译通过  
+#define RT_DFS_ELM_MAX_LFN          255  
+#define RT_DFS_ELM_MAX_SECTOR_SIZE  4096     //这里一定要与实际的spi flash一个扇区所包含的字节数相符,太小了会出现内存非法覆盖的情况  
+  
+/* the max number of mounted filesystem */  
+#define DFS_FILESYSTEMS_MAX         2  
+/* the max number of opened files       */  
+#define DFS_FD_MAX                  4  
 
 /* SECTION: lwip, a lighwight TCP/IP protocol stack */
 #define RT_USING_LWIP

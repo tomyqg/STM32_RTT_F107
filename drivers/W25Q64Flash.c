@@ -71,7 +71,7 @@ void SPI_Send_Byte(U8 out)
 		__NOP();
 		__NOP();
 		__NOP();
-	    __NOP();
+	  __NOP();
 		__NOP();
 		GPIO_ResetBits(CLK_GPIO, CLK_PIN);			                                     //toggle clock low
 	}
@@ -358,6 +358,12 @@ void WriteF(U32 Dst_Addr, U8 nBytes, U8 *header)
 	rt_kprintf("write date on address 0x%06x:%s\n",Dst_Addr,header);
 }
 
+void EraseALLF()
+{
+	SPI_Erase_All();
+	rt_kprintf("erase Flash All\n");
+}
+
 void EraseSectorF(U32 Dst_Addr)
 {
 	SPI_Erase_Sector(Dst_Addr);
@@ -370,5 +376,6 @@ FINSH_FUNCTION_EXPORT(FlashEraseTest, Flash Erase Test.)
 FINSH_FUNCTION_EXPORT(ReadF, read flash Dst_Addr[U32] nBytes[U8].)
 FINSH_FUNCTION_EXPORT(WriteF, write flash Dst_Addr[U32] nBytes[U8] header[U8 *].)
 FINSH_FUNCTION_EXPORT(EraseSectorF, erase flash sector Dst_Addr[U32].)
+FINSH_FUNCTION_EXPORT(EraseALLF, erase flash All.)
 
 #endif

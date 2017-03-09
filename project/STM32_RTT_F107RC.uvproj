@@ -482,9 +482,9 @@
               <FilePath>..\drivers\key.c</FilePath>
             </File>
             <File>
-              <FileName>board_io_spi.c</FileName>
+              <FileName>rt_stm32f10x_spi.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\drivers\board_io_spi.c</FilePath>
+              <FilePath>..\drivers\rt_stm32f10x_spi.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -945,6 +945,11 @@
               <FileName>tcpServer.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Test\src\tcpServer.c</FilePath>
+            </File>
+            <File>
+              <FileName>readwrite.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Test\src\readwrite.c</FilePath>
             </File>
           </Files>
         </Group>
