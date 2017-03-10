@@ -4,6 +4,10 @@
 Name:ntpapp.h
 Date:2011.01.24
 ******************************************************************************/
+#include "lwip/sockets.h"
+
+#define NTPDEBUG
+
 typedef struct ntptime
 {
     unsigned int sec;
@@ -46,5 +50,6 @@ void send_packet(int sockfd);
 int receive_packet(int sockfd, NTPPACKET *recvpacked, struct sockaddr_in * serversocket_in);
 void gettimepacket(NTPPACKET *receivepacket, struct timeval * new_time);
 void update_time(struct timeval * new_time);
+int get_time_from_NTP(void);
 #endif /*__NTPAPP_H__*/
 

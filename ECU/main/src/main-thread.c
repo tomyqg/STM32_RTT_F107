@@ -6,6 +6,7 @@
 #include "variation.h"
 #include "checkdata.h"
 #include "rtc.h"
+#include "ntpapp.h"
 
 #define MAIN_VERSION "R-1.0.0"
 
@@ -44,7 +45,7 @@ int init_inverter(inverter_info *inverter)
 	char flag_limitedid = '0';				//限定ID标志
 
 	inverter_info *curinverter = inverter;
-
+	
 	for(i=0; i<MAXINVERTERCOUNT; i++, curinverter++)
 	{
 		rt_memset(curinverter->id, '\0', sizeof(curinverter->id));		//清空逆变器UID
@@ -101,7 +102,7 @@ int init_inverter(inverter_info *inverter)
 
 	flag_limitedid = '1';		//后续从flash中获取限定ID标志
 
-
+	/*
 	if ('1' == flag_limitedid) {
 		while(1) {
 			//bind_inverters(); //绑定逆变器
@@ -126,7 +127,7 @@ int init_inverter(inverter_info *inverter)
 			}
 		}
 	}
-
+	*/
 	return 1;
 }
 
@@ -191,7 +192,7 @@ void main_thread_entry(void* parameter)
 	{
 		if((durabletime-thistime) >= reportinterval){
 		//if((durabletime-thistime) >= 60){
-			thistime = time(RT_NULL);
+			//thistime = time(RT_NULL);
 		
 		}
 		

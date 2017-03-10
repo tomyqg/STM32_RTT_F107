@@ -14,60 +14,67 @@ version:1.0
 #include "ntpapp.h"
 
 
-int ntpapp_thread_entry(void* parameter)
+int get_time_from_NTP()
 {
-    int sockfd;
-    int ret,times, i=0;
-    struct timeval newtime;
-    struct sockaddr_in serversocket;
-    NTPPACKET receivepacket;
+	int sockfd;
+  int ret,times, i=0;
+  struct timeval newtime,timeout;
+  struct sockaddr_in serversocket;
+  NTPPACKET receivepacket;
+  fd_set readfd;
 
-    sockfd = create_socket();
-    if(-1==sockfd)
-    {
-      #ifdef DEBUG
-        rt_kprintf("Create socket error!\n");
-      #endif 
-      return 0;
-    }
-    else{
-      #ifdef DEBUG
-				rt_kprintf("socket=%d\n",sockfd);
-      #endif
-    }
-    ret = connecttoserver(sockfd, &serversocket);
-    if(-1==ret)
-    {
-      #ifdef DEBUG
-        rt_kprintf("Connect server error!\n");
-      #endif
-      return 0;
-    }
-    else{
-      #ifdef DEBUG
-      rt_kprintf("socket=%d\n",ret);
-      #endif
-    }
+  sockfd = create_socket();
+  if(-1==sockfd)
+  {
+    #ifdef NTPDEBUG
+      rt_kprintf("Create socket error!\n");
+    #endif 
+    return 0;
+  }
+  else{
+    #ifdef NTPDEBUG
+    rt_kprintf("socket=%d\n",sockfd);
+    #endif
+  }
+  ret = connecttoserver(sockfd, &serversocket);
+  if(-1==ret)
+  {
+    #ifdef NTPDEBUG
+      rt_kprintf("Connect server error!\n");
+    #endif
+    return 0;
+  }
+  else{
+    #ifdef NTPDEBUG
+    rt_kprintf("socket=%d\n",ret);
+    #endif
+  }
 
-    for(i=0; i<5; i++){
+	for(i=0; i<5; i++){
 		send_packet(sockfd);
 		for(times=0;times<5;times++){
-
-#ifdef DEBUG
-			rt_kprintf("ret=%d\n",ret);
+			timeout.tv_sec = 6;
+			timeout.tv_usec = 0;
+			ret = select(sockfd+1, &readfd, NULL, NULL, &timeout);
+			
+#ifdef NTPDEBUG
+		rt_kprintf("ret=%d\n",ret);
 #endif
-			if(-1!=receive_packet(sockfd, &receivepacket, &serversocket)){
-				gettimepacket(&receivepacket, &newtime);
-#ifdef DEBUG
+
+			if(ret>0){
+				if(-1!=receive_packet(sockfd, &receivepacket, &serversocket)){
+					gettimepacket(&receivepacket, &newtime);
+#ifdef NTPDEBUG
 				rt_kprintf("server time= %s\n",ctime(&(newtime.tv_sec)));
 #endif
-			}
-			update_time(&newtime);
+				}
+				//update_time(&newtime);
 				break;
 			}
 		}
-
-
+		if(ret>0)
+			break;
+    }
     
     close(sockfd);
     return 0;
