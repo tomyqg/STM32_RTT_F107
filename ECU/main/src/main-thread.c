@@ -5,6 +5,7 @@
 #include "resolve.h"
 #include "variation.h"
 #include "checkdata.h"
+#include "rtc.h"
 
 #define MAIN_VERSION "R-1.0.0"
 
@@ -133,9 +134,9 @@ int init_inverter(inverter_info *inverter)
 int init_all(inverter_info *inverter)
 {
 
-	//openzigbee();
+	openzigbee();
 	init_ecu();
-	//init_inverter(inverter);
+	init_inverter(inverter);
 
 	return 0;
 }
@@ -176,7 +177,7 @@ int reset_inverter(inverter_info *inverter)
 
 void main_thread_entry(void* parameter)
 {
-	//int thistime=0, durabletime=65535, reportinterval=300;					//thistime:本轮向逆变器发送广播要数据的时间;durabletime:ECU本轮向逆变器要数据的持续时间
+	int thistime=0, durabletime=65535, reportinterval=300;					//thistime:本轮向逆变器发送广播要数据的时间;durabletime:ECU本轮向逆变器要数据的持续时间
 	//char broadcast_hour_minute[3]={'\0'};									//向逆变器发送广播命令时的时间
 	//int cur_time_hour;														//当前的时间小时
 
@@ -188,6 +189,11 @@ void main_thread_entry(void* parameter)
 	
 	while(1)
 	{
+		if((durabletime-thistime) >= reportinterval){
+		//if((durabletime-thistime) >= 60){
+			thistime = time(RT_NULL);
+		
+		}
 		
 	}
 	

@@ -24,6 +24,9 @@
 
 #ifndef RTC_H_INCLUDED
 #define RTC_H_INCLUDED
+#include <time.h>
+
+extern time_t time(time_t *t);
 
 extern rt_err_t set_date(rt_uint32_t year,
                          rt_uint32_t month,

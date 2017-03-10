@@ -49,7 +49,7 @@ int selectWiFi(int timeout)			//Wifi串口数据检测 返回0 表示串口没有数据  返回1表
 	}
 }
 
-
+//WIFI串口打开函数
 int WiFi_Open(void)
 {
 	int result = 0;
@@ -160,6 +160,7 @@ int WiFi_RecvData(int timeout,char *data)
 		return length;
 	}
 }
+
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>

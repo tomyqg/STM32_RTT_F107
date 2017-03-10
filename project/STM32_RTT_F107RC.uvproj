@@ -951,6 +951,26 @@
               <FileType>1</FileType>
               <FilePath>..\Test\src\readwrite.c</FilePath>
             </File>
+            <File>
+              <FileName>listdir.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Test\src\listdir.c</FilePath>
+            </File>
+            <File>
+              <FileName>readspeed.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Test\src\readspeed.c</FilePath>
+            </File>
+            <File>
+              <FileName>seekdir.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Test\src\seekdir.c</FilePath>
+            </File>
+            <File>
+              <FileName>writespeed.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Test\src\writespeed.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -19,12 +19,12 @@
 #define CS_GPIO                   GPIOA
 #define CS_PIN                    (GPIO_Pin_3)
 
-#define IO_SPI1_CLK_H()      GPIO_SetBits(CLK_GPIO, CLK_PIN)   
-#define IO_SPI1_CLK_L()      GPIO_ResetBits(CLK_GPIO, CLK_PIN);
-#define IO_SPI1_MOSI_H()     GPIO_SetBits(DI_GPIO, DI_PIN)
-#define IO_SPI1_MOSI_L()     GPIO_ResetBits(DI_GPIO, DI_PIN)
+#define IO_SPI1_CLK_H()      GPIO_SetBits(CLK_GPIO, CLK_PIN)   	//CLK设置为高电平
+#define IO_SPI1_CLK_L()      GPIO_ResetBits(CLK_GPIO, CLK_PIN);	//CLK设置为低电平
+#define IO_SPI1_MOSI_H()     GPIO_SetBits(DI_GPIO, DI_PIN)			//MOSI设置为高电平
+#define IO_SPI1_MOSI_L()     GPIO_ResetBits(DI_GPIO, DI_PIN)		//MOSI设置为低电平
 
-// MISO?????
+// MISO状态获取
 #define IO_SPI1_MISO_STATE() GPIO_ReadInputDataBit(DO_GPIO, DO_PIN) 
 
 /*****************************************************************************/
@@ -32,9 +32,6 @@
 /*  Function Implementations                                                 */
 /*                                                                           */
 /*****************************************************************************/
-
-
-
 static rt_err_t configure(struct rt_spi_device* device, struct rt_spi_configuration* configuration);
 static rt_uint32_t xfer(struct rt_spi_device* device, struct rt_spi_message* message);
 
