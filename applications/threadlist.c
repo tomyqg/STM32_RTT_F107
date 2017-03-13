@@ -32,7 +32,7 @@ extern int lwip_system_init(void);
 #ifdef EEPROM		
 #include "Flash_24L512.h"
 #endif
-
+#include "ds1302z_rtc.h"
 
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t led_stack[200];
@@ -41,10 +41,11 @@ ALIGN(RT_ALIGN_SIZE)
 rt_uint8_t main_stack[ 1024 ];
 struct rt_thread main_thread;
 
+/*
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t ntp_stack[1024];
 static struct rt_thread ntp_thread;
-
+*/
 
 void rt_init_thread_entry(void* parameter)
 {
@@ -95,6 +96,7 @@ void rt_init_thread_entry(void* parameter)
 	finsh_system_init();
 	finsh_set_device(RT_CONSOLE_DEVICE_NAME);
 #endif
+	rt_hw_rtc_init();		//实时时钟初始化
 }
 
 
@@ -123,7 +125,7 @@ static void ntp_thread_entry(void* parameter)
   while(1)
   {
     get_time_from_NTP();
-    rt_thread_delay( RT_TICK_PER_SECOND*259200);
+    rt_thread_delay( RT_TICK_PER_SECOND*10);		//259200
   }  
 
 }
@@ -145,12 +147,13 @@ void tasks_new(void)//创建任务线程
   }
 	
   /* init ntp thread */
-  result = rt_thread_init(&ntp_thread,"ntp",ntp_thread_entry,RT_NULL,(rt_uint8_t*)&ntp_stack[0],sizeof(ntp_stack),THREAD_PRIORITY_NTP,5);
+  /*
+	result = rt_thread_init(&ntp_thread,"ntp",ntp_thread_entry,RT_NULL,(rt_uint8_t*)&ntp_stack[0],sizeof(ntp_stack),THREAD_PRIORITY_NTP,5);
   if (result == RT_EOK)
   {
     rt_thread_startup(&ntp_thread);
   }
-	
+	*/
 	/* init main thread */
 	result = rt_thread_init(&main_thread,"main",main_thread_entry,RT_NULL,(rt_uint8_t*)&main_stack[0],sizeof(main_stack),THREAD_PRIORITY_MAIN,5);
   if (result == RT_EOK)

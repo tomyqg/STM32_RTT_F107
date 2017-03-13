@@ -65,6 +65,7 @@ int get_time_from_NTP()
 				if(-1!=receive_packet(sockfd, &receivepacket, &serversocket)){
 					gettimepacket(&receivepacket, &newtime);
 #ifdef NTPDEBUG
+				rt_kprintf("%d\n",newtime.tv_sec);
 				rt_kprintf("server time= %s\n",ctime(&(newtime.tv_sec)));
 #endif
 				}

@@ -16,7 +16,6 @@
  */
 
 #include <rtthread.h>
-#include <time.h>
 #include <string.h>
 #include <rthw.h>
 #include <stm32f10x.h>
@@ -25,63 +24,55 @@
 #define DS1302DAT GPIO_Pin_8   //与数据线相连的芯片的管脚
 #define DS1302RST GPIO_Pin_2   //与复位端相连的芯片的管脚
 
+static rt_mutex_t RTC_lock = RT_NULL;
 static struct rt_device rtc;
 
 void ds1302_writebyte(unsigned char dat)
 {
 	unsigned char i;
-	unsigned char sda;
+	//设置为推免输出
 	GPIO_InitTypeDef GPIO_InitStructure;
-	
-	GPIO_ResetBits(GPIOC,DS1302CLK);		
-	rt_hw_us_delay(2);
-	
-	GPIO_InitStructure.GPIO_Pin =  DS1302DAT;     
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz; 
+	GPIO_InitStructure.GPIO_Pin =  DS1302DAT;   
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;  
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;    
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
-	GPIO_SetBits(GPIOC,DS1302DAT);
-	rt_hw_us_delay(2);			
-	for(i=0; i<8; i++){
-		sda = dat & 0x01;
-		if(sda)
+	
+	GPIO_ResetBits(GPIOC,DS1302CLK);           //初始时钟线置为0
+	for(i=0;i<8;i++)    //开始传输8个字节的数据
+	{
+		
+		if(dat&0x01)	//取最低位，注意 DS1302的数据和地址都是从最低位开始传输的
 		{
 			GPIO_SetBits(GPIOC,DS1302DAT);
 		}else
 		{
 			GPIO_ResetBits(GPIOC,DS1302DAT);
 		}
-		rt_hw_us_delay(2);			
-		GPIO_SetBits(GPIOC,DS1302CLK);	
-		rt_hw_us_delay(2);			
-		GPIO_ResetBits(GPIOC,DS1302CLK);	
-		rt_hw_us_delay(1);			
-		dat >>= 1;
+		GPIO_SetBits(GPIOC,DS1302CLK);       //时钟线拉高，制造上升沿，SDA的数据被传输
+		GPIO_ResetBits(GPIOC,DS1302CLK);       //时钟线拉低，为下一个上升沿做准备
+		dat>>=1;        //数据右移一位，准备传输下一位数据
 	}
 }
 
 unsigned char ds1302_readbyte(void)
 {
-	unsigned char i, dat = 0x00;
-  GPIO_InitTypeDef GPIO_InitStructure;
-	
-	GPIO_InitStructure.GPIO_Pin =  DS1302DAT;     
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz; 
+	unsigned char i,dat;
+	//设置为上拉输入
+	GPIO_InitTypeDef GPIO_InitStructure;
+	GPIO_InitStructure.GPIO_Pin =  DS1302DAT;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;    
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
-	rt_hw_us_delay(2);
-
-	for(i=0; i<8; i++){
-		dat >>= 1;
-		if(1 == GPIO_ReadInputDataBit(GPIOC, DS1302DAT))
-			dat |= 0x80;
-		GPIO_SetBits(GPIOC,DS1302CLK);	
-		rt_hw_us_delay(2);			
-		GPIO_ResetBits(GPIOC,DS1302CLK);	
-		rt_hw_us_delay(2);	
+	
+	for(i=0;i<8;i++)
+	{
+		dat>>=1;        //要返回的数据左移一位
+		if(GPIO_ReadInputDataBit(GPIOC,DS1302DAT) == 1)     //当数据线为高时，证明该位数据为 1
+			dat|=0x80;  //要传输数据的当前值置为 1,若不是,则为 0
+		GPIO_SetBits(GPIOC,DS1302CLK);       //拉高时钟线
+		GPIO_ResetBits(GPIOC,DS1302CLK);       //制造下降沿
 	}
-
-	return dat;
+	return dat;         //返回读取出的数据
 }
 
 unsigned char ds1302_read(unsigned char cmd)
@@ -89,17 +80,11 @@ unsigned char ds1302_read(unsigned char cmd)
 	unsigned char data;
 
 	GPIO_ResetBits(GPIOC,DS1302RST);	
-	rt_hw_us_delay(1);	
 	GPIO_ResetBits(GPIOC,DS1302CLK);	
-	rt_hw_us_delay(1);	
 	GPIO_SetBits(GPIOC,DS1302RST);		
-	rt_hw_us_delay(1);	
 	ds1302_writebyte(cmd);
-	rt_hw_us_delay(2);	
 	data = ds1302_readbyte();
-	rt_hw_us_delay(1);	
 	GPIO_SetBits(GPIOC,DS1302CLK);		
-	rt_hw_us_delay(1);	
 	GPIO_ResetBits(GPIOC,DS1302RST);	
 
 	return data;
@@ -108,21 +93,14 @@ unsigned char ds1302_read(unsigned char cmd)
 void ds1302_write(unsigned char cmd, unsigned char data)
 {
 	GPIO_ResetBits(GPIOC,DS1302RST);	
-	rt_hw_us_delay(1);
 	GPIO_ResetBits(GPIOC,DS1302CLK);	
-	rt_hw_us_delay(1);
 	GPIO_SetBits(GPIOC,DS1302RST);		
-	rt_hw_us_delay(1);
 
 	ds1302_writebyte(cmd);
 	ds1302_writebyte(data);
-	rt_hw_us_delay(1);
 	GPIO_SetBits(GPIOC,DS1302CLK);	
-	rt_hw_us_delay(1);
 	GPIO_ResetBits(GPIOC,DS1302RST);	
 }
-
-
 
 static rt_err_t rt_rtc_open(rt_device_t dev, rt_uint16_t oflag)
 {
@@ -136,75 +114,113 @@ static rt_err_t rt_rtc_open(rt_device_t dev, rt_uint16_t oflag)
 
 static rt_size_t rt_rtc_read(rt_device_t dev, rt_off_t pos, void* buffer, rt_size_t size)
 {
-    return 0;
+	int ret;
+	unsigned char year, month, day, hour, minute, second;
+	char datetime[20] = {'\0'};
+	char temp[5] = {'\0'};
+	rt_err_t result = rt_mutex_take(RTC_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
+	{
+		year = ds1302_read(0x8D);
+		month = ds1302_read(0x89);
+		day = ds1302_read(0x87);
+		hour = ds1302_read(0x85);
+		minute = ds1302_read(0x83);
+		second = ds1302_read(0x81);
+
+		strcat(datetime, "20");
+		rt_kprintf("year: %x, month: %x, day: %x, hour: %x, minute: %x, second: %x\n", year, month, day, hour, minute, second);
+
+		rt_sprintf(temp, "%d", ((year >> 4) & 0x0f));
+		strcat(datetime, temp);
+		memset(temp, '\0', 5);
+
+		rt_sprintf(temp, "%d", (year & 0x0f));
+		strcat(datetime, temp);
+		memset(temp, '\0', 5);
+
+		rt_sprintf(temp, "%d", ((month >> 4) & 0x0f));
+		strcat(datetime, temp);
+		memset(temp, '\0', 5);
+
+		rt_sprintf(temp, "%d", (month & 0x0f));
+		strcat(datetime, temp);
+		memset(temp, '\0', 5);
+
+		rt_sprintf(temp, "%d", ((day >> 4) & 0x0f));
+		strcat(datetime, temp);
+		memset(temp, '\0', 5);
+
+		rt_sprintf(temp, "%d", (day & 0x0f));
+		strcat(datetime, temp);
+		memset(temp, '\0', 5);
+
+		rt_sprintf(temp, "%d", ((hour >> 4) & 0x07));
+		strcat(datetime, temp);
+		memset(temp, '\0', 5);
+
+		rt_sprintf(temp, "%d", (hour & 0x0f));
+		strcat(datetime, temp);
+		memset(temp, '\0', 5);
+
+		rt_sprintf(temp, "%d", ((minute >> 4) & 0x0f));
+		strcat(datetime, temp);
+		memset(temp, '\0', 5);
+
+		rt_sprintf(temp, "%d", (minute & 0x0f));
+		strcat(datetime, temp);
+		memset(temp, '\0', 5);
+
+		rt_sprintf(temp, "%d", ((second >> 4) & 0x0f));
+		strcat(datetime, temp);
+		memset(temp, '\0', 5);
+
+		rt_sprintf(temp, "%d", (second & 0x0f));
+		strcat(datetime, temp);
+		memset(temp, '\0', 5);
+
+		ret = strlen(datetime);
+		rt_memcpy(buffer,datetime,strlen(datetime));
+	}
+	rt_mutex_release(RTC_lock);
+	return ret;
 }
 
-static rt_err_t rt_rtc_control(rt_device_t dev, rt_uint8_t cmd, void *args)
+static rt_size_t rt_rtc_write(struct rt_device *dev,
+                                 rt_off_t          pos,
+                                 const void       *buffer,
+                                 rt_size_t         size)
 {
-	
-    rt_time_t *time;
-    RT_ASSERT(dev != RT_NULL);
-		rt_kprintf("rt_rtc_control\n");
-    switch (cmd)
-    {
-			case RT_DEVICE_CTRL_RTC_GET_TIME:		//获取时间
-			{
-				time_t now;
-				struct tm tm_new;
-				unsigned char year='0', month='0', day='0', hour='0', minute='0', second='0';
-				rt_kprintf("%c %c %c %c %c %c\n",year,month,day,hour,minute,second);
-				time = (rt_time_t *)args;
-				/* read device */
-				year = ds1302_read(0x8D);
-				month = ds1302_read(0x89);
-				day = ds1302_read(0x87);
-				hour = ds1302_read(0x85);
-				minute = ds1302_read(0x83);
-				second = ds1302_read(0x81);
-				rt_kprintf("%c %c %c %c %c %c\n",year,month,day,hour,minute,second);
-				tm_new.tm_year = year;
-				tm_new.tm_mon = month;
-				tm_new.tm_mday = day;
-				tm_new.tm_hour = hour;
-				tm_new.tm_min = minute;
-				tm_new.tm_sec = second;
-				//转换为1970.1.1开始的时间
-				now = mktime(&tm_new);
-				*time = (rt_time_t)now;
-						
-			}     
-      break;
+	int ret=0;
+	unsigned year, month, day, hour, minute, second;
+	unsigned char datetime[20] = {'\0'};
 
-			case RT_DEVICE_CTRL_RTC_SET_TIME:		//设置时间
-			{
-				time_t set_time;
-				struct tm *p_tm;
-				struct tm tm_new;
-				unsigned char year, month, day, hour, minute, second;
-				time = (rt_time_t *)args;
-				//转换为年月日时分秒时间
-				set_time = *time;
-				p_tm = localtime(&set_time);
-				memcpy(&tm_new, p_tm, sizeof(struct tm));
-				year = tm_new.tm_year;
-				month = tm_new.tm_mon;
-				day = tm_new.tm_mday;
-				hour = tm_new.tm_hour;
-				minute = tm_new.tm_min;
-				second = tm_new.tm_sec;
+	rt_err_t result = rt_mutex_take(RTC_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
+	{
+		rt_memcpy(datetime,buffer,size);
+		ret = size;
 
-				ds1302_write(0x8C, year);
-				ds1302_write(0x88, month);
-				ds1302_write(0x86, day);
-				ds1302_write(0x84, hour);
-				ds1302_write(0x82, minute);
-				ds1302_write(0x80, second);
-			
-			}
-			break;
-		}
+		rt_kprintf("%s\n", datetime);
 
-    return RT_EOK;
+		year = ((datetime[2] - 0x30) << 4) | (datetime[3] - 0x30);
+		month = ((datetime[4] - 0x30) << 4) | (datetime[5] - 0x30);
+		day = ((datetime[6] - 0x30) << 4) | (datetime[7] - 0x30);
+		hour = ((datetime[8] - 0x30) << 4) | (datetime[9] - 0x30);
+		minute = ((datetime[10] - 0x30) << 4) | (datetime[11] - 0x30);
+		second = ((datetime[12] - 0x30) << 4) | (datetime[13] - 0x30);
+
+		rt_kprintf("%x, %x, %x, %x, %x, %x\n", year, month, day, hour, minute, second);
+
+		ds1302_write(0x8C, year);
+		ds1302_write(0x88, month);
+		ds1302_write(0x86, day);
+		ds1302_write(0x84, hour);
+		ds1302_write(0x82, minute);
+		ds1302_write(0x80, second);
+	}
+	rt_mutex_release(RTC_lock);
+  return ret;
 }
 
 /*******************************************************************************
@@ -222,17 +238,8 @@ int RTC_Configuration(void)
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;    
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;    
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
-	GPIO_ResetBits(GPIOC,DS1302CLK);
-	rt_hw_us_delay(1);
-	GPIO_ResetBits(GPIOC,DS1302RST);
-	rt_hw_us_delay(1);
-	
-	//PA0配置为开漏模式，此模式下可以实现真下的双向IO  
-	GPIO_InitStructure.GPIO_Pin =  DS1302DAT;     
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;    
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
-	GPIO_SetBits(GPIOC,DS1302DAT);
-	rt_hw_us_delay(1);
+	GPIO_SetBits(GPIOC,DS1302CLK);
+	GPIO_SetBits(GPIOC,DS1302RST);
 	
 	ds1302_write(0x8e, 0x00);	//关闭写保护
   return 0;
@@ -254,12 +261,18 @@ void rt_hw_rtc_init(void)
     rtc.open 	= rt_rtc_open;
     rtc.close	= RT_NULL;
     rtc.read 	= rt_rtc_read;
-    rtc.write	= RT_NULL;
-    rtc.control = rt_rtc_control;
+    rtc.write	= rt_rtc_write;
+    rtc.control = RT_NULL;
 
     /* no private */
     rtc.user_data = RT_NULL;
 
+		RTC_lock = rt_mutex_create("RTC_lock", RT_IPC_FLAG_FIFO);
+		if (RTC_lock != RT_NULL)
+		{
+			rt_kprintf("Initialize RTC successful!\n");
+		}
+		
     rt_device_register(&rtc, "rtc", RT_DEVICE_FLAG_RDWR);
 
     return;

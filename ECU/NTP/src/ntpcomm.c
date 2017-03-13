@@ -158,10 +158,10 @@ void gettimepacket(NTPPACKET *receivepacket, struct timeval * new_time)
 
 void update_time(struct timeval * new_time)
 {
-    struct tm *timenow;
-		time_t newtime = (time_t)new_time->tv_sec;
-    timenow = localtime(&newtime);
-		set_time(timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
-		set_date(timenow->tm_year, timenow->tm_mon, timenow->tm_mday);
+    //struct tm *timenow;
+		//time_t newtime = (time_t)new_time->tv_sec;
+    //timenow = localtime(&newtime);
+		//set_time(timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
+		//set_date(timenow->tm_year, timenow->tm_mon, timenow->tm_mday);
 }
 

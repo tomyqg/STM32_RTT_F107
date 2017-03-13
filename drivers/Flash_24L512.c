@@ -311,7 +311,7 @@ void EEPROM_Init(void)
 	GPIO_Init(WP_GPIO, &GPIO_InitStructure);
 	
 	EEPROM_lock = rt_mutex_create("EEPROM_lock", RT_IPC_FLAG_FIFO);
-	if (EEPROM_lock == RT_NULL)
+	if (EEPROM_lock != RT_NULL)
 	{
 		rt_kprintf("Initialize EEPROM successful!\n");
 	}

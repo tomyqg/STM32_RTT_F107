@@ -316,7 +316,7 @@ void SPI_init(void)
 	SPI_WriteW25X_Disable();
 	/* Initialize W25Q32BV mutex lock  */
 	Flash_lock = rt_mutex_create("Flash_lock", RT_IPC_FLAG_FIFO);
-	if (Flash_lock == RT_NULL)
+	if (Flash_lock != RT_NULL)
 	{
 		rt_kprintf("Initialize W25Q32BV successful!\n");
 	}
