@@ -8,6 +8,8 @@
 #include <rthw.h>
 #include <stm32f10x.h>
 #include "resolve.h"
+#include <dfs_posix.h> 
+#include <stdio.h>
 
 extern struct rt_device serial4;		//串口4为Zigbee收发串口
 
@@ -1511,9 +1513,9 @@ int process_all(inverter_info *firstinverter)
 	//processpower(firstinverter);			//设置功率预设值,ZK,3.10有改动
 //	process_gfdi(firstinverter);			//清GFDI标志
 //	process_protect_data(firstinverter);	//设置预设值
-	process_turn_on_off(firstinverter);		//开关机
-	process_quick_boot(firstinverter);		//快速启动
-	process_ipp(firstinverter);				//IPP设定
+	//process_turn_on_off(firstinverter);		//开关机
+	//process_quick_boot(firstinverter);		//快速启动
+	//process_ipp(firstinverter);				//IPP设定
 	//process_ird_all(firstinverter);
 	//process_ird(firstinverter);
 	//turn_on_off(firstinverter);								//开关机,ZK,3.10所加
@@ -1526,8 +1528,163 @@ int process_all(inverter_info *firstinverter)
 
 int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 {
+	int i, j;
+	inverter_info *curinverter = firstinverter;
+	int count=0, syspower=0;
+	float curenergy=0;
+	char buff[50] = {'\0'};
+	int fd;
 
+	for(i=0;i<3;i++)
+	{
+		if(-1==zb_test_communication())
+			zigbee_reset();
+		else
+			break;
+	}
+	for(j=0; j<5; j++)
+	{
+		curinverter = firstinverter;
+		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++)			//每个逆变器最多要5次数据
+		{
+			process_all(firstinverter);
+			if((0 == curinverter->dataflag) && (0 != curinverter->shortaddr))
+			{
+				if(1 != curinverter->bindflag)
+				{
+					if(1 == zb_turnoff_limited_rptid(curinverter->shortaddr,curinverter))
+					{
+						curinverter->bindflag = 1;			//绑定逆变器标志位置1
+						//update_inverter_bind_flag(curinverter);
+					}
+				}
+				/*
+				if((0 == curinverter->model) )//&& (1 == curinverter->bindflag))
+				{
+					if(1 == zb_query_inverter_info(curinverter))
+						update_inverter_model_version(curinverter);
+				}
+				*/
 
+				if((0 != curinverter->model) )//&& (1 == curinverter->bindflag))
+				//if(1)
+				{
+					zb_query_data(curinverter);
+					rt_hw_us_delay(200000);
+				}
+			}
+			curinverter++;
+		}
+	}
+
+	ecu.polling_total_times++;				//ECU总轮训加1 ,ZK
+
+	fd = open("/TMP/DISCON.TXT", O_WRONLY | O_CREAT | O_TRUNC, 0);
+	if (fd >= 0) {
+		curinverter = firstinverter;
+		for(i=0; i<MAXINVERTERCOUNT; i++, curinverter++)						//统计当前一天逆变器与ECU没通讯上的总次数, ZK
+		{
+			if((0 == curinverter->dataflag)&&(12 == strlen(curinverter->id)))
+			{
+				curinverter->disconnect_times++;
+				sprintf(buff, "%s-%d-%d\n", curinverter->id,curinverter->disconnect_times,ecu.polling_total_times);
+				write(fd, buff, strlen(buff));
+			}
+			else if((1 == curinverter->dataflag)&&(12 == strlen(curinverter->id)))
+			{
+				sprintf(buff, "%s-%d-%d\n", curinverter->id,curinverter->disconnect_times,ecu.polling_total_times);
+				write(fd, buff, strlen(buff));
+			}
+		}
+		close(fd);
+	}
+
+	curinverter = firstinverter;
+	for(i=0; i<MAXINVERTERCOUNT; i++, curinverter++)		//统计连续没有获取到数据的逆变器 ZK,一旦接收到数据，此变量清零
+	{
+		if((0 == curinverter->dataflag)&&(12 == strlen(curinverter->id)))
+			curinverter->no_getdata_num++;
+	}
+
+	curinverter = firstinverter;
+	for(i=0; i<MAXINVERTERCOUNT; i++, curinverter++){							//统计当前多少个逆变器
+		if((1 == curinverter->dataflag)&&(12 == strlen(curinverter->id)))
+			count++;
+	}
+	ecu.count = count;
+
+	curinverter = firstinverter;
+	for(syspower=0, i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++){		//计算当前一轮系统功率
+		if(1 == curinverter->dataflag){
+			syspower += curinverter->op;
+			syspower += curinverter->opb;
+			syspower += curinverter->opc;
+			syspower += curinverter->opd;
+		}
+	}
+	ecu.system_power = syspower;
+
+	curinverter = firstinverter;
+	for(curenergy=0, i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++){		//计算当前一轮发电量
+		if(1 == curinverter->dataflag){
+			curenergy += curinverter->output_energy;
+			curenergy += curinverter->output_energyb;
+			curenergy += curinverter->output_energyc;
+		}
+	}
+	ecu.current_energy = curenergy;
+
+	//update_tmpdb(firstinverter);
+
+	fd = open("/TMP/IDNOBIND.TXT", O_WRONLY | O_CREAT | O_TRUNC, 0); 	//为了统计显示有短地址但是没有绑定的逆变器ID
+	if (fd >= 0) 
+	{						
+
+		curinverter = firstinverter;
+		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++)
+		{
+			if((1!=curinverter->bindflag)&&(0!=curinverter->shortaddr))
+			{
+				memset(buff,0,50);
+				sprintf(buff,"%s\n",curinverter->id);
+				write(fd, buff, strlen(buff));
+			}
+		}
+		close(fd);
+	}
+
+	fd = open("/TMP/SIGNALST.TXT", O_WRONLY | O_CREAT | O_TRUNC, 0);
+	if (fd >= 0) 
+	{			
+		curinverter = firstinverter;
+		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++)	 //统计每天逆变器的信号强度, ZK
+		{
+			memset(buff,0,50);
+			sprintf(buff, "%s%X\n", curinverter->id,curinverter->signalstrength);
+			write(fd, buff, strlen(buff));
+
+		}
+		close(fd);
+	}
+
+	fd = open("/TMP/RADUIS.TXT", O_WRONLY | O_CREAT | O_TRUNC, 0);
+	if (fd >= 0) 
+	{			
+		curinverter = firstinverter;
+		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++)	 //统计每台逆变器的信号强度, ZK
+		{
+			memset(buff,0,50);
+			sprintf(buff, "%s%X\n", curinverter->id,curinverter->raduis);
+			write(fd, buff, strlen(buff));
+		}
+		close(fd);
+	}
+	/*
+	write_gfdi_status(firstinverter);
+	write_turn_on_off_status(firstinverter);
+	save_turn_on_off_changed_result(firstinverter);
+	save_gfdi_changed_result(firstinverter);
+	*/
 	return ecu.count;
 }
 

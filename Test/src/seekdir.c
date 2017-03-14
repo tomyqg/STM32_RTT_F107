@@ -17,7 +17,6 @@ void seekdir_test(void)
 {
 	DIR * dirp;
 	long save3 = 0;
-	long cur;
 	int i = 0;
 	struct dirent *dp;
 

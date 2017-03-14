@@ -38,7 +38,7 @@ ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t led_stack[200];
 static struct rt_thread led_thread;
 ALIGN(RT_ALIGN_SIZE)
-rt_uint8_t main_stack[ 1024 ];
+rt_uint8_t main_stack[ 4096 ];
 struct rt_thread main_thread;
 
 /*
@@ -119,7 +119,7 @@ static void led_thread_entry(void* parameter)
         rt_thread_delay( RT_TICK_PER_SECOND/2 );
     }
 }
-
+/*
 static void ntp_thread_entry(void* parameter)
 {
   while(1)
@@ -129,7 +129,7 @@ static void ntp_thread_entry(void* parameter)
   }  
 
 }
-
+*/
 
 void tasks_new(void)//创建任务线程
 {

@@ -129,7 +129,7 @@ static rt_size_t rt_rtc_read(rt_device_t dev, rt_off_t pos, void* buffer, rt_siz
 		second = ds1302_read(0x81);
 
 		strcat(datetime, "20");
-		rt_kprintf("year: %x, month: %x, day: %x, hour: %x, minute: %x, second: %x\n", year, month, day, hour, minute, second);
+		//rt_kprintf("year: %x, month: %x, day: %x, hour: %x, minute: %x, second: %x\n", year, month, day, hour, minute, second);
 
 		rt_sprintf(temp, "%d", ((year >> 4) & 0x0f));
 		strcat(datetime, temp);
@@ -201,7 +201,7 @@ static rt_size_t rt_rtc_write(struct rt_device *dev,
 		rt_memcpy(datetime,buffer,size);
 		ret = size;
 
-		rt_kprintf("%s\n", datetime);
+		//rt_kprintf("%s\n", datetime);
 
 		year = ((datetime[2] - 0x30) << 4) | (datetime[3] - 0x30);
 		month = ((datetime[4] - 0x30) << 4) | (datetime[5] - 0x30);
@@ -210,7 +210,7 @@ static rt_size_t rt_rtc_write(struct rt_device *dev,
 		minute = ((datetime[10] - 0x30) << 4) | (datetime[11] - 0x30);
 		second = ((datetime[12] - 0x30) << 4) | (datetime[13] - 0x30);
 
-		rt_kprintf("%x, %x, %x, %x, %x, %x\n", year, month, day, hour, minute, second);
+		//rt_kprintf("%x, %x, %x, %x, %x, %x\n", year, month, day, hour, minute, second);
 
 		ds1302_write(0x8C, year);
 		ds1302_write(0x88, month);

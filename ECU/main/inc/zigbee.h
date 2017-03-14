@@ -43,6 +43,20 @@ int zb_frequency_protectime_broadcast(void);		//欠频保护时间广播
 int zb_frequency_protectime_single(inverter_info *inverter);		//欠频保护时间单播
 int zb_voltage_protectime_broadcast(void);		//欠压保护时间广播
 int zb_voltage_protectime_single(inverter_info *inverter);		//欠压保护时间单播
-
-		
+int process_gfdi(inverter_info *firstinverter);
+int compare_protect_data(char *set_protect_data, char *actual_protect_data);				//比较逆变器返回的预设值和页面上输入的预设值
+int resolve_presetdata(inverter_info *inverter, char * protect_data_result);	//?????????????
+int process_protect_data(inverter_info *firstinverter);
+int process_turn_on_off(inverter_info *firstinverter);
+int process_quick_boot(inverter_info *firstinverter);
+int process_ipp(inverter_info *firstinverter);
+int process_all(inverter_info *firstinverter);
+int getalldata(inverter_info *firstinverter);		//获取每个逆变器的数据
+int get_inverter_shortaddress(inverter_info *firstinverter);		//获取没有数据的逆变器的短地址
+int bind_nodata_inverter(inverter_info *firstinverter);		//绑定没有数据的逆变器,并且获取短地址
+int zb_change_inverter_channel_one(char *inverter_id, int channel);
+int zb_change_channel(int num, char **ids);
+int zb_reset_channel(int num, char **ids);
+int zb_off_report_id_and_bind(int short_addr);
+int zigbeeRecvMsg(char *data, int timeout_sec);
 #endif /*__ZIGBEE_H__*/

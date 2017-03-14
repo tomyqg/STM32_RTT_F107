@@ -74,7 +74,7 @@ static rt_uint32_t xfer(struct rt_spi_device* device, struct rt_spi_message* mes
         data = *send_ptr++;
       }
 			//rt_kprintf("send:%x\n",data);
-      rt_hw_us_delay(2);
+      //rt_hw_us_delay(2);
       // 循环移出一个字节数据
       for(i=0; i<8; i++)
       {
@@ -89,10 +89,10 @@ static rt_uint32_t xfer(struct rt_spi_device* device, struct rt_spi_message* mes
         if(IO_SPI1_MISO_STATE() != 0)  {
           u8Rtn |= 0x01;
         }
-        rt_hw_us_delay(4);
+        //rt_hw_us_delay(4);
         IO_SPI1_CLK_H();
         
-        rt_hw_us_delay(5);
+        //rt_hw_us_delay(5);
       }
 			//rt_kprintf("recv:%x\n",u8Rtn);
       if(recv_ptr != RT_NULL) {

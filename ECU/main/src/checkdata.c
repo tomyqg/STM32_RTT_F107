@@ -1,15 +1,8 @@
 #include "checkdata.h"
+#include <dfs_posix.h> 
+extern int ecu_type;	//1:SAA; 2:NA; 3:MX
 
-int ecu_type;	//1:SAA; 2:NA; 3:MX
-
-int get_ecu_type()			//ÔÚ³õÊ¼»¯initinverter()º¯Êýµ÷ÓÃ
-{
-
-	ecu_type = 1;
-	return 0;
-}
-
-int check_yc200_yc250(struct inverter_info_t *inverter)		//??????????€?????
+int check_yc200_yc250(struct inverter_info_t *inverter)		//ÔÚ½âÎöº¯ÊýµÄ×îºóµ÷ÓÃ
 {
 	if(inverter->dv > 1500)
 		inverter->dv = 1500;
@@ -75,7 +68,7 @@ int check_yc200_yc250(struct inverter_info_t *inverter)		//??????????€?????
 	return 0;
 }
 
-int check_yc500(struct inverter_info_t *inverter)		//??????????€?????
+int check_yc500(struct inverter_info_t *inverter)		//ÔÚ½âÎöº¯ÊýµÄ×îºóµ÷ÓÃ
 {
 	if(inverter->dv > 1500)
 		inverter->dv = 1500;
@@ -157,7 +150,7 @@ int check_yc500(struct inverter_info_t *inverter)		//??????????€?????
 	return 0;
 }
 
-int check_yc1000(struct inverter_info_t *inverter)		//??????????€?????
+int check_yc1000(struct inverter_info_t *inverter)		//ÔÚ½âÎöº¯ÊýµÄ×îºóµ÷ÓÃ
 {
 	if(inverter->dv > 1500)
 		inverter->dv = 1500;
@@ -263,7 +256,7 @@ int check_yc1000(struct inverter_info_t *inverter)		//??????????€?????
 	return 0;
 }
 
-/*void modify_data(struct inverter_info_t *inverter)	//??€????????????????
+/*void modify_data(struct inverter_info_t *inverter)	//¹¹Ôì´íÎóµÄÊý¾ÝÓÃÓÚ²âÊÔ
 {
 //	inverter->dv = -1;
 //	inverter->di = -1;
@@ -275,7 +268,7 @@ int check_yc1000(struct inverter_info_t *inverter)		//??????????€?????
 
 }
 
-void modify_data_yc500(struct inverter_info_t *inverter)	//??€????????????????
+void modify_data_yc500(struct inverter_info_t *inverter)	//¹¹Ôì´íÎóµÄÊý¾ÝÓÃÓÚ²âÊÔ
 {
 //	inverter->dv = -1;
 //	inverter->dvb = -1;

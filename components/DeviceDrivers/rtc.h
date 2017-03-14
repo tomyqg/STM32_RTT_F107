@@ -24,16 +24,8 @@
 
 #ifndef RTC_H_INCLUDED
 #define RTC_H_INCLUDED
-#include <time.h>
+int set_time(const char* time);
+int apstime(char* currenttime);
 
-extern time_t time(time_t *t);
-
-extern rt_err_t set_date(rt_uint32_t year,
-                         rt_uint32_t month,
-                         rt_uint32_t day);
-
-extern rt_err_t set_time(rt_uint32_t hour,
-                         rt_uint32_t minute,
-                         rt_uint32_t second);
 
 #endif // RTC_H_INCLUDED

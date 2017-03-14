@@ -1,39 +1,41 @@
 #include "main-thread.h"
 #include <board.h>
-#include <rtthread.h>
 #include "zigbee.h"
 #include "resolve.h"
 #include "variation.h"
 #include "checkdata.h"
 #include "rtc.h"
-#include "ntpapp.h"
+#include "datetime.h"
+#include <dfs_posix.h> 
+#include <rtthread.h>
+#include "file.h"
 
 #define MAIN_VERSION "R-1.0.0"
 
 ALIGN(RT_ALIGN_SIZE)
-extern rt_uint8_t main_stack[ 1024 ];
+extern rt_uint8_t main_stack[ 4096 ];
 extern struct rt_thread main_thread;
 
 inverter_info inverter[MAXINVERTERCOUNT];
 ecu_info ecu;
 
-
 int init_ecu()
 {
-	char *ecuid = "888888888888";		//后续修改为从flash中获取
-	rt_memcpy(ecu.id,ecuid,12);//获取ECU  ID
-	ecu.panid = 0x88;
+	get_ecuid(ecu.id);
+	//获取panid
+	ecu.panid = get_panid();
 	//获取ECU信道
-	ecu.channel = 0x10;
+	ecu.channel = get_channel();
+	
 	rt_memset(ecu.ip, '\0', sizeof(ecu.ip));
-	ecu.life_energy = 0;			//后续从flash中获取历史发电量
+	ecu.life_energy = get_lifetime_power();
 	ecu.current_energy = 0;
 	ecu.system_power = 0;
 	ecu.count = 0;
 	ecu.total = 0;
 	ecu.flag_ten_clock_getshortaddr = 1;			//ZK
 	ecu.polling_total_times=0;					//ECU一天之中轮训的次数清0, ZK
-	ecu.type = 1;
+	ecu.type = 0;
 	ecu.zoneflag = 0;				//时区
 	printecuinfo(&ecu);
 	return 1;
@@ -174,13 +176,24 @@ int reset_inverter(inverter_info *inverter)
 	return 1;
 }
 
+int acquire_time()
+{
+	char datetime[15] = {'\0'};
+	unsigned char hour, minute, second;
+	apstime(datetime);
+	hour = ((datetime[8] - 0x30) *10) + (datetime[9] - 0x30);
+	minute = ((datetime[10] - 0x30) *10) + (datetime[11] - 0x30);
+	second = ((datetime[12] - 0x30) *10) + (datetime[13] - 0x30);
+	//rt_kprintf("%d %d %d \n",hour,minute,second);
+	return (hour*60*60+minute*60+second);
+}
 
 
 void main_thread_entry(void* parameter)
 {
 	int thistime=0, durabletime=65535, reportinterval=300;					//thistime:本轮向逆变器发送广播要数据的时间;durabletime:ECU本轮向逆变器要数据的持续时间
-	//char broadcast_hour_minute[3]={'\0'};									//向逆变器发送广播命令时的时间
-	//int cur_time_hour;														//当前的时间小时
+	char broadcast_hour_minute[3]={'\0'};									//向逆变器发送广播命令时的时间
+	int cur_time_hour;														//当前的时间小时
 
 
 	rt_kprintf("\nmain.exe %s\n", MAIN_VERSION);
@@ -192,10 +205,73 @@ void main_thread_entry(void* parameter)
 	{
 		if((durabletime-thistime) >= reportinterval){
 		//if((durabletime-thistime) >= 60){
-			//thistime = time(RT_NULL);
-		
+			thistime = acquire_time();
+			rt_memset(ecu.broadcast_time, '\0', sizeof(ecu.broadcast_time));				//清空本次广播时间
+
+			cur_time_hour = get_time(ecu.broadcast_time, broadcast_hour_minute);					//重新获取本次广播事件
+
+			printmsg("****************************************");
+			print2msg("ecu.broadcast_time",ecu.broadcast_time);
+			
+			ecu.count = getalldata(inverter);			//获取所有逆变器数据,返回当前有数据的逆变器数量
+			ecu.life_energy = ecu.life_energy + ecu.current_energy;				//计算系统历史发电量
+
+			update_life_energy(ecu.life_energy);								//设置系统历史发电量
+
+			//update_today_energy(ecu.current_energy);							//设置系统当天发电量
+
+			/*
+			if(ecu.count>0)
+			{
+				save_system_power(ecu.system_power,ecu.broadcast_time);			//ZK
+				update_daily_energy(ecu.current_energy,ecu.broadcast_time);
+				update_monthly_energy(ecu.current_energy,ecu.broadcast_time);
+				update_yearly_energy(ecu.current_energy,ecu.broadcast_time);
+				update_lifetime_energy(ecu.life_energy);
+			}
+			display_on_lcd_and_web(); //液晶屏显示信息
+			*/
+			/*
+			if(ecu.count>0)
+			{
+				protocol_APS18(inverter, ecu.broadcast_time);
+				protocol_status(inverter, ecu.broadcast_time);
+				saveevent(inverter, ecu.broadcast_time);							//保存当前一轮逆变器时间
+			}
+
+			if(ecu.count>0)
+			{
+				displayonweb(inverter, ecu.broadcast_time);								//实时数据页面数据
+			}
+//			printinverterinfo(&inverter);										//打印逆变器解析信息,ZK
+//			format(inverter, ecu.broadcast_time, ecu.system_power, ecu.current_energy, ecu.life_energy);
+
+			reset_inverter(inverter);											//重置每个逆变器
+			remote_update(inverter);
+
+			if((cur_time_hour>9)&&(1 == ecu.flag_ten_clock_getshortaddr))
+			{
+				get_inverter_shortaddress(inverter);
+				if(ecu.polling_total_times>3)
+				{
+					ecu.flag_ten_clock_getshortaddr = 0;							//每天10点执行完重新获取短地址后标志位置为0
+				}
+			}
+
+			//对于轮训没有数据的逆变器进行重新获取短地址操作
+			bind_nodata_inverter(inverter);
+			*/
 		}
-		
+		process_all(inverter);
+		rt_thread_delay(RT_TICK_PER_SECOND);
+
+		durabletime = acquire_time();				//如果轮训一边的时间不到5分钟,那么一直等到5分钟再轮训下一遍,超过5分钟则等待10分钟。。。5分钟起跳
+		if((durabletime-thistime)<=300)
+			reportinterval = 300;
+		else if((durabletime-thistime)<=600)
+			reportinterval = 600;
+		else
+			reportinterval = 900;
 	}
 	
 }

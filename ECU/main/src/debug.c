@@ -2,18 +2,19 @@
 #include "variation.h"
 #include <rtdef.h>
 #include <rtthread.h>
+#include <stdio.h>
 
 void printmsg(char *msg)		//打印字符串
 {
 #ifdef DEBUG
-	rt_kprintf("main==>%s!\n", msg);
+	printf("main==>%s!\n", msg);
 #endif
 }
 
 void print2msg(char *msg1, char *msg2)		//打印字符串
 {
 #ifdef DEBUG
-	rt_kprintf("main==>%s: %s!\n", msg1, msg2);
+	printf("main==>%s: %s!\n", msg1, msg2);
 #endif
 }
 
@@ -21,21 +22,21 @@ void print2msg(char *msg1, char *msg2)		//打印字符串
 void printdecmsg(char *msg, int data)		//打印整形数据
 {
 #ifdef DEBUG
-	rt_kprintf("main==>%s: %d!\n", msg, data);
+	printf("main==>%s: %d!\n", msg, data);
 #endif
 }
 
 void printhexdatamsg(char *msg, int data)		//打印16进制数据,ZK
 {
 #ifdef DEBUG
-	rt_kprintf("main==>%s: %X!\n", msg, data);
+	printf("main==>%s: %X!\n", msg, data);
 #endif
 }
 
 void printfloatmsg(char *msg, float data)		//打印实数
 {
 #ifdef DEBUG
-	rt_kprintf("main==>%s: %d!\n", msg, data);
+	printf("main==>%s: %f!\n", msg, data);
 #endif
 }
 
@@ -44,10 +45,10 @@ void printhexmsg(char *msg, char *data, int size)		//打印十六进制数据
 #ifdef DEBUG
 	int i;
 
-	rt_kprintf("main==>%s: ", msg);
+	printf("main==>%s: ", msg);
 	for(i=0; i<size; i++)
-		rt_kprintf("%02X, ", data[i]);
-	rt_kprintf("\n");
+		printf("%02X, ", data[i]);
+	printf("\n");
 #endif
 }
 
