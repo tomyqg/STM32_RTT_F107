@@ -4,6 +4,7 @@
 #include "variation.h"
 #include "datetime.h"
 #include "ema_control.h"
+#include "file.h"
 
 
 //extern int caltype;		//计算方式，NA版和非NA版的区别
@@ -40,7 +41,7 @@ int write_turn_on_off_status(inverter_info *firstinverter)
 	FILE *fp;
 	int i;
 	inverter_info *inverter = firstinverter;
-	char write_buff[65535] = {'\0'};
+	char write_buff[300] = {'\0'};
 
 	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->id)); i++, inverter++)
 	{
@@ -157,10 +158,10 @@ int save_gfdi_changed_result(inverter_info *firstinverter)
 	FILE *fp;
 	inverter_info *inverter = firstinverter;
 	int i, count=0;
-	char gfdi_changed_result[65535]={'\0'};
+	char gfdi_changed_result[600]={'\0'};
 
 	strcpy(gfdi_changed_result, "APS13AAAAAA115AAA1");
-	fp = fopen("/etc/yuneng/ecuid.conf", "r");		//读取ECU的ID
+	fp = fopen("/yuneng/ecuid.con", "r");		//读取ECU的ID
 	if(fp)
 	{
 		fgets(ecu_id, 13, fp);
@@ -176,21 +177,6 @@ int save_gfdi_changed_result(inverter_info *firstinverter)
 	{
 		if(1 == inverter->gfdi_changed_flag)
 		{
-			/*memset(inverter_result, '\0', sizeof(inverter_result));
-			if('1' == inverter->last_gfdi_flag)
-				sprintf(inverter_result, "%sa1", inverter->inverterid);
-			else
-				sprintf(inverter_result, "%sa0", inverter->inverterid);
-			strcat(gfdi_changed_result, inverter_result);
-			if(1 == inverter->flagyc500)
-			{
-				memset(inverter_result, '\0', sizeof(inverter_result));
-				if('1' == inverter->last_gfdi_flag)
-					sprintf(inverter_result, "b1");
-				else
-					sprintf(inverter_result, "b0");
-				strcat(gfdi_changed_result, inverter_result);
-			}*/
 			strcat(gfdi_changed_result, inverter->id);
 			gfdi_changed_result[strlen(gfdi_changed_result)] = inverter->last_gfdi_flag;
 			strcat(gfdi_changed_result, "END");
@@ -217,8 +203,8 @@ int save_gfdi_changed_result(inverter_info *firstinverter)
 
 	strcat(gfdi_changed_result, "\n");
 
-	//if(count >0)
-		//save_process_result(115, gfdi_changed_result);
+	if(count >0)
+		save_process_result(115, gfdi_changed_result);
 
 	return 0;
 }
@@ -229,11 +215,11 @@ int save_turn_on_off_changed_result(inverter_info *firstinverter)
 	FILE *fp;
 	inverter_info *inverter = firstinverter;
 	int i, count=0;
-	char turn_on_off_changed_result[65535]={'\0'};
+	char turn_on_off_changed_result[600]={'\0'};
 	//char inverter_result[64];
 
 	strcpy(turn_on_off_changed_result, "APS13AAAAAA116AAA1");
-	fp = fopen("/etc/yuneng/ecuid.conf", "r");		//读取ECU的ID
+	fp = fopen("/yuneng/ecuid.con", "r");		//读取ECU的ID
 	if(fp)
 	{
 		fgets(ecu_id, 13, fp);
@@ -249,13 +235,6 @@ int save_turn_on_off_changed_result(inverter_info *firstinverter)
 	{
 		if(1 == inverter->turn_on_off_changed_flag)
 		{
-			/*memset(inverter_result, '\0', sizeof(inverter_result));
-			if('1' == inverter->last_turn_on_off_flag)
-				sprintf(inverter_result, "%s0", inverter->inverterid);
-			else
-				sprintf(inverter_result, "%s1", inverter->inverterid);
-			strcat(turn_on_off_changed_result, inverter_result);*/
-
 			strcat(turn_on_off_changed_result, inverter->id);
 			turn_on_off_changed_result[strlen(turn_on_off_changed_result)] = inverter->last_turn_on_off_flag;
 			strcat(turn_on_off_changed_result, "END");
@@ -281,8 +260,8 @@ int save_turn_on_off_changed_result(inverter_info *firstinverter)
 
 	strcat(turn_on_off_changed_result, "\n");
 
-	//if(count >0)
-		//save_process_result(116, turn_on_off_changed_result);
+	if(count >0)
+		save_process_result(116, turn_on_off_changed_result);
 
 	return 0;
 }

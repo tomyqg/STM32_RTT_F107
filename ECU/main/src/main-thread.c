@@ -10,7 +10,8 @@
 #include <rtthread.h>
 #include "file.h"
 #include "ema_control.h"
-
+#include "bind_inverters.h"
+#include "protocol.h"
 #define MAIN_VERSION "R-1.0.0"
 
 ALIGN(RT_ALIGN_SIZE)
@@ -107,51 +108,33 @@ int init_inverter(inverter_info *inverter)
 	if(fp)
 	{
 		flag_limitedid = fgetc(fp);
-		printf("flag_limitedid:%c\n",flag_limitedid);
 		fclose(fp);
 	}
-	/*
-	if ('1' == flag_limitedid) {
-		while(1) {
-			//bind_inverters(); //绑定逆变器
-			//ecu.total = get_id_from_db(inverter); //获取逆变器数量
-			if (ecu.total > 0) {
-				break; //直到逆变器数量大于0时退出循环
-			} else {
-				printf("please Input Inverter ID---------->\n"); //提示用户输入逆变器ID
-				rt_thread_delay(20*RT_TICK_PER_SECOND);
-			}
+	while(1) {
+		ecu.total = get_id_from_file(inverter);
+		if (ecu.total > 0) {
+			break; //直到逆变器数量大于0时退出循环
+		} else {
+			printf("please Input Inverter ID---------->\n"); //提示用户输入逆变器ID
+			rt_thread_delay(20*RT_TICK_PER_SECOND);
 		}
+	}
+	
+	if ('1' == flag_limitedid) {
+		bind_inverters(); //绑定逆变器
 		fp = fopen("/yuneng/limiteid.con", "w");
 		if (fp) {
 			fputs("0", fp);
 			fclose(fp);
 		}
 	}
-	else {
-		while(1) {
-			//ecu.total = get_id_from_db(inverter);
-			if (ecu.total > 0) {
-				break; //直到逆变器数量大于0时退出循环
-			} else {
-				printf("please Input Inverter ID---------->\n"); //提示用户输入逆变器ID
-				rt_thread_delay(20*RT_TICK_PER_SECOND);
-			}
-		}
-	}
-	*/
-	while(1)
-	{
-	}
-	
 	return 1;
 }
 
-
 int init_all(inverter_info *inverter)
 {
-
 	openzigbee();
+	zb_test_communication();
 	init_ecu();
 	init_inverter(inverter);
 	read_gfdi_turn_on_off_status(inverter);
@@ -202,7 +185,6 @@ int acquire_time()
 	return (hour*60*60+minute*60+second);
 }
 
-
 void main_thread_entry(void* parameter)
 {
 	int thistime=0, durabletime=65535, reportinterval=300;					//thistime:本轮向逆变器发送广播要数据的时间;durabletime:ECU本轮向逆变器要数据的持续时间
@@ -228,12 +210,13 @@ void main_thread_entry(void* parameter)
 			print2msg("ecu.broadcast_time",ecu.broadcast_time);
 			
 			ecu.count = getalldata(inverter);			//获取所有逆变器数据,返回当前有数据的逆变器数量
+			printf("ecu.count:%d\n",ecu.count);
 			ecu.life_energy = ecu.life_energy + ecu.current_energy;				//计算系统历史发电量
 
 			update_life_energy(ecu.life_energy);								//设置系统历史发电量
 
 			//update_today_energy(ecu.current_energy);							//设置系统当天发电量
-
+		
 			/*
 			if(ecu.count>0)
 			{
@@ -243,26 +226,27 @@ void main_thread_entry(void* parameter)
 				update_yearly_energy(ecu.current_energy,ecu.broadcast_time);
 				update_lifetime_energy(ecu.life_energy);
 			}
-			display_on_lcd_and_web(); //液晶屏显示信息
+			//display_on_lcd_and_web(); //液晶屏显示信息
 			*/
-			/*
+			
 			if(ecu.count>0)
 			{
 				protocol_APS18(inverter, ecu.broadcast_time);
 				protocol_status(inverter, ecu.broadcast_time);
-				saveevent(inverter, ecu.broadcast_time);							//保存当前一轮逆变器时间
+				//saveevent(inverter, ecu.broadcast_time);							//保存当前一轮逆变器时间
 			}
-
+			/*
 			if(ecu.count>0)
 			{
 				displayonweb(inverter, ecu.broadcast_time);								//实时数据页面数据
 			}
 //			printinverterinfo(&inverter);										//打印逆变器解析信息,ZK
 //			format(inverter, ecu.broadcast_time, ecu.system_power, ecu.current_energy, ecu.life_energy);
-
+			*/
 			reset_inverter(inverter);											//重置每个逆变器
-			remote_update(inverter);
-
+			
+			//remote_update(inverter);
+			
 			if((cur_time_hour>9)&&(1 == ecu.flag_ten_clock_getshortaddr))
 			{
 				get_inverter_shortaddress(inverter);
@@ -274,7 +258,7 @@ void main_thread_entry(void* parameter)
 
 			//对于轮训没有数据的逆变器进行重新获取短地址操作
 			bind_nodata_inverter(inverter);
-			*/
+			
 		}
 		process_all(inverter);
 		rt_thread_delay(RT_TICK_PER_SECOND);

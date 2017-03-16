@@ -145,6 +145,25 @@ void update_life_energy(float lifetime_power)
 		close(fd);
 	}
 }
+void updateID(void)
+{
+	FILE *fp;
+	int i;
+	inverter_info *curinverter = inverter;
+	//¸üÐÂ/home/data/idÊý¾Ý
+	fp = fopen("/home/data/id","w");
+	if(fp)
+	{
+		curinverter = inverter;
+		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++)			//ÓÐÐ§Äæ±äÆ÷ÂÖÑµ
+		{
+			fprintf(fp,"%s,%d,%d,%d,%d,%d,%d\n",curinverter->id,curinverter->shortaddr,curinverter->model,curinverter->version,curinverter->bindflag,curinverter->zigbee_version,curinverter->flag);
+			
+		}
+		fclose(fp);
+	}
+}
+
 
 int splitString(char *data,char splitdata[20][13])
 {
@@ -173,6 +192,7 @@ int get_id_from_file(inverter_info *firstinverter)
 	inverter_info *inverter = firstinverter;
 	char list[20][13];
 	char data[200];
+	int num =0;
 	FILE *fp;
 	fp = fopen("/home/data/id", "r");
 	if(fp)
@@ -183,7 +203,7 @@ int get_id_from_file(inverter_info *firstinverter)
 			memset(list,0,sizeof(list));
 			splitString(data,list);
 			strcpy(inverter->id, list[0]);
-			if(NULL==list[1])
+			if(0==strlen(list[1]))
 			{
 				inverter->shortaddr = 0;		//Î´»ñÈ¡µ½¶ÌµØÖ·µÄÄæ±äÆ÷¸³ÖµÎª0.ZK
 			}
@@ -191,7 +211,7 @@ int get_id_from_file(inverter_info *firstinverter)
 			{
 				inverter->shortaddr = atoi(list[1]);
 			}
-			if(NULL==list[2])
+			if(0==strlen(list[2]))
 			{
 				inverter->model = 0;		//Î´»ñµÃ»úÐÍÂëµÄÄæ±äÆ÷¸³ÖµÎª0.ZK
 			}
@@ -199,92 +219,130 @@ int get_id_from_file(inverter_info *firstinverter)
 			{
 				inverter->model = atoi(list[2]);
 			}
-
-			if(NULL==list[3])
+			
+			if(0==strlen(list[3]))
+			{
+				inverter->version = 0;		//Èí¼þ°æ±¾£¬Ã»ÓÐ±êÖ¾Îª0
+			}
+			else
+			{
+				inverter->version = atoi(list[3]);
+			}
+			
+			if(0==strlen(list[4]))
 			{
 				inverter->bindflag = 0;		//Î´°ó¶¨µÄÄæ±äÆ÷°Ñ±êÖ¾Î»¸³ÖµÎª0.ZK
 			}
 			else
 			{
-				inverter->bindflag = atoi(list[3]);
+				inverter->bindflag = atoi(list[4]);
 			}
 
-			if(NULL==list[4])
+			if(0==strlen(list[5]))
 			{
 				inverter->zigbee_version = 0;		//Ã»ÓÐ»ñÈ¡µ½zigbee°æ±¾ºÅµÄÄæ±äÆ÷¸³ÖµÎª0.ZK
 			}
 			else
 			{
-				inverter->zigbee_version = atoi(list[4]);
+				inverter->zigbee_version = atoi(list[5]);
 			}
+			if(0==strlen(list[6]))
+			{
+				inverter->flag = 0;		
+			}
+			else
+			{
+				inverter->flag = atoi(list[6]);
+			}
+			
 			inverter++;
+			num++;
 		}
 
 	}
-	/*
-	for(i=1;i<=nrow;i++)
-	{
-		strcpy(inverter->id, azResult[i*ncolumn]);
-		if(NULL==azResult[i*ncolumn+1])
-		{
-			inverter->shortaddr = 0;		//??????????€??€?????????€??€??0.ZK
-		}
-		else
-		{
-			inverter->shortaddr = atoi(azResult[i*ncolumn+1]);
-		}
 
-		if(NULL==azResult[i*ncolumn+2])
-		{
-			inverter->model = 0;		//???????????????????????€??0.ZK
-		}
-		else
-		{
-			inverter->model = atoi(azResult[i*ncolumn+2]);
-		}
-
-		if(NULL==azResult[i*ncolumn+3])
-		{
-			inverter->bindflag = 0;		//?????????????????????0.ZK
-		}
-		else
-		{
-			inverter->bindflag = atoi(azResult[i*ncolumn+3]);
-		}
-
-		if(NULL==azResult[i*ncolumn+4])
-		{
-			inverter->zigbee_version = 0;		//????????IGBEE???????????????0.ZK
-		}
-		else
-		{
-			inverter->zigbee_version = atoi(azResult[i*ncolumn+4]);
-		}
-		inverter++;
-	}
 
 	inverter = firstinverter;
 	printmsg("--------------");
-	for(i=1; i<=nrow; i++, inverter++)
+	for(i=1; i<=num; i++, inverter++)
 		printdecmsg(inverter->id, inverter->shortaddr);
 	printmsg("--------------");
-	printdecmsg("total", nrow);
-	sqlite3_free_table( azResult );
+	printdecmsg("total", num);
 
-	strcpy(sql,"SELECT id FROM id WHERE short_address IS NULL");
-	sqlite3_get_table( db , sql , &azResult , &nrow2 , &ncolumn2 , &zErrMsg );
 
+	inverter = firstinverter;
 	printmsg("--------------");
-	for(i=1; i<=nrow2; i++)
-		printmsg(azResult[i*ncolumn2]);
-	printmsg("--------------");
-	printdecmsg("no_shortaddr", nrow2);
-	sqlite3_free_table( azResult );
-
-	return nrow;
-	*/
+	for(i=1; i<=num; i++,inverter++)
+	{
+		if(inverter->shortaddr == 0)
+		{
+			printmsg(inverter->id);
+		}
+	}
+	return num;
 }
 
+int save_process_result(int item, char *result)
+{
+	char dir[28] = "/home/data/proc_res/";
+	char buf[5] ;
+	FILE *fp;
+	sprintf(buf,"%d",item);
+	strcat(dir,buf);
+	printf("%s",dir);
+		
+	fp = fopen(dir, "w");
+	if(fp)
+	{
+		fprintf(fp,"%d,%s\n",item,result);
+		fclose(fp);
+	}
+	
+	return 0;
+	
+}
+
+void save_record(char sendbuff[], char *date_time)
+{
+	char dir[50] = "/home/record/data/";
+	char file[9];
+	char suffix[3];
+	FILE *fp;
+	memcpy(file,&date_time[2],8);
+	file[8] = '\0';
+	memcpy(suffix,&date_time[10],2);
+	suffix[2] = '\0';
+	sprintf(dir,"%s%s.%s",dir,file,suffix);
+	printf("%s\n",dir);
+	fp = fopen(dir, "w");
+	if(fp)
+	{
+		fprintf(fp,"%s,1,%s\n",sendbuff,date_time);
+		fclose(fp);
+	}
+	
+}
+
+int save_status(char *result, char *date_time)
+{
+	char dir[50] = "/home/record/inversta/";
+	char file[9];
+	char suffix[3];
+	FILE *fp;
+	memcpy(file,&date_time[2],8);
+	file[8] = '\0';
+	memcpy(suffix,&date_time[10],2);
+	suffix[2] = '\0';
+	sprintf(dir,"%s%s.%s",dir,file,suffix);
+	printf("%s\n",dir);
+	fp = fopen(dir, "w");
+	if(fp)
+	{
+		fprintf(fp,"%s,%s,1\n",result,date_time);
+		fclose(fp);
+	}
+	return 0;
+}
 
 
 #ifdef RT_USING_FINSH
@@ -304,7 +362,6 @@ void splitSt(char * str)
 	}
 	printf("num:%d\n",num);
    
-	
 }
 FINSH_FUNCTION_EXPORT(splitSt, eg:splitSt());
 

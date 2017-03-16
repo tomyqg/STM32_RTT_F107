@@ -3,14 +3,23 @@
 #include <string.h>
 #include "variation.h"
 #include "zigbee.h"
+#include "bind_inverters.h"
+#include "channel.h"
+#include <rtdef.h>
+#include <rtthread.h>
+#include "debug.h"
+#include "file.h"
+
+
 #define MIN_GROUP_NUM 12
 
 extern ecu_info ecu;
+extern inverter_info inverter[MAXINVERTERCOUNT];
 extern struct rt_device serial4;	
-/*
-void setPanidOfInverters(int num, char **ids);
-int getShortaddrOfInverters(int num, char **ids);
-int getShortaddrOfEachInverter(char *id);
+
+#define ZIGBEE_SERIAL (serial4)
+
+
 
 void saveraduistostruct(char *id,int raduis)
 {
@@ -22,7 +31,7 @@ void saveraduistostruct(char *id,int raduis)
 		fclose(fp);
 	}
 }
-
+/*
 void savezbversion(char *id,int zbversion)
 {
     char *zErrMsg = 0;
@@ -46,10 +55,11 @@ void change_bind_zigbee_flag(char *id)
 	sprintf(sql,"UPDATE id SET bind_zigbee_flag=1 WHERE id='%s'",id);
 	sqlite3_exec(db, sql, 0, 0, &zErrMsg);perror(zErrMsg);
 }
-
+*/
 int getaddrOldOrNew(char *id)
 {
-	int i, ret, timestamp;
+	int  ret,index;
+	inverter_info *curinverter = inverter;
 	int short_addr = 0;
 	char recvMsg[256];
 	char inverterid[13];
@@ -64,7 +74,7 @@ int getaddrOldOrNew(char *id)
 
 	//发送上报单台逆变器ID的命令
 	clear_zbmodem();
-	write(zbmodem, command, 21);
+	ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0,command, 21);
 	print2msg("Get each inverter's short address", id);
 	printhexmsg("Sent", command, 21);
 
@@ -78,20 +88,47 @@ int getaddrOldOrNew(char *id)
 		&& (0 == strcmp(id, inverterid))) {
 		//获取短地址成功
 		short_addr = recvMsg[0]*256 + recvMsg[1];
-		update_inverter_addr(id, short_addr);
+		curinverter = inverter;
+		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+		{
+			if(!strcmp(curinverter->id,id))
+			{
+				curinverter->shortaddr = short_addr;
+				break;
+			}
+		}
+			
 		return 1;
 	}
 	else if ((11 == ret)
 		&& (0 == strcmp(id, inverterid))) {
 		saveraduistostruct(inverterid,recvMsg[2]);	//保存路由深度到结构体
-		savezbversion(inverterid,recvMsg[3]);
+		curinverter = inverter;
+		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+		{
+			if(!strcmp(curinverter->id,inverterid))
+			{
+				curinverter->zigbee_version = recvMsg[3];
+				break;
+			}
+		}
+
 		//暂存绑定标志
-		change_bind_zigbee_flag(inverterid);
+			curinverter = inverter;
+		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+		{
+			if(!strcmp(curinverter->id,inverterid))
+			{
+				curinverter->bindflag = 1;
+				break;
+			}
+		}
 		return 1;
 	}
 
 	return 0;
 }
+
 void send11order(char *inverterid,int count)
 {
 	int i;
@@ -112,10 +149,11 @@ void send11order(char *inverterid,int count)
 	sendbuff[20]=((inverterid[10]-0x30)*16+(inverterid[11]-0x30));
 	sendbuff[21]=(2*count)/256;
 	sendbuff[22]=(2*count)%256;
-	write(zbmodem, sendbuff, 21);
+	ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0,sendbuff, 21);
 	printhexmsg("Ready Change Inverter Panid (11order)", sendbuff, 23);
-	sleep(1);
+	rt_thread_delay(RT_TICK_PER_SECOND);
 }
+
 void send22order()
 {
 	int i;
@@ -130,49 +168,54 @@ void send22order()
 	sendbuff[13] = check%256;
 
 	for(i=0;i<3;i++){
-		write(zbmodem, sendbuff, 15);
+		ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0,sendbuff, 15);
 		printhexmsg("Change Panid Now (22order)", sendbuff, 15);
-		sleep(1);
+		rt_thread_delay(RT_TICK_PER_SECOND);
 	}
 }
+
 void getshortadd(char *recvbuff)
 {
-	char *zErrMsg = 0;
+	int index;
+	inverter_info *curinverter = inverter;
 	char curinverterid[13];
 	sprintf(curinverterid,"%02x%02x%02x%02x%02x%02x",recvbuff[4],recvbuff[5],recvbuff[6],recvbuff[7],recvbuff[8],recvbuff[9]);
-	char sql[1024];
-	sprintf(sql,"UPDATE id SET short_address=%d WHERE id='%s'",(recvbuff[0]*256+recvbuff[1]),curinverterid);
-	sqlite3_exec(db, sql, 0, 0, &zErrMsg);perror(zErrMsg);
+	curinverter = inverter;
+	for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+	{
+		if(!strcmp(curinverter->id,curinverterid))
+		{
+			curinverter->shortaddr = (recvbuff[0]*256+recvbuff[1]);
+		}
+	}
 }
-*/
-/*
+
+
 //绑定逆变器
 void bind_inverters()
 {
-   char sql[1024] = {'\0'};
-   char **azResult;
-   char *zErrMsg = 0;
-   char recvbuff[1024];
-   int i, nrow, ncolumn;
-
+  int num = 0,i = 0,index = 0;
+	inverter_info *curinverter = inverter;
+	unsigned short temppanid=ecu.panid;int k;
+	char recvbuff[256];
    //0.设置信道
    process_channel();
    zb_change_ecu_panid(); //将ECU的PANID和信道设置成配置文件中的
 
-	//1.绑定已经有短地址的逆变器,如绑定失败，则需要重新获取短地址
-	memset(sql, 0, sizeof(sql));
-	snprintf(sql, sizeof(sql), "SELECT short_address FROM id WHERE short_address is not null AND bind_zigbee_flag is null");
-	sqlite3_get_table(db, sql, &azResult, &nrow, &ncolumn, &zErrMsg);
-	for (i=1; i<=nrow; i++) {
-		//对每个逆变器进行绑定
-		if (!zb_off_report_id_and_bind(atoi(azResult[i]))) {
-			//绑定失败,重置短地址
-			memset(sql, 0, sizeof(sql));
-			snprintf(sql, sizeof(sql), "UPDATE id SET short_address=null WHERE short_address=%d", atoi(azResult[i]));
-			sqlite3_exec(db, sql, 0, 0, &zErrMsg);
+	//1.绑定已经有短地址的逆变器,如绑定失败，则需要重新获取短地址	
+	//对每个逆变器进行绑定
+	curinverter = inverter;
+	for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+	{
+		if((curinverter->shortaddr != 0)&&(curinverter->bindflag == 0))
+		{
+			if (!zb_off_report_id_and_bind(curinverter->shortaddr)) {
+				//绑定失败,重置短地址
+				curinverter->shortaddr = 0;
+			}
 		}
-	}
-	sqlite3_free_table(azResult);
+	}	
+
 
 	//2.查询表中没有短地址的逆变器ID，让其上报短地址，并存入数据库
 //	memset(sql, 0, sizeof(sql));
@@ -192,88 +235,116 @@ void bind_inverters()
 //	sqlite3_free_table(azResult);
 
 	//***新组网方案
-	int j;unsigned short temppanid=ecu.panid;int k;
-	sprintf(sql, "SELECT id FROM id WHERE short_address is null");//短地址为空的先找出来
-	sqlite3_get_table(db, sql, &azResult, &nrow, &ncolumn, &zErrMsg);
-	if(nrow>0)
+	
+	curinverter = inverter;
+	num = 0;
+	for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+	{
+		if(curinverter->shortaddr == 0)
+			num++;
+	}
+
+	if(num>0)
 	{printf("aa\n");
 		//清空短地址
-		//memset(sql,"\0",1024);
-		//sprintf(sql,"UPDATE id SET short_address=null,bind_zigbee_flag=null,turned_off_rpt_flag=null");
-		//sqlite3_exec(db, sql, 0, 0, &zErrMsg);perror(zErrMsg);
-
 		zb_restore_ecu_panid_0xffff(ecu.channel);
 		for(i=0;i<5;i++)
 		{printf("bb\n");
-			memset(sql, 0, sizeof(sql));
-			sprintf(sql, "SELECT id FROM id WHERE short_address is null AND bind_zigbee_flag  is null");
-			sqlite3_get_table(db, sql, &azResult, &nrow, &ncolumn, &zErrMsg);printf("nrow=%d\n",nrow);
-			ecu.panid=0xFFFF;
-			if(nrow==0)
-				break;
-			for(j=0;j<nrow;j++)
-			{printf("cc\n");
-				zb_change_inverter_channel_one(azResult[j+1],ecu.channel);//所有逆变器设置成0xFFFF
-				sleep(3);//zigbeeRecvMsg(recvbuff,5);
-			}
-			for(j=0;j<nrow;j++)
+			
+			curinverter = inverter;
+			num = 0;
+			for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
 			{
-				for(k=0;k<3;k++){
-					if(1==getaddrOldOrNew(azResult[j+1]))
-						break;
-					sleep(2);
+				if((curinverter->shortaddr == 0) && (curinverter->bindflag == 0))
+					num++;
+			}
+
+			ecu.panid=0xFFFF;
+			if(num==0)
+				break;
+			curinverter = inverter;
+			for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+			{
+				if((curinverter->shortaddr == 0) && (curinverter->bindflag == 0))
+				{
+					zb_change_inverter_channel_one(curinverter->id,ecu.channel);//所有逆变器设置成0xFFFF
+					rt_thread_delay(RT_TICK_PER_SECOND*3);//zigbeeRecvMsg(recvbuff,5);
 				}
-				printf("dd\n");
+			}
+			
+			curinverter = inverter;
+			for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+			{
+				if((curinverter->shortaddr == 0) && (curinverter->bindflag == 0))
+				{
+					for(k=0;k<3;k++){
+						if(1==getaddrOldOrNew(curinverter->id))
+							break;
+						rt_thread_delay(RT_TICK_PER_SECOND*2);
+					}
+					printf("dd\n");
 //					if(-1!=zigbeeRecvMsg(recvbuff,5))
 //						getshortadd(recvbuff);
+				}
 			}
-			sqlite3_free_table(azResult);
 		}
 		for(i=0;i<3;i++)			//新组网
 		{
-			memset(sql, 0, sizeof(sql));
-			sprintf(sql, "SELECT id FROM id WHERE short_address is null");
-			sqlite3_get_table(db, sql, &azResult, &nrow, &ncolumn, &zErrMsg);printf("nrow=%d\n",nrow);
-			ecu.panid=temppanid;
-			for(j=0;j<nrow;j++)
+			curinverter = inverter;
+			for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
 			{
-				send11order(azResult[j+1],nrow);
-				if(-1!=zigbeeRecvMsg(recvbuff,5))
-					getshortadd(recvbuff);printf("ee\n");
+				if(curinverter->shortaddr == 0)
+				{
+					num++;
+				}
 			}
-			sqlite3_free_table(azResult);
+			ecu.panid=temppanid;
+			curinverter = inverter;
+			for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+			{
+				if(curinverter->shortaddr == 0)
+				{
+					send11order(curinverter->id,num);
+					if(-1!=zigbeeRecvMsg(recvbuff,5))
+						getshortadd(recvbuff);printf("ee\n");
+				}
+			}
 		}
-					//旧组网
-
-		memset(sql,'\0',1024);
-		sprintf(sql, "SELECT id FROM id WHERE bind_zigbee_flag  is null");
-		sqlite3_get_table(db, sql, &azResult, &nrow, &ncolumn, &zErrMsg);printf("nrow=%d\n",nrow);
+		//旧组网
 		ecu.panid=temppanid;
-		for(j=0;j<nrow;j++)
+		curinverter = inverter;
+		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
 		{
-			for(i=0;i<3;i++)
-				zb_change_inverter_channel_one(azResult[j+1],ecu.channel);
+			if(curinverter->bindflag == 0)
+			{
+				for(i=0;i<3;i++)
+					zb_change_inverter_channel_one(curinverter->id,ecu.channel);
+			}
 		}
-		sqlite3_free_table(azResult);
-
-		clear_bind_flag();		//清空用于分辨新旧zigbee的绑定标志位
+		curinverter = inverter;
+		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+		{
+			curinverter->bindflag=0;
+		}			
+		
 		ecu.panid=0xFFFF;
 		send22order();
-		sleep(10);
+		rt_thread_delay(RT_TICK_PER_SECOND*10);
 		ecu.panid=temppanid;
 		zb_change_ecu_panid();
 	}
-	sleep(10);
+	rt_thread_delay(RT_TICK_PER_SECOND*10);
 	//3.绑定获取到短地址的逆变器
-	memset(sql, 0, sizeof(sql));
-	snprintf(sql, sizeof(sql), "SELECT short_address FROM id WHERE short_address is not null AND bind_zigbee_flag is null");
-	sqlite3_get_table(db, sql, &azResult, &nrow, &ncolumn, &zErrMsg);
-	for (i=1; i<=nrow; i++) {
-		//对每个逆变器进行绑定
-	//	zb_off_report_id_and_bind(atoi(azResult[i]));
+	curinverter = inverter;
+	for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+	{
+		if((curinverter->shortaddr !=0) && (curinverter->bindflag ==0))
+		{
+			//	zb_off_report_id_and_bind(curinverter->shortaddr));
+		}
+	}	
+	updateID();
 
-	}
-	sqlite3_free_table(azResult);
 }
 /*
 void setPanidOfInverters(int num, char **ids)

@@ -1,7 +1,7 @@
 #ifndef __ZIGBEE_H__
 #define __ZIGBEE_H__
 #include "variation.h"
-
+void clear_zbmodem(void);
 int selectZigbee(int timeout);			//zigbee串口数据检测 返回0 表示串口没有数据  返回1表示串口有数据
 int openzigbee(void);
 void zigbee_reset(void);

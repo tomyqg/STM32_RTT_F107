@@ -104,7 +104,7 @@ typedef struct inverter_info_t{
 	char last_report_time[16];	//发送给EMA时的日期和时间，格式：年月日时分秒
 	int no_getdata_num;					//连续没有获取到逆变器数据的次数
 	int disconnect_times;				//一天中没有与逆变器通信上的所有次数 ZK
-	int zigbee_version;					//zigbee版本号ZK
+	int zigbee_version;					//zigbee版本号ZK		//turned_off_rpt_flag
 	char processed_protect_flag;	//
 
 	char last_turn_on_off_flag;
@@ -114,6 +114,7 @@ typedef struct inverter_info_t{
 
 	int updating;
 	int updating_time;
+	char flag;			//id中的flag标志
 }inverter_info;
 
 typedef struct ecu_info_t{

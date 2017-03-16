@@ -11,6 +11,7 @@
 #include <dfs_posix.h> 
 #include <stdio.h>
 #include "ema_control.h"
+#include "file.h"
 
 
 extern struct rt_device serial4;		//串口4为Zigbee收发串口
@@ -903,7 +904,7 @@ int zb_query_data(inverter_info *inverter)		//请求逆变器实时数据
 		inverter->no_getdata_num = 0;	//一旦接收到数据就清0,ZK
 		inverter->dataflag = 1;	//接收到数据置为1
 
-		/*if(7==inverter->model)
+		if(7==inverter->model)
 			resolvedata_600(&data[4], inverter);
 		else if(5==inverter->model)
 			resolvedata_1000(&data[4], inverter);
@@ -911,7 +912,7 @@ int zb_query_data(inverter_info *inverter)		//请求逆变器实时数据
 			resolvedata_1000(&data[4], inverter);
 		else
 			{;}
-		*/
+		
 		return 1;
 	}
 	else
@@ -1555,21 +1556,24 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 				{
 					if(1 == zb_turnoff_limited_rptid(curinverter->shortaddr,curinverter))
 					{
-						curinverter->bindflag = 1;			//绑定逆变器标志位置1
-						//update_inverter_bind_flag(curinverter);
+						curinverter->bindflag = 1;			//绑定逆变器标志位1
+						updateID();	
 					}
+					
 				}
-				/*
+				
 				if((0 == curinverter->model) )//&& (1 == curinverter->bindflag))
 				{
 					if(1 == zb_query_inverter_info(curinverter))
-						update_inverter_model_version(curinverter);
+						updateID();
+					
 				}
-				*/
+				
 
 				if((0 != curinverter->model) )//&& (1 == curinverter->bindflag))
 				//if(1)
 				{
+					printf("%s---->querydata\n",curinverter->id);
 					zb_query_data(curinverter);
 					rt_hw_us_delay(200000);
 				}
@@ -1577,9 +1581,8 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 			curinverter++;
 		}
 	}
-
 	ecu.polling_total_times++;				//ECU总轮训加1 ,ZK
-
+	
 	fd = open("/TMP/DISCON.TXT", O_WRONLY | O_CREAT | O_TRUNC, 0);
 	if (fd >= 0) {
 		curinverter = firstinverter;
@@ -1634,7 +1637,6 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 		}
 	}
 	ecu.current_energy = curenergy;
-
 	//update_tmpdb(firstinverter);
 
 	fd = open("/TMP/IDNOBIND.TXT", O_WRONLY | O_CREAT | O_TRUNC, 0); 	//为了统计显示有短地址但是没有绑定的逆变器ID
@@ -1683,10 +1685,9 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 	
 	write_gfdi_status(firstinverter);
 	write_turn_on_off_status(firstinverter);
-	/*
 	save_turn_on_off_changed_result(firstinverter);
 	save_gfdi_changed_result(firstinverter);
-	*/
+	
 	return ecu.count;
 }
 
