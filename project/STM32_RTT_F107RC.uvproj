@@ -1016,6 +1016,16 @@
               <FileType>1</FileType>
               <FilePath>..\ECU\main\src\file.c</FilePath>
             </File>
+            <File>
+              <FileName>ema_control.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ECU\main\src\ema_control.c</FilePath>
+            </File>
+            <File>
+              <FileName>bind_inverters.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ECU\main\src\bind_inverters.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

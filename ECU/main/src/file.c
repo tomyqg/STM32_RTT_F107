@@ -1,7 +1,12 @@
 #include "file.h"
 #include "checkdata.h"
 #include <dfs_posix.h> 
+#include "debug.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+extern inverter_info inverter[MAXINVERTERCOUNT];
 
 int ecu_type;	//1:SAA; 2:NA; 3:MX
 
@@ -140,3 +145,173 @@ void update_life_energy(float lifetime_power)
 		close(fd);
 	}
 }
+
+int splitString(char *data,char splitdata[20][13])
+{
+	int i,j = 0,k=0;
+
+	for(i=0;i<strlen(data);++i){
+		
+		if(data[i] == ',') {
+			splitdata[j][k] = 0;
+			++j;
+			k = 0; 
+		}
+		else{
+			splitdata[j][k] = data[i];
+			++k;
+		}
+	}
+	return j+1;
+
+}
+
+int get_id_from_file(inverter_info *firstinverter)
+{
+
+	int i;
+	inverter_info *inverter = firstinverter;
+	char list[20][13];
+	char data[200];
+	FILE *fp;
+	fp = fopen("/home/data/id", "r");
+	if(fp)
+	{
+		while(NULL != fgets(data,200,fp))
+		{
+			printf("%s\n",data);
+			memset(list,0,sizeof(list));
+			splitString(data,list);
+			strcpy(inverter->id, list[0]);
+			if(NULL==list[1])
+			{
+				inverter->shortaddr = 0;		//Î´»ñÈ¡µ½¶ÌµØÖ·µÄÄæ±äÆ÷¸³ÖµÎª0.ZK
+			}
+			else
+			{
+				inverter->shortaddr = atoi(list[1]);
+			}
+			if(NULL==list[2])
+			{
+				inverter->model = 0;		//Î´»ñµÃ»úÐÍÂëµÄÄæ±äÆ÷¸³ÖµÎª0.ZK
+			}
+			else
+			{
+				inverter->model = atoi(list[2]);
+			}
+
+			if(NULL==list[3])
+			{
+				inverter->bindflag = 0;		//Î´°ó¶¨µÄÄæ±äÆ÷°Ñ±êÖ¾Î»¸³ÖµÎª0.ZK
+			}
+			else
+			{
+				inverter->bindflag = atoi(list[3]);
+			}
+
+			if(NULL==list[4])
+			{
+				inverter->zigbee_version = 0;		//Ã»ÓÐ»ñÈ¡µ½zigbee°æ±¾ºÅµÄÄæ±äÆ÷¸³ÖµÎª0.ZK
+			}
+			else
+			{
+				inverter->zigbee_version = atoi(list[4]);
+			}
+			inverter++;
+		}
+
+	}
+	/*
+	for(i=1;i<=nrow;i++)
+	{
+		strcpy(inverter->id, azResult[i*ncolumn]);
+		if(NULL==azResult[i*ncolumn+1])
+		{
+			inverter->shortaddr = 0;		//??????????€??€?????????€??€??0.ZK
+		}
+		else
+		{
+			inverter->shortaddr = atoi(azResult[i*ncolumn+1]);
+		}
+
+		if(NULL==azResult[i*ncolumn+2])
+		{
+			inverter->model = 0;		//???????????????????????€??0.ZK
+		}
+		else
+		{
+			inverter->model = atoi(azResult[i*ncolumn+2]);
+		}
+
+		if(NULL==azResult[i*ncolumn+3])
+		{
+			inverter->bindflag = 0;		//?????????????????????0.ZK
+		}
+		else
+		{
+			inverter->bindflag = atoi(azResult[i*ncolumn+3]);
+		}
+
+		if(NULL==azResult[i*ncolumn+4])
+		{
+			inverter->zigbee_version = 0;		//????????IGBEE???????????????0.ZK
+		}
+		else
+		{
+			inverter->zigbee_version = atoi(azResult[i*ncolumn+4]);
+		}
+		inverter++;
+	}
+
+	inverter = firstinverter;
+	printmsg("--------------");
+	for(i=1; i<=nrow; i++, inverter++)
+		printdecmsg(inverter->id, inverter->shortaddr);
+	printmsg("--------------");
+	printdecmsg("total", nrow);
+	sqlite3_free_table( azResult );
+
+	strcpy(sql,"SELECT id FROM id WHERE short_address IS NULL");
+	sqlite3_get_table( db , sql , &azResult , &nrow2 , &ncolumn2 , &zErrMsg );
+
+	printmsg("--------------");
+	for(i=1; i<=nrow2; i++)
+		printmsg(azResult[i*ncolumn2]);
+	printmsg("--------------");
+	printdecmsg("no_shortaddr", nrow2);
+	sqlite3_free_table( azResult );
+
+	return nrow;
+	*/
+}
+
+
+
+#ifdef RT_USING_FINSH
+#include <finsh.h>
+void splitSt(char * str)
+{
+	int i = 0 , num;
+	char list[20][13];
+	num = splitString(str,list);
+	for(i = 0;i<num;i++)
+	{
+		printf("%s ",list[i]);
+		if(strlen(list[i]) == 0)
+		{
+			printf("NULL ");
+		}
+	}
+	printf("num:%d\n",num);
+   
+	
+}
+FINSH_FUNCTION_EXPORT(splitSt, eg:splitSt());
+
+void testfile()
+{
+	get_id_from_file(inverter);
+}
+FINSH_FUNCTION_EXPORT(testfile, eg:testfile());
+
+#endif

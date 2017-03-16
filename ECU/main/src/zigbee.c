@@ -10,6 +10,8 @@
 #include "resolve.h"
 #include <dfs_posix.h> 
 #include <stdio.h>
+#include "ema_control.h"
+
 
 extern struct rt_device serial4;		//串口4为Zigbee收发串口
 
@@ -197,7 +199,7 @@ int zb_get_reply(char *data,inverter_info *inverter)			//读取逆变器的返回帧
 	char data_all[256];
 	char inverterid[13] = {'\0'};
 	int temp_size,size;
-	
+
 	if(selectZigbee(2) <= 0)
 	{
 		printmsg("Get reply time out");
@@ -206,6 +208,7 @@ int zb_get_reply(char *data,inverter_info *inverter)			//读取逆变器的返回帧
 	}
 	else
 	{
+
 		//rt_thread_delay(RT_TICK_PER_SECOND/2);
 		temp_size = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data_all, 255);
 		size = temp_size -12;
@@ -787,12 +790,11 @@ int zb_send_cmd(inverter_info *inverter, char *buff, int length)		//zigbee包头
 	{
 		sendbuff[15+i] = buff[i];
 	}
-	
-	rt_thread_delay(RT_TICK_PER_SECOND/5);
+
 	if(0!=inverter->shortaddr)
 	{
 		ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL,0, sendbuff, length+15);
-		//printhexmsg("Send", sendbuff, length+15);
+		//printhexmsg("Send", (char *)sendbuff, length+15);
 		return 1;
 	}
 	else
@@ -892,10 +894,9 @@ int zb_query_data(inverter_info *inverter)		//请求逆变器实时数据
 	sendbuff[i++] = 0xC1;
 	sendbuff[i++] = 0xFE;
 	sendbuff[i++] = 0xFE;
-	
+
 	zb_send_cmd(inverter, sendbuff, i);
 	ret = zb_get_reply(data,inverter);
-
 	
 	if((88 == ret)&&(0xFB == data[0])&&(0xFB == data[1])&&(0xFE == data[86])&&(0xFE == data[87]))
 	{
@@ -1679,9 +1680,10 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 		}
 		close(fd);
 	}
-	/*
+	
 	write_gfdi_status(firstinverter);
 	write_turn_on_off_status(firstinverter);
+	/*
 	save_turn_on_off_changed_result(firstinverter);
 	save_gfdi_changed_result(firstinverter);
 	*/

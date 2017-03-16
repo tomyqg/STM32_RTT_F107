@@ -9,6 +9,7 @@
 #include <dfs_posix.h> 
 #include <rtthread.h>
 #include "file.h"
+#include "ema_control.h"
 
 #define MAIN_VERSION "R-1.0.0"
 
@@ -45,7 +46,7 @@ int init_inverter(inverter_info *inverter)
 {
 	int i;
 	char flag_limitedid = '0';				//限定ID标志
-
+	FILE *fp;
 	inverter_info *curinverter = inverter;
 	
 	for(i=0; i<MAXINVERTERCOUNT; i++, curinverter++)
@@ -101,9 +102,14 @@ int init_inverter(inverter_info *inverter)
 	}
 
 	get_ecu_type();		//获取ECU型号
-
-	flag_limitedid = '1';		//后续从flash中获取限定ID标志
-
+	
+	fp = fopen("/yuneng/limiteid.con", "r");
+	if(fp)
+	{
+		flag_limitedid = fgetc(fp);
+		printf("flag_limitedid:%c\n",flag_limitedid);
+		fclose(fp);
+	}
 	/*
 	if ('1' == flag_limitedid) {
 		while(1) {
@@ -112,11 +118,15 @@ int init_inverter(inverter_info *inverter)
 			if (ecu.total > 0) {
 				break; //直到逆变器数量大于0时退出循环
 			} else {
-				//display_input_id(); //提示用户输入逆变器ID
-				rt_thread_delay(5*RT_TICK_PER_SECOND);
+				printf("please Input Inverter ID---------->\n"); //提示用户输入逆变器ID
+				rt_thread_delay(20*RT_TICK_PER_SECOND);
 			}
 		}
-		flag_limitedid = '0';
+		fp = fopen("/yuneng/limiteid.con", "w");
+		if (fp) {
+			fputs("0", fp);
+			fclose(fp);
+		}
 	}
 	else {
 		while(1) {
@@ -124,12 +134,16 @@ int init_inverter(inverter_info *inverter)
 			if (ecu.total > 0) {
 				break; //直到逆变器数量大于0时退出循环
 			} else {
-				//display_input_id(); //提示用户输入逆变器ID
-				rt_thread_delay(5*RT_TICK_PER_SECOND);
+				printf("please Input Inverter ID---------->\n"); //提示用户输入逆变器ID
+				rt_thread_delay(20*RT_TICK_PER_SECOND);
 			}
 		}
 	}
 	*/
+	while(1)
+	{
+	}
+	
 	return 1;
 }
 
@@ -140,7 +154,7 @@ int init_all(inverter_info *inverter)
 	openzigbee();
 	init_ecu();
 	init_inverter(inverter);
-
+	read_gfdi_turn_on_off_status(inverter);
 	return 0;
 }
 
