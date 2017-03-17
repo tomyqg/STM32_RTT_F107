@@ -297,28 +297,26 @@ int save_process_result(int item, char *result)
 		fprintf(fp,"%d,%s\n",item,result);
 		fclose(fp);
 	}
-	
 	return 0;
-	
 }
 
 void save_record(char sendbuff[], char *date_time)
 {
 	char dir[50] = "/home/record/data/";
 	char file[9];
-	char suffix[3];
-	FILE *fp;
-	memcpy(file,&date_time[2],8);
+	
+	int fd;
+	memcpy(file,&date_time[0],8);
 	file[8] = '\0';
-	memcpy(suffix,&date_time[10],2);
-	suffix[2] = '\0';
-	sprintf(dir,"%s%s.%s",dir,file,suffix);
+	sprintf(dir,"%s%s.dat",dir,file);
 	printf("%s\n",dir);
-	fp = fopen(dir, "w");
-	if(fp)
-	{
-		fprintf(fp,"%s,1,%s\n",sendbuff,date_time);
-		fclose(fp);
+	fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
+	if (fd >= 0)
+	{		
+		sprintf(sendbuff,"%s,%s,1\n",sendbuff,date_time);
+		printf("%s",sendbuff);
+		write(fd,sendbuff,strlen(sendbuff));
+		close(fd);
 	}
 	
 }
@@ -327,19 +325,18 @@ int save_status(char *result, char *date_time)
 {
 	char dir[50] = "/home/record/inversta/";
 	char file[9];
-	char suffix[3];
-	FILE *fp;
-	memcpy(file,&date_time[2],8);
+	int fd;
+	memcpy(file,&date_time[0],8);
 	file[8] = '\0';
-	memcpy(suffix,&date_time[10],2);
-	suffix[2] = '\0';
-	sprintf(dir,"%s%s.%s",dir,file,suffix);
+	sprintf(dir,"%s%s.dat",dir,file);
 	printf("%s\n",dir);
-	fp = fopen(dir, "w");
-	if(fp)
-	{
-		fprintf(fp,"%s,%s,1\n",result,date_time);
-		fclose(fp);
+	fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
+	if (fd >= 0)
+	{		
+		sprintf(result,"%s,%s,1\n",result,date_time);
+		printf("%s",result);
+		write(fd,result,strlen(result));
+		close(fd);
 	}
 	return 0;
 }
@@ -347,6 +344,34 @@ int save_status(char *result, char *date_time)
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
+
+void echo(const char* filename,const char* string)
+{
+	int fd;
+	int length;
+	if((filename == NULL) ||(string == NULL))
+	{
+		printf("para error\n");
+		return ;
+	}
+
+	fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0);
+	if (fd < 0)
+	{
+		rt_kprintf("open file for write failed\n");
+		return;
+	}
+	length = write(fd, string, strlen(string));
+	if (length != strlen(string))
+	{
+		rt_kprintf("check: read file failed\n");
+		close(fd);
+		return;
+	}
+	close(fd);
+}
+FINSH_FUNCTION_EXPORT(echo, eg:echo("/test","test"));
+
 void splitSt(char * str)
 {
 	int i = 0 , num;
@@ -371,4 +396,52 @@ void testfile()
 }
 FINSH_FUNCTION_EXPORT(testfile, eg:testfile());
 
+
+void rm_dir(char* dir)
+{
+	DIR *dirp;
+	struct dirent *d;
+	/* 打开dir目录*/
+	dirp = opendir(dir);
+	
+	if(dirp == RT_NULL)
+	{
+		rt_kprintf("open directory error!\n");
+	}
+	else
+	{
+		/* 读取目录*/
+		while ((d = readdir(dirp)) != RT_NULL)
+		{
+			char buff[100];
+			rt_kprintf("delete %s\n", d->d_name);
+			sprintf(buff,"%s/%s",dir,d->d_name);
+			unlink(buff);
+		}
+		/* 关闭目录 */
+		closedir(dirp);
+	}
+}
+FINSH_FUNCTION_EXPORT(rm_dir, eg:rm_dir("/home/record/data"));
+
+int initsystem(char *ecuid)
+{
+	mkdir("/home",0x777);
+	mkdir("/tmp",0x777);
+	mkdir("/yuneng",0x777);
+	mkdir("/home/data",0x777);
+	mkdir("/home/record",0x777);
+	mkdir("/home/data/proc_res",0x777);
+	echo("/home/data/ltpower","0.000000");
+	mkdir("/home/record/data",0x777);
+	mkdir("/home/record/inversta",0x777);
+	echo("/yuneng/ecuid.con",ecuid);
+	echo("/yuneng/area.con","SAA");
+	echo("/yuneng/ecumac.con","80:97:1B:00:72:1C");
+	echo("/yuneng/channel.con","0x10");
+	echo("/yuneng/limiteid.con","1");
+	
+	return 0;
+}
+FINSH_FUNCTION_EXPORT(initsystem, eg:initsystem("123456789012"));
 #endif

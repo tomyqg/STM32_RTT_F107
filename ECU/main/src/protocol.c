@@ -493,7 +493,7 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 	for(i=0; i<strlen(temp); i++)
 		buff[5+5-strlen(temp)+i] = temp[i];
 
-	strcat(buff, "\n");
+	//strcat(buff, "\n");
 	save_record(buff,sendcommanddatetime);//printf("point9 ");			//把发送给EMA的记录保存在数据库中
 	print2msg("Record", buff);
 

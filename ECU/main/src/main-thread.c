@@ -104,12 +104,7 @@ int init_inverter(inverter_info *inverter)
 
 	get_ecu_type();		//获取ECU型号
 	
-	fp = fopen("/yuneng/limiteid.con", "r");
-	if(fp)
-	{
-		flag_limitedid = fgetc(fp);
-		fclose(fp);
-	}
+
 	while(1) {
 		ecu.total = get_id_from_file(inverter);
 		if (ecu.total > 0) {
@@ -118,6 +113,13 @@ int init_inverter(inverter_info *inverter)
 			printf("please Input Inverter ID---------->\n"); //提示用户输入逆变器ID
 			rt_thread_delay(20*RT_TICK_PER_SECOND);
 		}
+	}
+
+	fp = fopen("/yuneng/limiteid.con", "r");
+	if(fp)
+	{
+		flag_limitedid = fgetc(fp);
+		fclose(fp);
 	}
 	
 	if ('1' == flag_limitedid) {
@@ -185,6 +187,26 @@ int acquire_time()
 	return (hour*60*60+minute*60+second);
 }
 
+int compareTime(int durabletime ,int thistime,int reportinterval)
+{
+	if((durabletime < reportinterval) && (thistime > reportinterval))
+	{
+		if((durabletime+(24*60*60-1)-thistime) > reportinterval)
+		{
+			return 1;
+		}
+		
+	}else
+	{
+		if((durabletime-thistime) >= reportinterval)
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
+
 void main_thread_entry(void* parameter)
 {
 	int thistime=0, durabletime=65535, reportinterval=300;					//thistime:本轮向逆变器发送广播要数据的时间;durabletime:ECU本轮向逆变器要数据的持续时间
@@ -199,8 +221,8 @@ void main_thread_entry(void* parameter)
 	
 	while(1)
 	{
-		if((durabletime-thistime) >= reportinterval){
-		//if((durabletime-thistime) >= 60){
+		if(compareTime(durabletime ,thistime,reportinterval)){
+		//if(compareTime(durabletime ,thistime,60)){	
 			thistime = acquire_time();
 			rt_memset(ecu.broadcast_time, '\0', sizeof(ecu.broadcast_time));				//清空本次广播时间
 
@@ -240,13 +262,14 @@ void main_thread_entry(void* parameter)
 			{
 				displayonweb(inverter, ecu.broadcast_time);								//实时数据页面数据
 			}
+			*/
 //			printinverterinfo(&inverter);										//打印逆变器解析信息,ZK
 //			format(inverter, ecu.broadcast_time, ecu.system_power, ecu.current_energy, ecu.life_energy);
-			*/
+			
 			reset_inverter(inverter);											//重置每个逆变器
 			
 			//remote_update(inverter);
-			
+			/*
 			if((cur_time_hour>9)&&(1 == ecu.flag_ten_clock_getshortaddr))
 			{
 				get_inverter_shortaddress(inverter);
@@ -258,7 +281,7 @@ void main_thread_entry(void* parameter)
 
 			//对于轮训没有数据的逆变器进行重新获取短地址操作
 			bind_nodata_inverter(inverter);
-			
+			*/
 		}
 		process_all(inverter);
 		rt_thread_delay(RT_TICK_PER_SECOND);

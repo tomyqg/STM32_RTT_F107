@@ -198,7 +198,7 @@
   * @}
   */
   
-//#define W25QXX	
+#define W25QXX	
 #define EEPROM
 
 #endif

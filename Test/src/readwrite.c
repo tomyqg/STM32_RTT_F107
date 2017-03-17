@@ -116,32 +116,10 @@ void readwrite(const char* filename)
 	rt_kprintf("read/write done.\n");
 }
 
-void echo(const char* filename,const char* string)
-{
-	int fd;
-	int length;
-
-	/* 只写 & 创建 打开 */
-	fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0);
-	if (fd < 0)
-	{
-		rt_kprintf("open file for write failed\n");
-		return;
-	}
-		/* 写入数据 */
-	length = write(fd, string, strlen(string));
-	if (length != strlen(string))
-	{
-		rt_kprintf("check: read file failed\n");
-		close(fd);
-		return;
-	}
-	close(fd);
-}
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 /* 输出函数到finsh shell命令行中 */
 FINSH_FUNCTION_EXPORT(readwrite, perform file read and write test);
-FINSH_FUNCTION_EXPORT(echo, eg:echo("/test","test"));
+
 #endif
