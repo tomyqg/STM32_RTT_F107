@@ -44,7 +44,7 @@ float calsystemgeneration(struct inverter_info_t *inverter)		//计算当前一�
 		inverter++;
 	}
 
-	printfloatmsg("System generation", temp);
+	printfloatmsg("main","System generation", temp);
 	
 	return temp;
 }
@@ -495,7 +495,7 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 
 	//strcat(buff, "\n");
 	save_record(buff,sendcommanddatetime);//printf("point9 ");			//把发送给EMA的记录保存在数据库中
-	print2msg("Record", buff);
+	print2msg("main","Record", buff);
 
 	return 0;
 }
@@ -524,7 +524,7 @@ int protocol_status(struct inverter_info_t *firstinverter, char *datetime)
 			sendbuff[i] = length[i-5];
 		strcat(sendbuff, "\n");
 
-		print2msg("status", sendbuff);
+		print2msg("main","status", sendbuff);
 
 		save_status(sendbuff, datetime);
 	}

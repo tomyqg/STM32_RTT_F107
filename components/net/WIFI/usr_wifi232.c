@@ -138,7 +138,7 @@ int WiFi_SendData(tcp_address_t address ,char *data ,int length)   //ÔÚ´®¿ÚÖ¸ÁîÄ
 	tcp_msg[4+msg_length] = check_sum;
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,tcp_msg, (msg_length+5));
 	
-	printhexmsg("WiFi_SendData", (char *)tcp_msg, (msg_length+5));
+	printhexmsg("main","WiFi_SendData", (char *)tcp_msg, (msg_length+5));
 	return 	(msg_length+5);
 }
 
@@ -151,7 +151,7 @@ int WiFi_RecvData(int timeout,char *data)
 	}
 	if(selectWiFi(timeout) <= 0)
 	{
-		printmsg("WIFI Get reply time out");
+		printmsg("main","WIFI Get reply time out");
 		return -1;
 	}
 	else

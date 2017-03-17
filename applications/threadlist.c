@@ -41,9 +41,9 @@ static struct rt_thread led_thread;
 ALIGN(RT_ALIGN_SIZE)
 rt_uint8_t main_stack[ 4096 ];
 struct rt_thread main_thread;
-//ALIGN(RT_ALIGN_SIZE)
-//rt_uint8_t client_stack[ 8192 ];
-//struct rt_thread client_thread;
+ALIGN(RT_ALIGN_SIZE)
+rt_uint8_t client_stack[ 8192 ];
+struct rt_thread client_thread;
 
 /*
 ALIGN(RT_ALIGN_SIZE)
@@ -164,12 +164,12 @@ void tasks_new(void)//创建任务线程
   {
     rt_thread_startup(&main_thread);
   }
-	/*
+	
 	result = rt_thread_init(&client_thread,"client",client_thread_entry,RT_NULL,(rt_uint8_t*)&client_stack[0],sizeof(client_stack),THREAD_PRIORITY_CLIENT,5);
   if (result == RT_EOK)
   {
-		//rt_thread_startup(&client_thread);
+		rt_thread_startup(&client_thread);
   }	
-	*/
+	
 	
 }

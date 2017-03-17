@@ -463,7 +463,7 @@ int resolvedata_1000(char *data, struct inverter_info_t *inverter)
 		inverter->output_energy=inverter->cur_output_energy;
 		inverter->output_energyb=inverter->cur_output_energyb;
 		inverter->output_energyc=inverter->cur_output_energyc;
-		printfloatmsg("DEBUG-3 output_energy", inverter->output_energy);
+		printfloatmsg("main","DEBUG-3 output_energy", inverter->output_energy);
 	}
 	inverter->pre_output_energy=inverter->cur_output_energy;
 	inverter->pre_output_energyb=inverter->cur_output_energyb;

@@ -263,20 +263,20 @@ int get_id_from_file(inverter_info *firstinverter)
 
 
 	inverter = firstinverter;
-	printmsg("--------------");
+	printmsg("main","--------------");
 	for(i=1; i<=num; i++, inverter++)
-		printdecmsg(inverter->id, inverter->shortaddr);
-	printmsg("--------------");
-	printdecmsg("total", num);
+		printdecmsg("main",inverter->id, inverter->shortaddr);
+	printmsg("main","--------------");
+	printdecmsg("main","total", num);
 
 
 	inverter = firstinverter;
-	printmsg("--------------");
+	printmsg("main","--------------");
 	for(i=1; i<=num; i++,inverter++)
 	{
 		if(inverter->shortaddr == 0)
 		{
-			printmsg(inverter->id);
+			printmsg("main",inverter->id);
 		}
 	}
 	return num;
