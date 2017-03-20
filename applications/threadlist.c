@@ -42,8 +42,13 @@ ALIGN(RT_ALIGN_SIZE)
 rt_uint8_t main_stack[ 4096 ];
 struct rt_thread main_thread;
 ALIGN(RT_ALIGN_SIZE)
-rt_uint8_t client_stack[ 8192 ];
+rt_uint8_t client_stack[ 12288 ];
 struct rt_thread client_thread;
+/*
+ALIGN(RT_ALIGN_SIZE)
+static rt_uint8_t dhcp_stack[1024];
+static struct rt_thread dhcp_thread;
+*/
 
 /*
 ALIGN(RT_ALIGN_SIZE)
@@ -124,6 +129,24 @@ static void led_thread_entry(void* parameter)
     }
 }
 /*
+static void dhcp_reset_thread_entry(void* parameter)
+{ 
+	while(1)
+	{
+		if(ETH_ReadPHYRegister(PHY_ADDRESS, PHY_BSR) & PHY_Linked_Status)
+		{
+			printf("network link\n");
+		}
+		else
+		{
+			printf("network unlink\n");
+		}
+		rt_thread_delay( RT_TICK_PER_SECOND * 10);
+	}
+}
+*/
+
+/*
 static void ntp_thread_entry(void* parameter)
 {
   while(1)
@@ -149,7 +172,13 @@ void tasks_new(void)//创建任务线程
   {
     rt_thread_startup(&led_thread);
   }
-	
+	/*
+  result = rt_thread_init(&dhcp_thread,"dhcp_reset",dhcp_reset_thread_entry,RT_NULL,(rt_uint8_t*)&dhcp_stack[0],sizeof(dhcp_stack),THREAD_PRIORITY_DHCPRESET,5);
+  if (result == RT_EOK)
+  {
+    rt_thread_startup(&dhcp_thread);
+  }	
+	*/
   /* init ntp thread */
   /*
 	result = rt_thread_init(&ntp_thread,"ntp",ntp_thread_entry,RT_NULL,(rt_uint8_t*)&ntp_stack[0],sizeof(ntp_stack),THREAD_PRIORITY_NTP,5);
@@ -159,11 +188,13 @@ void tasks_new(void)//创建任务线程
   }
 	*/
 	/* init main thread */
+	
 	result = rt_thread_init(&main_thread,"main",main_thread_entry,RT_NULL,(rt_uint8_t*)&main_stack[0],sizeof(main_stack),THREAD_PRIORITY_MAIN,5);
   if (result == RT_EOK)
   {
     rt_thread_startup(&main_thread);
   }
+	
 	
 	result = rt_thread_init(&client_thread,"client",client_thread_entry,RT_NULL,(rt_uint8_t*)&client_stack[0],sizeof(client_stack),THREAD_PRIORITY_CLIENT,5);
   if (result == RT_EOK)

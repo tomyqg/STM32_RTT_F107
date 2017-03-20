@@ -50,7 +50,7 @@ int compareTime(int durabletime ,int thistime,int reportinterval)
 {
 	if((durabletime < reportinterval) && (thistime > reportinterval))
 	{
-		if((durabletime+(24*60*60-1)-thistime) > reportinterval)
+		if((durabletime+(24*60*60+1)-thistime) > reportinterval)
 		{
 			return 1;
 		}

@@ -22,7 +22,7 @@
 #include <lwip/sockets.h> 
 
 ALIGN(RT_ALIGN_SIZE)
-extern rt_uint8_t client_stack[ 4096 ];
+extern rt_uint8_t client_stack[ 12288 ];
 extern struct rt_thread client_thread;
 
 
@@ -93,7 +93,7 @@ int connect_socket(int fd_sock)				//连接到服务器
 {
 	char domain[100]={'\0'};		//EMA的域名
 	char ip[20] = {'\0'};	//EMA的缺省IP
-	int port[2]={8995, 8996}, i;
+	int port[2]={8093, 8093};
 	char buff[1024] = {'\0'};
 	struct sockaddr_in serv_addr;
 	struct hostent * host;
@@ -142,12 +142,11 @@ int connect_socket(int fd_sock)				//连接到服务器
 	else
 	{
 		memset(ip, '\0', sizeof(ip));
-		printf("%s\n",*host->h_addr_list);
+		//printf("%s\n",*host->h_addr_list);
 		//inet_ntop(AF_INET, *host->h_addr_list, ip, 32);
-		printmsg("CLIENT",ip);
 	}
 
-
+	strcpy(ip, "139.168.200.158");
 	print2msg("CLIENT","IP", ip);
 	printdecmsg("CLIENT","Port1", port[0]);
 	printdecmsg("CLIENT","Port2", port[1]);
@@ -178,12 +177,61 @@ void close_socket(int fd_sock)					//关闭套接字
 }
 
 
+int clear_send_flag(char *readbuff)
+{
+	int i, j, count;		//EMA返回多少个时间(有几个时间,就说明EMA保存了多少条记录)
+	char recv_date_time[16];
+	
+	if(strlen(readbuff) >= 3)
+	{
+		count = (readbuff[1] - 0x30) * 10 + (readbuff[2] - 0x30);
+		if(count == (strlen(readbuff) - 3) / 14)
+		{
+			for(i=0; i<count; i++)
+			{
+				memset(recv_date_time, '\0', sizeof(recv_date_time));
+				strncpy(recv_date_time, &readbuff[3+i*14], 14);
+				
+				for(j=0; j<3; j++)
+				{
+					if(1 == change_resendflag(recv_date_time,'0'))
+					{
+						print2msg("CLIENT","Clear send flag into database", "1");
+						break;
+					}
+					else
+						print2msg("CLIENT","Clear send flag into database", "0");
+					rt_thread_delay(RT_TICK_PER_SECOND);
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
+int update_send_flag(char *send_date_time)
+{
+	int i;
+	for(i=0; i<3; i++)
+	{
+		if(1 == change_resendflag(send_date_time,'2'))
+		{
+			print2msg("CLIENT","Update send flag into database", "1");
+			break;
+		}
+		rt_thread_delay(RT_TICK_PER_SECOND * 5);
+	}
+
+	return 0;
+}
+
 int recv_response(int fd_sock, char *readbuff)
 {
 	fd_set rd;
 	struct timeval timeout;
 	int recvbytes, res, count=0, readbytes = 0;
-	char recvbuff[65535], temp[16];
+	char recvbuff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18], temp[16];
 	while(1)
 	{
 		FD_ZERO(&rd);
@@ -215,44 +263,211 @@ int recv_response(int fd_sock, char *readbuff)
 	}
 }
 
-int send_record(int fd_sock, char *sendbuff, char *send_date_time)			//?????EMA
+int detection_resendflag2()		//存在返回1，不存在返回0
 {
-	int sendbytes=0, res=0;
-	char readbuff[65535] = {'\0'};
+	DIR *dirp;
+	char dir[30] = "/home/record/data";
+	struct dirent *d;
+	char path[100];
+	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	FILE *fp;
+	/* 打开dir目录*/
+	dirp = opendir("/home/record/data");
+	
+	if(dirp == RT_NULL)
+	{
+		rt_kprintf("open directory error!\n");
+	}
+	else
+	{
+		/* 读取dir目录*/
+		while ((d = readdir(dirp)) != RT_NULL)
+		{
+			memset(path,0,100);
+			memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
+			sprintf(path,"%s/%s",dir,d->d_name);
+			//printf("%s\n",path);
+			//打开文件一行行判断是否有flag=2的  如果存在直接关闭文件并返回1
+			fp = fopen(path, "r");
+			if(fp)
+			{
+				while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
+				{
+					if(buff[strlen(buff)-2] == '2')			//检测最后一个字节的resendflag是否为2   如果发现是2  关闭文件并且return 1
+					{
+						fclose(fp);
+						closedir(dirp);
+						return 1;
+					}		
+				}
+				fclose(fp);
+			}
+			
+		}
+		/* 关闭目录 */
+		closedir(dirp);
+	}
+	return 0;
+}
 
+int change_resendflag(char *time,char flag)  //改变成功返回1，未找到该时间点返回0
+{
+	DIR *dirp;
+	char dir[30] = "/home/record/data";
+	struct dirent *d;
+	char path[100];
+	char filetime[15] = {'\0'};
+	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	FILE *fp;
+	/* 打开dir目录*/
+	dirp = opendir("/home/record/data");
+	
+	if(dirp == RT_NULL)
+	{
+		rt_kprintf("open directory error!\n");
+	}
+	else
+	{
+		/* 读取dir目录*/
+		while ((d = readdir(dirp)) != RT_NULL)
+		{
+			memset(path,0,100);
+			memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
+			sprintf(path,"%s/%s",dir,d->d_name);
+			//打开文件一行行判断是否有flag=2的  如果存在直接关闭文件并返回1
+			fp = fopen(path, "r+");
+			if(fp)
+			{
+				while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
+				{
+					memset(filetime,0,15);
+					memcpy(filetime,&buff[strlen(buff)-17],14);				//获取每条记录的时间
+					filetime[14] = '\0';
+					if(!memcmp(time,filetime,14))						//每条记录的时间和传入的时间对比，若相同则变更flag				
+					{
+						fseek(fp,-2L,SEEK_CUR);
+						fputc(flag,fp);
+						//printf("%s\n",filetime);
+						fclose(fp);
+						closedir(dirp);
+						return 1;
+					}
+					
+				}
+				fclose(fp);
+			}
+			
+		}
+		/* 关闭目录 */
+		closedir(dirp);
+	}
+	return 0;
+	
+}	
+
+//查询一条resendflag为1的数据   查询到了返回1  如果没查询到返回0
+/*
+data:表示获取到的数据
+time：表示获取到的时间
+flag：表示是否还有下一条数据   存在下一条为1   不存在为0
+*/
+int search_readflag(char *data,char * time, int *flag,char sendflag)	
+{
+	DIR *dirp;
+	char dir[30] = "/home/record/data";
+	struct dirent *d;
+	char path[100];
+	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	FILE *fp;
+	printf("1----------->\n");
+	/* 打开dir目录*/
+	dirp = opendir("/home/record/data");
+	if(dirp == RT_NULL)
+	{
+		rt_kprintf("open directory error!\n");
+	}
+	else
+	{
+		printf("2----------->\n");
+		/* 读取dir目录*/
+		while ((d = readdir(dirp)) != RT_NULL)
+		{
+			printf("3----------->\n");
+			memset(path,0,100);
+			memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
+			sprintf(path,"%s/%s",dir,d->d_name);
+			fp = fopen(path, "r");
+			if(fp)
+			{
+				while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))  //读取一行数据
+				{
+					printf("4----------->\n");
+					if(buff[strlen(buff)-2] == sendflag)			//检测最后一个字节的resendflag是否为1
+					{
+						printf("5----------->\n");
+						memcpy(time,&buff[strlen(buff)-17],14);				//获取每条记录的时间
+						memcpy(data,buff,(strlen(buff)-18));
+						data[strlen(buff)-18] = '\n';
+						//printf("time:%s   data:%s\n",time,data);
+						rt_thread_delay(RT_TICK_PER_SECOND*1);
+						while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	//再往下读数据，寻找是否还有要发送的数据
+						{
+							if(buff[strlen(buff)-2] == sendflag)
+							{
+								*flag = 1;
+								fclose(fp);
+								closedir(dirp);
+								return 1;
+							}
+						}
+
+						*flag = 0;
+						fclose(fp);
+						closedir(dirp);
+						return 1;
+					}		
+				}
+				printf("6----------->\n");
+				fclose(fp);
+			}
+			
+		}
+		/* 关闭目录 */
+		closedir(dirp);
+	}
+	return 0;
+}
+
+
+int send_record(int fd_sock, char *sendbuff, char *send_date_time)			//发送数据到EMA  注意在存储的时候结尾未添加'\n'  在发送时的时候记得添加
+{
+	int sendbytes=0;
+	char readbuff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};
 	sendbytes = send(fd_sock, sendbuff, strlen(sendbuff), 0);
-
 	if(-1 == sendbytes)
 		return -1;
-
 	if(-1 == recv_response(fd_sock, readbuff))
 		return -1;
 	else
 	{
-		//if('1' == readbuff[0])
-			//update_send_flag(send_date_time);
-		//clear_send_flag(readbuff);
+		if('1' == readbuff[0])
+			update_send_flag(send_date_time);
+		clear_send_flag(readbuff);
 		return 0;
 	}
-
 }
+
 
 int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 {
-	int sendbytes=0, res=0, recvbytes = 0;
+	int sendbytes=0;
 	char readbuff[1024] = {'\0'};
-	fd_set rd;
-	struct timeval timeout;
 	char sendbuff[256] = {'\0'};
 	FILE *fp;
 	int fd_sock;
 
-	//strcpy(sql,"SELECT date_time FROM Data WHERE resendflag='2'");
-	//sqlite3_get_table( db , sql , &azResult , &nrow , &ncolumn , &zErrMsg );
-	//print2msg("Select nrow of resendflag=2 from db", zErrMsg);
-	//sqlite3_free_table( azResult );
-	//if(nrow < 1)
-		//return 0;
+	if(0 == detection_resendflag2())		//	检测是否有resendflag='2'的记录
+		return 0;
 
 	strcpy(sendbuff, "APS13AAA22");
 	fp = fopen("/yuneng/ecuid.con", "r");
@@ -277,74 +492,116 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 				close_socket(fd_sock);
 				return -1;
 			}
-			//if(recv_response(fd_sock, readbuff) > 3)
-				//clear_send_flag(readbuff);
-			//else
-				//break;
+			if(recv_response(fd_sock, readbuff) > 3)
+				clear_send_flag(readbuff);
+			else
+				break;
 		}
 	}
 
 	close_socket(fd_sock);
 	return 0;
 }
-/*
+
 int resend_record()
 {
-	char sql[1024]={'\0'};
-	char *zErrMsg=0;
-	char **azResult;
-	int i, res, nrow, ncolumn;
 	int fd_sock;
-
-	memset(sql,'\0',sizeof(sql));
-	strcpy(sql,"SELECT record,date_time FROM Data WHERE resendflag='2'");
-	sqlite3_get_table( db , sql , &azResult , &nrow , &ncolumn , &zErrMsg );
-	print2msg("Select result from db", zErrMsg);
-	if(nrow >= 1)
+	char data[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};//查询到的数据
+	char time[15] = {'\0'};
+	int flag,res;
+	
+	//在/home/record/data/目录下查询resendflag为2的记录
+	fd_sock = createsocket();
+	printdecmsg("CLIENT","Socket", fd_sock);
+	if(1 == connect_socket(fd_sock))
 	{
-		printdecmsg("Record count(flag=2)", nrow);
-		fd_sock = createsocket();
-		printdecmsg("Socket", fd_sock);
-		if(1 == connect_socket(fd_sock))
+		while(search_readflag(data,time,&flag,'2'))		//	获取一条resendflag为1的数据
 		{
-			for(i=nrow; i>=1; i--){
-				if(1 != i)
-					azResult[i*ncolumn][78] = '1';
-				printmsg(azResult[i*ncolumn]);
-				res = send_record(fd_sock, azResult[i*ncolumn], azResult[i*ncolumn+1]);
-				if(-1 == res)
-					break;
-			}
+				if(1 == flag)		// 还存在需要上传的数据
+					data[78] = '1';
+			printmsg("CLIENT",data);
+			res = send_record(fd_sock, data, time);
+			if(-1 == res)
+				break;
 		}
-		close_socket(fd_sock);
 	}
-	else
-		printmsg("There are none record");
-	sqlite3_free_table( azResult );
-
+	close_socket(fd_sock);
+		
 	return 0;
 }
-*/
+
 
 void client_thread_entry(void* parameter)
 {
+	char broadcast_hour_minute[3]={'\0'};
+	char broadcast_time[16];
 	int fd_sock;
-	int thistime=0, lasttime=0;
-	
+	int thistime=0, lasttime=0,res,flag;
+	char data[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};//查询到的数据
+	char time[15] = {'\0'};
+	rt_thread_delay(RT_TICK_PER_SECOND*20);
 	printmsg("CLIENT","Started");
 	
 	while(1)
 	{
 		thistime = lasttime = acquire_time();
 		
-		//if(1 == get_hour())
+		if(1 == get_hour())
 		{
 			preprocess();		//预处理,先发送一个头信息给EMA,让EMA把标记为2的记录的时间返回ECU,然后ECU再把标记为2的记录再次发送给EMA,防止EMA收到记录返回收到标志而没有存入数据库的请情况
-			//resend_record();
+			resend_record();
 		}
 		
+		get_time(broadcast_time, broadcast_hour_minute);
+		print2msg("client","time",broadcast_time);
 		
-		printf("client_thread_entry>>>>>>>>>>>>>>..\n");
-		rt_thread_delay(RT_TICK_PER_SECOND*20);
+		fd_sock = createsocket();
+		printdecmsg("CLIENT","Socket", fd_sock);
+		if(1 == connect_socket(fd_sock))
+		{
+			while(search_readflag(data,time,&flag,'1'))		//	获取一条resendflag为1的数据
+			{
+				printf("1___________________>\n");
+				if(compareTime(thistime ,lasttime,300))
+				{
+					break;
+				}
+				printf("2___________________>\n");
+				if(1 == flag)		// 还存在需要上传的数据
+						data[78] = '1';
+				printf("3___________________>\n");
+				printmsg("CLIENT",data);
+				res = send_record(fd_sock, data, time);
+				printf("4___________________>\n");
+				if(-1 == res)
+					break;
+				printf("5___________________>\n");
+				thistime = acquire_time();
+				memset(data,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL));
+				memset(time,0,15);
+				printf("6___________________>\n");
+			}
+			printf("next\n");
+		}
+		close_socket(fd_sock);
+		
+		if((thistime < 300) && (lasttime > 300))
+		{
+			if((thistime+(24*60*60+1)-lasttime) < 300)
+			{
+				rt_thread_delay(300 - ((thistime+(24*60*60+1)) + lasttime) * RT_TICK_PER_SECOND);
+			}
+			
+		}else
+		{
+			if((thistime-lasttime) < 300)
+			{
+				rt_thread_delay((300 + lasttime - thistime) * RT_TICK_PER_SECOND);
+			}
+		}
+		
+		printf("\n");
 	}
 }
+
+
