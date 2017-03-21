@@ -12,6 +12,9 @@
 #include "ema_control.h"
 #include "bind_inverters.h"
 #include "protocol.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #define MAIN_VERSION "R-1.0.0"
 
 ALIGN(RT_ALIGN_SIZE)
@@ -200,7 +203,7 @@ void main_thread_entry(void* parameter)
 			print2msg("main","ecu.broadcast_time",ecu.broadcast_time);
 			
 			ecu.count = getalldata(inverter);			//获取所有逆变器数据,返回当前有数据的逆变器数量
-			printf("ecu.count:%d\n",ecu.count);
+			//printf("ecu.count:%d\n",ecu.count);
 			ecu.life_energy = ecu.life_energy + ecu.current_energy;				//计算系统历史发电量
 
 			update_life_energy(ecu.life_energy);								//设置系统历史发电量

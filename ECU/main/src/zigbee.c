@@ -1574,7 +1574,7 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 				if((0 != curinverter->model) )//&& (1 == curinverter->bindflag))
 				//if(1)
 				{
-					printf("%s---->querydata\n",curinverter->id);
+					//printf("%s---->querydata\n",curinverter->id);
 					zb_query_data(curinverter);
 					rt_hw_us_delay(200000);
 				}

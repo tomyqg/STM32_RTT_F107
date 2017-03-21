@@ -42,14 +42,13 @@ ALIGN(RT_ALIGN_SIZE)
 rt_uint8_t main_stack[ 4096 ];
 struct rt_thread main_thread;
 ALIGN(RT_ALIGN_SIZE)
-rt_uint8_t client_stack[ 12288 ];
+rt_uint8_t client_stack[ 8192 ];
 struct rt_thread client_thread;
 /*
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t dhcp_stack[1024];
 static struct rt_thread dhcp_thread;
 */
-
 /*
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t ntp_stack[1024];
@@ -106,6 +105,8 @@ void rt_init_thread_entry(void* parameter)
 	finsh_set_device(RT_CONSOLE_DEVICE_NAME);
 #endif
 	rt_hw_rtc_init();		//实时时钟初始化
+		
+	//初始化一把用于/home/record/data 数据读写的锁   使用互斥量
 }
 
 
@@ -201,6 +202,7 @@ void tasks_new(void)//创建任务线程
   {
 		rt_thread_startup(&client_thread);
   }	
+	
 	
 	
 }

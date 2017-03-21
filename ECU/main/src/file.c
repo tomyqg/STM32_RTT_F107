@@ -314,7 +314,7 @@ void save_record(char sendbuff[], char *date_time)
 	if (fd >= 0)
 	{		
 		sprintf(sendbuff,"%s,%s,1\n",sendbuff,date_time);
-		printf("%s",sendbuff);
+		//printf("%s",sendbuff);
 		write(fd,sendbuff,strlen(sendbuff));
 		close(fd);
 	}

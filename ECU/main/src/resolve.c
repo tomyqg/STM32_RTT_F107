@@ -679,36 +679,36 @@ int resolvedata_600(char *data, struct inverter_info_t *inverter)
 //	inverter->pre_output_energy=inverter->cur_output_energy;
 
 	if((inverter->curaccgen >= inverter->preaccgen)&&(inverter->curaccgenb >= inverter->preaccgenb)&&(inverter->curacctime >= inverter->preacctime))
-	{	printf("%d\n",__LINE__);
+	{	//printf("%d\n",__LINE__);
 		seconds = inverter->curacctime - inverter->preacctime;
 		inverter->curgeneration = inverter->curaccgen - inverter->preaccgen;
 		inverter->curgenerationb = inverter->curaccgenb - inverter->preaccgenb;
 	}
 	else
-	{printf("%d\n",__LINE__);
+	{//printf("%d\n",__LINE__);
 		seconds = inverter->curacctime;
 		inverter->curgeneration = inverter->curaccgen;
 		inverter->curgenerationb = inverter->curaccgenb;
 	}
-	printf("prtm=%d\n",inverter->preacctime);
+	//printf("prtm=%d\n",inverter->preacctime);
 	inverter->preacctime = inverter->curacctime;
 	inverter->preaccgen = inverter->curaccgen;
 	inverter->preaccgenb = inverter->curaccgenb;
 
 	if(0==seconds)//???????????????
-	{printf("%d\n",__LINE__);
+	{//printf("%d\n",__LINE__);
 		inverter->op = 0;
 		inverter->opb = 0;
 	}
 
 
 	if(inverter->curacctime > 600)		//??????????,?????10????????????????,ZK
-	{printf("%d\n",__LINE__);printf("%f %d\n",inverter->curgeneration,seconds);
+	{//printf("%d\n",__LINE__);printf("%f %d\n",inverter->curgeneration,seconds);
 		inverter->op = inverter->curgeneration * 1000.0 * 3600.0 / seconds;
 		inverter->opb = inverter->curgenerationb * 1000.0 * 3600.0 / seconds;
 	}
 	else
-	{printf("%d\n",__LINE__);
+	{//printf("%d\n",__LINE__);
 		inverter->op = (int)(inverter->dv*inverter->di);
 		inverter->opb = (int)(inverter->dvb*inverter->dib);
 	}
