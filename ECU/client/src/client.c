@@ -25,6 +25,8 @@ ALIGN(RT_ALIGN_SIZE)
 extern rt_uint8_t client_stack[ 8192 ];
 extern struct rt_thread client_thread;
 
+extern rt_mutex_t record_data_lock;
+
 
 int writeconnecttime(void)			//保存最后一次连接上服务器的时间
 {
@@ -271,42 +273,48 @@ int detection_resendflag2()		//存在返回1，不存在返回0
 	char path[100];
 	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
 	FILE *fp;
-	/* 打开dir目录*/
-	dirp = opendir("/home/record/data");
-	
-	if(dirp == RT_NULL)
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
 	{
-		rt_kprintf("open directory error!\n");
-	}
-	else
-	{
-		/* 读取dir目录*/
-		while ((d = readdir(dirp)) != RT_NULL)
+		/* 打开dir目录*/
+		dirp = opendir("/home/record/data");
+		
+		if(dirp == RT_NULL)
 		{
-			memset(path,0,100);
-			memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
-			sprintf(path,"%s/%s",dir,d->d_name);
-			//printf("%s\n",path);
-			//打开文件一行行判断是否有flag=2的  如果存在直接关闭文件并返回1
-			fp = fopen(path, "r");
-			if(fp)
-			{
-				while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
-				{
-					if(buff[strlen(buff)-2] == '2')			//检测最后一个字节的resendflag是否为2   如果发现是2  关闭文件并且return 1
-					{
-						fclose(fp);
-						closedir(dirp);
-						return 1;
-					}		
-				}
-				fclose(fp);
-			}
-			
+			rt_kprintf("open directory error!\n");
 		}
-		/* 关闭目录 */
-		closedir(dirp);
+		else
+		{
+			/* 读取dir目录*/
+			while ((d = readdir(dirp)) != RT_NULL)
+			{
+				memset(path,0,100);
+				memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
+				sprintf(path,"%s/%s",dir,d->d_name);
+				//printf("%s\n",path);
+				//打开文件一行行判断是否有flag=2的  如果存在直接关闭文件并返回1
+				fp = fopen(path, "r");
+				if(fp)
+				{
+					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
+					{
+						if(buff[strlen(buff)-2] == '2')			//检测最后一个字节的resendflag是否为2   如果发现是2  关闭文件并且return 1
+						{
+							fclose(fp);
+							closedir(dirp);
+							rt_mutex_release(record_data_lock);
+							return 1;
+						}		
+					}
+					fclose(fp);
+				}
+				
+			}
+			/* 关闭目录 */
+			closedir(dirp);
+		}
 	}
+	rt_mutex_release(record_data_lock);
 	return 0;
 }
 
@@ -319,48 +327,54 @@ int change_resendflag(char *time,char flag)  //改变成功返回1，未找到该时间点返回
 	char filetime[15] = {'\0'};
 	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
 	FILE *fp;
-	/* 打开dir目录*/
-	dirp = opendir("/home/record/data");
-	
-	if(dirp == RT_NULL)
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
 	{
-		rt_kprintf("open directory error!\n");
-	}
-	else
-	{
-		/* 读取dir目录*/
-		while ((d = readdir(dirp)) != RT_NULL)
+		/* 打开dir目录*/
+		dirp = opendir("/home/record/data");
+		
+		if(dirp == RT_NULL)
 		{
-			memset(path,0,100);
-			memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
-			sprintf(path,"%s/%s",dir,d->d_name);
-			//打开文件一行行判断是否有flag=2的  如果存在直接关闭文件并返回1
-			fp = fopen(path, "r+");
-			if(fp)
-			{
-				while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
-				{
-					memset(filetime,0,15);
-					memcpy(filetime,&buff[strlen(buff)-17],14);				//获取每条记录的时间
-					filetime[14] = '\0';
-					if(!memcmp(time,filetime,14))						//每条记录的时间和传入的时间对比，若相同则变更flag				
-					{
-						fseek(fp,-2L,SEEK_CUR);
-						fputc(flag,fp);
-						//printf("%s\n",filetime);
-						fclose(fp);
-						closedir(dirp);
-						return 1;
-					}
-					
-				}
-				fclose(fp);
-			}
-			
+			rt_kprintf("open directory error!\n");
 		}
-		/* 关闭目录 */
-		closedir(dirp);
+		else
+		{
+			/* 读取dir目录*/
+			while ((d = readdir(dirp)) != RT_NULL)
+			{
+				memset(path,0,100);
+				memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
+				sprintf(path,"%s/%s",dir,d->d_name);
+				//打开文件一行行判断是否有flag=2的  如果存在直接关闭文件并返回1
+				fp = fopen(path, "r+");
+				if(fp)
+				{
+					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
+					{
+						memset(filetime,0,15);
+						memcpy(filetime,&buff[strlen(buff)-17],14);				//获取每条记录的时间
+						filetime[14] = '\0';
+						if(!memcmp(time,filetime,14))						//每条记录的时间和传入的时间对比，若相同则变更flag				
+						{
+							fseek(fp,-2L,SEEK_CUR);
+							fputc(flag,fp);
+							//printf("%s\n",filetime);
+							fclose(fp);
+							closedir(dirp);
+							rt_mutex_release(record_data_lock);
+							return 1;
+						}
+						
+					}
+					fclose(fp);
+				}
+				
+			}
+			/* 关闭目录 */
+			closedir(dirp);
+		}
 	}
+	rt_mutex_release(record_data_lock);
 	return 0;
 	
 }	
@@ -379,55 +393,62 @@ int search_readflag(char *data,char * time, int *flag,char sendflag)
 	char path[100];
 	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
 	FILE *fp;
-	/* 打开dir目录*/
-	dirp = opendir("/home/record/data");
-	if(dirp == RT_NULL)
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
 	{
-		rt_kprintf("open directory error!\n");
-	}
-	else
-	{
-		/* 读取dir目录*/
-		while ((d = readdir(dirp)) != RT_NULL)
+		/* 打开dir目录*/
+		dirp = opendir("/home/record/data");
+		if(dirp == RT_NULL)
 		{
-			memset(path,0,100);
-			memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
-			sprintf(path,"%s/%s",dir,d->d_name);
-			fp = fopen(path, "r");
-			if(fp)
-			{
-				while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))  //读取一行数据
-				{
-					if(buff[strlen(buff)-2] == sendflag)			//检测最后一个字节的resendflag是否为1
-					{
-						memcpy(time,&buff[strlen(buff)-17],14);				//获取每条记录的时间
-						memcpy(data,buff,(strlen(buff)-18));
-						data[strlen(buff)-18] = '\n';
-						//printf("time:%s   data:%s\n",time,data);
-						rt_thread_delay(RT_TICK_PER_SECOND*1);
-						while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	//再往下读数据，寻找是否还有要发送的数据
-						{
-							if(buff[strlen(buff)-2] == sendflag)
-							{
-								*flag = 1;
-								fclose(fp);
-								closedir(dirp);
-								return 1;
-							}
-						}
-
-						*flag = 0;
-						fclose(fp);
-						closedir(dirp);
-						return 1;
-					}		
-				}
-				fclose(fp);
-			}
+			rt_kprintf("open directory error!\n");
 		}
-		/* 关闭目录 */
-		closedir(dirp);
+		else
+		{
+			/* 读取dir目录*/
+			while ((d = readdir(dirp)) != RT_NULL)
+			{
+				memset(path,0,100);
+				memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
+				sprintf(path,"%s/%s",dir,d->d_name);
+				fp = fopen(path, "r");
+				if(fp)
+				{
+					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))  //读取一行数据
+					{
+						if(buff[strlen(buff)-2] == sendflag)			//检测最后一个字节的resendflag是否为1
+						{
+							memcpy(time,&buff[strlen(buff)-17],14);				//获取每条记录的时间
+							memcpy(data,buff,(strlen(buff)-18));
+							data[strlen(buff)-18] = '\n';
+							//printf("time:%s   data:%s\n",time,data);
+							rt_thread_delay(RT_TICK_PER_SECOND*1);
+							while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	//再往下读数据，寻找是否还有要发送的数据
+							{
+								if(buff[strlen(buff)-2] == sendflag)
+								{
+									*flag = 1;
+									fclose(fp);
+									closedir(dirp);
+									rt_mutex_release(record_data_lock);
+									return 1;
+								}
+							}
+
+							*flag = 0;
+							fclose(fp);
+							closedir(dirp);
+							rt_mutex_release(record_data_lock);
+							return 1;
+						}		
+					}
+					fclose(fp);
+				}
+			}
+			/* 关闭目录 */
+			closedir(dirp);
+		}
 	}
+	rt_mutex_release(record_data_lock);
 	return 0;
 }
 
@@ -440,44 +461,50 @@ void delete_file_resendflag0()		//清空数据resend标志全部为0的目录
 	char path[100];
 	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
 	FILE *fp;
-	/* 打开dir目录*/
-	dirp = opendir("/home/record/data");
-	
-	if(dirp == RT_NULL)
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
 	{
-		rt_kprintf("open directory error!\n");
-	}
-	else
-	{
-		/* 读取dir目录*/
-		while ((d = readdir(dirp)) != RT_NULL)
+		/* 打开dir目录*/
+		dirp = opendir("/home/record/data");
+		
+		if(dirp == RT_NULL)
 		{
-			memset(path,0,100);
-			memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
-			sprintf(path,"%s/%s",dir,d->d_name);
-			//printf("%s\n",path);
-			//打开文件一行行判断是否有flag!=0的  如果存在直接关闭文件并返回,如果不存在，删除文件
-			fp = fopen(path, "r");
-			if(fp)
-			{
-				while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
-				{
-					if(buff[strlen(buff)-2] != '0')			//检测是否存在resendflag != 0的记录   若存在则直接退出函数
-					{
-						fclose(fp);
-						closedir(dirp);
-						return;
-					}		
-				}
-				fclose(fp);
-				//遍历完文件都没发现flag != 0的记录直接删除文件
-				unlink(path);
-			}
-			
+			rt_kprintf("open directory error!\n");
 		}
-		/* 关闭目录 */
-		closedir(dirp);
+		else
+		{
+			/* 读取dir目录*/
+			while ((d = readdir(dirp)) != RT_NULL)
+			{
+				memset(path,0,100);
+				memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
+				sprintf(path,"%s/%s",dir,d->d_name);
+				//printf("%s\n",path);
+				//打开文件一行行判断是否有flag!=0的  如果存在直接关闭文件并返回,如果不存在，删除文件
+				fp = fopen(path, "r");
+				if(fp)
+				{
+					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
+					{
+						if(buff[strlen(buff)-2] != '0')			//检测是否存在resendflag != 0的记录   若存在则直接退出函数
+						{
+							fclose(fp);
+							closedir(dirp);
+							rt_mutex_release(record_data_lock);
+							return;
+						}		
+					}
+					fclose(fp);
+					//遍历完文件都没发现flag != 0的记录直接删除文件
+					unlink(path);
+				}
+				
+			}
+			/* 关闭目录 */
+			closedir(dirp);
+		}
 	}
+	rt_mutex_release(record_data_lock);
 	return;
 
 }

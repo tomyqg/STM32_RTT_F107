@@ -102,6 +102,11 @@ void rt_hw_exception_install(rt_err_t (*exception_handle)(void *context));
  * delay interfaces
  */
 void rt_hw_us_delay(rt_uint32_t us);	//增加us级别的延时函数
+/*
+ * reset interfaces
+ */
+void reboot(void);			//复位函数
+
 
 #ifdef __cplusplus
 }

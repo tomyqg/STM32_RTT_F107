@@ -2,6 +2,7 @@
 #include <stm32f10x_rcc.h>
 #include <eth@stm32.h>
 #include <ethernet.h>
+#include "file.h"
 struct rt_stm32_eth Lan8720A;
 /* interrupt service routine for ETH */
 void ETH_IRQHandler(void)
@@ -169,6 +170,8 @@ rt_err_t rt_hw_stm32_eth_init()
     ETH_NVIC_Configuration();
 		RT_ASSERT((&Lan8720A)!= RT_NULL);
 	  rt_memset(&(Lan8720A),0, sizeof(struct rt_stm32_eth));
+		get_mac(Lan8720A.dev_addr);
+		/*
     // OUI 00-80-E1 STMICROELECTRONICS
     Lan8720A.dev_addr[0] = 0x00;
     Lan8720A.dev_addr[1] = 0x80;
@@ -177,7 +180,7 @@ rt_err_t rt_hw_stm32_eth_init()
     Lan8720A.dev_addr[3] = *(rt_uint8_t*)(0x1FFFF7E8+7);
     Lan8720A.dev_addr[4] = *(rt_uint8_t*)(0x1FFFF7E8+8);
     Lan8720A.dev_addr[5] = *(rt_uint8_t*)(0x1FFFF7E8+9);
-
+		*/
 		return rt_hw_ethernet_register(&Lan8720A,"e0",RT_NULL,RT_NULL);
 }
 

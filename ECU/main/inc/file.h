@@ -1,6 +1,7 @@
 #ifndef __FILE_H__
 #define __FILE_H__
 #include "variation.h"
+#include <rtthread.h>
 
 
 void get_ecuid(char *ecuid);
@@ -23,5 +24,5 @@ void save_record(char sendbuff[], char *date_time);			//ECU·¢ËÍ¼ÇÂ¼¸øEMAµÄÍ¬Ê±,±
 
 int save_status(char *result, char *date_time);	//ÉèÖÃ±£»¤²ÎÊı£¬¹¦ÂÊµÈÍê³Éºó£¬°Ñ½á¹û±£´æµ½ÎÄ¼şÖĞ£¬control_client°Ñ½á¹û·¢ËÍ¸øEMA
 
-
+void get_mac(rt_uint8_t  dev_addr[6]);
 #endif /*__FILE_H__*/

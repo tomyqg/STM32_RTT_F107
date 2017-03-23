@@ -16,6 +16,7 @@
 #endif
 
 #ifdef RT_USING_LWIP
+#include <Lan8720A.h> 
 #include <eth@stm32.h>
 #include <netif/ethernetif.h>
 extern int lwip_system_init(void);
@@ -55,6 +56,8 @@ static rt_uint8_t ntp_stack[1024];
 static struct rt_thread ntp_thread;
 */
 
+rt_mutex_t record_data_lock = RT_NULL;
+
 void rt_init_thread_entry(void* parameter)
 {
     {
@@ -88,8 +91,10 @@ void rt_init_thread_entry(void* parameter)
     }
 #endif /* RT_USING_DFS && RT_USING_DFS_ELMFAT */
 
-
 #ifdef RT_USING_LWIP
+  /* initialize eth interface */
+  rt_hw_stm32_eth_init();
+
 	/* initialize lwip stack */
 	/* register ethernetif device */
 	eth_system_device_init();
@@ -99,6 +104,9 @@ void rt_init_thread_entry(void* parameter)
 	rt_kprintf("TCP/IP initialized!\n");
 #endif
 
+//	EXTIX_Init();		 	//外部中断初始化
+
+
 #ifdef RT_USING_FINSH
 	/* initialize finsh */
 	finsh_system_init();
@@ -106,7 +114,12 @@ void rt_init_thread_entry(void* parameter)
 #endif
 	rt_hw_rtc_init();		//实时时钟初始化
 		
-	//初始化一把用于/home/record/data 数据读写的锁   使用互斥量
+	//初始化一把用于/home/record/data 数据读写的锁   使用互斥量 在操作该目录时加锁，操作结束解锁
+	record_data_lock = rt_mutex_create("record_data_lock", RT_IPC_FLAG_FIFO);
+	if (record_data_lock != RT_NULL)
+	{
+		rt_kprintf("Initialize record_data_lock successful!\n");
+	}
 }
 
 
@@ -189,19 +202,21 @@ void tasks_new(void)//创建任务线程
   }
 	*/
 	/* init main thread */
-	
+	/*
 	result = rt_thread_init(&main_thread,"main",main_thread_entry,RT_NULL,(rt_uint8_t*)&main_stack[0],sizeof(main_stack),THREAD_PRIORITY_MAIN,5);
   if (result == RT_EOK)
   {
     rt_thread_startup(&main_thread);
   }
-	
-	
+	*/
+	/* init client thread */
+	/*
 	result = rt_thread_init(&client_thread,"client",client_thread_entry,RT_NULL,(rt_uint8_t*)&client_stack[0],sizeof(client_stack),THREAD_PRIORITY_CLIENT,5);
   if (result == RT_EOK)
   {
 		rt_thread_startup(&client_thread);
   }	
+	*/
 	
 	
 	

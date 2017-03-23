@@ -39,3 +39,15 @@ void rt_hw_us_delay(rt_uint32_t us)
             current_delay = SysTick->LOAD + delta - SysTick->VAL;
     } while( current_delay < us );
 }
+
+void reboot()
+{
+	__set_FAULTMASK(1);     // 关闭所有中断
+	NVIC_SystemReset();			// 复位
+}
+
+#ifdef RT_USING_FINSH
+#include <finsh.h>
+
+FINSH_FUNCTION_EXPORT(reboot, software reset);
+#endif

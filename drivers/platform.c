@@ -1,11 +1,7 @@
 #include <rtthread.h>
-#include <Lan8720A.h> 
 #include <board.h>
 #include <key.h>
 
-#ifdef RT_USING_LWIP
-#include "eth@stm32.h"
-#endif /* RT_USING_LWIP */
 
 #ifdef RT_USING_SPI
 #include "rt_stm32f10x_spi.h"
@@ -66,11 +62,6 @@ void rt_platform_init(void)
     w25qxx_init("flash","spi20");
 #endif /* RT_USING_DFS && RT_USING_DFS_ELMFAT */
 #endif // RT_USING_SPI
-	
-#ifdef RT_USING_LWIP
-    /* initialize eth interface */
-    rt_hw_stm32_eth_init();
-#endif /* RT_USING_LWIP */
 
-//	EXTIX_Init();		 	//外部中断初始化
 }
+

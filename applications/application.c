@@ -23,11 +23,6 @@
 
 int rt_application_init(void)
 {
-    
-
-	
-
-
 		tasks_new();
     return 0;
 }

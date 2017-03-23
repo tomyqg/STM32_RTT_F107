@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+extern rt_mutex_t record_data_lock;
 extern inverter_info inverter[MAXINVERTERCOUNT];
 
 int ecu_type;	//1:SAA; 2:NA; 3:MX
@@ -304,20 +305,25 @@ void save_record(char sendbuff[], char *date_time)
 {
 	char dir[50] = "/home/record/data/";
 	char file[9];
-	
+	rt_err_t result;
 	int fd;
 	memcpy(file,&date_time[0],8);
 	file[8] = '\0';
 	sprintf(dir,"%s%s.dat",dir,file);
 	printf("%s\n",dir);
-	fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
-	if (fd >= 0)
-	{		
-		sprintf(sendbuff,"%s,%s,1\n",sendbuff,date_time);
-		//printf("%s",sendbuff);
-		write(fd,sendbuff,strlen(sendbuff));
-		close(fd);
+	result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
+	{
+		fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
+		if (fd >= 0)
+		{		
+			sprintf(sendbuff,"%s,%s,1\n",sendbuff,date_time);
+			//printf("%s",sendbuff);
+			write(fd,sendbuff,strlen(sendbuff));
+			close(fd);
+		}
 	}
+	rt_mutex_release(record_data_lock);
 	
 }
 
@@ -340,10 +346,6 @@ int save_status(char *result, char *date_time)
 	}
 	return 0;
 }
-
-
-#ifdef RT_USING_FINSH
-#include <finsh.h>
 
 void echo(const char* filename,const char* string)
 {
@@ -370,6 +372,51 @@ void echo(const char* filename,const char* string)
 	}
 	close(fd);
 }
+
+//将两个字节的字符串转换为16进制数
+int strtohex(char str[2])
+{
+	int ret=0;
+	
+	((str[0]-'A') >= 0)? (ret =ret+(str[0]-'A'+10)*16 ):(ret = ret+(str[0]-'0')*16);
+	((str[1]-'A') >= 0)? (ret =ret+(str[1]-'A'+10) ):(ret = ret+(str[1]-'0'));
+	return ret;
+}
+
+void get_mac(rt_uint8_t  dev_addr[6])
+{
+	FILE *fp;
+	char macstr[18] = {'\0'};
+	fp = fopen("/yuneng/ecumac.con","r");
+	if(fp)
+	{
+		//读取mac地址
+		if(NULL != fgets(macstr,18,fp))
+		{
+			dev_addr[0]=strtohex(&macstr[0]);
+			dev_addr[1]=strtohex(&macstr[3]);
+			dev_addr[2]=strtohex(&macstr[6]);
+			dev_addr[3]=strtohex(&macstr[9]);
+			dev_addr[4]=strtohex(&macstr[12]);
+			dev_addr[5]=strtohex(&macstr[15]);
+			//printf("%x %x %x %x %x %x\n",dev_addr[0],dev_addr[1],dev_addr[2],dev_addr[3],dev_addr[4],dev_addr[5]);
+			fclose(fp);
+			return;
+		}
+		fclose(fp);		
+	}
+	dev_addr[0]=0x00;;
+	dev_addr[1]=0x80;;
+	dev_addr[2]=0xE1;
+	dev_addr[3]=*(rt_uint8_t*)(0x1FFFF7E8+7);
+	dev_addr[4]=*(rt_uint8_t*)(0x1FFFF7E8+8);
+	dev_addr[5]=*(rt_uint8_t*)(0x1FFFF7E8+9);
+	return;
+}
+
+#ifdef RT_USING_FINSH
+#include <finsh.h>
+
 FINSH_FUNCTION_EXPORT(echo, eg:echo("/test","test"));
 
 void splitSt(char * str)
@@ -424,8 +471,9 @@ void rm_dir(char* dir)
 }
 FINSH_FUNCTION_EXPORT(rm_dir, eg:rm_dir("/home/record/data"));
 
-int initsystem(char *ecuid)
+int initsystem(char *ecuid,char *mac)
 {
+	
 	mkdir("/home",0x777);
 	mkdir("/tmp",0x777);
 	mkdir("/yuneng",0x777);
@@ -437,11 +485,28 @@ int initsystem(char *ecuid)
 	mkdir("/home/record/inversta",0x777);
 	echo("/yuneng/ecuid.con",ecuid);
 	echo("/yuneng/area.con","SAA");
-	echo("/yuneng/ecumac.con","80:97:1B:00:72:1C");
+	echo("/yuneng/ecumac.con",mac);
+	//echo("/yuneng/ecumac.con","80:97:1B:00:72:1C");
 	echo("/yuneng/channel.con","0x10");
 	echo("/yuneng/limiteid.con","1");
 	
 	return 0;
 }
-FINSH_FUNCTION_EXPORT(initsystem, eg:initsystem("123456789012"));
+FINSH_FUNCTION_EXPORT(initsystem, eg:initsystem("123456789012","80:97:1B:00:72:1C"));
+
+void addInverter(char *inverter_id)
+{
+	int fd;
+	char buff[50];
+	fd = open("/home/data/id", O_WRONLY | O_APPEND | O_CREAT,0);
+	if (fd >= 0)
+	{		
+		sprintf(buff,"%s,,,,,,\n",inverter_id);
+		write(fd,buff,strlen(buff));
+		close(fd);
+	}
+	echo("/yuneng/limiteid.con","1");
+}
+FINSH_FUNCTION_EXPORT(addInverter, eg:addInverter("201703150001"));
+
 #endif
