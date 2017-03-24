@@ -8,6 +8,8 @@
 #include "ntpapp.h"
 #include <board.h>
 #include <rtthread.h>
+#include "arch/sys_arch.h"
+
 
 #ifdef RT_USING_DFS
 #include <dfs_fs.h>
@@ -45,11 +47,11 @@ struct rt_thread main_thread;
 ALIGN(RT_ALIGN_SIZE)
 rt_uint8_t client_stack[ 8192 ];
 struct rt_thread client_thread;
-/*
+#ifdef RT_USING_LWIP
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t dhcp_stack[1024];
 static struct rt_thread dhcp_thread;
-*/
+#endif
 /*
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t ntp_stack[1024];
@@ -142,23 +144,21 @@ static void led_thread_entry(void* parameter)
         rt_thread_delay( RT_TICK_PER_SECOND/2 );
     }
 }
-/*
+#ifdef RT_USING_LWIP
 static void dhcp_reset_thread_entry(void* parameter)
 { 
 	while(1)
 	{
+		rt_thread_delay( RT_TICK_PER_SECOND * 60);
 		if(ETH_ReadPHYRegister(PHY_ADDRESS, PHY_BSR) & PHY_Linked_Status)
 		{
-			printf("network link\n");
+			//写重新DHCP的代码
+			//printf("network link\n");
+			dhcp_reset();
 		}
-		else
-		{
-			printf("network unlink\n");
-		}
-		rt_thread_delay( RT_TICK_PER_SECOND * 10);
 	}
 }
-*/
+#endif
 
 /*
 static void ntp_thread_entry(void* parameter)
@@ -186,13 +186,14 @@ void tasks_new(void)//创建任务线程
   {
     rt_thread_startup(&led_thread);
   }
-	/*
+#ifdef RT_USING_LWIP
   result = rt_thread_init(&dhcp_thread,"dhcp_reset",dhcp_reset_thread_entry,RT_NULL,(rt_uint8_t*)&dhcp_stack[0],sizeof(dhcp_stack),THREAD_PRIORITY_DHCPRESET,5);
   if (result == RT_EOK)
   {
     rt_thread_startup(&dhcp_thread);
   }	
-	*/
+#endif
+	
   /* init ntp thread */
   /*
 	result = rt_thread_init(&ntp_thread,"ntp",ntp_thread_entry,RT_NULL,(rt_uint8_t*)&ntp_stack[0],sizeof(ntp_stack),THREAD_PRIORITY_NTP,5);
@@ -218,6 +219,9 @@ void tasks_new(void)//创建任务线程
   }	
 	*/
 	
-	
-	
 }
+
+#ifdef RT_USING_FINSH
+#include <finsh.h>
+FINSH_FUNCTION_EXPORT(dhcp_reset, eg:dhcp_reset());
+#endif

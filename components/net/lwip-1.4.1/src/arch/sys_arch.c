@@ -130,6 +130,77 @@ static void tcpip_init_done_callback(void *arg)
     rt_sem_release((rt_sem_t)arg);
 }
 
+void dhcp_reset(void)
+{
+  rt_device_t device;
+  struct eth_device *ethif;
+	struct ip_addr ipaddr, netmask, gw;
+  struct rt_list_node* node;
+  struct rt_object* object;
+  struct rt_object_information *information;
+
+  extern struct rt_object_information rt_object_container[];
+
+	IP4_ADDR(&gw, 0,0,0,0);
+  IP4_ADDR(&ipaddr, 0,0,0,0);
+  IP4_ADDR(&netmask, 0,0,0,0);
+
+  /* enter critical */
+  rt_enter_critical();
+
+  /* for each network interfaces */
+  information = &rt_object_container[RT_Object_Class_Device];
+  for (node = information->object_list.next;
+       node != &(information->object_list);
+       node = node->next)
+  {
+    object = rt_list_entry(node, struct rt_object, list);
+    device = (rt_device_t)object;
+    if (device->type == RT_Device_Class_NetIf)
+    {
+      ethif = (struct eth_device *)device;
+
+      /* leave critical */
+      rt_exit_critical();
+#if LWIP_DHCP
+			if (ethif->flags & NETIF_FLAG_DHCP)
+			{
+				if(ethif->netif->dhcp != NULL)
+				{
+					dhcp_release(ethif->netif);
+					/* if this interface uses DHCP, start the DHCP client */
+					dhcp_start(ethif->netif);
+					rt_kprintf("dhcp_start1\n");					
+				}else
+				{
+				  netif_add(ethif->netif, &ipaddr, &netmask, &gw,
+                 ethif, netif_device_init, tcpip_input);
+
+          if (netif_default == RT_NULL)
+            netif_set_default(ethif->netif);
+					dhcp_start(ethif->netif);
+					rt_kprintf("dhcp_start2\n");
+				}
+
+			}
+
+#endif
+
+      if (!(ethif->flags & ETHIF_LINK_PHYUP))
+      {
+        netif_set_link_up(ethif->netif);
+      }
+
+      /* enter critical */
+      rt_enter_critical();
+    }
+  }
+
+  /* leave critical */
+	rt_exit_critical();
+}
+
+
 /**
  * LwIP system initialization
  */
