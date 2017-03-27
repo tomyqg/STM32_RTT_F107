@@ -167,17 +167,21 @@ void dhcp_reset(void)
 			{
 				if(ethif->netif->dhcp != NULL)
 				{
+					netif_set_addr(ethif->netif, &ipaddr, &netmask, &gw);
+					netif_set_down(ethif->netif);
+					//netif_remove(ethif->netif);
 					dhcp_release(ethif->netif);
+					dhcp_stop(ethif->netif);
 					/* if this interface uses DHCP, start the DHCP client */
 					dhcp_start(ethif->netif);
 					rt_kprintf("dhcp_start1\n");					
 				}else
 				{
 				  netif_add(ethif->netif, &ipaddr, &netmask, &gw,
-                 ethif, netif_device_init, tcpip_input);
+                 		ethif, netif_device_init, tcpip_input);
 
-          if (netif_default == RT_NULL)
-            netif_set_default(ethif->netif);
+		          if (netif_default == RT_NULL)
+		            netif_set_default(ethif->netif);
 					dhcp_start(ethif->netif);
 					rt_kprintf("dhcp_start2\n");
 				}

@@ -149,12 +149,12 @@ static void dhcp_reset_thread_entry(void* parameter)
 { 
 	while(1)
 	{
-		rt_thread_delay( RT_TICK_PER_SECOND * 60);
+		rt_thread_delay( RT_TICK_PER_SECOND * 1800);
 		if(ETH_ReadPHYRegister(PHY_ADDRESS, PHY_BSR) & PHY_Linked_Status)
 		{
 			//写重新DHCP的代码
 			//printf("network link\n");
-			dhcp_reset();
+			//dhcp_reset();
 		}
 	}
 }
@@ -203,21 +203,20 @@ void tasks_new(void)//创建任务线程
   }
 	*/
 	/* init main thread */
-	/*
+	
 	result = rt_thread_init(&main_thread,"main",main_thread_entry,RT_NULL,(rt_uint8_t*)&main_stack[0],sizeof(main_stack),THREAD_PRIORITY_MAIN,5);
   if (result == RT_EOK)
   {
     rt_thread_startup(&main_thread);
   }
-	*/
+	
 	/* init client thread */
-	/*
+	
 	result = rt_thread_init(&client_thread,"client",client_thread_entry,RT_NULL,(rt_uint8_t*)&client_stack[0],sizeof(client_stack),THREAD_PRIORITY_CLIENT,5);
   if (result == RT_EOK)
   {
 		rt_thread_startup(&client_thread);
   }	
-	*/
 	
 }
 
