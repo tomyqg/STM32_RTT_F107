@@ -172,6 +172,8 @@ void dhcp_reset(void)
 					//netif_remove(ethif->netif);
 					dhcp_release(ethif->netif);
 					dhcp_stop(ethif->netif);
+					mem_free(ethif->netif->dhcp);
+					ethif->netif->dhcp=NULL;
 					/* if this interface uses DHCP, start the DHCP client */
 					dhcp_start(ethif->netif);
 					rt_kprintf("dhcp_start1\n");					
