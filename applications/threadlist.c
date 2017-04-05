@@ -18,8 +18,7 @@
 #endif
 
 #ifdef RT_USING_LWIP
-#include <Lan8720A.h> 
-#include <eth@stm32.h>
+#include <stm32_eth.h>
 #include <netif/ethernetif.h>
 extern int lwip_system_init(void);
 #endif
@@ -47,11 +46,13 @@ struct rt_thread main_thread;
 ALIGN(RT_ALIGN_SIZE)
 rt_uint8_t client_stack[ 8192 ];
 struct rt_thread client_thread;
+/*
 #ifdef RT_USING_LWIP
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t dhcp_stack[1024];
 static struct rt_thread dhcp_thread;
 #endif
+*/
 /*
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t ntp_stack[1024];
@@ -144,6 +145,7 @@ static void led_thread_entry(void* parameter)
         rt_thread_delay( RT_TICK_PER_SECOND/2 );
     }
 }
+/*
 #ifdef RT_USING_LWIP
 static void dhcp_reset_thread_entry(void* parameter)
 { 
@@ -159,7 +161,7 @@ static void dhcp_reset_thread_entry(void* parameter)
 	}
 }
 #endif
-
+*/
 /*
 static void ntp_thread_entry(void* parameter)
 {
@@ -185,6 +187,7 @@ void tasks_new(void)//创建任务线程
   {
     rt_thread_startup(&led_thread);
   }
+	/*
 #ifdef RT_USING_LWIP
   result = rt_thread_init(&dhcp_thread,"dhcp_reset",dhcp_reset_thread_entry,RT_NULL,(rt_uint8_t*)&dhcp_stack[0],sizeof(dhcp_stack),THREAD_PRIORITY_DHCPRESET,5);
   if (result == RT_EOK)
@@ -192,7 +195,7 @@ void tasks_new(void)//创建任务线程
     rt_thread_startup(&dhcp_thread);
   }	
 #endif
-	
+	*/
   /* init ntp thread */
   /*
 	result = rt_thread_init(&ntp_thread,"ntp",ntp_thread_entry,RT_NULL,(rt_uint8_t*)&ntp_stack[0],sizeof(ntp_stack),THREAD_PRIORITY_NTP,5);

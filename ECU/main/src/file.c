@@ -11,6 +11,27 @@ extern inverter_info inverter[MAXINVERTERCOUNT];
 
 int ecu_type;	//1:SAA; 2:NA; 3:MX
 
+int fileopen(const char *file, int flags, int mode)
+{
+	return open(file,flags,mode);
+}
+
+int fileclose(int fd)
+{
+	return close(fd);
+}
+
+int fileWrite(int fd,char* buf,int len)
+{
+	return write( fd, buf, len );
+}
+
+int fileRead(int fd,char* buf,int len)
+{
+	return read( fd, buf, len );
+}
+
+
 int get_ecu_type()			
 {
 	int fd;

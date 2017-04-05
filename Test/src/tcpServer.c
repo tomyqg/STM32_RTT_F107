@@ -9,11 +9,11 @@ static const char send_data[] = "This is TCP Server from RT-Thread.";
 void tcpserv(void* parameter)
 {
 	char *recv_data; /* 用于接收的指针，后面会做一次动态分配以请求可用内存 */
-	rt_uint32_t sin_size;
+	rt_uint32_t sin_size,sum=0;
 	int sock, connected, bytes_received;
 	struct sockaddr_in server_addr, client_addr;
 	rt_bool_t stop = RT_FALSE; /* 停止标志 */
-	recv_data = rt_malloc(1024); /* 分配接收用的数据缓冲 */
+	recv_data = rt_malloc(1461); /* 分配接收用的数据缓冲 */
 	if (recv_data == RT_NULL)
 	{
 		rt_kprintf("No memory\n");
@@ -67,12 +67,12 @@ void tcpserv(void* parameter)
 		while (1)
 		{
 			/* 发送数据到connected socket */
-			send(connected, send_data, strlen(send_data), 0);
+			//send(connected, send_data, strlen(send_data), 0);
 			/*
 			* 从connected socket中接收数据，接收buffer是1024大小，
 			* 但并不一定能够收到1024大小的数据
 			*/
-			bytes_received = recv(connected, recv_data, 1024, 0);
+			bytes_received = recv(connected, recv_data, 1460, 0);
 			if (bytes_received < 0)
 			{
 				/* 接收失败，关闭这个connected socket */
@@ -80,7 +80,15 @@ void tcpserv(void* parameter)
 				break;
 			}
 			/* 有接收到数据，把末端清零 */
-			recv_data[bytes_received] = '\0';
+			//recv_data[bytes_received] = '\0';
+			if(bytes_received > 0)
+			{
+				sum = sum+bytes_received;
+				rt_kprintf("%d   %d\n",bytes_received,sum);
+				//rt_kprintf("%s", recv_data);
+				rt_memset(recv_data,0x00,1461 );
+			}
+		#if 0	
 			if (strcmp(recv_data, "q") == 0 || strcmp(recv_data, "Q") == 0)
 			{
 				/* 如果是首字母是q或Q，关闭这个连接 */
@@ -99,6 +107,7 @@ void tcpserv(void* parameter)
 				/* 在控制终端显示收到的数据 */
 				rt_kprintf("RECIEVED DATA = %s \n", recv_data);
 			}
+			#endif
 		}
 	}
 	/* 退出服务 */

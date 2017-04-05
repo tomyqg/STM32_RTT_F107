@@ -3,7 +3,10 @@
 #include "variation.h"
 #include <rtthread.h>
 
-
+int fileopen(const char *file, int flags, int mode);
+int fileclose(int fd);
+int fileWrite(int fd,char* buf,int len);
+int fileRead(int fd,char* buf,int len);
 void get_ecuid(char *ecuid);
 int get_ecu_type(void);
 unsigned short get_panid(void);
@@ -25,4 +28,6 @@ void save_record(char sendbuff[], char *date_time);			//ECU·¢ËÍ¼ÇÂ¼¸øEMAµÄÍ¬Ê±,±
 int save_status(char *result, char *date_time);	//ÉèÖÃ±£»¤²ÎÊı£¬¹¦ÂÊµÈÍê³Éºó£¬°Ñ½á¹û±£´æµ½ÎÄ¼şÖĞ£¬control_client°Ñ½á¹û·¢ËÍ¸øEMA
 
 void get_mac(rt_uint8_t  dev_addr[6]);
+void echo(const char* filename,const char* string);
+
 #endif /*__FILE_H__*/

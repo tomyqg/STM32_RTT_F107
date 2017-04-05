@@ -122,7 +122,7 @@
 #define RT_LWIP_IPADDR0	192
 #define RT_LWIP_IPADDR1	168
 #define RT_LWIP_IPADDR2	1
-#define RT_LWIP_IPADDR3	230
+#define RT_LWIP_IPADDR3	30
 
 /* gateway address of target*/
 #define RT_LWIP_GWADDR0	192
@@ -150,8 +150,8 @@
 #define RT_LWIP_TCP_SND_BUF	8192
 /* TCP receive window. */
 #define RT_LWIP_TCP_WND		8192
-#define CHECKSUM_BY_HARDWARE
-#define RT_LWIP_DHCP      
+#define CHECKSUM_BY_HARDWARE						1
+//#define RT_LWIP_DHCP      
 #define CHECKSUM_CHECK_TCP              0
 #define CHECKSUM_CHECK_IP               0
 #define CHECKSUM_CHECK_UDP              0

@@ -11,7 +11,7 @@
 #include <netif/etharp.h>
 #include <lwip/icmp.h>
 #include "lwipopts.h" 
-#include "eth@stm32.h"
+#include "stm32_eth.h"
 #include <rtdevice.h>
 #include <ethernet.h>
 

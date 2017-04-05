@@ -103,10 +103,6 @@ static void GPIO_Configuration(void)
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
 	
-	
-
-	
-	
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	 
   /* RX_DV/CRS_DV */
@@ -121,14 +117,15 @@ static void GPIO_Configuration(void)
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
  
-
   /* Reset */
+	/*
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;	
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
 	GPIO_ResetBits(GPIOB, GPIO_Pin_10);//硬件复位LAN8720 	
  
-  GPIO_SetBits(GPIOB, GPIO_Pin_10);//复位结束 
+  GPIO_SetBits(GPIOB, GPIO_Pin_10);//复位结束
+	*/
 }
 
 /**
@@ -148,7 +145,7 @@ static void ETH_NVIC_Configuration(void)
   NVIC_InitTypeDef   NVIC_InitStructure;
 
   /* Set the Vector Table base location at 0x08000000 */
-  NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x4000);
+  //NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0000);
 
   /* 2 bit for pre-emption priority, 2 bits for subpriority */
   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2); 

@@ -77,4 +77,5 @@ int get_hour()
 void getcurrenttime(char db_time[])		
 {
 	apstime(db_time);
+	db_time[14] = '\0';
 }
