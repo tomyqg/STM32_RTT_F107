@@ -151,7 +151,7 @@
 /* TCP receive window. */
 #define RT_LWIP_TCP_WND		8192
 #define CHECKSUM_BY_HARDWARE						1
-//#define RT_LWIP_DHCP      
+#define RT_LWIP_DHCP      
 #define CHECKSUM_CHECK_TCP              0
 #define CHECKSUM_CHECK_IP               0
 #define CHECKSUM_CHECK_UDP              0
