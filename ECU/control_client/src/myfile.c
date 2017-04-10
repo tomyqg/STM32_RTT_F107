@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-
 #include "myfile.h"
 #include "datetime.h"
 #include <dfs_posix.h> 
@@ -17,11 +16,12 @@ void delete_newline(char *s)
 /* 获取(存储单个参数的)配置文件中的值 */
 char *file_get_one(char *s, int count, const char *filename)
 {
+	
 	FILE *fp;
-
+	
 	fp = fopen(filename, "r");
 	if(fp == NULL){
-		printmsg("control_client",(char *)filename);
+		print2msg("control_client",(char *)filename,"open error!");
 		return NULL;
 	}
 	fgets(s, count, fp);
@@ -35,7 +35,6 @@ char *file_get_one(char *s, int count, const char *filename)
 int file_set_one(const char *s, const char *filename)
 {
 	FILE *fp;
-
 	fp = fopen(filename, "w");
 	if(fp == NULL){
 		printmsg("control_client",(char *)filename);
@@ -64,7 +63,11 @@ int file_get_array(MyArray *array, int num, const char *filename)
 	}
 	while(!feof(fp))
 	{
-		if(count >= num)return 0;
+		if(count >= num)
+		{
+			fclose(fp);
+			return 0;
+		}
 		memset(buffer, 0 ,sizeof(buffer));
 		fgets(buffer, 128, fp);
 		if(!strlen(buffer))continue;
@@ -95,26 +98,54 @@ int file_set_array(const MyArray *array, int num, const char *filename)
 	return 0;
 }
 
-
-int save_to_process_result(int cmd_id, char *savebuffer)
-{	char dir[50] = "/home/data/proc_res";
-	char file[9];
-	int fd;
-	char time[20];
-	getcurrenttime(time);
-	memcpy(file,&time[0],8);
-	file[8] = '\0';
-	sprintf(dir,"%s%s.dat",dir,file);
-	printf("%s\n",dir);
-	fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
-	if (fd >= 0)
-	{		
-		sprintf(savebuffer,"%s,%3d,1\n",savebuffer,cmd_id);
-		printf("%s",savebuffer);
-		write(fd,savebuffer,strlen(savebuffer));
-		close(fd);
+//清除文件
+int clear_file(char *filename)
+{
+	FILE *fp;
+	fp = fopen(filename, "w");
+	if(fp == NULL){
+		printmsg("control_client",(char *)filename);
+		return -1;
 	}
+	fclose(fp);
 	return 0;
+}
+
+//删除文件以行
+int delete_line(char* filename,char* temfilename,char* compareData,int len)
+{
+	FILE *fin,*ftp;
+  char data[512];
+  fin=fopen(filename,"r");//读打开原文件123.txt
+	if(fin == NULL)
+	{
+		printf("Open the file %s failure...\n",filename);
+    return -1;
+	}
+  ftp=fopen(temfilename,"w");//写打开临时文件tmp.txt
+	if( ftp==NULL){
+		printf("Open the file %s failure...\n",temfilename);
+		fclose(fin);
+    return -1;
+  }
+  while(fgets(data,512,fin))//从原文件读取一行
+	{
+		if(memcmp(data,compareData,len))
+		{
+			fputs(data,ftp);//不是则将这一行写入临时文件
+		}
+	}
+  fclose(fin);
+  fclose(ftp);
+  remove(filename);//删除原文件
+  rename(temfilename,filename);//将临时文件名改为原文件名
+  return 0;
 	
 }
+
+#ifdef RT_USING_FINSH
+#include <finsh.h>
+FINSH_FUNCTION_EXPORT(delete_line, eg:delete_line("/home/data/id","/home/data/id_tmp","201703150001",12));
+#endif
+
 

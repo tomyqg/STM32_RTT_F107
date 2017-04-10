@@ -29,5 +29,7 @@ int save_status(char *result, char *date_time);	//设置保护参数，功率等完成后，把
 
 void get_mac(rt_uint8_t  dev_addr[6]);
 void echo(const char* filename,const char* string);
+int save_process_result(int item, char *result);
+void addInverter(char *inverter_id);
 
 #endif /*__FILE_H__*/

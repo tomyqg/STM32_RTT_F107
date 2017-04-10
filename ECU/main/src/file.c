@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "datetime.h"
 
 extern rt_mutex_t record_data_lock;
 extern inverter_info inverter[MAXINVERTERCOUNT];
@@ -210,8 +211,9 @@ int splitString(char *data,char splitdata[20][13])
 int get_id_from_file(inverter_info *firstinverter)
 {
 
-	int i;
+	int i,j,sameflag;
 	inverter_info *inverter = firstinverter;
+	inverter_info *curinverter = firstinverter;
 	char list[20][13];
 	char data[200];
 	int num =0;
@@ -224,7 +226,22 @@ int get_id_from_file(inverter_info *firstinverter)
 			printf("%s\n",data);
 			memset(list,0,sizeof(list));
 			splitString(data,list);
+			//判断是否存在该逆变器
+			curinverter = firstinverter;
+			sameflag=0;
+			for(j=0; (j<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); j++)	
+			{
+				if(!memcmp(list[0],curinverter->id,12))
+					sameflag = 1;
+				curinverter++;
+			}
+			if(sameflag == 1)
+			{
+				continue;
+			}
+			
 			strcpy(inverter->id, list[0]);
+			
 			if(0==strlen(list[1]))
 			{
 				inverter->shortaddr = 0;		//未获取到短地址的逆变器赋值为0.ZK
@@ -306,20 +323,25 @@ int get_id_from_file(inverter_info *firstinverter)
 
 int save_process_result(int item, char *result)
 {
-	char dir[28] = "/home/data/proc_res/";
-	char buf[5] ;
-	FILE *fp;
-	sprintf(buf,"%d",item);
-	strcat(dir,buf);
-	printf("%s",dir);
-		
-	fp = fopen(dir, "w");
-	if(fp)
-	{
-		fprintf(fp,"%d,%s\n",item,result);
-		fclose(fp);
+	char dir[50] = "/home/data/proc_res";
+	char file[9];
+	int fd;
+	char time[20];
+	getcurrenttime(time);
+	memcpy(file,&time[0],8);
+	file[8] = '\0';
+	sprintf(dir,"%s%s.dat",dir,file);
+	printf("%s\n",dir);
+	fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
+	if (fd >= 0)
+	{		
+		sprintf(result,"%s,%3d,1\n",result,item);
+		printf("%s",result);
+		write(fd,result,strlen(result));
+		close(fd);
 	}
 	return 0;
+
 }
 
 void save_record(char sendbuff[], char *date_time)
@@ -435,6 +457,21 @@ void get_mac(rt_uint8_t  dev_addr[6])
 	return;
 }
 
+void addInverter(char *inverter_id)
+{
+	int fd;
+	char buff[50];
+	fd = open("/home/data/id", O_WRONLY | O_APPEND | O_CREAT,0);
+	if (fd >= 0)
+	{		
+		sprintf(buff,"%s,,,,,,\n",inverter_id);
+		write(fd,buff,strlen(buff));
+		close(fd);
+	}
+	echo("/yuneng/limiteid.con","1");
+}
+
+
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 
@@ -494,7 +531,7 @@ FINSH_FUNCTION_EXPORT(rm_dir, eg:rm_dir("/home/record/data"));
 
 int initsystem(char *ecuid,char *mac)
 {
-	
+	char fileecuid[13];	
 	mkdir("/home",0x777);
 	mkdir("/tmp",0x777);
 	mkdir("/yuneng",0x777);
@@ -504,30 +541,22 @@ int initsystem(char *ecuid,char *mac)
 	echo("/home/data/ltpower","0.000000");
 	mkdir("/home/record/data",0x777);
 	mkdir("/home/record/inversta",0x777);
-	echo("/yuneng/ecuid.con",ecuid);
+	memcpy(fileecuid,ecuid,12);
+	fileecuid[12] = '\n';
+	echo("/yuneng/ecuid.con",fileecuid);
 	echo("/yuneng/area.con","SAA");
 	echo("/yuneng/ecumac.con",mac);
 	//echo("/yuneng/ecumac.con","80:97:1B:00:72:1C");
 	echo("/yuneng/channel.con","0x10");
 	echo("/yuneng/limiteid.con","1");
-	
+	echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.105\nPort1=8997\nPort2=8997\n");
+	echo("/yuneng/version.con","M1.0\n");
+	echo("/yuneng/vernum.con","2\n");
 	return 0;
 }
 FINSH_FUNCTION_EXPORT(initsystem, eg:initsystem("123456789012","80:97:1B:00:72:1C"));
 
-void addInverter(char *inverter_id)
-{
-	int fd;
-	char buff[50];
-	fd = open("/home/data/id", O_WRONLY | O_APPEND | O_CREAT,0);
-	if (fd >= 0)
-	{		
-		sprintf(buff,"%s,,,,,,\n",inverter_id);
-		write(fd,buff,strlen(buff));
-		close(fd);
-	}
-	echo("/yuneng/limiteid.con","1");
-}
+
 FINSH_FUNCTION_EXPORT(addInverter, eg:addInverter("201703150001"));
 
 #endif

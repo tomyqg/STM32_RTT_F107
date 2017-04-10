@@ -11,5 +11,6 @@ char *file_get_one(char *s, int count, const char *filename);
 int file_set_one(const char *s, const char *filename);
 int file_get_array(MyArray *array, int num, const char *filename);
 int file_set_array(const MyArray *array, int num, const char *filename);
-int save_to_process_result(int cmd_id, char *savebuffer);
+int clear_file(char *filename);
+int delete_line(char* filename,char* temfilename,char* compareData,int len);
 #endif	/*__MYFILE_H__*/

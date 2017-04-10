@@ -9,7 +9,7 @@
 
 //extern int caltype;		//计算方式，NA版和非NA版的区别
 
-int write_gfdi_status(inverter_info *firstinverter)
+int write_gfdi_status(inverter_info *firstinverter) 
 {
 	FILE *fp;
 	int i;

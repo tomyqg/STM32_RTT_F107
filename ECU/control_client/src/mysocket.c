@@ -41,7 +41,7 @@ int create_socket(void)
 //	fcntl(sockfd, F_SETFL, O_NONBLOCK | iflags);
 	if(sockfd == -1){
 		printmsg("control_client","socket");
-        exit(1);
+        return -1;
 	}
 	return sockfd;
 }
@@ -79,7 +79,7 @@ int connect__socket(int sockfd, int port, const char *ip, const char *domain)
 		print2msg("control_client","Failed to connect to ",time);
 		printmsg("control_client","connect");
 		close(sockfd);
-		exit(1);
+		return -1;
 	}
 	print2msg("control_client","Connecting EMA successfully", time);
 	return 0;
@@ -127,14 +127,13 @@ int recv_socket(int sockfd, char *recvbuffer, int size, int timeout_s)
 		FD_ZERO(&fds);
 		FD_SET(sockfd, &fds);
 		timeout.tv_sec = timeout_s;
-
 		switch(select(sockfd+1, &fds, NULL, NULL, &timeout)){
 			case -1:
 				printmsg("control_client","select");
 			case 0:
 				printmsg("control_client","Receive date from EMA timeout");
 				close(sockfd);
-				printmsg("control_client",">>End\n");
+				printmsg("control_client",">>End");
 				return -1;
 			default:
 				if(FD_ISSET(sockfd, &fds)){
@@ -156,16 +155,19 @@ int recv_socket(int sockfd, char *recvbuffer, int size, int timeout_s)
 				break;
 		}
 	}
-	//return 0;
+
 }
 
-/* Socket客户端初始化 */
+/* Socket客户端初始化 返回-1表示失败*/ 
 int client_socket_init(int port, const char *ip, const char *domain)
 {
 	int sockfd;
+	int ret;
 
 	sockfd = create_socket();
-	connect__socket(sockfd, port, ip, domain);
+	if(sockfd < 0) return sockfd;
+	ret = connect__socket(sockfd, port, ip, domain);
+	if(ret < 0) return ret;
 	return sockfd;
 }
 

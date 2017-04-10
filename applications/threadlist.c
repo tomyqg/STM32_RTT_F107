@@ -5,6 +5,7 @@
 #include "led.h"
 #include "main-thread.h"
 #include "client.h"
+#include "control_client.h"
 #include "ntpapp.h"
 #include <board.h>
 #include <rtthread.h>
@@ -40,12 +41,17 @@ extern int lwip_system_init(void);
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t led_stack[200];
 static struct rt_thread led_thread;
+/*
 ALIGN(RT_ALIGN_SIZE)
 rt_uint8_t main_stack[ 4096 ];
 struct rt_thread main_thread;
 ALIGN(RT_ALIGN_SIZE)
 rt_uint8_t client_stack[ 8192 ];
 struct rt_thread client_thread;
+*/
+ALIGN(RT_ALIGN_SIZE)
+rt_uint8_t control_client_stack[ 14336 ];
+struct rt_thread control_client_thread;
 /*
 #ifdef RT_USING_LWIP
 ALIGN(RT_ALIGN_SIZE)
@@ -220,6 +226,14 @@ void tasks_new(void)//创建任务线程
 		rt_thread_startup(&client_thread);
   }	
 	*/
+	
+	result = rt_thread_init(&control_client_thread,"control_client",control_client_thread_entry,RT_NULL,(rt_uint8_t*)&control_client_stack[0],sizeof(control_client_stack),THREAD_PRIORITY_CONTROL_CLIENT,5);
+  if (result == RT_EOK)
+  {
+		rt_thread_startup(&control_client_thread);
+  }	
+	
+	
 }
 
 #ifdef RT_USING_FINSH

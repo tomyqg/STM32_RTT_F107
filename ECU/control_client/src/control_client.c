@@ -16,12 +16,15 @@
 #include "mysocket.h"
 #include "remote_control_protocol.h"
 
+#include "inverter_id.h"
+
 
 ALIGN(RT_ALIGN_SIZE)
-extern rt_uint8_t control_client_stack[ 8192 ];
+extern rt_uint8_t control_client_stack[ 14336 ];
 extern struct rt_thread control_client_thread;
 
 extern rt_mutex_t record_data_lock;
+char ecuid[13] = {'\0'};
 
 #define ARRAYNUM 6
 #define MAXBUFFER 4096
@@ -312,8 +315,8 @@ void delete_statusflag0()		//清空数据flag标志全部为0的目录
 	}
 	rt_mutex_release(record_data_lock);
 	return;
-
 }
+
 //根据时间点修改标志
 int change_statusflag(char *time,char flag)  //改变成功返回1，未找到该时间点返回0
 {
@@ -450,13 +453,199 @@ int search_statusflag(char *data,char * time, int *flag,char sendflag)
 }
 
 
+void delete_pro_result_flag0()		//清空数据flag标志全部为0的目录
+{
+	DIR *dirp;
+	char dir[30] = "/home/data/proc_res";
+	struct dirent *d;
+	char path[100];
+	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	FILE *fp;
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
+	{
+		/* 打开dir目录*/
+		dirp = opendir("/home/data/proc_res");
+		
+		if(dirp == RT_NULL)
+		{
+			rt_kprintf("open directory error!\n");
+		}
+		else
+		{
+			/* 读取dir目录*/
+			while ((d = readdir(dirp)) != RT_NULL)
+			{
+				memset(path,0,100);
+				memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
+				sprintf(path,"%s/%s",dir,d->d_name);
+				//打开文件一行行判断是否有flag!=0的  如果存在直接关闭文件并返回,如果不存在，删除文件
+				fp = fopen(path, "r");
+				if(fp)
+				{
+					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
+					{
+						if(buff[strlen(buff)-2] != '0')			//检测是否存在resendflag != 0的记录   若存在则直接退出函数
+						{
+							fclose(fp);
+							closedir(dirp);
+							rt_mutex_release(record_data_lock);
+							return;
+						}		
+					}
+					fclose(fp);
+					//遍历完文件都没发现flag != 0的记录直接删除文件
+					unlink(path);
+				}			
+			}
+			/* 关闭目录 */
+			closedir(dirp);
+		}
+	}
+	rt_mutex_release(record_data_lock);
+	return;
+}
+
+//根据时间点修改标志
+int change_pro_result_flag(char *item,char flag)  //改变成功返回1，未找到该时间点返回0
+{
+	DIR *dirp;
+	char dir[30] = "/home/data/proc_res";
+	struct dirent *d;
+	char path[100];
+	char fileitem[4] = {'\0'};
+	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	FILE *fp;
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
+	{
+		/* 打开dir目录*/
+		dirp = opendir("/home/data/proc_res");
+		
+		if(dirp == RT_NULL)
+		{
+			rt_kprintf("open directory error!\n");
+		}
+		else
+		{
+			/* 读取dir目录*/
+			while ((d = readdir(dirp)) != RT_NULL)
+			{
+				memset(path,0,100);
+				memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
+				sprintf(path,"%s/%s",dir,d->d_name);
+				//打开文件一行行判断是否有flag=2的  如果存在直接关闭文件并返回1
+				fp = fopen(path, "r+");
+				if(fp)
+				{
+					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
+					{
+						memset(fileitem,0,4);
+						memcpy(fileitem,&buff[strlen(buff)-6],3);				//获取每条记录的时间
+						fileitem[3] = '\0';
+						if(!memcmp(item,fileitem,4))						//每条记录的时间和传入的时间对比，若相同则变更flag				
+						{
+							fseek(fp,-2L,SEEK_CUR);
+							fputc(flag,fp);
+							//printf("%s\n",filetime);
+							fclose(fp);
+							closedir(dirp);
+							rt_mutex_release(record_data_lock);
+							return 1;
+						}
+						
+					}
+					fclose(fp);
+				}
+				
+			}
+			/* 关闭目录 */
+			closedir(dirp);
+		}
+	}
+	rt_mutex_release(record_data_lock);
+	return 0;
+	
+}
+//查询一条flag为1的数据   查询到了返回1  如果没查询到返回0
+/*
+data:表示获取到的数据
+item：表示获取的命令帧
+flag：表示是否还有下一条数据   存在下一条为1   不存在为0
+*/
+int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)	
+{
+	DIR *dirp;
+	char dir[30] = "/home/data/proc_res";
+	struct dirent *d;
+	char path[100];
+	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	FILE *fp;
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
+	{
+		/* 打开dir目录*/
+		dirp = opendir("/home/data/proc_res");
+		if(dirp == RT_NULL)
+		{
+			rt_kprintf("open directory error!\n");
+		}
+		else
+		{
+			/* 读取dir目录*/
+			while ((d = readdir(dirp)) != RT_NULL)
+			{
+				memset(path,0,100);
+				memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
+				sprintf(path,"%s/%s",dir,d->d_name);
+				fp = fopen(path, "r");
+				if(fp)
+				{
+					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))  //读取一行数据
+					{
+						if(buff[strlen(buff)-2] == sendflag)			//检测最后一个字节的resendflag是否为1
+						{
+							memcpy(item,&buff[strlen(buff)-6],3);				//获取每条记录的item
+							memcpy(data,buff,(strlen(buff)-7));
+							data[strlen(buff)-7] = '\n';
+							//printf("time:%s   data:%s\n",time,data);
+							rt_thread_delay(RT_TICK_PER_SECOND*1);
+							while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	//再往下读数据，寻找是否还有要发送的数据
+							{
+								if(buff[strlen(buff)-2] == sendflag)
+								{
+									*flag = 1;
+									fclose(fp);
+									closedir(dirp);
+									rt_mutex_release(record_data_lock);
+									return 1;
+								}
+							}
+
+							*flag = 0;
+							fclose(fp);
+							closedir(dirp);
+							rt_mutex_release(record_data_lock);
+							return 1;
+						}		
+					}
+					fclose(fp);
+				}
+			}
+			/* 关闭目录 */
+			closedir(dirp);
+		}
+	}
+	rt_mutex_release(record_data_lock);
+	return 0;
+}
+
+
 //检查逆变器异常状态
 int check_inverter_abnormal_status_sent(int hour)
 {
-
 	int sockfd;
 	int i, flag, num = 0;
-	char ecuid[13] = {'\0'};
 	char datetime[15] = {'\0'};
 	char recv_buffer[4096] = {'\0'};
 	char send_buffer[MAXBUFFER] = {'\0'};
@@ -464,14 +653,13 @@ int check_inverter_abnormal_status_sent(int hour)
 	if(get_hour() != hour)
 		return 0;
 
-	file_get_one(ecuid, sizeof(ecuid), "/yuneng/ecuid.con");
-
 	//查询是否有flag=2的数据
 	if(0 == detection_statusflag('2'))
 		return 0;
 	//有flag=2的数据,发送一条读取EMA已存时间戳命令
 	printmsg("control_client",">>Start Check abnormal status sent");
 	sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);
+	if(sockfd < 0) return -1;
 	strcpy(send_buffer, "APS13AAA51A123AAA0");
 	strcat(send_buffer, ecuid);
 	strcat(send_buffer, "000000000000000000END\n");
@@ -534,11 +722,10 @@ int response_inverter_abnormal_status()
 
 	//建立socket连接
 	sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);
-
+	if(sockfd < 0) return -1;
 	//逐条发送逆变器异常状态
 	while(search_statusflag(data,time,&havaflag,'1'))		//	获取一条resendflag为1的数据
-	{
-		
+	{	
 		//发送一条逆变器异常状态信息
 		if(send_socket(sockfd, data, strlen(data)) < 0){
 			continue;
@@ -591,7 +778,7 @@ int response_inverter_abnormal_status()
 						memset(send_buffer,0x00,1024);
 						msg_ACK(send_buffer, "A118", da_time, 0);
 						send_socket(sockfd, send_buffer, strlen(send_buffer));
-						printmsg("control_client",">>End\n");
+						printmsg("control_client",">>End");
 						printdecmsg("control_client","socked",sockfd);
 						result=1;break;
 					}
@@ -599,12 +786,12 @@ int response_inverter_abnormal_status()
 			//调用函数
 			else if(pfun[cmd_id%100]){
 				next_cmd_id = (*pfun[cmd_id%100])(command, save_buffer);
-				save_to_process_result(cmd_id, save_buffer);
+				save_process_result(cmd_id, save_buffer);
 				if(next_cmd_id > 0){
 					memset(command, 0, sizeof(command));
 					snprintf(recv_buffer, 51+1, "APS13AAA51A101AAA0000000000000A%3d00000000000000END", next_cmd_id);
 					(*pfun[next_cmd_id%100])(command, save_buffer);
-					save_to_process_result(next_cmd_id, save_buffer);
+					save_process_result(next_cmd_id, save_buffer);
 				}
 				else if(next_cmd_id < 0){
 					result = -1;
@@ -623,18 +810,16 @@ int communication_with_EMA(int next_cmd_id)
 {
 	int sockfd;
 	int cmd_id;
-	char ecuid[13] = {'\0'};
 	char timestamp[15] = "00000000000000";
 	char recv_buffer[4096] = {'\0'};
 	char send_buffer[MAXBUFFER] = {'\0'};
 	int one_a118=0;
-
-	file_get_one(ecuid, sizeof(ecuid), "/etc/yuneng/ecuid.conf");
-
+	
 	while(1)
 	{
-		printmsg("control_client",">>Start Communication with EMA");
+		printmsg("control_client","Start Communication with EMA");
 		sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);
+		if(sockfd < 0) return -1;
 		if(next_cmd_id <= 0)
 		{
 			//ECU向EMA发送请求命令指令
@@ -647,13 +832,13 @@ int communication_with_EMA(int next_cmd_id)
 				close(sockfd);
 				break;
 			}
-
+			
 			//校验命令
 			if(msg_format_check(recv_buffer) < 0){
 				close(sockfd);
 				continue;
 			}
-
+			
 			//解析命令号
 			cmd_id = msg_cmd_id(recv_buffer);
 		}
@@ -670,9 +855,9 @@ int communication_with_EMA(int next_cmd_id)
 		if(cmd_id == 118){
 			if(one_a118==0){
 				one_a118=1;
-				system("rm /etc/yuneng/fill_up_data.conf");
-				system("echo '1'>>/etc/yuneng/fill_up_data.conf");
-				system("killall main.exe");
+				//system("rm /etc/yuneng/fill_up_data.conf");
+				//system("echo '1'>>/etc/yuneng/fill_up_data.conf");
+				//system("killall main.exe");
 			}
 			strncpy(timestamp, &recv_buffer[34], 14);
 			next_cmd_id = first_time_info(recv_buffer, send_buffer);
@@ -699,7 +884,7 @@ int communication_with_EMA(int next_cmd_id)
 
 		//将消息发送给EMA(自动计算长度,补上回车)
 		send_socket(sockfd, send_buffer, strlen(send_buffer));
-		printmsg("control_client",">>End\n");
+		printmsg("control_client",">>End");
 		close(sockfd);
 
 		//如果功能函数返回值小于0,则返回-1,程序会自动退出
@@ -707,14 +892,155 @@ int communication_with_EMA(int next_cmd_id)
 			return -1;
 		}
 	}
-	printmsg("control_client",">>End\n");
+	printmsg("control_client",">>End");
 	return 0;
 }
 
+/* 上报process_result表中的信息 */
+int response_process_result()
+{
+	//char sendbuffer[MAXBUFFER] = {'\0'};
+	int sockfd, flag;
+	//int num, i;
+	//int item_num[32] = {0};
+	char data[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};//查询到的数据
+	char item[4] = {'\0'};
+	
 
-
+	{
+		//查询所有[ECU级别]处理结果
+		//逐条上报ECU级别处理结果
+		while(search_pro_result_flag(data,item,&flag,'1'))
+		{
+			printmsg("control_client",">>Start Response ECU Process Result");
+			sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);
+			if(sockfd < 0) return -1;
+			//发送一条记录
+			if(send_socket(sockfd, data, strlen(data)) < 0){
+				close(sockfd);
+				continue;
+			}
+			//发送成功则将标志位置0
+			change_pro_result_flag(item,'0');
+			close(sockfd);
+			printmsg("control_client",">>End");
+		}				
+		delete_pro_result_flag0();
+		
+		/*
+		//查询[逆变器级别]处理结果的命令号,存入数组
+		memset(sql, 0, sizeof(sql));
+		snprintf(sql, sizeof(sql), "SELECT distinct(item) FROM inverter_process_result WHERE flag=1");
+		if(get_data(db, sql, &azResult, &nrow, &ncolumn) != 0){
+			close_db(db);
+			return 0;
+		}
+		for(i=1; i<=nrow; i++)
+		{
+			item_num[i-1] = atoi(azResult[i]);
+		}
+		if(nrow)sqlite3_free_table(azResult);
+		//最条拼接并上报逆变器级别处理结果
+		num = 0;
+		while(item_num[num] != 0)
+		{
+			debug_msg("item:%d", item_num[num]);
+			item = item_num[num++];
+			memset(sql, '\0', sizeof(sql));
+			snprintf(sql, sizeof(sql), "SELECT result FROM inverter_process_result WHERE item=%d and flag=1", item);
+			if(get_data(db, sql, &azResult, &nrow, &ncolumn) != 0){
+				close_db(db);
+				return 0;
+			}
+			//拼接数据
+			memset(sendbuffer, 0, sizeof(sendbuffer));
+			sprintf(sendbuffer, "APS1300000A%03dAAA0%.12s%04d00000000000000END", item, ecuid, nrow);
+			for(i=1; i<=nrow; i++)
+			{
+				strcat(sendbuffer, azResult[i]);
+			}
+			if(nrow)sqlite3_free_table(azResult);
+			//发送数据
+			debug_msg(">>Start Response Inverter Process Result");
+			sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);
+			if(sockfd < 0) return -1;
+			if(send_socket(sockfd, sendbuffer, strlen(sendbuffer)) < 0){
+				close(sockfd);
+				continue;
+			}
+			memset(sql, 0, sizeof(sql));
+			snprintf(sql, sizeof(sql), "UPDATE inverter_process_result SET flag=0 WHERE item=%d", item);
+			update_data(db, sql);
+			close(sockfd);
+		}
+		close_db(db);
+		*/
+	}
+	return 0;
+}
 
 void control_client_thread_entry(void* parameter)
 {
+	int result, ecu_time = 0, ecu_flag = 1;
+	char buffer[16] = {'\0'};
+	MyArray array[ARRAYNUM] = {'\0'};
+	FILE *fp;
+	delete_line("/test","/ttt","0",1);
+	//添加功能函数
+  add_functions();
 	
+	//获取ECU的通讯开关flag
+	if(file_get_one(buffer, sizeof(buffer), "/yuneng/ecu_flag.con")){
+		ecu_flag = atoi(buffer);
+	}
+
+	printdecmsg("control_client","ecu_flag", ecu_flag);
+	
+	file_get_one(ecuid, sizeof(ecuid), "/yuneng/ecuid.con");
+
+	//从配置文件中获取socket通讯参数
+	if(file_get_array(array, ARRAYNUM, "/yuneng/control.con") == 0){
+		get_socket_config(&sockcfg, array);
+	}
+	
+	/* ECU轮训主循环 */
+	while(1)
+	{
+		//每天一点时向EMA确认逆变器异常状态是否被存储
+		check_inverter_abnormal_status_sent(1);
+
+		fp=fopen("/yuneng/A118.con","r");
+		if(fp!=NULL)
+		{
+			char c='0';
+			c=fgetc(fp);
+			if(c=='1')
+				result = communication_with_EMA(118);
+			fclose(fp);
+			unlink("/yuneng/A118.con");
+		}
+		
+		if(exist_inverter_abnormal_status() && ecu_flag){
+			ecu_time =  acquire_time();
+			result = response_inverter_abnormal_status();
+			response_process_result();
+		}
+		else if(compareTime(acquire_time() ,ecu_time,60*sockcfg.report_interval)){
+			ecu_time = acquire_time();
+			if(ecu_flag){ //如果ecu_flag = 0 则不上报处理结果
+				response_process_result();
+			}
+			result = communication_with_EMA(0);
+		}
+		//程序自行跳过本次循环
+		if(result < 0){
+			result = 0;
+			printmsg("control_client","Quit control_client");
+			continue;
+		}
+		
+		rt_thread_delay(RT_TICK_PER_SECOND*sockcfg.report_interval*60/3);
+		
+	}
+
 }
