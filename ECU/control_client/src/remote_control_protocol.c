@@ -6,6 +6,7 @@
 #include "myfile.h"
 
 #define VERSION 13
+extern char ecuid[13] ;
 
 /* 生成协议头 */
 int msg_Header(char *sendbuffer, const char *cmd_id)
@@ -23,9 +24,6 @@ int msg_Header(char *sendbuffer, const char *cmd_id)
  * */
 int msg_REQ(char *sendbuffer)
 {
-	char ecuid[13] = {'\0'};
-	file_get_one(ecuid, sizeof(ecuid), "/yuneng/ecuid.con");
-
 	msg_Header(sendbuffer, "A101");
 	strcat(sendbuffer, ecuid);
 	strcat(sendbuffer, "A10100000000000000END");
@@ -44,9 +42,8 @@ int msg_REQ(char *sendbuffer)
 int msg_ACK(char *sendbuffer,
 		const char *cmd_id, const char *timestamp, int ack_flag)
 {
-	char ecuid[13] = {'\0'};
 	char msg_body[35] = {'\0'};
-	file_get_one(ecuid, sizeof(ecuid), "/yuneng/ecuid.con");
+
 
 	msg_Header(sendbuffer, "A100");
 	sprintf(msg_body, "%.12s%.4s%.14s%1dEND", ecuid, cmd_id, timestamp, ack_flag);
@@ -118,11 +115,6 @@ int msg_seq_id(const char *msg)
  * */
 int msg_format_check(const char *msg)
 {
-	
-	char ecuid[13] = {'\0'};
-
-	file_get_one(ecuid, sizeof(ecuid), "/yuneng/ecuid.con");
-
 	//协议头APS
 	if(strncmp(msg, "APS", 3)){
 		printmsg("control_client","Format Error: APS");

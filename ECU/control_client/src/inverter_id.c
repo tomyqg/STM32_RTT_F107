@@ -1,16 +1,16 @@
 #include <stdio.h>
 #include <string.h>
 #include "remote_control_protocol.h"
-#include "myfile.h"
 #include "debug.h"
 #include "rthw.h"
 #include "file.h"
+#include "myfile.h"
 
 /* 协议的ECU部分 */
 int ecu_msg(char *sendbuffer, int num, const char *recvbuffer)
 {
-	int i;
-	char *str;
+
+
 	char ecuid[13] = {'\0'};		//ECU号码
 	char version_msg[16] = {'\0'};	//版本信息（包括：长度+版本号+数字版本号）
 	char version[16] = {'\0'};		//版本号
@@ -51,18 +51,14 @@ int ecu_msg(char *sendbuffer, int num, const char *recvbuffer)
 }
 
 /* 协议的逆变器部分 */
-int inverter_msg(char *sendbuffer, int nrow, int ncolumn, char **azResult)
+int inverter_msg(char *sendbuffer, char* id)
 {
-	int i;
+	//添加逆变器ID
+	strcat(sendbuffer, id); //逆变器ID
+	strcat(sendbuffer, "00"); 	 //逆变器类型
+	strcat(sendbuffer, "00000"); //逆变器版本号
+	strcat(sendbuffer, "END"); 	 //结束符
 
-	for (i = 1; i <= nrow; i++)
-	{
-		strcat(sendbuffer, azResult[i*ncolumn]); //逆变器ID
-		strcat(sendbuffer, "00"); 	 //逆变器类型
-		strcat(sendbuffer, "00000"); //逆变器版本号
-		strcat(sendbuffer, "END"); 	 //结束符
-	}
-	//sqlite3_free_table(azResult);
 	return 0;
 }
 
@@ -100,7 +96,7 @@ int delete_id(const char *msg, int num)
 		inverter_id[12] = '\0';
 		//删除一个逆变器ID
 		delete_line("/home/data/id","/home/data/id_tmp",inverter_id,12);
-			count++;
+		count++;
 	}
 	return count;
 }
@@ -108,47 +104,45 @@ int delete_id(const char *msg, int num)
 /* 清空逆变器 */
 int clear_id()
 {
-	return clear_file("/home/date/id");
+	return clear_file("/home/data/id");
 }
 
 
 /* 【A102】ECU上报逆变器ID */
 int response_inverter_id(const char *recvbuffer, char *sendbuffer)
 {
-	#if 0 
-	sqlite3 *db;
-	char **azResult;
-	int nrow, ncolumn;
-	char sql[1024] = {'\0'};
-
+	//记录逆变器数量
+	int num = 0,i;
+	char inverter_ids[20][13];
 	/* Head */
 	strcpy(sendbuffer, "APS13AAAAAA102AAA0"); //交给协议函数
 
-	if(!open_db("/home/database.db", &db))
 	{
-		//数据库打开成功，进行查询操作
- 		strcpy(sql, "SELECT id FROM id");
- 		if(!get_data(db, sql, &azResult, &nrow, &ncolumn))
- 		{
-			/* ECU Message */
-			ecu_msg(sendbuffer, nrow, recvbuffer);
+		//逆变器数量
+		num = get_num_from_id(inverter_ids);
+		/* ECU Message */
+		ecu_msg(sendbuffer, num, recvbuffer);
 
-			/* Inverter Message */
-			inverter_msg(sendbuffer, nrow, ncolumn, azResult);
- 		}
-		close_db(db);
+		for(i = 0; i < num;i++)
+		{
+			if(12 == strlen(inverter_ids[i]))
+			{
+				/* Inverter Message */
+				inverter_msg(sendbuffer,inverter_ids[i]);		
+			}
+		}
+		
 	}
-	#endif
 	return 0;
 }
 
 /* 【A103】EMA设置逆变器ID */
 int set_inverter_id(const char *recvbuffer, char *sendbuffer)
 {
-	int i, flag, num;
+	int flag, num;
 	int ack_flag = SUCCESS;
 	char timestamp[15] = {'\0'};
-
+	
 	//获取设置类型标志位: 0清除逆变器; 1添加逆变器; 2删除逆变器
 	sscanf(&recvbuffer[30], "%1d", &flag);
 	//获取逆变器数量
@@ -163,7 +157,6 @@ int set_inverter_id(const char *recvbuffer, char *sendbuffer)
 	}
 	else
 	{
-		//if(!open_db("/home/database.db", &db))
 		{
 			//数据库打开成功，进行数据操作
 			switch(flag)
@@ -188,8 +181,8 @@ int set_inverter_id(const char *recvbuffer, char *sendbuffer)
 					break;
 			}
 		}
-		//重启主程序
-		reboot();
+		//重启主线程
+		//reboot();
 	}
 
 	//拼接应答消息

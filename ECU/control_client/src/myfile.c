@@ -122,6 +122,7 @@ int delete_line(char* filename,char* temfilename,char* compareData,int len)
 		printf("Open the file %s failure...\n",filename);
     return -1;
 	}
+	
   ftp=fopen(temfilename,"w");//写打开临时文件tmp.txt
 	if( ftp==NULL){
 		printf("Open the file %s failure...\n",temfilename);
@@ -141,6 +142,29 @@ int delete_line(char* filename,char* temfilename,char* compareData,int len)
   rename(temfilename,filename);//将临时文件名改为原文件名
   return 0;
 	
+}
+
+
+int get_num_from_id(char inverter_ids[20][13])
+{
+	int num=0;
+	FILE *fp;
+	char data[200];
+	fp = fopen("/home/data/id", "r");
+	if(fp)
+	{
+		while(NULL != fgets(data,200,fp))
+		{
+			//如果当前行存在数据，表示存在一个逆变器
+			memcpy(inverter_ids[num],data,12);
+			inverter_ids[num][12] = '\0';
+			num++;
+		}
+		fclose(fp);
+	}	
+	
+	
+	return num;
 }
 
 #ifdef RT_USING_FINSH

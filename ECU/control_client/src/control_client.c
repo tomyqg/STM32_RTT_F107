@@ -17,17 +17,17 @@
 #include "remote_control_protocol.h"
 
 #include "inverter_id.h"
-
+#include "comm_config.h"
 
 ALIGN(RT_ALIGN_SIZE)
-extern rt_uint8_t control_client_stack[ 14336 ];
+extern rt_uint8_t control_client_stack[ 10240 ];
 extern struct rt_thread control_client_thread;
 
 extern rt_mutex_t record_data_lock;
 char ecuid[13] = {'\0'};
 
 #define ARRAYNUM 6
-#define MAXBUFFER 4096
+#define MAXBUFFER (MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18)
 #define FIRST_TIME_CMD_NUM 12
 
 typedef struct socket_config
@@ -54,12 +54,12 @@ Socket_Cfg sockcfg = {'\0'};
 
 void add_functions()
 {
-//  pfun[A102] = response_inverter_id; 			//上报逆变器ID
-//  pfun[A103] = set_inverter_id; 				//设置逆变器ID
+  pfun[A102] = response_inverter_id; 			//上报逆变器ID
+  pfun[A103] = set_inverter_id; 				//设置逆变器ID
 //  pfun[A104] = response_time_zone; 			//上报ECU本地时区
 //	pfun[A105] = set_time_zone; 				//设置ECU本地时区
-//	pfun[A106] = response_comm_config;			//上报ECU通讯配置参数
-//	pfun[A107] = set_comm_config;				//设置ECU通讯配置参数
+	pfun[A106] = response_comm_config;			//上报ECU通讯配置参数
+	pfun[A107] = set_comm_config;				//设置ECU通讯配置参数
 //	pfun[A108] = custom_command;				//向ECU发送自定义命令
 //	pfun[A109] = set_inverter_ac_protection_5; 	//设置逆变器交流保护参数(5项)
 //	pfun[A110] = set_inverter_maxpower;			//设置逆变器最大功率
@@ -647,19 +647,35 @@ int check_inverter_abnormal_status_sent(int hour)
 	int sockfd;
 	int i, flag, num = 0;
 	char datetime[15] = {'\0'};
-	char recv_buffer[4096] = {'\0'};
-	char send_buffer[MAXBUFFER] = {'\0'};
+	//char recv_buffer[4096] = {'\0'};
+	//char send_buffer[MAXBUFFER] = {'\0'};
+	char *recv_buffer = NULL;
+	char *send_buffer = NULL;
+	recv_buffer = rt_malloc(2048);
+	send_buffer = rt_malloc(MAXBUFFER);
 
 	if(get_hour() != hour)
+	{
+		rt_free(recv_buffer);
+		rt_free(send_buffer);
 		return 0;
-
+	}
 	//查询是否有flag=2的数据
 	if(0 == detection_statusflag('2'))
+	{
+		rt_free(recv_buffer);
+		rt_free(send_buffer);
 		return 0;
+	}
 	//有flag=2的数据,发送一条读取EMA已存时间戳命令
 	printmsg("control_client",">>Start Check abnormal status sent");
 	sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);
-	if(sockfd < 0) return -1;
+	if(sockfd < 0)
+	{
+		rt_free(recv_buffer);
+		rt_free(send_buffer);
+		return -1;
+	}
 	strcpy(send_buffer, "APS13AAA51A123AAA0");
 	strcat(send_buffer, ecuid);
 	strcat(send_buffer, "000000000000000000END\n");
@@ -667,11 +683,15 @@ int check_inverter_abnormal_status_sent(int hour)
 	//接收EMA应答
 	if(recv_socket(sockfd, recv_buffer, sizeof(recv_buffer), sockcfg.timeout) <= 0){
 		close(sockfd);
+		rt_free(recv_buffer);
+		rt_free(send_buffer);
 		return 0;
 	}
 	//校验命令
 	if(msg_format_check(recv_buffer) < 0){
 		close(sockfd);
+		rt_free(recv_buffer);
+		rt_free(send_buffer);
 		return 0;
 	}
 	//解析收到的时间戳,并删除EMA已存的数据(将其改为0)
@@ -691,6 +711,8 @@ int check_inverter_abnormal_status_sent(int hour)
 	
 	//如果所有标志为0，则清空数据
 	delete_statusflag0();
+	rt_free(recv_buffer);
+	rt_free(send_buffer);
 	return 0;
 }
 
@@ -711,18 +733,31 @@ int response_inverter_abnormal_status()
 	int result = 0;
 	int  j, sockfd, flag, num, cmd_id, next_cmd_id,havaflag;
 	char datetime[15] = {'\0'};
-	char recv_buffer[4096] = {'\0'};
-	char command[4096] = {'\0'};
-	char send_buffer[1024]={'\0'};
+	//char recv_buffer[4096] = {'\0'};
+	//char command[4096] = {'\0'};
+	//char send_buffer[1024]={'\0'};
 	char save_buffer[MAXBUFFER] = {'\0'};
+	char *recv_buffer = NULL;
+	char *command = NULL;
+	char *send_buffer = NULL;
+
 	char data[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};//查询到的数据
 	char time[15] = {'\0'};
 	FILE *fp;	
 	printmsg("control_client",">>Start Response Abnormal Status");
+	recv_buffer = (char *)rt_malloc(2048);
+	command = (char *)rt_malloc(2048);
+	send_buffer = (char *)rt_malloc(1024);
 
 	//建立socket连接
 	sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);
-	if(sockfd < 0) return -1;
+	if(sockfd < 0)
+	{
+		rt_free(recv_buffer);
+		rt_free(command);
+		rt_free(send_buffer);
+		return -1;
+	}
 	//逐条发送逆变器异常状态
 	while(search_statusflag(data,time,&havaflag,'1'))		//	获取一条resendflag为1的数据
 	{	
@@ -733,6 +768,9 @@ int response_inverter_abnormal_status()
 		//接收EMA应答
 		if(recv_socket(sockfd, recv_buffer, sizeof(recv_buffer), sockcfg.timeout) <= 0){
 			close(sockfd);
+			rt_free(recv_buffer);
+			rt_free(command);
+			rt_free(send_buffer);
 			return 0;
 		}
 		//校验命令
@@ -769,7 +807,12 @@ int response_inverter_abnormal_status()
 				
 				fp=fopen("/yuneng/A118.con","w");
 				if(fp==NULL)
+				{
+					rt_free(recv_buffer);
+					rt_free(command);
+					rt_free(send_buffer);
 					return -1;
+				}
 				else
 					{
 						fputs("1",fp);
@@ -802,6 +845,10 @@ int response_inverter_abnormal_status()
 	//清空inversta的flag标志位为0的标志
 	delete_statusflag0();
 	close(sockfd);
+	rt_free(recv_buffer);
+	rt_free(command);
+	rt_free(send_buffer);
+
 	return result;
 }
 
@@ -811,15 +858,24 @@ int communication_with_EMA(int next_cmd_id)
 	int sockfd;
 	int cmd_id;
 	char timestamp[15] = "00000000000000";
-	char recv_buffer[4096] = {'\0'};
-	char send_buffer[MAXBUFFER] = {'\0'};
+	//char recv_buffer[4096] = {'\0'};
+	//char send_buffer[MAXBUFFER] = {'\0'};
 	int one_a118=0;
+	char *recv_buffer = NULL;
+	char *send_buffer = NULL;
+	recv_buffer = rt_malloc(2048);
+	send_buffer = rt_malloc(MAXBUFFER);
 	
 	while(1)
 	{
 		printmsg("control_client","Start Communication with EMA");
 		sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);
-		if(sockfd < 0) return -1;
+		if(sockfd < 0) 
+		{
+			rt_free(recv_buffer);
+			rt_free(send_buffer);
+			return -1;
+		}
 		if(next_cmd_id <= 0)
 		{
 			//ECU向EMA发送请求命令指令
@@ -832,13 +888,11 @@ int communication_with_EMA(int next_cmd_id)
 				close(sockfd);
 				break;
 			}
-			
 			//校验命令
 			if(msg_format_check(recv_buffer) < 0){
 				close(sockfd);
 				continue;
 			}
-			
 			//解析命令号
 			cmd_id = msg_cmd_id(recv_buffer);
 		}
@@ -881,7 +935,6 @@ int communication_with_EMA(int next_cmd_id)
 			snprintf(send_buffer, 52+1, "APS13AAA52A100AAA0%sA%3d000000000000002END",
 					ecuid, cmd_id);
 		}
-
 		//将消息发送给EMA(自动计算长度,补上回车)
 		send_socket(sockfd, send_buffer, strlen(send_buffer));
 		printmsg("control_client",">>End");
@@ -889,10 +942,14 @@ int communication_with_EMA(int next_cmd_id)
 
 		//如果功能函数返回值小于0,则返回-1,程序会自动退出
 		if(next_cmd_id < 0){
+			rt_free(recv_buffer);
+			rt_free(send_buffer);
 			return -1;
 		}
 	}
 	printmsg("control_client",">>End");
+	rt_free(recv_buffer);
+	rt_free(send_buffer);
 	return 0;
 }
 
@@ -985,10 +1042,10 @@ void control_client_thread_entry(void* parameter)
 	char buffer[16] = {'\0'};
 	MyArray array[ARRAYNUM] = {'\0'};
 	FILE *fp;
-	delete_line("/test","/ttt","0",1);
+	//rt_thread_delay(RT_TICK_PER_SECOND*40);
 	//添加功能函数
   add_functions();
-	
+
 	//获取ECU的通讯开关flag
 	if(file_get_one(buffer, sizeof(buffer), "/yuneng/ecu_flag.con")){
 		ecu_flag = atoi(buffer);
@@ -1002,13 +1059,13 @@ void control_client_thread_entry(void* parameter)
 	if(file_get_array(array, ARRAYNUM, "/yuneng/control.con") == 0){
 		get_socket_config(&sockcfg, array);
 	}
-	
+
 	/* ECU轮训主循环 */
 	while(1)
 	{
 		//每天一点时向EMA确认逆变器异常状态是否被存储
 		check_inverter_abnormal_status_sent(1);
-
+ 
 		fp=fopen("/yuneng/A118.con","r");
 		if(fp!=NULL)
 		{
@@ -1019,7 +1076,7 @@ void control_client_thread_entry(void* parameter)
 			fclose(fp);
 			unlink("/yuneng/A118.con");
 		}
-		
+
 		if(exist_inverter_abnormal_status() && ecu_flag){
 			ecu_time =  acquire_time();
 			result = response_inverter_abnormal_status();
@@ -1038,8 +1095,8 @@ void control_client_thread_entry(void* parameter)
 			printmsg("control_client","Quit control_client");
 			continue;
 		}
-		
 		rt_thread_delay(RT_TICK_PER_SECOND*sockcfg.report_interval*60/3);
+	
 		
 	}
 

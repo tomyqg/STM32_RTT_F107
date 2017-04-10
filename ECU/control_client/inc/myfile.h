@@ -13,4 +13,5 @@ int file_get_array(MyArray *array, int num, const char *filename);
 int file_set_array(const MyArray *array, int num, const char *filename);
 int clear_file(char *filename);
 int delete_line(char* filename,char* temfilename,char* compareData,int len);
+int get_num_from_id(char inverter_ids[20][13]);
 #endif	/*__MYFILE_H__*/

@@ -100,7 +100,7 @@
 /* the max number of mounted filesystem */  
 #define DFS_FILESYSTEMS_MAX         2  
 /* the max number of opened files       */  
-#define DFS_FD_MAX                  12  
+#define DFS_FD_MAX                  4  
 
 /* SECTION: lwip, a lighwight TCP/IP protocol stack */
 #define RT_USING_LWIP

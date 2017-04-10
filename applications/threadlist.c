@@ -38,32 +38,43 @@ extern int lwip_system_init(void);
 #endif
 #include "ds1302z_rtc.h"
 
+#ifdef THREAD_PRIORITY_LED
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t led_stack[200];
 static struct rt_thread led_thread;
-/*
+#endif
+
+#ifdef THREAD_PRIORITY_MAIN
 ALIGN(RT_ALIGN_SIZE)
 rt_uint8_t main_stack[ 4096 ];
 struct rt_thread main_thread;
+#endif
+
+#ifdef THREAD_PRIORITY_CLIENT
 ALIGN(RT_ALIGN_SIZE)
 rt_uint8_t client_stack[ 8192 ];
 struct rt_thread client_thread;
-*/
+#endif
+
+#ifdef THREAD_PRIORITY_CONTROL_CLIENT
 ALIGN(RT_ALIGN_SIZE)
-rt_uint8_t control_client_stack[ 14336 ];
+rt_uint8_t control_client_stack[ 10240 ];
 struct rt_thread control_client_thread;
-/*
+#endif
+
+#ifdef THREAD_PRIORITY_DHCPRESET
 #ifdef RT_USING_LWIP
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t dhcp_stack[1024];
 static struct rt_thread dhcp_thread;
 #endif
-*/
-/*
+#endif
+
+#ifdef THREAD_PRIORITY_NTP
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t ntp_stack[1024];
 static struct rt_thread ntp_thread;
-*/
+#endif
 
 rt_mutex_t record_data_lock = RT_NULL;
 
@@ -151,7 +162,8 @@ static void led_thread_entry(void* parameter)
         rt_thread_delay( RT_TICK_PER_SECOND/2 );
     }
 }
-/*
+
+#ifdef THREAD_PRIORITY_DHCPRESET	
 #ifdef RT_USING_LWIP
 static void dhcp_reset_thread_entry(void* parameter)
 { 
@@ -167,8 +179,8 @@ static void dhcp_reset_thread_entry(void* parameter)
 	}
 }
 #endif
-*/
-/*
+#endif
+#ifdef THREAD_PRIORITY_NTP
 static void ntp_thread_entry(void* parameter)
 {
   while(1)
@@ -178,22 +190,26 @@ static void ntp_thread_entry(void* parameter)
   }  
 
 }
-*/
+#endif
 
 void tasks_new(void)//创建任务线程
 {
 	rt_err_t result;
 	rt_thread_t tid;
+	
 	/* init init thread */
   tid = rt_thread_create("init",rt_init_thread_entry, RT_NULL,768, THREAD_PRIORITY_INIT, 20);
 	if (tid != RT_NULL) rt_thread_startup(tid);
+#ifdef THREAD_PRIORITY_LED
   /* init led thread */
   result = rt_thread_init(&led_thread,"led",led_thread_entry,RT_NULL,(rt_uint8_t*)&led_stack[0],sizeof(led_stack),THREAD_PRIORITY_LED,5);
   if (result == RT_EOK)
   {
     rt_thread_startup(&led_thread);
   }
-	/*
+#endif
+
+#ifdef THREAD_PRIORITY_DHCPRESET	
 #ifdef RT_USING_LWIP
   result = rt_thread_init(&dhcp_thread,"dhcp_reset",dhcp_reset_thread_entry,RT_NULL,(rt_uint8_t*)&dhcp_stack[0],sizeof(dhcp_stack),THREAD_PRIORITY_DHCPRESET,5);
   if (result == RT_EOK)
@@ -201,37 +217,42 @@ void tasks_new(void)//创建任务线程
     rt_thread_startup(&dhcp_thread);
   }	
 #endif
-	*/
+#endif
+	
+#ifdef THREAD_PRIORITY_NTP		
   /* init ntp thread */
-  /*
 	result = rt_thread_init(&ntp_thread,"ntp",ntp_thread_entry,RT_NULL,(rt_uint8_t*)&ntp_stack[0],sizeof(ntp_stack),THREAD_PRIORITY_NTP,5);
   if (result == RT_EOK)
   {
     rt_thread_startup(&ntp_thread);
   }
-	*/
+#endif
+	
+#ifdef THREAD_PRIORITY_MAIN
 	/* init main thread */
-	/*
 	result = rt_thread_init(&main_thread,"main",main_thread_entry,RT_NULL,(rt_uint8_t*)&main_stack[0],sizeof(main_stack),THREAD_PRIORITY_MAIN,5);
   if (result == RT_EOK)
   {
     rt_thread_startup(&main_thread);
   }
-	*/
+#endif
+	
+#ifdef THREAD_PRIORITY_CLIENT
 	/* init client thread */
-	/*
 	result = rt_thread_init(&client_thread,"client",client_thread_entry,RT_NULL,(rt_uint8_t*)&client_stack[0],sizeof(client_stack),THREAD_PRIORITY_CLIENT,5);
   if (result == RT_EOK)
   {
 		rt_thread_startup(&client_thread);
   }	
-	*/
+#endif
 	
+#ifdef THREAD_PRIORITY_CONTROL_CLIENT
 	result = rt_thread_init(&control_client_thread,"control_client",control_client_thread_entry,RT_NULL,(rt_uint8_t*)&control_client_stack[0],sizeof(control_client_stack),THREAD_PRIORITY_CONTROL_CLIENT,5);
   if (result == RT_EOK)
   {
 		rt_thread_startup(&control_client_thread);
   }	
+#endif
 	
 	
 }

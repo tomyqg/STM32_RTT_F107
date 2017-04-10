@@ -549,7 +549,7 @@ int initsystem(char *ecuid,char *mac)
 	//echo("/yuneng/ecumac.con","80:97:1B:00:72:1C");
 	echo("/yuneng/channel.con","0x10");
 	echo("/yuneng/limiteid.con","1");
-	echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.105\nPort1=8997\nPort2=8997\n");
+	echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.103\nPort1=8997\nPort2=8997\n");
 	echo("/yuneng/version.con","M1.0\n");
 	echo("/yuneng/vernum.con","2\n");
 	return 0;
