@@ -552,6 +552,8 @@ int initsystem(char *ecuid,char *mac)
 	echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.103\nPort1=8997\nPort2=8997\n");
 	echo("/yuneng/version.con","M1.0\n");
 	echo("/yuneng/vernum.con","2\n");
+	echo("/yuneng/datacent.con","Domain=111.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
+	echo("/home/data/power","");
 	return 0;
 }
 FINSH_FUNCTION_EXPORT(initsystem, eg:initsystem("123456789012","80:97:1B:00:72:1C"));

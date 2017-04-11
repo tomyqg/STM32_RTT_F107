@@ -1,6 +1,7 @@
 #ifndef __MYFILE_H__
 #define __MYFILE_H__
 
+#include "variation.h"
 typedef struct name_value
 {
 	char name[32];
@@ -13,5 +14,7 @@ int file_get_array(MyArray *array, int num, const char *filename);
 int file_set_array(const MyArray *array, int num, const char *filename);
 int clear_file(char *filename);
 int delete_line(char* filename,char* temfilename,char* compareData,int len);
-int get_num_from_id(char inverter_ids[20][13]);
+int get_num_from_id(char inverter_ids[MAXINVERTERCOUNT][13]);
+int insert_line(char * filename,char *str);
+int search_line(char* filename,char* compareData,int len);
 #endif	/*__MYFILE_H__*/

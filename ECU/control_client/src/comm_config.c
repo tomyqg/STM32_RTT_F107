@@ -192,7 +192,6 @@ int set_comm_config(const char *recvbuffer, char *sendbuffer)
 	comm_cfg_num = msg_get_int(&recvbuffer[30], 1);
 	//获取时间戳
 	strncpy(timestamp, &recvbuffer[31], 14);
-
 	while(comm_cfg_num--){
 		//复制出到"END"为止的字符串
 		memset(buffer, 0, sizeof(buffer));
@@ -200,7 +199,7 @@ int set_comm_config(const char *recvbuffer, char *sendbuffer)
 
 		//通信协议种类
 		comm_cfg_type = msg_get_int(buffer, 1);
-
+		printf("comm_cfg_type = %d\n",comm_cfg_type);
 		//[1]逆变器运行数据通信配置
 		if(comm_cfg_type == 1){
 			file_get_array(&array[2], 4, "/yuneng/datacent.con");

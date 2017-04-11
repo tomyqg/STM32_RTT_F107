@@ -113,7 +113,7 @@ int response_inverter_id(const char *recvbuffer, char *sendbuffer)
 {
 	//记录逆变器数量
 	int num = 0,i;
-	char inverter_ids[20][13];
+	char inverter_ids[MAXINVERTERCOUNT][13];
 	/* Head */
 	strcpy(sendbuffer, "APS13AAAAAA102AAA0"); //交给协议函数
 

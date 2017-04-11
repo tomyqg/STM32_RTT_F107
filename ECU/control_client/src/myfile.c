@@ -123,7 +123,7 @@ int delete_line(char* filename,char* temfilename,char* compareData,int len)
     return -1;
 	}
 	
-  ftp=fopen(temfilename,"w");//写打开临时文件tmp.txt
+  ftp=fopen(temfilename,"w");
 	if( ftp==NULL){
 		printf("Open the file %s failure...\n",temfilename);
 		fclose(fin);
@@ -145,9 +145,9 @@ int delete_line(char* filename,char* temfilename,char* compareData,int len)
 }
 
 
-int get_num_from_id(char inverter_ids[20][13])
+int get_num_from_id(char inverter_ids[MAXINVERTERCOUNT][13])
 {
-	int num=0;
+	int num=0,i,sameflag;
 	FILE *fp;
 	char data[200];
 	fp = fopen("/home/data/id", "r");
@@ -155,7 +155,17 @@ int get_num_from_id(char inverter_ids[20][13])
 	{
 		while(NULL != fgets(data,200,fp))
 		{
-			//如果当前行存在数据，表示存在一个逆变器
+			//与前面几行比较 如果当前行存在数据，表示存在一个逆变器
+			sameflag = 0;
+			for(i = 0;i<num;i++)
+			{
+				if(!memcmp(data,inverter_ids[i],12))
+					sameflag = 1;
+			}
+			if(sameflag == 1)
+			{
+				continue;
+			}
 			memcpy(inverter_ids[num],data,12);
 			inverter_ids[num][12] = '\0';
 			num++;
@@ -166,6 +176,47 @@ int get_num_from_id(char inverter_ids[20][13])
 	
 	return num;
 }
+
+int insert_line(char * filename,char *str)
+{
+	int fd;
+	fd = open(filename, O_WRONLY | O_APPEND | O_CREAT,0);
+	if (fd >= 0)
+	{		
+
+		write(fd,str,strlen(str));
+		close(fd);
+	}
+	
+	return search_line(filename,str,strlen(str));
+	
+}
+
+int search_line(char* filename,char* compareData,int len)
+{
+	FILE *fin;
+  char data[50];
+  fin=fopen(filename,"r");
+	if(fin == NULL)
+	{
+		printf("Open the file %s failure1...\n",filename);
+    return -1;
+	}
+	
+  while(fgets(data,50,fin))//从原文件读取一行
+	{
+		if(!memcmp(data,compareData,len))
+		{
+			//存在相同行，关闭文件   然后返回1  表示存在该行
+			fclose(fin);
+			return 1;
+		}
+	}
+  fclose(fin);
+  return -1;
+}
+
+
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
