@@ -188,7 +188,7 @@ void updateID(void)
 }
 
 
-int splitString(char *data,char splitdata[20][13])
+int splitString(char *data,char splitdata[][32])
 {
 	int i,j = 0,k=0;
 
@@ -214,7 +214,7 @@ int get_id_from_file(inverter_info *firstinverter)
 	int i,j,sameflag;
 	inverter_info *inverter = firstinverter;
 	inverter_info *curinverter = firstinverter;
-	char list[20][13];
+	char list[20][32];
 	char data[200];
 	int num =0;
 	FILE *fp;
@@ -297,7 +297,7 @@ int get_id_from_file(inverter_info *firstinverter)
 			inverter++;
 			num++;
 		}
-
+		fclose(fp);
 	}
 
 
@@ -480,7 +480,7 @@ FINSH_FUNCTION_EXPORT(echo, eg:echo("/test","test"));
 void splitSt(char * str)
 {
 	int i = 0 , num;
-	char list[20][13];
+	char list[20][32];
 	num = splitString(str,list);
 	for(i = 0;i<num;i++)
 	{
@@ -549,7 +549,7 @@ int initsystem(char *ecuid,char *mac)
 	//echo("/yuneng/ecumac.con","80:97:1B:00:72:1C");
 	echo("/yuneng/channel.con","0x10");
 	echo("/yuneng/limiteid.con","1");
-	echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.103\nPort1=8997\nPort2=8997\n");
+	echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.118\nPort1=8997\nPort2=8997\n");
 	echo("/yuneng/version.con","M1.0\n");
 	echo("/yuneng/vernum.con","2\n");
 	echo("/yuneng/datacent.con","Domain=111.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");

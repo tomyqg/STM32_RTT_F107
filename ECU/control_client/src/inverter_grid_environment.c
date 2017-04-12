@@ -28,7 +28,7 @@ int set_grid_environment_num(const char *msg, int num)
 		delete_line("/home/data/gfidenv","/home/data/gfidenv.t",inverter_id,12);
 		sprintf(str,"%s,%d,1\n",inverter_id,grid_env);
 		//插入数据
-		if(1 == insert_line("/home/data/gfidenv",str))
+		if(-1 == insert_line("/home/data/gfidenv",str))
 		{
 			err_count++;
 		}

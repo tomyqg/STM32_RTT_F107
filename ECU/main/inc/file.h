@@ -17,7 +17,7 @@ void update_life_energy(float lifetime_power);
 void updateID(void);
 
 
-int splitString(char *data,char splitdata[20][13]);
+int splitString(char *data,char splitdata[][32]);
 
 int get_id_from_file(inverter_info *firstinverter);
 
@@ -31,5 +31,4 @@ void get_mac(rt_uint8_t  dev_addr[6]);
 void echo(const char* filename,const char* string);
 int save_process_result(int item, char *result);
 void addInverter(char *inverter_id);
-
 #endif /*__FILE_H__*/

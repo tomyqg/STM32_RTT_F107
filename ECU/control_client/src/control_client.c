@@ -30,6 +30,7 @@
 #include "inverter_restore.h"
 #include "inverter_update.h"
 #include "set_autoflag_report.h"
+#include "inverter_ac_protection.h"
 
 
 
@@ -68,37 +69,37 @@ Socket_Cfg sockcfg = {'\0'};
 
 void add_functions()
 {
-  pfun[A102] = response_inverter_id; 			//上报逆变器ID
-  pfun[A103] = set_inverter_id; 				//设置逆变器ID
+  pfun[A102] = response_inverter_id; 			//上报逆变器ID  										OK
+  pfun[A103] = set_inverter_id; 				//设置逆变器ID												OK
 //  pfun[A104] = response_time_zone; 			//上报ECU本地时区
 //	pfun[A105] = set_time_zone; 				//设置ECU本地时区
-	pfun[A106] = response_comm_config;			//上报ECU通讯配置参数
-	pfun[A107] = set_comm_config;				//设置ECU通讯配置参数
+	pfun[A106] = response_comm_config;			//上报ECU通讯配置参数								OK
+	pfun[A107] = set_comm_config;				//设置ECU通讯配置参数										OK
 //	pfun[A108] = custom_command;				//向ECU发送自定义命令
-//	pfun[A109] = set_inverter_ac_protection_5; 	//设置逆变器交流保护参数(5项)
-	pfun[A110] = set_inverter_maxpower;			//设置逆变器最大功率
-	pfun[A111] = set_inverter_onoff;			//设置逆变器开关机
-	pfun[A112] = clear_inverter_gfdi;			//设置逆变器GFDI
-//	pfun[A113] = response_ecu_ac_protection_5;	//上报ECU级别交流保护参数(5项)
-//	pfun[A114] = read_inverter_ac_protection_5; //读取逆变器的交流保护参数(5项)
-	pfun[A117] = response_inverter_maxpower;	//上报逆变器最大功率及范围
-	pfun[A119] = set_ecu_flag;					//设置ECU与EMA的通讯开关
-//	pfun[A120] = response_ecu_ac_protection_13;	//上报ECU级别交流保护参数(13项)
-//	pfun[A121] = read_inverter_ac_protection_13;//读取逆变器的交流保护参数(13项)
-//	pfun[A122] = set_inverter_ac_protection_13;	//设置逆变器的交流保护参数(13项)
-	pfun[A124] = read_inverter_grid_environment;//读取逆变器电网环境
-	pfun[A125] = set_inverter_grid_environment;	//设置逆变器电网环境
-	pfun[A126] = read_inverter_ird;				//读取逆变器的IRD选项
-	pfun[A127] = set_inverter_ird;				//设置逆变器的IRD选项
+	pfun[A109] = set_inverter_ac_protection_5; 	//设置逆变器交流保护参数(5项)
+	pfun[A110] = set_inverter_maxpower;			//设置逆变器最大功率								OK
+	pfun[A111] = set_inverter_onoff;			//设置逆变器开关机										OK
+	pfun[A112] = clear_inverter_gfdi;			//设置逆变器GFDI											OK
+	pfun[A113] = response_ecu_ac_protection_5;	//上报ECU级别交流保护参数(5项)
+	pfun[A114] = read_inverter_ac_protection_5; //读取逆变器的交流保护参数(5项)
+	pfun[A117] = response_inverter_maxpower;	//上报逆变器最大功率及范围				OK
+	pfun[A119] = set_ecu_flag;					//设置ECU与EMA的通讯开关								OK
+	pfun[A120] = response_ecu_ac_protection_13;	//上报ECU级别交流保护参数(13项)
+	pfun[A121] = read_inverter_ac_protection_13;//读取逆变器的交流保护参数(13项)
+	pfun[A122] = set_inverter_ac_protection_13;	//设置逆变器的交流保护参数(13项)
+	pfun[A124] = read_inverter_grid_environment;//读取逆变器电网环境						OK
+	pfun[A125] = set_inverter_grid_environment;	//设置逆变器电网环境						OK	
+	pfun[A126] = read_inverter_ird;				//读取逆变器的IRD选项									OK
+	pfun[A127] = set_inverter_ird;				//设置逆变器的IRD选项									OK
 	pfun[A128] = read_inverter_signal_strength;	//读取逆变器的信号强度
 	pfun[A129] = response_grid_quality;			//上报系统的电网质量
-//	pfun[A130] = response_ecu_ac_protection_17;	//上报ECU级别交流保护参数(17项)
-//	pfun[A131] = read_inverter_ac_protection_17;//读取逆变器的交流保护参数(17项)
-//	pfun[A132] = set_inverter_ac_protection_17;	//设置逆变器的交流保护参数(17项)
-	pfun[A134] = set_inverter_restore;			//设置逆变器的还原标志
-	pfun[A136] = set_inverter_update;			//设置逆变器的升级标志
-	pfun[A138] = set_autoflag_report;			//设置ECU自动上报功能
-	pfun[A148] = read_wrong_id;					//读取异常的3501uid
+	pfun[A130] = response_ecu_ac_protection_17;	//上报ECU级别交流保护参数(17项)
+	pfun[A131] = read_inverter_ac_protection_17;//读取逆变器的交流保护参数(17项)
+	pfun[A132] = set_inverter_ac_protection_17;	//设置逆变器的交流保护参数(17项)
+	pfun[A134] = set_inverter_restore;			//设置逆变器的还原标志							OK
+	pfun[A136] = set_inverter_update;			//设置逆变器的升级标志								OK
+	pfun[A138] = set_autoflag_report;			//设置ECU自动上报功能									OK
+	pfun[A148] = read_wrong_id;					//读取异常的3501uid											OK
 	pfun[A150] = set_unnormal_id;				//设置3501正确的id
 }
 

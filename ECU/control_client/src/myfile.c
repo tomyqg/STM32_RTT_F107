@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "myfile.h"
+#include "file.h"
 #include "datetime.h"
 #include <dfs_posix.h> 
 #include "debug.h"
@@ -216,6 +217,32 @@ int search_line(char* filename,char* compareData,int len)
   return -1;
 }
 
+
+int get_protection_from_file(const char pro_name[][32],float *pro_value,int *pro_flag,int num)
+{
+	FILE *fp;
+	char list[3][32];
+	char data[200];
+	int j = 0;
+	fp = fopen("/home/data/setpropa", "r");
+	if(fp)
+	{
+		while(NULL != fgets(data,200,fp))
+		{
+			memset(list,0,sizeof(list));
+			splitString(data,list);
+			for(j=0; j<num; j++){
+				if(!memcmp(list[0], pro_name[j],strlen(list[0]))){
+					pro_value[j] = atof(list[1]);
+					pro_flag[j] = 1;
+					break;
+				}
+			}
+		}
+		fclose(fp);
+	}
+	return -1;
+}
 
 
 #ifdef RT_USING_FINSH
