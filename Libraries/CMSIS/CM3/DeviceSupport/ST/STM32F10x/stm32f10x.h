@@ -911,7 +911,7 @@ typedef struct
   __IO uint32_t RESERVED;
   __IO uint32_t OBR;
   __IO uint32_t WRPR;
-#ifdef STM32F10X_XL
+#if 1
   uint32_t RESERVED1[8]; 
   __IO uint32_t KEYR2;
   uint32_t RESERVED2;   

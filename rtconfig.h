@@ -150,7 +150,7 @@
 #define RT_LWIP_TCP_SND_BUF	8192
 /* TCP receive window. */
 #define RT_LWIP_TCP_WND		8192
-#define CHECKSUM_BY_HARDWARE						1
+//#define CHECKSUM_BY_HARDWARE						1
 #define RT_LWIP_DHCP      
 #define CHECKSUM_CHECK_TCP              0
 #define CHECKSUM_CHECK_IP               0
@@ -178,7 +178,7 @@
   * @brief  For LAN8720A  
   */  
 	#ifdef LAN8720A_PHY
-		#define PHY_ADDRESS       0x00/* Relative to STM3210C-EVAL Board */
+		#define PHY_ADDRESS       0x01/* Relative to STM3210C-EVAL Board */
 		#define PHY_SR                           31         /*!< Tranceiver Status Register */
 		#define PHY_Speed_Status            ((u16)0x0004)       /*!< Configured information of Speed: 10Mbps */
 		#define PHY_Duplex_Status           ((u16)0x0010)       /*!< Configured information of Duplex: Full-duplex */

@@ -26,7 +26,7 @@
 #define CHECKSUM_BY_HARDWARE    1       /* don't ues hardware checksum. */
 #define RMII_MODE               1       /* 0: MII MODE, 1: RMII MODE. */
 #define STM32_ETH_IO_REMAP      0       /* 0: default,  1: remap RXD to PDx. */
-#define USE_MCO                 1       /* 0: disable,  1: PA8(MCO) out 25Mhz(MII) or 50Mhz(RMII). */
+#define USE_MCO                 0       /* 0: disable,  1: PA8(MCO) out 25Mhz(MII) or 50Mhz(RMII). */
 
 /** @addtogroup STM32_ETH_Driver
   * @brief ETH driver modules
@@ -359,27 +359,41 @@ void ETH_StructInit(ETH_InitTypeDef* ETH_InitStruct)
 {
     /* ETH_InitStruct members default value */
     /*------------------------   MAC   -----------------------------------*/
+	//参数是否自动配置，选择disable需要自动配置默写参数（auto模式在网线没插上时会导致超时，初始化失败）
     ETH_InitStruct->ETH_AutoNegotiation = ETH_AutoNegotiation_Disable;
-    ETH_InitStruct->ETH_Watchdog = ETH_Watchdog_Enable;
-    ETH_InitStruct->ETH_Jabber = ETH_Jabber_Enable;
+	//关闭看门狗定时器，允许接收超长帧
+    ETH_InitStruct->ETH_Watchdog = ETH_Watchdog_Disable;			//ETH_Watchdog_Enable
+    //关闭jabber定时器，允许发送超长帧
+    ETH_InitStruct->ETH_Jabber = ETH_Jabber_Disable;				//ETH_Jabber_Enable
+    //发送帧间间隙
     ETH_InitStruct->ETH_InterFrameGap = ETH_InterFrameGap_96Bit;
     ETH_InitStruct->ETH_CarrierSense = ETH_CarrierSense_Enable;
     ETH_InitStruct->ETH_Speed = ETH_Speed_10M;
     ETH_InitStruct->ETH_ReceiveOwn = ETH_ReceiveOwn_Enable;
+	//不启用自循环模式
     ETH_InitStruct->ETH_LoopbackMode = ETH_LoopbackMode_Disable;
     ETH_InitStruct->ETH_Mode = ETH_Mode_HalfDuplex;
     ETH_InitStruct->ETH_ChecksumOffload = ETH_ChecksumOffload_Disable;
     ETH_InitStruct->ETH_RetryTransmission = ETH_RetryTransmission_Enable;
-    ETH_InitStruct->ETH_AutomaticPadCRCStrip = ETH_AutomaticPadCRCStrip_Disable;
+	/*自动填充/CRC剥离处理不执行，转发所有帧*/
+	ETH_InitStruct->ETH_AutomaticPadCRCStrip = ETH_AutomaticPadCRCStrip_Disable;
     ETH_InitStruct->ETH_BackOffLimit = ETH_BackOffLimit_10;
     ETH_InitStruct->ETH_DeferralCheck = ETH_DeferralCheck_Disable;
-    ETH_InitStruct->ETH_ReceiveAll = ETH_ReceiveAll_Disable;
-    ETH_InitStruct->ETH_SourceAddrFilter = ETH_SourceAddrFilter_Disable;
-    ETH_InitStruct->ETH_PassControlFrames = ETH_PassControlFrames_BlockAll;
-    ETH_InitStruct->ETH_BroadcastFramesReception = ETH_BroadcastFramesReception_Disable;
-    ETH_InitStruct->ETH_DestinationAddrFilter = ETH_DestinationAddrFilter_Normal;
+	//MAC过滤只接受通过源目的地址的数据
+	ETH_InitStruct->ETH_ReceiveAll = ETH_ReceiveAll_Disable;
+	//MAC过滤源地址错误帧？
+    ETH_InitStruct->ETH_SourceAddrFilter = ETH_SourceAddrFilter_Normal_Enable;	//ETH_SourceAddrFilter_Disable
+	//MAC不转发任何控制帧
+	ETH_InitStruct->ETH_PassControlFrames = ETH_PassControlFrames_BlockAll;
+	//接收广播帧
+    ETH_InitStruct->ETH_BroadcastFramesReception = ETH_BroadcastFramesReception_Enable;	//ETH_BroadcastFramesReception_Disable
+	//目的地址过滤结果正常
+	ETH_InitStruct->ETH_DestinationAddrFilter = ETH_DestinationAddrFilter_Normal;
+	//混杂模式，启用帧过滤
     ETH_InitStruct->ETH_PromiscuousMode = ETH_PromiscuousMode_Disable;
+	//过滤器正常工作，不传送控制帧
     ETH_InitStruct->ETH_MulticastFramesFilter = ETH_MulticastFramesFilter_Perfect;
+	//单播帧目的地址完美过滤
     ETH_InitStruct->ETH_UnicastFramesFilter = ETH_UnicastFramesFilter_Perfect;
     ETH_InitStruct->ETH_HashTableHigh = 0x0;
     ETH_InitStruct->ETH_HashTableLow = 0x0;
@@ -392,21 +406,33 @@ void ETH_StructInit(ETH_InitTypeDef* ETH_InitStruct)
     ETH_InitStruct->ETH_VLANTagComparison = ETH_VLANTagComparison_16Bit;
     ETH_InitStruct->ETH_VLANTagIdentifier = 0x0;
     /*------------------------   DMA   -----------------------------------*/
+	/*丢弃校验错误帧不执行(因为未进行硬件校验)*/
     ETH_InitStruct->ETH_DropTCPIPChecksumErrorFrame = ETH_DropTCPIPChecksumErrorFrame_Disable;
-    ETH_InitStruct->ETH_ReceiveStoreForward = ETH_ReceiveStoreForward_Enable;
-    ETH_InitStruct->ETH_FlushReceivedFrame = ETH_FlushReceivedFrame_Disable;
-    ETH_InitStruct->ETH_TransmitStoreForward = ETH_TransmitStoreForward_Enable;
+	//接收数据超过阈值转发
+	ETH_InitStruct->ETH_ReceiveStoreForward = ETH_ReceiveStoreForward_Disable;	//ETH_ReceiveStoreForward_Enable
+	//描述符被占用和接收FIFO不可用时清空FIFO(解决堵塞)
+	ETH_InitStruct->ETH_FlushReceivedFrame = ETH_FlushReceivedFrame_Enable;	//ETH_FlushReceivedFrame_Disable
+	//发送数据完整帧转发
+	ETH_InitStruct->ETH_TransmitStoreForward = ETH_TransmitStoreForward_Disable;//ETH_TransmitStoreForward_Enable
+	//发送阈值为64Bytes
     ETH_InitStruct->ETH_TransmitThresholdControl = ETH_TransmitThresholdControl_64Bytes;
+	 //接收FIFO丢弃所有错误帧
     ETH_InitStruct->ETH_ForwardErrorFrames = ETH_ForwardErrorFrames_Disable;
-    ETH_InitStruct->ETH_ForwardUndersizedGoodFrames = ETH_ForwardUndersizedGoodFrames_Disable;
+	  /*接收FIFO上传长度不够的好帧*/
+    ETH_InitStruct->ETH_ForwardUndersizedGoodFrames = ETH_ForwardUndersizedGoodFrames_Enable;//ETH_ForwardUndersizedGoodFrames_Disable
+    //接收阈值为64Bytes
     ETH_InitStruct->ETH_ReceiveThresholdControl = ETH_ReceiveThresholdControl_64Bytes;
-    ETH_InitStruct->ETH_SecondFrameOperate = ETH_SecondFrameOperate_Disable;
+	//DMA直接发送第二个帧，不需要之前帧回复
+    ETH_InitStruct->ETH_SecondFrameOperate = ETH_SecondFrameOperate_Enable;	//ETH_SecondFrameOperate_Disable
+	//传输地址对齐
     ETH_InitStruct->ETH_AddressAlignedBeats = ETH_AddressAlignedBeats_Enable;
-    ETH_InitStruct->ETH_FixedBurst = ETH_FixedBurst_Disable;
-    ETH_InitStruct->ETH_RxDMABurstLength = ETH_RxDMABurstLength_1Beat;
-    ETH_InitStruct->ETH_TxDMABurstLength = ETH_TxDMABurstLength_1Beat;
+	 //固定的突发
+    ETH_InitStruct->ETH_FixedBurst = ETH_FixedBurst_Enable;//ETH_FixedBurst_Disable
+    ETH_InitStruct->ETH_RxDMABurstLength = ETH_RxDMABurstLength_32Beat;
+    ETH_InitStruct->ETH_TxDMABurstLength = ETH_TxDMABurstLength_32Beat;
     ETH_InitStruct->ETH_DescriptorSkipLength = 0x0;
-    ETH_InitStruct->ETH_DMAArbitration = ETH_DMAArbitration_RoundRobin_RxTx_1_1;
+	//发送和接收比例(上传数据时重要) 2:1
+    ETH_InitStruct->ETH_DMAArbitration = ETH_DMAArbitration_RoundRobin_RxTx_2_1;	//ETH_DMAArbitration_RoundRobin_RxTx_1_1
 }
 
 /**
@@ -3102,19 +3128,29 @@ static rt_err_t rt_stm32_eth_init(rt_device_t dev)
 
     /* Fill ETH_InitStructure parametrs */
     /*------------------------   MAC   -----------------------------------*/
-    ETH_InitStructure.ETH_AutoNegotiation = ETH_AutoNegotiation_Enable  ;
-    ETH_InitStructure.ETH_Speed = ETH_Speed_100M;
+	//参数是否自动配置，选择disable需要自动配置默写参数（auto模式在网线没插上时会导致超时，初始化失败）
+    ETH_InitStructure.ETH_AutoNegotiation = ETH_AutoNegotiation_Disable  ;	//ETH_AutoNegotiation_Enable
+	//快速以太网速度
+	ETH_InitStructure.ETH_Speed = ETH_Speed_100M;
+	 //全双工模式
     ETH_InitStructure.ETH_Mode = ETH_Mode_FullDuplex;
 
     ETH_InitStructure.ETH_LoopbackMode = ETH_LoopbackMode_Disable;
     ETH_InitStructure.ETH_RetryTransmission = ETH_RetryTransmission_Disable;
-    ETH_InitStructure.ETH_AutomaticPadCRCStrip = ETH_AutomaticPadCRCStrip_Disable;
-    ETH_InitStructure.ETH_ReceiveAll = ETH_ReceiveAll_Enable;
-    ETH_InitStructure.ETH_BroadcastFramesReception = ETH_BroadcastFramesReception_Disable;
-    ETH_InitStructure.ETH_PromiscuousMode = ETH_PromiscuousMode_Disable;
+	/*自动填充/CRC剥离处理不执行，转发所有帧*/
+	ETH_InitStructure.ETH_AutomaticPadCRCStrip = ETH_AutomaticPadCRCStrip_Disable;
+	//MAC过滤只接受通过源目的地址的数据
+    ETH_InitStructure.ETH_ReceiveAll = ETH_ReceiveAll_Disable;//ETH_ReceiveAll_Enable
+    //接收广播帧
+    ETH_InitStructure.ETH_BroadcastFramesReception = ETH_BroadcastFramesReception_Enable;//ETH_BroadcastFramesReception_Disable
+	//混杂模式，启用帧过滤
+	ETH_InitStructure.ETH_PromiscuousMode = ETH_PromiscuousMode_Disable;
+	//过滤器正常工作，不传送控制帧
     ETH_InitStructure.ETH_MulticastFramesFilter = ETH_MulticastFramesFilter_Perfect;
+	//单播帧目的地址完美过滤
     ETH_InitStructure.ETH_UnicastFramesFilter = ETH_UnicastFramesFilter_Perfect;
 #if CHECKSUM_BY_HARDWARE
+	//IPV4头文件硬件校验
     ETH_InitStructure.ETH_ChecksumOffload = ETH_ChecksumOffload_Enable;
 #endif /* CHECKSUM_BY_HARDWARE */
 
@@ -3123,13 +3159,19 @@ static rt_err_t rt_stm32_eth_init(rt_device_t dev)
     /* When we use the Checksum offload feature, we need to enable the Store and Forward mode:
     the store and forward guarantee that a whole frame is stored in the FIFO, so the MAC can insert/verify the checksum,
     if the checksum is OK the DMA can handle the frame otherwise the frame is dropped */
-    ETH_InitStructure.ETH_DropTCPIPChecksumErrorFrame = ETH_DropTCPIPChecksumErrorFrame_Enable;
-    ETH_InitStructure.ETH_ReceiveStoreForward = ETH_ReceiveStoreForward_Enable;
+     /*丢弃校验错误帧不执行(因为未进行硬件校验)*/
+    ETH_InitStructure.ETH_DropTCPIPChecksumErrorFrame = ETH_DropTCPIPChecksumErrorFrame_Disable;//ETH_DropTCPIPChecksumErrorFrame_Enable
+    //接收数据超过阈值转发
+    ETH_InitStructure.ETH_ReceiveStoreForward = ETH_ReceiveStoreForward_Disable;//ETH_ReceiveStoreForward_Enable
+    //发送数据完整帧转发
     ETH_InitStructure.ETH_TransmitStoreForward = ETH_TransmitStoreForward_Enable;
-
+		//接收FIFO丢弃所有错误帧
     ETH_InitStructure.ETH_ForwardErrorFrames = ETH_ForwardErrorFrames_Disable;
-    ETH_InitStructure.ETH_ForwardUndersizedGoodFrames = ETH_ForwardUndersizedGoodFrames_Disable;
+	 /*接收FIFO上传长度不够的好帧*/
+    ETH_InitStructure.ETH_ForwardUndersizedGoodFrames = ETH_ForwardUndersizedGoodFrames_Enable;//ETH_ForwardUndersizedGoodFrames_Disable
+      //DMA直接发送第二个帧，不需要之前帧回复
     ETH_InitStructure.ETH_SecondFrameOperate = ETH_SecondFrameOperate_Enable;
+	  //传输地址对齐
     ETH_InitStructure.ETH_AddressAlignedBeats = ETH_AddressAlignedBeats_Enable;
     ETH_InitStructure.ETH_FixedBurst = ETH_FixedBurst_Enable;
     ETH_InitStructure.ETH_RxDMABurstLength = ETH_RxDMABurstLength_32Beat;

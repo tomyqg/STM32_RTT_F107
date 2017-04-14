@@ -388,7 +388,7 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
     memset(buf,0x00, sizeof(buf));
 		FD_ZERO(&rd);
 		FD_SET(d_sock, &rd);
-		timeout.tv_sec = 60;
+		timeout.tv_sec = 10;
 		timeout.tv_usec = 0;
 
 		while (1) {
@@ -420,7 +420,7 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
 							*stor_size += write_len;
 					}
 					memset(buf,0x00, sizeof(buf));
-					if(len < 32){	
+					if(len < 1){	
 
 						printf("\ntransfer:%d\n",len);
 						break;
@@ -488,6 +488,7 @@ int ftp_storfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
     while ( (len = fileRead( handle, buf, 512)) > 0)
     {
         send_len = send(d_sock, buf, len, 0);
+			printf("%d\n",send_len);
         if (send_len != len ||
             (stop != NULL && *stop))
         {
@@ -582,21 +583,16 @@ int ftp_quit( int c_sock)
 void getfile(char *host, int port, char *user, char *pwd)
 {
 	unsigned long long stor_size = 0;
-	int stop = 0;
+	int stop = 0,ret;
 	//"ecu.apsema.com", 9219, "zhyf", "yuneng"
 	int sockfd = ftp_connect( host, port, user, pwd  );
-	//int sockfd = ftp_connect( "192.168.1.104", 21, "admin", "admin" );
 	if(sockfd != -1)
 	{
 		printf("ftp connect successful %d\n",sockfd);	
 	}
-	//ftp_type(sockfd,'I');
-	//ftp_cwd(sockfd, "/Result/" );
 	
-	//ftp_retrfile(sockfd, "/Result/area_204000000840.conf", "/FTP/test" ,&stor_size, &stop);
-	ftp_retrfile(sockfd, "/Result/123455.log", "/FTP/test" ,&stor_size, &stop);
-  //ftp_storfile(sockfd, "/HOME/DATA/LTPOWER","/Result/ltpower" ,&stor_size, &stop);
-	printf("stor_size:%lld  stop:%d\n",stor_size,stop);
+	ret = ftp_retrfile(sockfd, "/Result/ecu1_0.bin", "/FTP/ecu.bin" ,&stor_size, &stop);
+	printf("\nret :%d\nstor_size:%lld  stop:%d\n",ret,stor_size,stop);
 	ftp_quit( sockfd);
 }
 FINSH_FUNCTION_EXPORT(getfile,get file from ftp.)

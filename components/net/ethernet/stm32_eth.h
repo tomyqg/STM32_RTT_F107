@@ -468,7 +468,7 @@ typedef struct  {
 /**
   * @brief  For LAN8700
   */
-#define PHY_SR                           31         /*!< Tranceiver Status Register */
+//#define PHY_SR                           31         /*!< Tranceiver Status Register */
 /**
   * @brief  For DP83848
   */
@@ -479,8 +479,8 @@ typedef struct  {
 /**
   * @brief  For LAN8700
   */
-#define PHY_Speed_Status            ((u16)0x0004)       /*!< Configured information of Speed: 10Mbps */
-#define PHY_Duplex_Status           ((u16)0x0010)       /*!< Configured information of Duplex: Full-duplex */
+//#define PHY_Speed_Status            ((u16)0x0004)       /*!< Configured information of Speed: 10Mbps */
+//#define PHY_Duplex_Status           ((u16)0x0010)       /*!< Configured information of Duplex: Full-duplex */
 
 /**
   * @brief  For DP83848
