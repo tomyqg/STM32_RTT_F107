@@ -1051,6 +1051,31 @@
               <FileType>1</FileType>
               <FilePath>..\ECU\main\src\setpower.c</FilePath>
             </File>
+            <File>
+              <FileName>set_ird.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ECU\main\src\set_ird.c</FilePath>
+            </File>
+            <File>
+              <FileName>turn_on_off.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ECU\main\src\turn_on_off.c</FilePath>
+            </File>
+            <File>
+              <FileName>clear_gfdi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ECU\main\src\clear_gfdi.c</FilePath>
+            </File>
+            <File>
+              <FileName>set_protection_parameters.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ECU\main\src\set_protection_parameters.c</FilePath>
+            </File>
+            <File>
+              <FileName>set_protection_parameters_inverter.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ECU\main\src\set_protection_parameters_inverter.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

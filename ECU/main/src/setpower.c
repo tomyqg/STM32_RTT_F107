@@ -11,6 +11,10 @@
 power表格字段：
 id,limitedpower,limitedresult,stationarypower,stationaryresult,flag
 */
+/*
+power表格字段：
+maxpower,fixedpower,sysmaxpower
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +23,8 @@ id,limitedpower,limitedresult,stationarypower,stationaryresult,flag
 #include <string.h>
 #include "debug.h"
 #include "myfile.h"
+#include "file.h"
+#include "setpower.h"
 
 
 int getpower(inverter_info *inverter, int *limitedpower, int *stationarypower)	//读取逆变器的最大功率和固定功率
@@ -36,12 +42,9 @@ int getpower(inverter_info *inverter, int *limitedpower, int *stationarypower)	/
 		*limitedpower = atoi(splitdata[1]);
 		*stationarypower = atoi(splitdata[3]);
 
-
 		printdecmsg("main","Maximun power", *limitedpower);
 		printdecmsg("main","Fixed power", *stationarypower);
 	}
-
-
 	return 0;
 }
 
@@ -63,8 +66,10 @@ int get_maximum_power(inverter_info *inverter)
 		{
 			power = atoi(splitdata[1]);
 			return power;
+		}else
+		{
+			return -1;
 		}
-		
 	}
 	else
 		return -1;
@@ -89,85 +94,147 @@ int get_fixed_power(inverter_info *inverter)
 
 int getsyspower()		//读取系统最大总功率
 {
-	char sql[100]={'\0'};
-	char *zErrMsg=0;
-	char **azResult;
-	int nrow, ncolumn, syspower;
+	char linedata[100] = "\0";
+	char splitdata[3][32];
+	int syspower;
+	
+	//读取一行数据
+	file_get_one(linedata, 100, "/home/data/powerall");
+	
+	//将所在行分裂
+	splitString(linedata,splitdata);
 
-	sprintf(sql,"SELECT sysmaxpower FROM powerall WHERE item=0;");
-	sqlite3_get_table( db , sql , &azResult , &nrow , &ncolumn , &zErrMsg );
-	syspower = atoi(azResult[1]);
-	sqlite3_free_table( azResult );
+	syspower = atoi(splitdata[2]);
 
-	printdecmsg("Maximun system power", syspower);
+	printdecmsg("main","Maximun system power", syspower);
 
 	return syspower;
 }
 
 int updatemaxpower(inverter_info *inverter, int limitedresult)//更新逆变器的最大功率结果
-{
-	char sql[100] = { '\0' };
-	char *zErrMsg = 0;
+{	
+	char linedata[100] = "\0";
+	char splitdata[6][32];
 	int i;
+	
+	//读取所在ID行
+	read_line("/home/data/power",linedata,inverter->id,12);
+	
+	//将所在行分裂
+	splitString(linedata,splitdata);
+	memset(linedata,0x00,100);
+	sprintf(linedata,"%s,%d,%d,%d,%d,0\n",inverter->id,limitedresult,atoi(splitdata[2]),atoi(splitdata[3]),atoi(splitdata[4]));
+	//删除id所在行
+	delete_line("/home/data/power","/home/data/power.t",inverter->id,12);
 
-	sprintf(sql,"UPDATE power SET limitedresult=%d,flag=0 WHERE id=%s ", limitedresult, inverter->id);
+	//更新所在行
 	for(i=0; i<3; i++)
 	{
-		if(SQLITE_OK == sqlite3_exec( db , sql , 0 , 0 , &zErrMsg ))
+		if(1 == insert_line("/home/data/power",linedata))
 		{
-			print2msg(inverter->id, "Update maximun power successfully");
+			print2msg("main",inverter->id, "Update maximun power successfully");
 			break;
 		}
 		else
-			print2msg(inverter->id, "Failed to update maximun power");
+			print2msg("main",inverter->id, "Failed to update maximun power");
 	}
 
 	return 0;
 }
 
-int updatemaxflag(inverter_info *inverter)		//更新逆变器为最大功率模式
+int updatemaxflag(inverter_info *inverter)			//更新逆变器为最大功率模式
 {
-	char sql[100] = { '\0' };
-	char *zErrMsg = 0;
+	char linedata[100] = "\0";
+	char splitdata[6][32];
 	int i;
+	
 
-	sprintf(sql,"UPDATE power SET flag=0 WHERE id=%s ", inverter->id);
-
+	
+	//读取所在ID行
+	read_line("/home/data/power",linedata,inverter->id,12);
+	
+	//将所在行分裂
+	splitString(linedata,splitdata);
+	memset(linedata,0x00,100);
+	sprintf(linedata,"%s,%d,%d,%d,%d,0\n",inverter->id,atoi(splitdata[1]),atoi(splitdata[2]),atoi(splitdata[3]),atoi(splitdata[4]));
+	//删除id所在行
+	delete_line("/home/data/power","/home/data/power.t",inverter->id,12);
+	
 	for(i=0; i<3; i++)
 	{
-		if(SQLITE_OK == sqlite3_exec( db , sql , 0 , 0 , &zErrMsg ))
+		if(1 == insert_line("/home/data/power",linedata))
 		{
-			print2msg(inverter->id, "Update maximun power flag successfully");
+			print2msg("main",inverter->id, "Update maximun power flag successfully");
 				break;
 		}
 		else
-			print2msg(inverter->id, "Failed to update maximun flag power");
+			print2msg("main",inverter->id, "Failed to update maximun flag power");
 	}
-
-
-	print2msg(inverter->id, "has been changed to Maximun power Mode");
+	print2msg("main",inverter->id, "has been changed to Maximun power Mode");
+	return 0;
 }
 
 int updatefixedpower(inverter_info *inverter, int stationaryresult)
 {
-	char sql[100]={'\0'};
-	char *zErrMsg=0;
+	char linedata[100] = "\0";
+	char splitdata[6][32];
+	int i;
+	
+	//读取所在ID行
+	read_line("/home/data/power",linedata,inverter->id,12);
+	
+	//将所在行分裂
+	splitString(linedata,splitdata);
+	memset(linedata,0x00,100);
+	sprintf(linedata,"%s,%d,%d,%d,%d,0\n",inverter->id,atoi(splitdata[1]),atoi(splitdata[2]),atoi(splitdata[3]),stationaryresult);
+	//删除id所在行
+	delete_line("/home/data/power","/home/data/power.t",inverter->id,12);
 
-	sprintf(sql,"UPDATE power SET stationaryresult=%d WHERE id=%s ", stationaryresult, inverter->id);
-	sqlite3_exec( db , sql , 0 , 0 , &zErrMsg );
+	for(i=0; i<3; i++)
+	{
+		if(1 == insert_line("/home/data/power",linedata))
+		{
+			print2msg("main",inverter->id, "Update fixed power flag successfully");
+				break;
+		}
+		else
+			print2msg("main",inverter->id, "Failed to update fixed flag power");
+	}
 
-	printdecmsg("Fixed power from inverter", stationaryresult);
+	printdecmsg("main","Fixed power from inverter", stationaryresult);
+	return 0;
 }
 
 int updatefixedflag(inverter_info *inverter)
 {
-	char sql[100]={'\0'};
-	char *zErrMsg=0;
+	char linedata[100] = "\0";
+	char splitdata[6][32];
+	int i;
+	
+	//读取所在ID行
+	read_line("/home/data/power",linedata,inverter->id,12);
+	
+	//将所在行分裂
+	splitString(linedata,splitdata);
+	memset(linedata,0x00,100);
+	sprintf(linedata,"%s,%d,%d,%d,%d,1\n",inverter->id,atoi(splitdata[1]),atoi(splitdata[2]),atoi(splitdata[3]),atoi(splitdata[4]));
+	//删除id所在行
+	delete_line("/home/data/power","/home/data/power.t",inverter->id,12);
 
-	sprintf(sql,"UPDATE power SET flag=1 WHERE id=%s ", inverter->id);
-	sqlite3_exec( db , sql , 0 , 0 , &zErrMsg );
 
-	print2msg(inverter->id, "has been changed to fixed power Mode!\n");
+	for(i=0; i<3; i++)
+	{
+		if(1 == insert_line("/home/data/power",linedata))
+		{
+			print2msg("main",inverter->id, "Update fixed power flag successfully");
+				break;
+		}
+		else
+			print2msg("main",inverter->id, "Failed to update fixed flag power");
+	}
+
+	print2msg("main",inverter->id, "has been changed to fixed power Mode!\n");
+	return 0;
 }
 
 
@@ -183,7 +250,7 @@ int calcount(inverter_info *firstinverter)
 			panelcount++;
 	}
 
-	printdecmsg("Panel count", panelcount);
+	printdecmsg("main","Panel count", panelcount);
 
 	return panelcount;
 }
@@ -209,38 +276,37 @@ int setfixedpowerone(inverter_info *inverter, char power)//固定功率限定单
 	sendbuff[i++] = 0xFE;
 
 	zb_send_cmd(inverter, sendbuff, i);
-	printmsg("Set fixed power single");
+	printmsg("main","Set fixed power single");
 	ret = zb_get_reply(data, inverter);
 	if ((13 == ret) && (0xFB == data[0]) && (0xFB == data[1])&& (0xFE == data[11]) && (0xFE == data[12]))
 	{
 		if (0xDE == data[3])
 		{
-			printmsg("Set success");
+			printmsg("main","Set success");
 			return 1;
 		}
 		else if (0xDF == data[3])
 		{
-			printmsg("Set failed");
+			printmsg("main","Set failed");
 			return 2;
 		}
 		else
 		{
-			printmsg("Set failed");
+			printmsg("main","Set failed");
 			return -1;
 		}
 	}
 	else
 	{
-		printmsg("Set failed");
+		printmsg("main","Set failed");
 		return -1;
 	}
 }
 
 int setfixedpowerall(char power)	//固定功率限定广播，zb_constpower_broadcast
 {
-	int i = 0, ret;
+	int i = 0;
 	char sendbuff[256] = { '\0' };
-	char data[256] = { '\0' };
 
 	sendbuff[i++] = 0xFB;
 	sendbuff[i++] = 0xFB;
@@ -257,7 +323,7 @@ int setfixedpowerall(char power)	//固定功率限定广播，zb_constpower_broa
 	sendbuff[i++] = 0xFE;
 
 	zb_broadcast_cmd(sendbuff, i);
-	printmsg("Set fixed power broadcast");
+	printmsg("main","Set fixed power broadcast");
 	return 1;
 
 }
@@ -283,38 +349,37 @@ int setlimitedpowerone(inverter_info *inverter, char power)	//发送命令，设
 	sendbuff[i++] = 0xFE;
 
 	zb_send_cmd(inverter, sendbuff, i);
-	printmsg("Set max power single");
+	printmsg("main","Set max power single");
 	ret = zb_get_reply(data, inverter);
 	if ((13 == ret) && (0xFB == data[0]) && (0xFB == data[1])&& (0xFE == data[11]) && (0xFE == data[12]))
 	{
 		if (0xDE == data[3])
 		{
-			printmsg("Set success");
+			printmsg("main","Set success");
 			return 1;
 		}
 		else if (0xDF == data[3])
 		{
-			printmsg("Set failed");
+			printmsg("main","Set failed");
 			return 2;
 		}
 		else
 		{
-			printmsg("Set failed");
+			printmsg("main","Set failed");
 			return -1;
 		}
 	}
 	else
 	{
-		printmsg("Set failed");
+		printmsg("main","Set failed");
 		return -1;
 	}
 }
 
 int setlimitedpowerall(char power)	//最大功率限定广播，zb_powerlimited_broadcast
 {
-	int i = 0, ret;
+	int i = 0;
 	char sendbuff[256] = { '\0' };
-	char data[256] = { '\0' };
 
 	sendbuff[i++] = 0xFB;
 	sendbuff[i++] = 0xFB;
@@ -331,7 +396,7 @@ int setlimitedpowerall(char power)	//最大功率限定广播，zb_powerlimited_
 	sendbuff[i++] = 0xFE;
 
 	zb_broadcast_cmd(sendbuff, i);
-	printmsg("Set max power broadcast");
+	printmsg("main","Set max power broadcast");
 	return 0;
 }
 
@@ -340,17 +405,14 @@ int save_max_power_result_all(void)			//设置所有逆变器功率的结果
 {
 	char ecu_id[16];
 	FILE *fp;
-	sqlite3 *db;
-	char *zErrMsg=0;
-	int nrow=0,ncolumn=0;
-	char **azResult;
-	int i;
-	char sql[1024];
-	char set_max_power_result[65535] = {'\0'};
+	char set_max_power_result[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};
 	char inverter_result[64];
+	char data[200];
+	char splitdata[6][32];
+	int num = 0;
 
 	strcpy(set_max_power_result, "APS13AAAAAA117AAA1");
-	fp = fopen("/etc/yuneng/ecuid.conf", "r");		//读取ECU的ID
+	fp = fopen("/yuneng/ecuid.con", "r");		//读取ECU的ID
 	if(fp)
 	{
 		fgets(ecu_id, 13, fp);
@@ -362,33 +424,30 @@ int save_max_power_result_all(void)			//设置所有逆变器功率的结果
 	strcat(set_max_power_result, "00000000000000");		//时间戳，设置逆变器后返回的结果中时间戳为0
 	strcat(set_max_power_result, "END");					//固定格式
 
-
-	sqlite3_open("/home/database.db", &db);
-	strcpy(sql, "SELECT id,limitedresult FROM power");
-	for(i=0;i<3;i++)
+	fp = fopen("/home/data/power", "r");
+	if(fp)
 	{
-		if(SQLITE_OK == sqlite3_get_table( db , sql , &azResult , &nrow , &ncolumn , &zErrMsg ))
+		memset(data,0x00,200);
+		
+		while(NULL != fgets(data,200,fp))
 		{
-			for(i=1; i<=nrow; i++)
-			{
-				memset(inverter_result, '\0', sizeof(inverter_result));
-				sprintf(inverter_result, "%s%03d020250END", azResult[i*ncolumn], atoi(azResult[i*ncolumn+1]));
-				strcat(set_max_power_result, inverter_result);
-			}
-			strcat(set_max_power_result, "\n");
-			sqlite3_free_table(azResult);
-			break;
+			memset(splitdata,0x00,6*32);
+			splitString(data,splitdata);
+			
+			memset(inverter_result, '\0', sizeof(inverter_result));
+			sprintf(inverter_result, "%s%03d020250END", splitdata[0], atoi(splitdata[2]));
+			strcat(set_max_power_result, inverter_result);
+			memset(data,0x00,200);
+			num++;
 		}
-		else
-			print2msg("SELECT FROM power", zErrMsg);
-		sqlite3_free_table(azResult);
-		sleep(1);
+		fclose(fp);
 	}
-	sqlite3_close(db);
-	set_max_power_result[30] = nrow/1000 + 0x30;
-	set_max_power_result[31] = (nrow/100)%10 + 0x30;
-	set_max_power_result[32] = (nrow/10)%10 + 0x30;
-	set_max_power_result[33] = nrow%10 + 0x30;
+	
+
+	set_max_power_result[30] = num/1000 + 0x30;
+	set_max_power_result[31] = (num/100)%10 + 0x30;
+	set_max_power_result[32] = (num/10)%10 + 0x30;
+	set_max_power_result[33] = num%10 + 0x30;
 
 	if(strlen(set_max_power_result) > 10000)
 		set_max_power_result[5] = (strlen(set_max_power_result)-1)/10000 + 0x30;
@@ -411,11 +470,11 @@ int save_max_power_result_one(char *inverterid, int power)		//设置一个逆变
 {
 	char ecu_id[16];
 	FILE *fp;
-	char set_max_power_result[65535] = {'\0'};
+	char set_max_power_result[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};
 	char inverter_result[64] = {'\0'};
 
 	strcpy(set_max_power_result, "APS13AAAAAA117AAA1");
-	fp = fopen("/etc/yuneng/ecuid.conf", "r");		//读取ECU的ID
+	fp = fopen("/etc/yuneng/ecuid.con", "r");		//读取ECU的ID
 	if(fp)
 	{
 		fgets(ecu_id, 13, fp);
@@ -451,7 +510,7 @@ int save_max_power_result_one(char *inverterid, int power)		//设置一个逆变
 
 int save_max_power_result_one(inverter_info *inverter, int power)		//设置一个逆变器最大功率的结果
 {
-	char inverter_result[65535] = {'\0'};
+	char inverter_result[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};
 
 	memset(inverter_result, '\0', sizeof(inverter_result));
 	sprintf(inverter_result, "%s%03d020300END", inverter->id, power);
@@ -462,116 +521,34 @@ int save_max_power_result_one(inverter_info *inverter, int power)		//设置一�
 
 int process_max_power(inverter_info *firstinverter)
 {
-	int limitedpower, stationarypower, i, j, k, m, res;
-	char command[16]={'\0'};
+	int limitedpower,k, m, res;
+	FILE * fp;
 	char limitedvalue;
 	int limitedresult;
 	char readpresetdata[128] = {'\0'};
+	char data[200];
+	char splitdata[6][32];
+	int num = 0;
 	inverter_info *curinverter = firstinverter;
-	char sql[100]={'\0'};
-	char *zErrMsg=0;
-	char **azResult;
-	int nrow=0, ncolumn=0;
 
-	/*
-	fp = fopen("/tmp/setmaxpower.conf", "r");
-	if (fp)
+	fp = fopen("/home/data/power", "r");
+	if(fp)
 	{
-		curinverter = firstinverter;
-		fgets(command, sizeof(command), fp);
-		fclose(fp);
-		if (!strlen(command))
-			return 0;
-		else if (!strncmp(command, "ALL", 3))
+		memset(data,0x00,200);
+		
+		while(NULL != fgets(data,200,fp))
 		{
-			printmsg("Set all inverter's maximum power!");
-			getpower(firstinverter, &limitedpower, &stationarypower);
-			limitedvalue = (limitedpower * 7395) >> 14;
-			setmaxpowerall(limitedvalue);
-
-			for (i = 0;(i < MAXINVERTERCOUNT) && (12 == strlen(curinverter->id));i++, curinverter++)
-			{
-				memset(readpresetdata, '\0', 20);
-				//if(1 == curinverter->flagyc500){
-				res = zb_query_protect_parameter(curinverter, readpresetdata);
-				if ((1 == res) && (limitedvalue == readpresetdata[5]))
-				{
-					limitedresult = (readpresetdata[5] << 14) / 7395;	//读取成功
-					updatemaxpower(curinverter, limitedresult);
-					update_maxpower_mode(curinverter);
-				}
-				else
-				{
-					for (j = 0; j < 3; j++)
-					{
-						setmaxpowerone(curinverter, limitedvalue);
-						memset(readpresetdata, '\0', 20);
-						res = zb_query_protect_parameter(curinverter,readpresetdata);
-						if ((1 == res) && (limitedvalue == readpresetdata[5]))
-						{
-							limitedresult = (readpresetdata[5] << 14) / 7395;
-							updatemaxpower(curinverter, limitedresult);
-							update_maxpower_mode(curinverter);
-							break;
-						}
-					}
-				}
-			}
-
-			fp = fopen("/tmp/setmaxpower.conf", "w");
-			fclose(fp);
-		//	save_max_power_result_all();		//ZK,暂时屏蔽
-		}
-		else
-		{
-			printmsg("Set one inverter's maximum power!");
-
-			for (i = 0;(i < MAXINVERTERCOUNT) && (12 == strlen(curinverter->id));i++, curinverter++)
-			{
-				if (!strncmp(command, curinverter->id, 12))
-				{
-					getpower(curinverter, &limitedpower, &stationarypower);
-					limitedvalue = (limitedpower * 7395) >> 14;
-					printdecmsg("limitedvalue", limitedvalue);
-					for (j = 0; j < 4; j++)
-					{
-						setmaxpowerone(curinverter, limitedvalue);
-						memset(readpresetdata, '\0', 20);
-						res = zb_query_protect_parameter(curinverter,readpresetdata);
-						printdecmsg("res", res);
-						if(1 == res)
-						{
-							limitedresult = (readpresetdata[5] << 14) / 7395;
-							updatemaxpower(curinverter, limitedresult);
-							update_maxpower_mode(curinverter);
-							save_max_power_result_one(curinverter->id, limitedresult);
-							break;
-						}
-					}
-					break;
-				}
-			}
-
-			fp = fopen("/tmp/setmaxpower.conf", "w");
-			fclose(fp);
-		}
-	}
-	*/
-	sprintf(sql,"SELECT id,limitedpower FROM power WHERE flag=1 AND limitedpower IS NOT NULL;");
-	for(i=0; i<3; i++)
-	{
-		res = sqlite3_get_table( db , sql , &azResult , &nrow , &ncolumn , &zErrMsg );
-		if(SQLITE_OK == res)
-		{
-			for(j=1; j<=nrow; j++)
+			memset(splitdata,0x00,6*32);
+			splitString(data,splitdata);
+			if((1 == atoi(splitdata[5]))&& (0 != atoi(splitdata[1])))
 			{
 				curinverter = firstinverter;
 				for(k=0; (k<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); k++, curinverter++)
 				{
-					if(!strncmp(azResult[j*ncolumn], curinverter->id, 12))
+					if(!strncmp(splitdata[0], curinverter->id, 12))
 					{
 						updatemaxflag(curinverter);
-						limitedpower = atoi(azResult[j*ncolumn+1]);
+						limitedpower = atoi(splitdata[1]);
 						limitedvalue = (limitedpower * 7395) >> 14;
 
 						for(m=0; m<3; m++)
@@ -580,7 +557,7 @@ int process_max_power(inverter_info *firstinverter)
 							memset(readpresetdata, '\0', sizeof(readpresetdata));
 
 							res = zb_query_protect_parameter(curinverter, readpresetdata);
-							printdecmsg("res", res);
+							printdecmsg("main","res", res);
 							if(1 == res)
 							{
 								limitedresult = (readpresetdata[5] << 14) / 7395;
@@ -593,110 +570,15 @@ int process_max_power(inverter_info *firstinverter)
 					}
 				}
 			}
-			sqlite3_free_table( azResult );
-			break;
-		}
-		else
-			sqlite3_free_table( azResult );
-	}
-}
-/*
-int process_fixed_power(inverter_info *firstinverter)
-{
-	FILE *fp;
-	int limitedpower, stationarypower, i, j, res;
-	char command[16]={'\0'};
-	char stationaryvalue;
-	int stationaryresult;
-	int syspower;
-	int panelcount = 0;
-	int yc200 = 0, yc500 = 0;
-	char readpresetdata[20] = { '\0' };
-	inverter_info *curinverter = firstinverter;
 
-	fp = fopen("/tmp/setfixpower.conf", "r");
-	if (fp)
-	{
-		curinverter = firstinverter;
-		fgets(command, sizeof(command), fp);
+			memset(data,0x00,200);
+			num++;
+		}
 		fclose(fp);
-
-		if (!strlen(command))
-			return 0;
-		else if (!strncmp(command, "ALL", 3))
-		{
-			printmsg("Set all inverter's fixed power!");
-			getpower(firstinverter, &limitedpower, &stationarypower);
-			stationaryvalue = (stationarypower * 7395) >> 14;
-			setfixedpowerall(stationaryvalue);
-
-			for (i = 0;(i < MAXINVERTERCOUNT) && (12 == strlen(curinverter->id));i++, curinverter++)
-			{
-				memset(readpresetdata, '\0', 20);
-				//if(1 == curinverter->flagyc500){
-				res = zb_query_protect_parameter(curinverter, readpresetdata);
-				if ((1 == res) && (stationaryvalue == readpresetdata[6]))
-				{
-					stationaryresult = (readpresetdata[6] << 14) / 7395;	//读取成功
-					updatefixedpower(curinverter, stationaryresult);
-					update_fixedpower_mode(curinverter);
-				}
-				else
-				{
-					for (j = 0; j < 3; j++)
-					{
-						setfixedpowerone(curinverter, stationaryvalue);
-						memset(readpresetdata, '\0', 20);
-						res = zb_query_protect_parameter(curinverter,readpresetdata);
-						if ((1 == res) && (stationaryvalue == readpresetdata[6]))
-						{
-							stationaryresult = (readpresetdata[6] << 14) / 7395;
-							updatefixedpower(curinverter, stationaryresult);
-							update_fixedpower_mode(curinverter);
-							break;
-						}
-					}
-				}
-			}
-
-			fp = fopen("/tmp/setfixpower.conf", "w");
-			fclose(fp);
-		}
-		else
-		{
-			printmsg("Set one inverter's fixed power!");
-
-			for (i = 0;(i < MAXINVERTERCOUNT) && (12 == strlen(curinverter->id));i++, curinverter++)
-			{
-				if (!strncmp(command, curinverter->id, 12))
-				{
-					getpower(curinverter, &limitedpower, &stationarypower);
-					stationaryvalue = (stationarypower * 7395) >> 14;
-					printdecmsg("stationaryvalue", stationaryvalue);
-					for (j = 0; j < 4; j++)
-					{
-						setfixedpowerone(curinverter, stationaryvalue);
-						memset(readpresetdata, '\0', 20);
-						res = zb_query_protect_parameter(curinverter,readpresetdata);
-						printdecmsg("res", res);
-						if(1 == res)
-						{
-							stationaryresult = (readpresetdata[6] << 14) / 7395;
-							updatefixedpower(curinverter, stationaryresult);
-							update_fixedpower_mode(curinverter);
-							break;
-						}
-					}
-					break;
-				}
-			}
-
-			fp = fopen("/tmp/setfixpower.conf", "w");
-			fclose(fp);
-		}
 	}
+	return 1;
 }
-*/
+
 int read_max_power(inverter_info *firstinverter)
 {
 	FILE *fp;
@@ -707,7 +589,7 @@ int read_max_power(inverter_info *firstinverter)
 	inverter_info *curinverter = firstinverter;
 
 	memset(id, '\0', sizeof(id));
-	fp = fopen("/tmp/getmaxpower.conf", "r");
+	fp = fopen("/tmp/maxpower.con", "r");
 	if(fp)
 	{
 		fgets(id, 50, fp);
@@ -733,7 +615,7 @@ int read_max_power(inverter_info *firstinverter)
 			}
 		}
 
-		fp = fopen("/tmp/getmaxpower.conf", "w");
+		fp = fopen("/tmp/maxpower.con", "w");
 		fclose(fp);
 	//	save_max_power_result_all();
 	}
@@ -746,4 +628,5 @@ int processpower(inverter_info *firstinverter)
 	process_max_power(firstinverter);
 //	process_fixed_power(firstinverter);
 	read_max_power(firstinverter);
+	return 1;
 }

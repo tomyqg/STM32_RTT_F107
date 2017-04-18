@@ -5,8 +5,8 @@
 #include "myfile.h"
 
 /*********************************************************************
-gfidenv表格字段：
-id, set_value, set_flag
+ird表格字段：
+id, result, set_value, set_flag
 **********************************************************************/
 
 /* 设置指定台数逆变器的IRD选项 */
@@ -28,7 +28,7 @@ int set_ird_num(const char *msg, int num)
 			
 			//如果存在该逆变器数据则删除该记录
 			delete_line("/home/data/ird","/home/data/ird_t",inverter_id,12);
-			sprintf(str,"%s,%d,1\n",inverter_id,ird);
+			sprintf(str,"%s,,%d,1\n",inverter_id,ird);
 			//插入数据
 			if(-1 == insert_line("/home/data/ird",str))
 			{

@@ -13,11 +13,16 @@
 #include "ema_control.h"
 #include "file.h"
 
+#include "setpower.h"
+#include "set_ird.h"
+#include "turn_on_off.h"
+#include "clear_gfdi.h"
+#include "set_protection_parameters.h"
 
 extern struct rt_device serial4;		//串口4为Zigbee收发串口
 
 extern ecu_info ecu;
-extern int processpower(inverter_info *firstinverter);
+
 
 #define RD_DELAY 	(RT_TICK_PER_SECOND/2) //读取数据延时
 #define WR_DELAY	(RT_TICK_PER_SECOND) //写数据延时
@@ -1384,7 +1389,43 @@ int zb_voltage_protectime_single(inverter_info *inverter)		//欠压保护时间单播
 
 int process_gfdi(inverter_info *firstinverter)
 {
-	
+	int i,j;
+	FILE *fp;
+	char command[256] = {'\0'};
+	inverter_info *curinverter = firstinverter;
+
+	fp = fopen("/tmp/procgfdi.con", "r");
+	while(1){
+		curinverter = firstinverter;
+		memset(command, '\0', 256);
+		fgets(command, 256, fp);
+		if(!strlen(command))
+			break;
+		if('\n' == command[strlen(command)-1])
+			command[strlen(command)-1] = '\0';
+		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++){
+			if(!strcmp(command, curinverter->id))
+			{
+				j=0;
+				while(j<3)
+				{
+					if(1 == zb_clear_gfdi(curinverter))
+					{
+						print2msg("main","Clear GFDI", curinverter->id);
+						break;
+					}
+					j++;
+				}
+				break;
+			}
+			curinverter++;
+		}
+	}
+
+	fclose(fp);
+	fp = fopen("/tmp/procgfdi.con", "w");
+	fclose(fp);
+
 	return 0;
 }
 
@@ -1485,30 +1526,277 @@ int resolve_presetdata(inverter_info *inverter, char * protect_data_result)	//??
 
 	return 1;
 }
-
+/*
 int process_protect_data(inverter_info *firstinverter)
 {
-	
+	FILE *fp;
+	int flag = 0;
+	int i,j;
+	char buff[256] = {'\0'};
+	char protect_data_yc500_yc200[20]={0};		//??ECU??????????(????????????????)
+	char protect_data_yc1000[20]={0};
+	inverter_info *curinverter = firstinverter;
+	char protect_data_DD_reply[256]={'\0'};
+
+
+	fp = fopen("/tmp/presdata.con", "r");
+
+
+	if(fp){
+		fgets(buff, 255, fp);
+		fclose(fp);
+	}
+
+	if(!strlen(buff))
+		flag = 0;
+	if('0' == buff[0])
+		flag = 0;
+	if('1' == buff[0])
+		flag = 1;
+	if('2' == buff[0])
+		flag = 2;
+
+
+	if(1 == flag)
+	{
+
+		get_protect_data_from_db(protect_data_yc500_yc200,protect_data_yc1000);
+
+		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++)
+		{
+			if(((1==curinverter->model)||(2==curinverter->model)||(3==curinverter->model)||(4==curinverter->model))&&(curinverter->model!=0))
+			{
+				for(j=0;j<3;j++)
+				{
+					if(1 == zb_set_protect_parameter(curinverter,protect_data_yc500_yc200))
+					{
+						print2msg("main","set_protect_parameter_successful", curinverter->id);
+
+						if(1 == zb_query_protect_parameter(curinverter, protect_data_DD_reply))
+						{
+							resolve_and_update_inverter_protect_parameter(curinverter, &protect_data_DD_reply[4]);
+
+							if(0 == compare_protect_data(protect_data_yc500_yc200, &protect_data_DD_reply[7]))	//????,???????????
+							{
+								print2msg("main","compare_protect_parameter_successful", curinverter->id);
+								break;
+							}
+
+						}
+					}
+				}
+			}
+			else if(((5==curinverter->model)||(6==curinverter->model))&&(curinverter->model!=0))
+			{
+				for(j=0;j<3;j++)
+				{
+					if(1 == zb_set_protect_parameter(curinverter,protect_data_yc1000))
+					{
+						print2msg("main","set_protect_parameter_successful", curinverter->id);
+						if(1 == zb_query_protect_parameter(curinverter, protect_data_DD_reply))
+						{
+							resolve_and_update_inverter_protect_parameter(curinverter, &protect_data_DD_reply[4]);
+							if(0 == compare_protect_data(protect_data_yc1000, &protect_data_DD_reply[7]))		//????,???????????
+							{
+								print2msg("main","compare_protect_parameter_successful", curinverter->id);
+								break;
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				;
+			}
+		}
+
+		save_protect_result(firstinverter);
+
+	//	query_protect_data_from_inverter(firstinverter, protect_data_yc500_yc200,protect_data_yc1000);
+	//	display_protect_result(firstinverter);
+
+
+		fp = fopen("/tmp/presdata.con", "w");
+		fprintf(fp, "0");
+		fclose(fp);
+	}
+
+
+	if(2 == flag)
+	{
+		if(1 == zb_query_protect_parameter(curinverter, protect_data_DD_reply))
+		{
+			resolve_and_update_inverter_protect_parameter(curinverter, &protect_data_DD_reply[4]);
+		}
+
+		save_protect_result(firstinverter);
+
+		fp = fopen("/tmp/presdata.con", "w");
+		fprintf(fp, "0");
+		fclose(fp);
+	}
+
 	return 0;
 }
-
+*/
 int process_turn_on_off(inverter_info *firstinverter)
 {
+	int i, j;
+	FILE *fp;
+	char command[256] = {'\0'};
+	inverter_info *curinverter = firstinverter;
 
+	fp = fopen("/tmp/connect.con", "r");
+	if(!fp)
+		return -1;
+	while(1){
+		curinverter = firstinverter;
+		memset(command, '\0', 256);
+		fgets(command, 256, fp);
+		if(!strlen(command))
+			break;
+		if('\n' == command[strlen(command)-1])
+			command[strlen(command)-1] = '\0';
+		if(!strncmp(command, "connect all", 11)){
+			zb_turnon_inverter_broadcast();
+			printmsg("main","turn on all");
+			break;
+		}
+		if(!strncmp(command, "disconnect all", 14)){
+			zb_shutdown_broadcast();
+			printmsg("main","turn off all");
+			break;
+		}
+
+		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++){
+			if(!strncmp(command, curinverter->id, 12))
+			{
+				j = 0;
+				if('c' == command[12])
+				{
+					while(j<3)
+					{
+						if(1 == zb_boot_single(curinverter))
+						{
+							print2msg("main","turn on", curinverter->id);
+							break;
+						}
+						j++;
+					}
+				}
+				if('d' == command[12])
+				{
+					while(j<3)
+					{
+						if(1 == zb_shutdown_single(curinverter))
+						{
+							print2msg("main","turn off", curinverter->id);
+							break;
+						}
+						j++;
+					}
+				}
+			}
+			curinverter++;
+		}
+	}
+
+	fclose(fp);
+	fp = fopen("/tmp/connect.con", "w");
+	fclose(fp);
 
 	return 0;
+
 }
 
 int process_quick_boot(inverter_info *firstinverter)
 {
+	int i;
+	FILE *fp;
+	char flag_quickboot = '0';				//快速启动标志
+	inverter_info *curinverter = firstinverter;
 
+	fp = fopen("/tmp/qckboot.con", "r");
+
+	if(fp)
+	{
+		flag_quickboot = fgetc(fp);
+		fclose(fp);
+		if('1' == flag_quickboot)
+		{
+			curinverter = firstinverter;
+			for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++)
+			{
+				zb_boot_waitingtime_single(curinverter);
+				print2msg("main","quick boot",curinverter->id);
+				curinverter++;
+			}
+		}
+		fp = fopen("/tmp/qckboot.con", "w");
+		if(fp)
+		{
+			fputs("0",fp);
+			fclose(fp);
+		}
+	}
 	return 0;
+
 }
 
 int process_ipp(inverter_info *firstinverter)
 {
+	int i, j;
+	FILE *fp;
+	char command[256] = {'\0'};
+	inverter_info *curinverter = firstinverter;
+
+	fp = fopen("/tmp/ipp.con", "r");
+
+	if(fp)
+	{
+		while(1)
+		{
+			curinverter = firstinverter;
+			memset(command, '\0', 256);
+			fgets(command, 256, fp);
+			if(!strlen(command))
+				break;
+			if('\n' == command[strlen(command)-1])
+				command[strlen(command)-1] = '\0';
+			if(!strncmp(command, "set ipp all", 11)){
+				zb_ipp_broadcast();
+				printmsg("main","set ipp all");
+				break;
+			}
+
+			for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++){
+				if(!strcmp(command, curinverter->id))
+				{
+					j=0;
+					while(j<3)
+					{
+						if(1 == zb_ipp_single(curinverter))
+						{
+							print2msg("main","set ipp single", curinverter->id);
+							break;
+						}
+						j++;
+					}
+					break;
+				}
+				curinverter++;
+			}
+		}
+
+		fclose(fp);
+	}
+	fp = fopen("/tmp/ipp.con", "w");
+	fclose(fp);
 
 	return 0;
+
+
 }
 
 int process_all(inverter_info *firstinverter)
@@ -1516,16 +1804,15 @@ int process_all(inverter_info *firstinverter)
 	processpower(firstinverter);			//设置功率预设值,ZK,3.10有改动
 //	process_gfdi(firstinverter);			//清GFDI标志
 //	process_protect_data(firstinverter);	//设置预设值
-	//process_turn_on_off(firstinverter);		//开关机
-	//process_quick_boot(firstinverter);		//快速启动
-	//process_ipp(firstinverter);				//IPP设定
-	//process_ird_all(firstinverter);
-	//process_ird(firstinverter);
-	//turn_on_off(firstinverter);								//开关机,ZK,3.10所加
-	//clear_gfdi(firstinverter);								//清GFDI标志,ZK,3.10所加
-	//set_protection_parameters(firstinverter);				//设置预设值广播,ZK,3.10所加
+	process_turn_on_off(firstinverter);		//开关机
+	process_quick_boot(firstinverter);		//快速启动
+	process_ipp(firstinverter);				//IPP设定
+	process_ird_all(firstinverter);
+	process_ird(firstinverter);
+	turn_on_off(firstinverter);								//开关机,ZK,3.10所加
+	clear_gfdi(firstinverter);								//清GFDI标志,ZK,3.10所加
+	set_protection_parameters(firstinverter);				//设置预设值广播,ZK,3.10所加
 	//set_protection_parameters_inverter_one(firstinverter);  //设置预设值单点,ZK,3.10所加
-
 	return 0;
 }
 

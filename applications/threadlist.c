@@ -264,7 +264,7 @@ void tasks_new(void)//创建任务线程
 #endif
 	
 #ifdef THREAD_PRIORITY_CONTROL_CLIENT
-	result = rt_thread_init(&control_client_thread,"control_client",control_client_thread_entry,RT_NULL,(rt_uint8_t*)&control_client_stack[0],sizeof(control_client_stack),THREAD_PRIORITY_CONTROL_CLIENT,5);
+	result = rt_thread_init(&control_client_thread,"control",control_client_thread_entry,RT_NULL,(rt_uint8_t*)&control_client_stack[0],sizeof(control_client_stack),THREAD_PRIORITY_CONTROL_CLIENT,5);
   if (result == RT_EOK)
   {
 		rt_thread_startup(&control_client_thread);
@@ -329,7 +329,7 @@ void restartThread(threadType type)
 #ifdef THREAD_PRIORITY_CONTROL_CLIENT
 		case TYPE_CONTROL_CLIENT:
 			rt_thread_detach(&control_client_thread);
-			result = rt_thread_init(&control_client_thread,"control_client",control_client_thread_entry,RT_NULL,(rt_uint8_t*)&control_client_stack[0],sizeof(control_client_stack),THREAD_PRIORITY_CONTROL_CLIENT,5);
+			result = rt_thread_init(&control_client_thread,"control",control_client_thread_entry,RT_NULL,(rt_uint8_t*)&control_client_stack[0],sizeof(control_client_stack),THREAD_PRIORITY_CONTROL_CLIENT,5);
 			if (result == RT_EOK)
 			{
 				rt_thread_startup(&control_client_thread);

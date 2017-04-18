@@ -344,6 +344,52 @@ int save_process_result(int item, char *result)
 
 }
 
+int save_inverter_parameters_result(inverter_info *inverter, int item, char *inverter_result)
+{
+	char dir[50] = "/home/data/iprocres";
+	char file[9];
+	int fd;
+	char time[20];
+	getcurrenttime(time);
+	memcpy(file,&time[0],8);
+	file[8] = '\0';
+	sprintf(dir,"%s%s.dat",dir,file);
+	printf("%s\n",dir);
+	fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
+	if (fd >= 0)
+	{		
+		sprintf(inverter_result,"%s,%s %3d,1\n",inverter_result,inverter->id,item);
+		printf("%s",inverter_result);
+		write(fd,inverter_result,strlen(inverter_result));
+		close(fd);
+	}
+	return 0;
+
+}
+
+int save_inverter_parameters_result2(char *id, int item, char *inverter_result)
+{
+	char dir[50] = "/home/data/iprocres";
+	char file[9];
+	int fd;
+	char time[20];
+	getcurrenttime(time);
+	memcpy(file,&time[0],8);
+	file[8] = '\0';
+	sprintf(dir,"%s%s.dat",dir,file);
+	printf("%s\n",dir);
+	fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
+	if (fd >= 0)
+	{		
+		sprintf(inverter_result,"%s,%s %3d,1\n",inverter_result,id,item);
+		printf("%s",inverter_result);
+		write(fd,inverter_result,strlen(inverter_result));
+		close(fd);
+	}
+	return 0;
+
+}
+
 void save_record(char sendbuff[], char *date_time)
 {
 	char dir[50] = "/home/record/data/";
@@ -538,6 +584,7 @@ int initsystem(char *ecuid,char *mac)
 	mkdir("/home/data",0x777);
 	mkdir("/home/record",0x777);
 	mkdir("/home/data/proc_res",0x777);
+	mkdir("/home/data/iprocres",0x777);
 	echo("/home/data/ltpower","0.000000");
 	mkdir("/home/record/data",0x777);
 	mkdir("/home/record/inversta",0x777);
@@ -555,6 +602,8 @@ int initsystem(char *ecuid,char *mac)
 	echo("/yuneng/datacent.con","Domain=111.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
 	echo("/home/data/power","");
 	mkdir("/ftp",0x777);
+	
+	
 	return 0;
 }
 FINSH_FUNCTION_EXPORT(initsystem, eg:initsystem("123456789012","80:97:1B:00:72:1C"));
