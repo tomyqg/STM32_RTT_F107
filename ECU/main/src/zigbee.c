@@ -1513,7 +1513,7 @@ int process_ipp(inverter_info *firstinverter)
 
 int process_all(inverter_info *firstinverter)
 {
-	//processpower(firstinverter);			//设置功率预设值,ZK,3.10有改动
+	processpower(firstinverter);			//设置功率预设值,ZK,3.10有改动
 //	process_gfdi(firstinverter);			//清GFDI标志
 //	process_protect_data(firstinverter);	//设置预设值
 	//process_turn_on_off(firstinverter);		//开关机

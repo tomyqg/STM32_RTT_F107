@@ -6,6 +6,7 @@
 #include "main-thread.h"
 #include "client.h"
 #include "control_client.h"
+#include "remoteUpdate.h"
 #include "ntpapp.h"
 #include <board.h>
 #include <rtthread.h>
@@ -68,6 +69,12 @@ ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t dhcp_stack[1024];
 static struct rt_thread dhcp_thread;
 #endif
+#endif
+
+#ifdef THREAD_PRIORITY_UPDATE
+ALIGN(RT_ALIGN_SIZE)
+static rt_uint8_t update_stack[4096];
+static struct rt_thread update_thread;
 #endif
 
 #ifdef THREAD_PRIORITY_NTP
@@ -208,7 +215,17 @@ void tasks_new(void)//创建任务线程
     rt_thread_startup(&led_thread);
   }
 #endif
-
+	
+	
+#ifdef THREAD_PRIORITY_UPDATE	
+  /* init update thread */
+	result = rt_thread_init(&update_thread,"update",remote_update_thread_entry,RT_NULL,(rt_uint8_t*)&update_stack[0],sizeof(update_stack),THREAD_PRIORITY_UPDATE,5);
+  if (result == RT_EOK)
+  {
+    rt_thread_startup(&update_thread);
+  }
+#endif
+	
 #ifdef THREAD_PRIORITY_DHCPRESET	
 #ifdef RT_USING_LWIP
   result = rt_thread_init(&dhcp_thread,"dhcp_reset",dhcp_reset_thread_entry,RT_NULL,(rt_uint8_t*)&dhcp_stack[0],sizeof(dhcp_stack),THREAD_PRIORITY_DHCPRESET,5);
@@ -254,10 +271,84 @@ void tasks_new(void)//创建任务线程
   }	
 #endif
 	
-	
+}
+
+
+void restartThread(threadType type)
+{
+	rt_err_t result;
+	switch(type)
+	{
+#ifdef THREAD_PRIORITY_LED
+		case TYPE_LED:
+			rt_thread_detach(&led_thread);
+			/* init led thread */
+			result = rt_thread_init(&led_thread,"led",led_thread_entry,RT_NULL,(rt_uint8_t*)&led_stack[0],sizeof(led_stack),THREAD_PRIORITY_LED,5);
+			if (result == RT_EOK)
+			{
+				rt_thread_startup(&led_thread);
+			}
+			break;
+#endif 
+#ifdef THREAD_PRIORITY_UPDATE
+		case TYPE_UPDATE:
+			rt_thread_detach(&update_thread);
+		  /* init update thread */
+			result = rt_thread_init(&update_thread,"update",remote_update_thread_entry,RT_NULL,(rt_uint8_t*)&update_stack[0],sizeof(update_stack),THREAD_PRIORITY_UPDATE,5);
+			if (result == RT_EOK)
+			{
+				rt_thread_startup(&update_thread);
+			}
+			break;
+#endif
+			
+#ifdef THREAD_PRIORITY_MAIN
+		case TYPE_MAIN:
+			rt_thread_detach(&main_thread);
+			/* init main thread */
+			result = rt_thread_init(&main_thread,"main",main_thread_entry,RT_NULL,(rt_uint8_t*)&main_stack[0],sizeof(main_stack),THREAD_PRIORITY_MAIN,5);
+			if (result == RT_EOK)
+			{
+				rt_thread_startup(&main_thread);
+			}
+			break;
+#endif
+		
+#ifdef THREAD_PRIORITY_CLIENT
+		case TYPE_CLIENT:
+			rt_thread_detach(&client_thread);
+			/* init client thread */
+			result = rt_thread_init(&client_thread,"client",client_thread_entry,RT_NULL,(rt_uint8_t*)&client_stack[0],sizeof(client_stack),THREAD_PRIORITY_CLIENT,5);
+			if (result == RT_EOK)
+			{
+				rt_thread_startup(&client_thread);
+			}	
+			break;
+#endif
+		
+#ifdef THREAD_PRIORITY_CONTROL_CLIENT
+		case TYPE_CONTROL_CLIENT:
+			rt_thread_detach(&control_client_thread);
+			result = rt_thread_init(&control_client_thread,"control_client",control_client_thread_entry,RT_NULL,(rt_uint8_t*)&control_client_stack[0],sizeof(control_client_stack),THREAD_PRIORITY_CONTROL_CLIENT,5);
+			if (result == RT_EOK)
+			{
+				rt_thread_startup(&control_client_thread);
+			}	
+			break;
+#endif 
+		default:
+			break;
+			
+	}
 }
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 FINSH_FUNCTION_EXPORT(dhcp_reset, eg:dhcp_reset());
+
+void restart(int type)
+{
+	restartThread((threadType)type);
+}
+FINSH_FUNCTION_EXPORT(restart, eg:restart());
 #endif

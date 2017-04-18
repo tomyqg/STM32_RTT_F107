@@ -4,6 +4,7 @@
 #include "remote_control_protocol.h"
 #include "debug.h"
 #include "myfile.h"
+#include "threadlist.h"
 
 
 #define NUM 6
@@ -206,7 +207,7 @@ int set_comm_config(const char *recvbuffer, char *sendbuffer)
 			save_cfg(&cfg1, array, buffer);
 			file_set_array(array, 2, "/yuneng/client.con");
 			file_set_array(&array[2], 4, "/yuneng/datacent.con");
-			//mysystem("killall client");
+			restartThread(TYPE_CLIENT);//mysystem("killall client");
 		}
 		//[2]远程控制通信配置
 		else if(comm_cfg_type == 2){

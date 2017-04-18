@@ -35,4 +35,11 @@ int ftp_deletefile( int c_sock, char *s );
 //删除目录  OK
 int ftp_deletefolder( int c_sock, char *s );
 
+//下载文件
+int ftpgetfile(char *host, int port, char *user, char *pwd,char *remotefile,char *localfile);
+	
+//上传文件
+int ftpputfile(char *host, int port, char *user, char *pwd,char *remotefile,char *localfile);
+
+
 #endif /*__THFTPAPI_H__*/

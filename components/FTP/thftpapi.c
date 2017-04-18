@@ -321,7 +321,7 @@ int ftp_list( int c_sock, char *path, void **data, unsigned long long *data_len)
             free(re_buf);
             re_buf = re_buf_n;
         }
-   //     memcpy(re_buf+total_len, buf, len);
+//        memcpy(re_buf+total_len, buf, len);
         total_len += len;
     }
     close( d_sock );
@@ -347,13 +347,13 @@ int ftp_list( int c_sock, char *path, void **data, unsigned long long *data_len)
 int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, int *stop)
 {
     int     d_sock;
-    ssize_t     len,write_len,i=0,sum=0;
+    ssize_t     len,write_len,sum=0;
     char    buf[1461];
     int     handle;
     int     result;
     fd_set rd;
 		struct timeval timeout;	
-	  char time[20];
+	  //char time[20];
     //打开本地文件
     handle = fileopen( d,  O_WRONLY | O_CREAT | O_TRUNC, 0 );
     if ( handle == -1 ) 
@@ -400,12 +400,12 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
 				return -1;
 			}else
 			{
-				getcurrenttime(time);
-				printf("%03d :time:%s  :len1:%7d ",++i,time,len);
+				//getcurrenttime(time);
+				//printf("%03d :time:%s  :len1:%7d ",++i,time,len);
 				if((len = recv( d_sock, buf, 1460, MSG_DONTWAIT )) > 0 )
 				{
 					sum += len;
-					printf("len2:%7d sum:%7d\n",len,sum);
+					//printf("len2:%7d sum:%7d\n",len,sum);
 
 					write_len = fileWrite( handle, buf, len );
 					if (write_len != len || (stop != NULL && *stop))
@@ -577,46 +577,53 @@ int ftp_quit( int c_sock)
     return re;
 }
 
-#ifdef RT_USING_FINSH
-#include <finsh.h>
 //下载文件
-void getfile(char *host, int port, char *user, char *pwd)
+int ftpgetfile(char *host, int port, char *user, char *pwd,char *remotefile,char *localfile)
 {
 	unsigned long long stor_size = 0;
 	int stop = 0,ret;
-	//"ecu.apsema.com", 9219, "zhyf", "yuneng"
 	int sockfd = ftp_connect( host, port, user, pwd  );
 	if(sockfd != -1)
 	{
 		printf("ftp connect successful %d\n",sockfd);	
 	}
 	
-	ret = ftp_retrfile(sockfd, "/Result/ecu1_0.bin", "/FTP/ecu.bin" ,&stor_size, &stop);
+	ret = ftp_retrfile(sockfd, remotefile, localfile ,&stor_size, &stop);
 	printf("\nret :%d\nstor_size:%lld  stop:%d\n",ret,stor_size,stop);
 	ftp_quit( sockfd);
+	return ret;
+}
+
+//上传文件
+int ftpputfile(char *host, int port, char *user, char *pwd,char *remotefile,char *localfile)
+{
+	unsigned long long stor_size = 0;
+	int stop = 0,ret;
+	int sockfd = ftp_connect( host, port, user, pwd  );
+
+	if(sockfd != -1)
+	{
+		printf("ftp connect successful %d\n",sockfd);	
+	}
+
+  ret = ftp_storfile(sockfd, localfile,remotefile ,&stor_size, &stop);
+	printf("stor_size:%lld  stop:%d\n",stor_size,stop);
+	ftp_quit( sockfd);
+	return ret;
+}
+
+#ifdef RT_USING_FINSH
+#include <finsh.h>
+
+void getfile(char *host, int port, char *user, char *pwd)
+{
+	ftpgetfile(host,port,user,pwd,"/Result/ecu1_0.bin","/ftp/ecu.bin");
 }
 FINSH_FUNCTION_EXPORT(getfile,get file from ftp.)
 
-//下载文件
 void putfile(char *host, int port, char *user, char *pwd)
 {
-	unsigned long long stor_size = 0;
-	int stop = 0;
-	//"ecu.apsema.com", 9219, "zhyf", "yuneng"
-	int sockfd = ftp_connect( host, port, user, pwd  );
-	//int sockfd = ftp_connect( "192.168.1.104", 21, "admin", "admin" );
-	if(sockfd != -1)
-	{
-		printf("ftp connect successful %d\n",sockfd);	
-	}
-	//ftp_type(sockfd,'I');
-	//ftp_cwd(sockfd, "/Result/" );
-	
-	//ftp_retrfile(sockfd, "/Result/area_204000000840.conf", "/FTP/test" ,&stor_size, &stop);
-	//ftp_retrfile(sockfd, "/Result/123455.log", "/FTP/test" ,&stor_size, &stop);
-  ftp_storfile(sockfd, "/ftp/test","/Result/1.log" ,&stor_size, &stop);
-	printf("stor_size:%lld  stop:%d\n",stor_size,stop);
-	ftp_quit( sockfd);
+	ftpgetfile(host,port,user,pwd,"/RESULT/ecu1.bin","/ftp/ecu.bin");
 }
 FINSH_FUNCTION_EXPORT(putfile,put file from ftp.)
 #endif

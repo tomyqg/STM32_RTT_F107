@@ -5,6 +5,7 @@
 #include "rthw.h"
 #include "file.h"
 #include "myfile.h"
+#include "threadlist.h"
 
 /* 协议的ECU部分 */
 int ecu_msg(char *sendbuffer, int num, const char *recvbuffer)
@@ -182,7 +183,7 @@ int set_inverter_id(const char *recvbuffer, char *sendbuffer)
 			}
 		}
 		//重启主线程
-		//reboot();
+		restartThread(TYPE_MAIN);
 	}
 
 	//拼接应答消息

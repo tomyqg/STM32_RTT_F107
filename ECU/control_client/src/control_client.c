@@ -1059,6 +1059,8 @@ void control_client_thread_entry(void* parameter)
 	//添加功能函数
   add_functions();
 
+	
+	rt_thread_delay(RT_TICK_PER_SECOND * 30);
 	//获取ECU的通讯开关flag
 	if(file_get_one(buffer, sizeof(buffer), "/yuneng/ecu_flag.con")){
 		ecu_flag = atoi(buffer);

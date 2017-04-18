@@ -245,11 +245,11 @@ void bind_inverters()
 	}
 
 	if(num>0)
-	{printf("aa\n");
+	{//printf("aa\n");
 		//清空短地址
 		zb_restore_ecu_panid_0xffff(ecu.channel);
 		for(i=0;i<5;i++)
-		{printf("bb\n");
+		{//printf("bb\n");
 			
 			curinverter = inverter;
 			num = 0;
@@ -282,7 +282,7 @@ void bind_inverters()
 							break;
 						rt_thread_delay(RT_TICK_PER_SECOND*2);
 					}
-					printf("dd\n");
+					//printf("dd\n");
 //					if(-1!=zigbeeRecvMsg(recvbuff,5))
 //						getshortadd(recvbuff);
 				}
@@ -306,7 +306,7 @@ void bind_inverters()
 				{
 					send11order(curinverter->id,num);
 					if(-1!=zigbeeRecvMsg(recvbuff,5))
-						getshortadd(recvbuff);printf("ee\n");
+						getshortadd(recvbuff);//printf("ee\n");
 				}
 			}
 		}

@@ -3,6 +3,7 @@
 #include <string.h>
 #include "remote_control_protocol.h"
 #include "debug.h"
+#include "threadlist.h"
 
 //[A138]开启自动上报
 int set_autoflag_report(const char *recvbuffer, char *sendbuffer)
@@ -21,7 +22,7 @@ int set_autoflag_report(const char *recvbuffer, char *sendbuffer)
 		fputs("1",fp);
 		fclose(fp);
 		ack_flag=SUCCESS;
-		//system("killall main.exe");
+		restartThread(TYPE_MAIN);//system("killall main.exe");
 	}
 	//保存到数据库
 

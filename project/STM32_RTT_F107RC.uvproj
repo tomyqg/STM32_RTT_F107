@@ -333,7 +333,7 @@
               <OCR_RVCT9>
                 <Type>0</Type>
                 <StartAddress>0x20000000</StartAddress>
-                <Size>0x10000</Size>
+                <Size>0x20000</Size>
               </OCR_RVCT9>
               <OCR_RVCT10>
                 <Type>0</Type>
@@ -1046,6 +1046,11 @@
               <FileType>1</FileType>
               <FilePath>..\ECU\main\src\zigbee.c</FilePath>
             </File>
+            <File>
+              <FileName>setpower.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ECU\main\src\setpower.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1215,6 +1220,11 @@
               <FileName>flash_if.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\ECU\Update\src\flash_if.c</FilePath>
+            </File>
+            <File>
+              <FileName>remoteUpdate.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ECU\Update\src\remoteUpdate.c</FilePath>
             </File>
           </Files>
         </Group>
