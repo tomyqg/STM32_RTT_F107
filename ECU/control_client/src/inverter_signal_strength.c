@@ -4,11 +4,13 @@
 #include "remote_control_protocol.h"
 #include "debug.h"
 #include "myfile.h"
+#include "rtthread.h"
 
 /*********************************************************************
 signstre表格字段：
 id ,signal_strength,set_flag
 **********************************************************************/
+extern rt_mutex_t record_data_lock;
 
 int read_signal_strength_num(const char *msg, int num)
 {
@@ -41,7 +43,7 @@ int read_inverter_signal_strength(const char *recvbuffer, char *sendbuffer)
 	int ack_flag = SUCCESS;
 	int type, num;
 	char timestamp[15] = {'\0'};
-
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	//获取设置类型标志位: 0读取所有逆变器，1读取指定逆变器
 	type = msg_get_int(&recvbuffer[30], 1);
 
@@ -76,5 +78,6 @@ int read_inverter_signal_strength(const char *recvbuffer, char *sendbuffer)
 
 	//拼接应答消息
 	msg_ACK(sendbuffer, "A128", timestamp, ack_flag);
+	rt_mutex_release(record_data_lock);
 	return 0;
 }

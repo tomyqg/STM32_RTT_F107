@@ -3,11 +3,13 @@
 #include <remote_control_protocol.h>
 #include "debug.h"
 #include "myfile.h"
-
+#include "rtthread.h"
 /*********************************************************************
 clrgfdi表格字段：
 id, set_flag
 **********************************************************************/
+extern rt_mutex_t record_data_lock;
+
 
 /* 清除所有逆变器的GFDI */
 int clear_all()
@@ -67,7 +69,8 @@ int clear_inverter_gfdi(const char *recvbuffer, char *sendbuffer)
 	int ack_flag = SUCCESS;
 	int type, num;
 	char timestamp[15] = {'\0'};
-
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	
 	//获取设置类型标志位: 0全部清除, 1指定逆变器清除
 	type = msg_get_int(&recvbuffer[30], 1);
 	//获取逆变器数量
@@ -99,5 +102,6 @@ int clear_inverter_gfdi(const char *recvbuffer, char *sendbuffer)
 
 	//拼接应答消息
 	msg_ACK(sendbuffer, "A112", timestamp, ack_flag);
+	rt_mutex_release(record_data_lock);
 	return 0;
 }

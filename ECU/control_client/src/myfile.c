@@ -5,9 +5,8 @@
 #include "datetime.h"
 #include <dfs_posix.h> 
 #include "debug.h"
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+
 void delete_newline(char *s)
 {
 	if(10 == s[strlen(s)-1])
@@ -134,6 +133,7 @@ int delete_line(char* filename,char* temfilename,char* compareData,int len)
 	{
 		if(memcmp(data,compareData,len))
 		{
+			printf("%s\n",data);
 			fputs(data,ftp);//不是则将这一行写入临时文件
 		}
 	}
@@ -258,6 +258,29 @@ int read_line(char* filename,char *linedata,char* compareData,int len)
   while(fgets(linedata,100,fin))//从原文件读取一行
 	{
 		if(!memcmp(linedata,compareData,len))
+		{
+			//存在相同行，关闭文件   然后返回1  表示存在该行
+			fclose(fin);
+			return 1;
+		}
+	}
+  fclose(fin);
+  return -1;
+}
+
+int read_line_end(char* filename,char *linedata,char* compareData,int len)
+{
+		FILE *fin;
+  fin=fopen(filename,"r");
+	if(fin == NULL)
+	{
+		printf("Open the file %s failure1...\n",filename);
+    return -1;
+	}
+	
+  while(fgets(linedata,100,fin))//从原文件读取一行
+	{
+		if(!memcmp(&linedata[strlen(linedata)-len-1],compareData,len))
 		{
 			//存在相同行，关闭文件   然后返回1  表示存在该行
 			fclose(fin);

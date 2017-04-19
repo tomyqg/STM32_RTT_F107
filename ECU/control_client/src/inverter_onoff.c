@@ -3,6 +3,10 @@
 #include <remote_control_protocol.h>
 #include "debug.h"
 #include "myfile.h"
+#include "rtthread.h"
+
+extern rt_mutex_t record_data_lock;
+
 
 /*********************************************************************
 turnonof表格字段：
@@ -18,11 +22,11 @@ int turn_onoff_all(int type)
 
 	//查询所有逆变器ID号
 	num = get_num_from_id(inverter_ids);
-
+	printf("%d\n",num);
 	for(i=1; i<=num; i++)
 	{
 	//如果存在该逆变器数据则删除该记录
-		delete_line("/home/data/turnonof","/home/data/turnonof.t",inverter_ids[i-1],12);
+		delete_line("/home/data/turnonof","/home/data/_turnof",inverter_ids[i-1],12);
 		sprintf(str,"%s,%d\n",inverter_ids[i-1],type);
 		//插入数据
 		if(1 == insert_line("/home/data/turnonof",str))
@@ -48,7 +52,7 @@ int turn_onoff_num( const char *msg, int num)
 		onoff = msg_get_int(&msg[i*16 + 12], 1) + 1;
 		
 		//如果存在该逆变器数据则删除该记录
-		delete_line("/home/data/turnonof","/home/data/turnonof.t",inverter_id,12);
+		delete_line("/home/data/turnonof","/home/data/_turnof",inverter_id,12);
 		sprintf(str,"%s,%d\n",inverter_id,onoff);
 		//插入一条开关机指令
 		if(-1 == insert_line("/home/data/turnonof",str))
@@ -66,6 +70,7 @@ int set_inverter_onoff(const char *recvbuffer, char *sendbuffer)
 	int ack_flag = SUCCESS;
 	int type, num;
 	char timestamp[15] = {'\0'};
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 
 	//获取设置类型标志位: 0全开; 1全关; 2指定逆变器开关
 	type = msg_get_int(&recvbuffer[30], 1);
@@ -96,7 +101,7 @@ int set_inverter_onoff(const char *recvbuffer, char *sendbuffer)
 			ack_flag = FORMAT_ERROR;
 			break;
 	}
-
+	rt_mutex_release(record_data_lock);
 	//拼接应答消息
 	msg_ACK(sendbuffer, "A111", timestamp, ack_flag);
 	return 0;

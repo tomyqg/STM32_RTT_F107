@@ -5,9 +5,11 @@
 #include "debug.h"
 #include "myfile.h"
 #include "threadlist.h"
-
+#include "rtthread.h"
 
 #define NUM 6
+
+extern rt_mutex_t record_data_lock;
 
 typedef struct comm_config
 {
@@ -111,6 +113,7 @@ int response_comm_config(const char *recvbuffer, char *sendbuffer)
 	MyArray array[NUM] = {'\0'}; //通信配置参数结构体数组
 	Comm_Cfg cfg1 = {'\0'};
 	Comm_Cfg cfg2 = {'\0'};
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 
 	//ecu_id
 	file_get_one(ecuid, sizeof(ecuid), "/yuneng/ecuid.con");
@@ -165,6 +168,7 @@ int response_comm_config(const char *recvbuffer, char *sendbuffer)
 		strcat(sendbuffer, cfg2.socket_addr);
 		strcat(sendbuffer, "END");
 	}
+	rt_mutex_release(record_data_lock);
 	return 0;
 }
 
@@ -179,6 +183,7 @@ int set_comm_config(const char *recvbuffer, char *sendbuffer)
 	char buffer[256] = {'\0'};
 	Comm_Cfg cfg1 = {'\0'};
 	Comm_Cfg cfg2 = {'\0'};
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 
 	MyArray array[NUM] = {
 		{"Timeout", ""},
@@ -222,7 +227,7 @@ int set_comm_config(const char *recvbuffer, char *sendbuffer)
 	}
 	//拼接应答消息
 	msg_ACK(sendbuffer, "A107", timestamp, ack_flag);
-
+	rt_mutex_release(record_data_lock);
 	return 106;
 
 }

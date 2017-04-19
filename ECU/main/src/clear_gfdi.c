@@ -12,6 +12,8 @@
 clrgfdi±í¸ñ×Ö¶Î:
 id, set_flag
 */
+extern rt_mutex_t record_data_lock;
+
 int get_clear_gfdi_flag(char *id)
 {
 	int flag1=0;
@@ -48,6 +50,7 @@ int clear_gfdi(inverter_info *firstinverter)
 	int i, j;
 	char id[256] = {'\0'};
 	inverter_info *curinverter = firstinverter;
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 
 	for(j=0; j<3; j++)
 	{
@@ -56,7 +59,7 @@ int clear_gfdi(inverter_info *firstinverter)
 		if(!get_clear_gfdi_flag(id))
 			break;
 
-		clear_clear_gfdi_flag(curinverter->id);
+		clear_clear_gfdi_flag(id);
 		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++)
 		{
 			if(!strcmp(id, curinverter->id))
@@ -70,6 +73,7 @@ int clear_gfdi(inverter_info *firstinverter)
 			curinverter++;
 		}
 	}
+	rt_mutex_release(record_data_lock);
 
 	return 0;
 }

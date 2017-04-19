@@ -3,11 +3,13 @@
 #include "remote_control_protocol.h"
 #include "debug.h"
 #include "myfile.h"
+#include "rtthread.h"
 
 /*********************************************************************
 restinv表格字段：
 id,restore_result,restore_time,restore_flag
 **********************************************************************/
+extern rt_mutex_t record_data_lock;
 
 /* 设置指定台数逆变器的还原标志 */
 int set_restore_num(const char *msg, int num)
@@ -43,7 +45,8 @@ int set_inverter_restore(const char *recvbuffer, char *sendbuffer)
 	int ack_flag = SUCCESS;
 	int type, num;
 	char timestamp[15] = {'\0'};
-
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	
 	//获取设置类型标志位: 0还原所有逆变器（注：目前没有还原所有这个功能），1还原指定逆变器
 	type = msg_get_int(&recvbuffer[30], 1);
 	//获取逆变器数量
@@ -74,5 +77,6 @@ int set_inverter_restore(const char *recvbuffer, char *sendbuffer)
 	}
 	//拼接应答消息
 	msg_ACK(sendbuffer, "A134", timestamp, ack_flag);
+	rt_mutex_release(record_data_lock);
 	return 0;
 }

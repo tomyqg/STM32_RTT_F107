@@ -16,6 +16,10 @@ id,parameter_name, parameter_value,set_flag         primary key(id, parameter_na
 #include "myfile.h"
 #include "file.h"
 #include "set_protection_parameters.h"
+#include "set_protection_parameters_inverter.h"
+#include "rtthread.h"
+
+extern rt_mutex_t record_data_lock;
 
 extern inverter_info inverter[MAXINVERTERCOUNT];
 
@@ -1171,7 +1175,7 @@ int read_protection_parameters_one(inverter_info *firstinverter, char *id)
 int set_protection_parameters_inverter_one(struct inverter_info_t *firstinverter)
 {
 	char inverter_id[16];
-	
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 
 	while(1){
 		if(1 != set_protection_paras_one(inverter_id))
@@ -1179,7 +1183,7 @@ int set_protection_parameters_inverter_one(struct inverter_info_t *firstinverter
 		else
 			read_protection_parameters_one(firstinverter, inverter_id);
 	}
-
+	rt_mutex_release(record_data_lock);
 	return 0;
 }
 

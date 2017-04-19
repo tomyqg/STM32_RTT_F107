@@ -3,6 +3,9 @@
 #include "remote_control_protocol.h"
 #include "debug.h"
 #include "myfile.h"
+#include "rtthread.h"
+
+extern rt_mutex_t record_data_lock;
 
 /* 【129】ECU上报系统的电网质量 */
 int response_grid_quality(const char *recvbuffer, char *sendbuffer)
@@ -10,6 +13,7 @@ int response_grid_quality(const char *recvbuffer, char *sendbuffer)
 	char grid_quality[2] = {'\0'};
 	char ecuid[13] = {'\0'};
 	char timestamp[15] = {'\0'};
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 
 	//获取ECU_ID
 	file_get_one(ecuid, sizeof(ecuid), "/yuneng/ecuid.con");
@@ -25,5 +29,6 @@ int response_grid_quality(const char *recvbuffer, char *sendbuffer)
 	msgcat_s(sendbuffer, 14, timestamp);
 	msgcat_s(sendbuffer, 3, "END");
 
+	rt_mutex_release(record_data_lock);
 	return 0;
 }

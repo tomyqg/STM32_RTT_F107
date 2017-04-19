@@ -6,11 +6,13 @@
 #include "debug.h"
 #include "file.h"
 #include "myfile.h"
+#include "rtthread.h"
 
 /*
 ird表格字段
 id, result, set_value, set_flag
 */
+extern rt_mutex_t record_data_lock;
 extern inverter_info inverter[MAXINVERTERCOUNT];
 int send_ird_command_single(int shortaddr, char value)		//单台设置逆变器ird
 {
@@ -312,6 +314,7 @@ int set_ird_single()		//设置单台逆变器IRD
 	char id[16]={'\0'};
 	char value[16]={'\0'};
 	int shortaddr;
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	while(1){
 		shortaddr= get_ird_id_value(id, value);
 		if(-1 == shortaddr)		//从数据库中获取一台要设置电网的逆变器的ID和IRD，没有就退出
@@ -324,7 +327,7 @@ int set_ird_single()		//设置单台逆变器IRD
 			get_ird_single(shortaddr,id);			//读取逆变器的设置结果
 		}
 	}
-
+	rt_mutex_release(record_data_lock);
 	return 0;
 }
 
@@ -334,6 +337,7 @@ int set_ird_all(inverter_info *firstinverter)		//设置所有逆变器IRD
 	char buff[256]={'\0'};
 	char id[256]={'\0'};
 	char value[256]={'\0'};
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	
 	fp = fopen("/tmp/set_ird.conf", "r");
 	if(fp)
@@ -352,6 +356,7 @@ int set_ird_all(inverter_info *firstinverter)		//设置所有逆变器IRD
 			}
 		}
 	}
+	rt_mutex_release(record_data_lock);
 	return 0;
 }
 
@@ -359,6 +364,7 @@ int get_ird_from_inverters(inverter_info *firstinverter)		//设置所有逆变�
 {
 	FILE *fp;
 	char buff[256]={'\0'};
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	//set_grid_environment_all(firstinverter);	//在系统中有逆变器上传实时数据时才设置所有
 
 	fp = fopen("/tmp/get_ird.conf", "r");	//不设置只读
@@ -374,6 +380,7 @@ int get_ird_from_inverters(inverter_info *firstinverter)		//设置所有逆变�
 			get_ird_all(firstinverter);
 		}
 	}
+	rt_mutex_release(record_data_lock);
 	return 0;
 }
 

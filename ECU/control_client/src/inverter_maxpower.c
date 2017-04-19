@@ -4,6 +4,7 @@
 #include "remote_control_protocol.h"
 #include "debug.h"
 #include "myfile.h"
+#include "rtthread.h"
 
 /*********************************************************************
 power表格字段：
@@ -11,6 +12,9 @@ id,limitedpower,limitedresult,stationarypower,stationaryresult,flag
 **********************************************************************/
 
 #define MAXPOWER_RANGE "020300"
+
+extern rt_mutex_t record_data_lock ;
+
 
 /* 设置指定台数逆变器最大功率 */
 int set_maxpower_num(const char *msg, int num)
@@ -66,6 +70,7 @@ int set_inverter_maxpower(const char *recvbuffer, char *sendbuffer)
 	int ack_flag = SUCCESS;
 	int type, maxpower, num;
 	char timestamp[15] = {'\0'};
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	
 	//获取设置类型标志位: 0设置全部, 1设置指定逆变器
 	type = msg_get_int(&recvbuffer[30], 1);
@@ -102,6 +107,7 @@ int set_inverter_maxpower(const char *recvbuffer, char *sendbuffer)
 	}
 	//拼接应答消息
 	msg_ACK(sendbuffer, "A110", timestamp, ack_flag);
+	rt_mutex_release(record_data_lock);
 	return 0;
 }
 
@@ -112,6 +118,7 @@ int response_inverter_maxpower(const char *recvbuffer, char *sendbuffer)
 	int ack_flag = SUCCESS;
 
 	char timestamp[15] = {'\0'};
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 
 	//设置读取所有逆变器最大功率的指令
 	if(file_set_one("ALL", "/tmp/maxpower.con") < 0){
@@ -122,5 +129,6 @@ int response_inverter_maxpower(const char *recvbuffer, char *sendbuffer)
 
 	//拼接应答消息
 	msg_ACK(sendbuffer, "A117", timestamp, ack_flag);
+	rt_mutex_release(record_data_lock);
 	return 0;
 }

@@ -17,9 +17,6 @@
 #include <string.h>
 #define MAIN_VERSION "R-1.0.0"
 
-ALIGN(RT_ALIGN_SIZE)
-extern rt_uint8_t main_stack[ 4096 ];
-extern struct rt_thread main_thread;
 
 inverter_info inverter[MAXINVERTERCOUNT];
 ecu_info ecu;

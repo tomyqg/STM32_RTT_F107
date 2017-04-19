@@ -26,7 +26,9 @@ proparas±í¸ñ×Ö¶Î£º
 #include "myfile.h"
 #include "file.h"
 #include "set_protection_parameters.h"
+#include "rtthread.h"
 
+extern rt_mutex_t record_data_lock;
 /*yc600*/
 int set_protection_yc600(int order,int data,int num)
 {	
@@ -1468,7 +1470,7 @@ int set_protection_parameters(inverter_info *firstinverter)
 	FILE *fp;
 	char buff[16];
 	int flag;
-	
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	if(set_protection_paras(firstinverter) > 0)
 		read_protection_parameters(firstinverter);
 
@@ -1496,7 +1498,7 @@ int set_protection_parameters(inverter_info *firstinverter)
 			fclose(fp);
 		}
 	}
-
+	rt_mutex_release(record_data_lock);
 	return 0;
 }
 

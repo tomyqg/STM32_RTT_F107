@@ -18,6 +18,7 @@
 #include "turn_on_off.h"
 #include "clear_gfdi.h"
 #include "set_protection_parameters.h"
+#include "set_protection_parameters_inverter.h"
 
 extern struct rt_device serial4;		//串口4为Zigbee收发串口
 
@@ -1801,7 +1802,7 @@ int process_ipp(inverter_info *firstinverter)
 
 int process_all(inverter_info *firstinverter)
 {
-	processpower(firstinverter);			//设置功率预设值,ZK,3.10有改动
+	processpower(firstinverter);			//设置功率预设值,ZK,3.10有改动	OK
 //	process_gfdi(firstinverter);			//清GFDI标志
 //	process_protect_data(firstinverter);	//设置预设值
 	process_turn_on_off(firstinverter);		//开关机
@@ -1809,10 +1810,10 @@ int process_all(inverter_info *firstinverter)
 	process_ipp(firstinverter);				//IPP设定
 	process_ird_all(firstinverter);
 	process_ird(firstinverter);
-	turn_on_off(firstinverter);								//开关机,ZK,3.10所加
+	turn_on_off(firstinverter);								//开关机,ZK,3.10所加	OK
 	clear_gfdi(firstinverter);								//清GFDI标志,ZK,3.10所加
 	set_protection_parameters(firstinverter);				//设置预设值广播,ZK,3.10所加
-	//set_protection_parameters_inverter_one(firstinverter);  //设置预设值单点,ZK,3.10所加
+	set_protection_parameters_inverter_one(firstinverter);  //设置预设值单点,ZK,3.10所加
 	return 0;
 }
 

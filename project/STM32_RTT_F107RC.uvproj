@@ -1076,6 +1076,11 @@
               <FileType>1</FileType>
               <FilePath>..\ECU\main\src\set_protection_parameters_inverter.c</FilePath>
             </File>
+            <File>
+              <FileName>remote_update.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ECU\main\src\remote_update.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

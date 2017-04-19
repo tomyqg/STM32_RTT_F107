@@ -26,6 +26,7 @@ maxpower,fixedpower,sysmaxpower
 #include "file.h"
 #include "setpower.h"
 
+extern rt_mutex_t record_data_lock ;
 
 int getpower(inverter_info *inverter, int *limitedpower, int *stationarypower)	//读取逆变器的最大功率和固定功率
 {
@@ -125,7 +126,7 @@ int updatemaxpower(inverter_info *inverter, int limitedresult)//更新逆变器�
 	memset(linedata,0x00,100);
 	sprintf(linedata,"%s,%d,%d,%d,%d,0\n",inverter->id,limitedresult,atoi(splitdata[2]),atoi(splitdata[3]),atoi(splitdata[4]));
 	//删除id所在行
-	delete_line("/home/data/power","/home/data/power.t",inverter->id,12);
+	delete_line("/home/data/power","/home/data/_power",inverter->id,12);
 
 	//更新所在行
 	for(i=0; i<3; i++)
@@ -147,7 +148,6 @@ int updatemaxflag(inverter_info *inverter)			//更新逆变器为最大功率模
 	char linedata[100] = "\0";
 	char splitdata[6][32];
 	int i;
-	
 
 	
 	//读取所在ID行
@@ -158,7 +158,7 @@ int updatemaxflag(inverter_info *inverter)			//更新逆变器为最大功率模
 	memset(linedata,0x00,100);
 	sprintf(linedata,"%s,%d,%d,%d,%d,0\n",inverter->id,atoi(splitdata[1]),atoi(splitdata[2]),atoi(splitdata[3]),atoi(splitdata[4]));
 	//删除id所在行
-	delete_line("/home/data/power","/home/data/power.t",inverter->id,12);
+	delete_line("/home/data/power","/home/data/_power",inverter->id,12);
 	
 	for(i=0; i<3; i++)
 	{
@@ -188,7 +188,7 @@ int updatefixedpower(inverter_info *inverter, int stationaryresult)
 	memset(linedata,0x00,100);
 	sprintf(linedata,"%s,%d,%d,%d,%d,0\n",inverter->id,atoi(splitdata[1]),atoi(splitdata[2]),atoi(splitdata[3]),stationaryresult);
 	//删除id所在行
-	delete_line("/home/data/power","/home/data/power.t",inverter->id,12);
+	delete_line("/home/data/power","/home/data/_power",inverter->id,12);
 
 	for(i=0; i<3; i++)
 	{
@@ -219,7 +219,7 @@ int updatefixedflag(inverter_info *inverter)
 	memset(linedata,0x00,100);
 	sprintf(linedata,"%s,%d,%d,%d,%d,1\n",inverter->id,atoi(splitdata[1]),atoi(splitdata[2]),atoi(splitdata[3]),atoi(splitdata[4]));
 	//删除id所在行
-	delete_line("/home/data/power","/home/data/power.t",inverter->id,12);
+	delete_line("/home/data/power","/home/data/_power",inverter->id,12);
 
 
 	for(i=0; i<3; i++)
@@ -522,7 +522,7 @@ int save_max_power_result_one(inverter_info *inverter, int power)		//设置一�
 int process_max_power(inverter_info *firstinverter)
 {
 	int limitedpower,k, m, res;
-	FILE * fp;
+
 	char limitedvalue;
 	int limitedresult;
 	char readpresetdata[128] = {'\0'};
@@ -530,52 +530,46 @@ int process_max_power(inverter_info *firstinverter)
 	char splitdata[6][32];
 	int num = 0;
 	inverter_info *curinverter = firstinverter;
-
-	fp = fopen("/home/data/power", "r");
-	if(fp)
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	memset(data,0x00,200);
+	while(-1 != read_line_end("/home/data/power",data,"1",1))
 	{
-		memset(data,0x00,200);
-		
-		while(NULL != fgets(data,200,fp))
+		memset(splitdata,0x00,6*32);
+		splitString(data,splitdata);
+		if((1 == atoi(splitdata[5]))&& (0 != atoi(splitdata[1])))
 		{
-			memset(splitdata,0x00,6*32);
-			splitString(data,splitdata);
-			if((1 == atoi(splitdata[5]))&& (0 != atoi(splitdata[1])))
+			curinverter = firstinverter;
+			for(k=0; (k<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); k++, curinverter++)
 			{
-				curinverter = firstinverter;
-				for(k=0; (k<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); k++, curinverter++)
+				if(!strncmp(splitdata[0], curinverter->id, 12))
 				{
-					if(!strncmp(splitdata[0], curinverter->id, 12))
+					updatemaxflag(curinverter);
+					limitedpower = atoi(splitdata[1]);
+					limitedvalue = (limitedpower * 7395) >> 14;
+					for(m=0; m<3; m++)
 					{
-						updatemaxflag(curinverter);
-						limitedpower = atoi(splitdata[1]);
-						limitedvalue = (limitedpower * 7395) >> 14;
+						setlimitedpowerone(curinverter, limitedvalue);
+						memset(readpresetdata, '\0', sizeof(readpresetdata));
 
-						for(m=0; m<3; m++)
+						res = zb_query_protect_parameter(curinverter, readpresetdata);
+						printdecmsg("main","res", res);
+						if(1 == res)
 						{
-							setlimitedpowerone(curinverter, limitedvalue);
-							memset(readpresetdata, '\0', sizeof(readpresetdata));
-
-							res = zb_query_protect_parameter(curinverter, readpresetdata);
-							printdecmsg("main","res", res);
-							if(1 == res)
-							{
-								limitedresult = (readpresetdata[5] << 14) / 7395;
-								updatemaxpower(curinverter, limitedresult);
-								save_max_power_result_one(curinverter, limitedresult);
-								break;
-							}
+							limitedresult = (readpresetdata[5] << 14) / 7395;
+							updatemaxpower(curinverter, limitedresult);
+							save_max_power_result_one(curinverter, limitedresult);
+							break;
 						}
-						break;
 					}
+					break;
 				}
 			}
-
-			memset(data,0x00,200);
-			num++;
 		}
-		fclose(fp);
+
+		memset(data,0x00,200);
+		num++;
 	}
+	rt_mutex_release(record_data_lock);
 	return 1;
 }
 
@@ -587,7 +581,7 @@ int read_max_power(inverter_info *firstinverter)
 	int limitedresult;
 	char readpresetdata[128] = {'\0'};
 	inverter_info *curinverter = firstinverter;
-
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	memset(id, '\0', sizeof(id));
 	fp = fopen("/tmp/maxpower.con", "r");
 	if(fp)
@@ -619,7 +613,7 @@ int read_max_power(inverter_info *firstinverter)
 		fclose(fp);
 	//	save_max_power_result_all();
 	}
-
+	rt_mutex_release(record_data_lock);
 	return 0;
 }
 

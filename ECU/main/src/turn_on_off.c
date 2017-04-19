@@ -7,6 +7,7 @@
 #include "myfile.h"
 #include "file.h"
 
+extern rt_mutex_t record_data_lock;
 
 /*********************************************************************
 turnonof±í¸ñ×Ö¶Î:
@@ -39,7 +40,7 @@ int get_turn_on_off_flag(char *id, int *flag)
 
 int clear_turn_on_off_flag(char *id)
 {
-	delete_line("/home/data/turnonof","/home/data/turnonof.t",id,12);
+	delete_line("/home/data/turnonof","/home/data/_turnof",id,12);
 	return 0;
 }
 
@@ -49,7 +50,7 @@ int turn_on_off(inverter_info *firstinverter)
 	char id[256] = {'\0'};
 	inverter_info *curinverter = firstinverter;
 	int flag;
-
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	while(1){
 		curinverter = firstinverter;
 		memset(id, '\0', 256);
@@ -80,6 +81,6 @@ int turn_on_off(inverter_info *firstinverter)
 			curinverter++;
 		}
 	}
-
+	rt_mutex_release(record_data_lock);
 	return 0;
 }

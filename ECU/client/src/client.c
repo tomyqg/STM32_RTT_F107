@@ -21,10 +21,6 @@
 #include <lwip/netdb.h> 
 #include <lwip/sockets.h> 
 
-ALIGN(RT_ALIGN_SIZE)
-extern rt_uint8_t client_stack[ 8192 ];
-extern struct rt_thread client_thread;
-
 extern rt_mutex_t record_data_lock;
 
 

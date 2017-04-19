@@ -6,6 +6,9 @@
 #include "file.h"
 #include "myfile.h"
 #include "threadlist.h"
+#include "rtthread.h"
+
+extern rt_mutex_t record_data_lock;
 
 /* 协议的ECU部分 */
 int ecu_msg(char *sendbuffer, int num, const char *recvbuffer)
@@ -115,6 +118,7 @@ int response_inverter_id(const char *recvbuffer, char *sendbuffer)
 	//记录逆变器数量
 	int num = 0,i;
 	char inverter_ids[MAXINVERTERCOUNT][13];
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	/* Head */
 	strcpy(sendbuffer, "APS13AAAAAA102AAA0"); //交给协议函数
 
@@ -134,6 +138,7 @@ int response_inverter_id(const char *recvbuffer, char *sendbuffer)
 		}
 		
 	}
+	rt_mutex_release(record_data_lock);
 	return 0;
 }
 
@@ -143,6 +148,7 @@ int set_inverter_id(const char *recvbuffer, char *sendbuffer)
 	int flag, num;
 	int ack_flag = SUCCESS;
 	char timestamp[15] = {'\0'};
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	
 	//获取设置类型标志位: 0清除逆变器; 1添加逆变器; 2删除逆变器
 	sscanf(&recvbuffer[30], "%1d", &flag);
@@ -188,6 +194,6 @@ int set_inverter_id(const char *recvbuffer, char *sendbuffer)
 
 	//拼接应答消息
 	msg_ACK(sendbuffer, "A103", timestamp, ack_flag);
-
+	rt_mutex_release(record_data_lock);
 	return 102; //返回下一个执行命令的命令号
 }

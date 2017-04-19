@@ -34,10 +34,6 @@
 
 
 
-ALIGN(RT_ALIGN_SIZE)
-extern rt_uint8_t control_client_stack[ 8192 ];
-extern struct rt_thread control_client_thread;
-
 extern rt_mutex_t record_data_lock;
 char ecuid[13] = {'\0'};
 
@@ -1060,7 +1056,7 @@ void control_client_thread_entry(void* parameter)
   add_functions();
 
 	
-	rt_thread_delay(RT_TICK_PER_SECOND * 60);
+	//rt_thread_delay(RT_TICK_PER_SECOND * 30);
 	//获取ECU的通讯开关flag
 	if(file_get_one(buffer, sizeof(buffer), "/yuneng/ecu_flag.con")){
 		ecu_flag = atoi(buffer);

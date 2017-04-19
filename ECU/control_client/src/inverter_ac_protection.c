@@ -4,6 +4,8 @@
 #include "remote_control_protocol.h"
 #include "debug.h"
 #include "myfile.h"
+#include "rtthread.h"
+
 /*********************************************************************
 setpropa表格字段：
 parameter_name,parameter_value,set_flag             primary key(parameter_name)
@@ -13,6 +15,8 @@ id,parameter_name, parameter_value,set_flag         primary key(id, parameter_na
 **********************************************************************/
 
 #define NUM 17
+
+extern rt_mutex_t record_data_lock;
 
 static const char pro_name[NUM][32] = {
 		"under_voltage_fast",
@@ -171,7 +175,7 @@ int set_inverter_ac_protection_5(const char *recvbuffer, char *sendbuffer)
 {
 	int ack_flag = SUCCESS;
 	char timestamp[15] = {'\0'};
-
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	memset(pro_value, 0, sizeof(pro_value));
 	memset(pro_flag, 0, sizeof(pro_flag));
 
@@ -196,6 +200,7 @@ int set_inverter_ac_protection_5(const char *recvbuffer, char *sendbuffer)
 
 	//拼接应答消息
 	msg_ACK(sendbuffer, "A109", timestamp, ack_flag);
+	rt_mutex_release(record_data_lock);
 	return 113;
 }
 
@@ -204,7 +209,7 @@ int response_ecu_ac_protection_5(const char *recvbuffer, char *sendbuffer)
 {
 	char ecuid[13] = {'\0'};
 	char timestamp[15] = {'\0'};
-
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	//获取参数
 	file_get_one(ecuid, sizeof(ecuid), "/yuneng/ecuid.con");
 	strncpy(timestamp, &recvbuffer[34], 14);
@@ -225,7 +230,7 @@ int response_ecu_ac_protection_5(const char *recvbuffer, char *sendbuffer)
 	msgcat_parameter_range(sendbuffer);
 	msgcat_d(sendbuffer, 3, query_ecu_maxpower());
 	msgcat_s(sendbuffer, 3, "END");
-
+	rt_mutex_release(record_data_lock);
 	return 0;
 }
 
@@ -234,7 +239,7 @@ int read_inverter_ac_protection_5(const char *recvbuffer, char *sendbuffer)
 {
 	int ack_flag = SUCCESS;
 	char timestamp[15] = {'\0'};
-
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	//读取逆变器交流保护参数
 	if(file_set_one("2", "/tmp/presdata.con")){
 		ack_flag = FILE_ERROR;
@@ -245,6 +250,7 @@ int read_inverter_ac_protection_5(const char *recvbuffer, char *sendbuffer)
 
 	//拼接应答消息
 	msg_ACK(sendbuffer, "A114", timestamp, ack_flag);
+	rt_mutex_release(record_data_lock);
 	return 0;
 }
 
@@ -254,7 +260,7 @@ int set_inverter_ac_protection_13(const char *recvbuffer, char *sendbuffer)
 	int ack_flag = SUCCESS;
 	int inverter_num = 0;
 	char timestamp[15] = {'\0'};
-
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	memset(pro_value, 0, sizeof(pro_value));
 	memset(pro_flag, 0, sizeof(pro_flag));
 
@@ -295,6 +301,7 @@ int set_inverter_ac_protection_13(const char *recvbuffer, char *sendbuffer)
 			ack_flag = DB_ERROR;
 		//拼接应答消息
 		msg_ACK(sendbuffer, "A122", timestamp, ack_flag);
+		rt_mutex_release(record_data_lock);
 		return 120;
 	}
 	else
@@ -308,6 +315,7 @@ int set_inverter_ac_protection_13(const char *recvbuffer, char *sendbuffer)
 		}
 		//拼接应答消息
 		msg_ACK(sendbuffer, "A122", timestamp, ack_flag);
+		rt_mutex_release(record_data_lock);
 		return 0;
 	}
 }
@@ -317,7 +325,7 @@ int response_ecu_ac_protection_13(const char *recvbuffer, char *sendbuffer)
 {
 	char ecuid[13] = {'\0'};
 	char timestamp[15] = {'\0'};
-
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	//获取参数
 	file_get_one(ecuid, sizeof(ecuid), "/yuneng/ecuid.con");
 	strncpy(timestamp, &recvbuffer[34], 14);
@@ -346,7 +354,7 @@ int response_ecu_ac_protection_13(const char *recvbuffer, char *sendbuffer)
 	msgcat_d(sendbuffer, 2, format_ecu_ac_protection("frequency_triptime_fast", 2));
 	msgcat_d(sendbuffer, 4, format_ecu_ac_protection("frequency_triptime_slow", 2));
 	msgcat_s(sendbuffer, 3, "END");
-
+	rt_mutex_release(record_data_lock);
 	return 0;
 }
 
@@ -355,7 +363,7 @@ int read_inverter_ac_protection_13(const char *recvbuffer, char *sendbuffer)
 {
 	int ack_flag = SUCCESS;
 	char timestamp[15] = {'\0'};
-
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	//读取逆变器交流保护参数
 	if(file_set_one("2", "/tmp/presdata.con")){
 		ack_flag = FILE_ERROR;
@@ -366,6 +374,7 @@ int read_inverter_ac_protection_13(const char *recvbuffer, char *sendbuffer)
 
 	//拼接应答消息
 	msg_ACK(sendbuffer, "A121", timestamp, ack_flag);
+	rt_mutex_release(record_data_lock);
 	return 0;
 }
 
@@ -374,7 +383,7 @@ int response_ecu_ac_protection_17(const char *recvbuffer, char *sendbuffer)
 {
 	char ecuid[13] = {'\0'};
 	char timestamp[15] = {'\0'};
-
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	//获取参数
 	file_get_one(ecuid, sizeof(ecuid), "/yuneng/ecuid.con");
 	strncpy(timestamp, &recvbuffer[34], 14);
@@ -407,7 +416,7 @@ int response_ecu_ac_protection_17(const char *recvbuffer, char *sendbuffer)
 	msgcat_d(sendbuffer, 6, format_ecu_ac_protection("voltage_3_clearance_time", 2));
 	msgcat_d(sendbuffer, 5, format_ecu_ac_protection("start_time", 0));
 	msgcat_s(sendbuffer, 3, "END");
-
+	rt_mutex_release(record_data_lock);
 	return 0;
 }
 
@@ -417,7 +426,7 @@ int set_inverter_ac_protection_17(const char *recvbuffer, char *sendbuffer)
 	int ack_flag = SUCCESS;
 	int inverter_num = 0;
 	char timestamp[15] = {'\0'};
-
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	memset(pro_value, 0, sizeof(pro_value));
 	memset(pro_flag, 0, sizeof(pro_flag));
 
@@ -466,6 +475,7 @@ int set_inverter_ac_protection_17(const char *recvbuffer, char *sendbuffer)
 			ack_flag = DB_ERROR;
 		//拼接应答消息
 		msg_ACK(sendbuffer, "A132", timestamp, ack_flag);
+		rt_mutex_release(record_data_lock);
 		return 130;
 	}
 	else
@@ -479,6 +489,7 @@ int set_inverter_ac_protection_17(const char *recvbuffer, char *sendbuffer)
 		}
 		//拼接应答消息
 		msg_ACK(sendbuffer, "A132", timestamp, ack_flag);
+		rt_mutex_release(record_data_lock);
 		return 0;
 	}
 }
@@ -488,7 +499,7 @@ int read_inverter_ac_protection_17(const char *recvbuffer, char *sendbuffer)
 {
 	int ack_flag = SUCCESS;
 	char timestamp[15] = {'\0'};
-
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	//读取逆变器交流保护参数
 	if(file_set_one("2", "/tmp/presdata.con")){
 		ack_flag = FILE_ERROR;
@@ -499,5 +510,6 @@ int read_inverter_ac_protection_17(const char *recvbuffer, char *sendbuffer)
 
 	//拼接应答消息
 	msg_ACK(sendbuffer, "A131", timestamp, ack_flag);
+	rt_mutex_release(record_data_lock);
 	return 0;
 }

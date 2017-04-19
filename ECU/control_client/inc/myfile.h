@@ -19,4 +19,5 @@ int insert_line(char * filename,char *str);
 int search_line(char* filename,char* compareData,int len);
 int get_protection_from_file(const char pro_name[][32],float *pro_value,int *pro_flag,int num);
 int read_line(char* filename,char *linedata,char* compareData,int len);
+int read_line_end(char* filename,char *linedata,char* compareData,int len);
 #endif	/*__MYFILE_H__*/
