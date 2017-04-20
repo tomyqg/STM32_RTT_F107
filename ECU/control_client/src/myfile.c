@@ -200,7 +200,7 @@ int search_line(char* filename,char* compareData,int len)
   fin=fopen(filename,"r");
 	if(fin == NULL)
 	{
-		printf("Open the file %s failure1...\n",filename);
+		printf("search_line %s failure1...\n",filename);
     return -1;
 	}
 	
@@ -251,7 +251,7 @@ int read_line(char* filename,char *linedata,char* compareData,int len)
   fin=fopen(filename,"r");
 	if(fin == NULL)
 	{
-		printf("Open the file %s failure1...\n",filename);
+		printf("read_line %s failure2...\n",filename);
     return -1;
 	}
 	
@@ -274,7 +274,7 @@ int read_line_end(char* filename,char *linedata,char* compareData,int len)
   fin=fopen(filename,"r");
 	if(fin == NULL)
 	{
-		printf("Open the file %s failure1...\n",filename);
+		printf("read_line_end %s failure3...\n",filename);
     return -1;
 	}
 	

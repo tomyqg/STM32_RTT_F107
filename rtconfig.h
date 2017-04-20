@@ -116,7 +116,7 @@
 #define RT_LWIP_DNS
 
 /* the number of simulatenously active TCP connections*/
-#define RT_LWIP_TCP_PCB_NUM	5
+#define RT_LWIP_TCP_PCB_NUM	10
 
 /* ip address of target*/
 #define RT_LWIP_IPADDR0	192
@@ -170,34 +170,6 @@
 // #define RT_USING_BSP_CMSIS
 
 
-/** @defgroup PHY_Setting 
-  * @{
-  */ 
-	#define LAN8720A_PHY
-	/** 	
-  * @brief  For LAN8720A  
-  */  
-	#ifdef LAN8720A_PHY
-		#define PHY_ADDRESS       0x01/* Relative to STM3210C-EVAL Board */
-		#define PHY_SR                           31         /*!< Tranceiver Status Register */
-		#define PHY_Speed_Status            ((u16)0x0004)       /*!< Configured information of Speed: 10Mbps */
-		#define PHY_Duplex_Status           ((u16)0x0010)       /*!< Configured information of Duplex: Full-duplex */
-	#endif
-	//#define DP83848_PHY
-	/** 
-	 * @brief  For DP83848  
-  */  
-	#ifdef DP83848_PHY
-		#define PHY_ADDRESS       0x1F/* Relative to STM3210C-EVAL Board */
-		#define PHY_SR                           16         /*!< Tranceiver Status Register */
-		#define PHY_Speed_Status            ((uint16_t)0x0002)    /*!< Configured information of Speed: 10Mbps */
-		#define PHY_Duplex_Status           ((uint16_t)0x0004)    /*!< Configured information of Duplex: Full-duplex */
-	#endif
-/**
-  * @}
-  */
-  
-//#define W25QXX	
-#define EEPROM
+//#define EEPROM
 
 #endif

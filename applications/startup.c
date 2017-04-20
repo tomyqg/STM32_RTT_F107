@@ -16,10 +16,6 @@
 #include <rthw.h>
 #include <rtthread.h>
 #include "board.h"
-#ifdef RT_USING_FINSH
-#include <shell.h>
-#include <finsh.h>
-#endif
 
 /**
  * @addtogroup STM32

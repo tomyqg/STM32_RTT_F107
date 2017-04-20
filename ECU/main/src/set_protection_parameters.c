@@ -1001,26 +1001,26 @@ int clear_flag(char *para_name)					//设置后清除数据库中参数的设置标志
 	int i;
 
 	//读取行
-	read_line("/home/data/setpropa",data,para_name,strlen(para_name));
-
-	//将所在行分裂
-	splitString(data,splitdata);
-	memset(data,0x00,200);
-	sprintf(data,"%s,%d,,0\n",para_name,atoi(splitdata[1]));
-
-	//删除para_name所在行
-	delete_line("/home/data/setpropa","/home/data/setpropa.t",para_name,strlen(para_name));
-	//更新所在行
-	for(i=0; i<3; i++)
+	if(1 == read_line("/home/data/setpropa",data,para_name,strlen(para_name)))
 	{
-		if(1 == insert_line("/home/data/ird",data))
+		//将所在行分裂
+		splitString(data,splitdata);
+		memset(data,0x00,200);
+		sprintf(data,"%s,%d,,0\n",para_name,atoi(splitdata[1]));
+
+		//删除para_name所在行
+		delete_line("/home/data/setpropa","/home/data/setpropa.t",para_name,strlen(para_name));
+		//更新所在行
+		for(i=0; i<3; i++)
 		{
-			break;
+			if(1 == insert_line("/home/data/ird",data))
+			{
+				break;
+			}
+			else
+				print2msg("main","Failed to clear protection set flag", para_name);
 		}
-		else
-			print2msg("main","Failed to clear protection set flag", para_name);
 	}
-	
 	return 0;
 }
 

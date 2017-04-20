@@ -89,28 +89,30 @@ int resolve_ird(char *id, char *readbuff)		//解析并保存IRD设置结果
 	mode = ((readbuff[3+1] >> 1) & 0x03);
 	
 	//读取所在ID行
-	read_line("/home/data/ird",data,id,12);
+	if(1 == read_line("/home/data/ird",data,id,12))
+	{	
+		//将所在行分裂
+		splitString(data,splitdata);
+		memset(data,0x00,200);
+		sprintf(data,"%s,%d,,0\n",id,mode);
 
-	//将所在行分裂
-	splitString(data,splitdata);
-	memset(data,0x00,200);
-	sprintf(data,"%s,%d,,0\n",id,mode);
-
-	//删除id所在行
-	delete_line("/home/data/ird","/home/data/ird.t",id,12);
-	//更新所在行
-	for(i=0; i<3; i++)
-	{
-		if(1 == insert_line("/home/data/ird",data))
+		//删除id所在行
+		delete_line("/home/data/ird","/home/data/ird.t",id,12);
+		//更新所在行
+		for(i=0; i<3; i++)
 		{
-			print2msg("main",id, "Update resolve ird successfully");
-			break;
+			if(1 == insert_line("/home/data/ird",data))
+			{
+				print2msg("main",id, "Update resolve ird successfully");
+				break;
+			}
+			else
+				print2msg("main",id, "Failed to resolve ird power");
 		}
-		else
-			print2msg("main",id, "Failed to resolve ird power");
+		sprintf(inverter_result, "%s%01dEND", id, mode);				//这里先注释掉
+		save_inverter_parameters_result2(id, 126, inverter_result);		//把结果保存到数据库，通过远程控制程序上传给EMA
 	}
-	sprintf(inverter_result, "%s%01dEND", id, mode);				//这里先注释掉
-	save_inverter_parameters_result2(id, 126, inverter_result);		//把结果保存到数据库，通过远程控制程序上传给EMA
+
 
 	return 0;
 }
@@ -124,29 +126,30 @@ int resolve_ird_DD(char *id, char *readbuff)		//解析并保存IRD设置结果
 	
 	mode = (int)readbuff[3+19];
 //读取所在ID行
-	read_line("/home/data/power",data,id,12);
-
-	//将所在行分裂
-	splitString(data,splitdata);
-	memset(data,0x00,200);
-	sprintf(data,"%s,%d,,0\n",id,mode);
-
-	//删除id所在行
-	delete_line("/home/data/ird","/home/data/ird.t",id,12);
-	//更新所在行
-	for(i=0; i<3; i++)
+	if(1 == read_line("/home/data/power",data,id,12))
 	{
-		if(1 == insert_line("/home/data/ird",data))
-		{
-			print2msg("main",id, "Update resolve ird DD successfully");
-			break;
-		}
-		else
-			print2msg("main",id, "Failed to resolve ird DD power");
-	}
+		//将所在行分裂
+		splitString(data,splitdata);
+		memset(data,0x00,200);
+		sprintf(data,"%s,%d,,0\n",id,mode);
 
-	sprintf(inverter_result, "%s%01dEND", id, mode);				//这里先注释掉
-	save_inverter_parameters_result2(id, 126, inverter_result);		//把结果保存到数据库，通过远程控制程序上传给EMA
+		//删除id所在行
+		delete_line("/home/data/ird","/home/data/ird.t",id,12);
+		//更新所在行
+		for(i=0; i<3; i++)
+		{
+			if(1 == insert_line("/home/data/ird",data))
+			{
+				print2msg("main",id, "Update resolve ird DD successfully");
+				break;
+			}
+			else
+				print2msg("main",id, "Failed to resolve ird DD power");
+		}
+
+		sprintf(inverter_result, "%s%01dEND", id, mode);				//这里先注释掉
+		save_inverter_parameters_result2(id, 126, inverter_result);		//把结果保存到数据库，通过远程控制程序上传给EMA
+	}
 
 	return 0;
 }
@@ -256,27 +259,28 @@ int clear_ird_flag_single(char *id)					//设置后清除数据库中参数的�
 	int i;
 
 	//读取所在ID行
-	read_line("/home/data/power",data,id,12);
-
-	//将所在行分裂
-	splitString(data,splitdata);
-	memset(data,0x00,200);
-	sprintf(data,"%s,%d,,0\n",id,atoi(splitdata[1]));
-
-	//删除id所在行
-	delete_line("/home/data/ird","/home/data/ird.t",id,12);
-	//更新所在行
-	for(i=0; i<3; i++)
+	if(1 == read_line("/home/data/power",data,id,12))
 	{
-		if(1 == insert_line("/home/data/ird",data))
+		//将所在行分裂
+		splitString(data,splitdata);
+		memset(data,0x00,200);
+		sprintf(data,"%s,%d,,0\n",id,atoi(splitdata[1]));
+
+		//删除id所在行
+		delete_line("/home/data/ird","/home/data/ird.t",id,12);
+		//更新所在行
+		for(i=0; i<3; i++)
 		{
-			print2msg("main",id, "Update clear_ird_flag_single successfully");
-			break;
+			if(1 == insert_line("/home/data/ird",data))
+			{
+				print2msg("main",id, "Update clear_ird_flag_single successfully");
+				break;
+			}
+			else
+				print2msg("main",id, "Failed to clear_ird_flag_single power");
 		}
-		else
-			print2msg("main",id, "Failed to clear_ird_flag_single power");
 	}
-	
+
 	return 0;
 }
 

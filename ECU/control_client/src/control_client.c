@@ -1051,12 +1051,11 @@ void control_client_thread_entry(void* parameter)
 	char buffer[16] = {'\0'};
 	MyArray array[ARRAYNUM] = {'\0'};
 	FILE *fp;
-	//rt_thread_delay(RT_TICK_PER_SECOND*40);
+	rt_thread_delay(RT_TICK_PER_SECOND*60);
 	//添加功能函数
   add_functions();
 
 	
-	//rt_thread_delay(RT_TICK_PER_SECOND * 30);
 	//获取ECU的通讯开关flag
 	if(file_get_one(buffer, sizeof(buffer), "/yuneng/ecu_flag.con")){
 		ecu_flag = atoi(buffer);

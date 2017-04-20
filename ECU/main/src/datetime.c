@@ -10,6 +10,7 @@ int get_time(char *sendcommanddatetime, char *sendcommandtime)		//·¢¸øEMA¼ÇÂ¼Ê±»
 	unsigned hour, minute;
 	apstime(datetime);
 	rt_memcpy(sendcommanddatetime,datetime,14);
+	sendcommanddatetime[14] = '\0';
 	hour = ((datetime[8] - 0x30) * 10) + (datetime[9] - 0x30);
 	minute = ((datetime[10] - 0x30) * 10) + (datetime[11] - 0x30);
     
@@ -46,6 +47,7 @@ int acquire_time()
 	return (hour*60*60+minute*60+second);
 }
 
+// >=
 int compareTime(int durabletime ,int thistime,int reportinterval)
 {
 	if((durabletime < reportinterval) && (thistime > reportinterval))
@@ -58,6 +60,27 @@ int compareTime(int durabletime ,int thistime,int reportinterval)
 	}else
 	{
 		if((durabletime-thistime) >= reportinterval)
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
+//<
+// >=
+int compareTimeLess(int durabletime ,int thistime,int reportinterval)
+{
+	if((durabletime < reportinterval) && (thistime > reportinterval))
+	{
+		if((durabletime+(24*60*60+1)-thistime) <= reportinterval)
+		{
+			return 1;
+		}
+		
+	}else
+	{
+		if((durabletime-thistime) < reportinterval)
 		{
 			return 1;
 		}

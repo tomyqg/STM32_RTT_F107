@@ -11,6 +11,12 @@
 #include <dfs_posix.h> 
 #include "debug.h"
 #include "rthw.h"
+#include "datetime.h"
+
+/*********************************************************************
+upinv表格字段:
+id,update_result,update_time,update_flag
+**********************************************************************/
 
 int Sendupdatepackage_start(inverter_info *inverter)	//发送单点开始数据包
 {
@@ -175,15 +181,18 @@ int Complementupdatepackage_single(inverter_info *inverter)	//检查漏掉的数据包并
 				if(i>=10)
 				{
 					printmsg("main","Complementupdatepackage single 10 times failed");
+					close(fd);
 					return -1;		//补单包3次没响应的情况
 				}
 				printdecmsg("main","Complement_package",(data[6]*256+data[7]));
 				rt_hw_us_delay(30000);
 				check = 0x00;
 			}
-		return 1;	//成功补包
+
 		}
 		close(fd);
+		return 1;	//成功补包
+		
 	}
 	else if((12 == ret) && (0x45 == data[3]) && (0xFB == data[0]) && (0xFB == data[1]) && (0xFE == data[10]) && (0xFE == data[11]))//补包如果超过512包就直接还原
 	{
@@ -202,7 +211,7 @@ int Update_start(inverter_info *inverter)		//发送更新指令
 {
 	int ret;
 	int i=0;
-	unsigned char data[256]={};
+	unsigned char data[256];
 	unsigned char sendbuff[74]={0x00};
 
 	sendbuff[0]=0xfc;
@@ -225,6 +234,7 @@ int Update_start(inverter_info *inverter)		//发送更新指令
 
 	if(i>=3)								//如果发送3遍指令仍然没有返回正确指令，则返回0
 		return 0;
+	return 0;
 
 }
 
@@ -232,7 +242,7 @@ int Update_success_end(inverter_info *inverter)		//更新成功结束指令
 {
 	int ret;
 	int i=0;
-	unsigned char data[256]={};
+	unsigned char data[256];
 	unsigned char sendbuff[74]={0x00};
 
 	sendbuff[0]=0xfc;
@@ -265,7 +275,7 @@ int Restore(inverter_info *inverter)		//发送还原指令
 {
 	int ret;
 	int i=0;
-	unsigned char data[256]={};
+	unsigned char data[256];
 	unsigned char sendbuff[74]={0x00};
 
 	sendbuff[0]=0xfc;
@@ -288,6 +298,7 @@ int Restore(inverter_info *inverter)		//发送还原指令
 
 	if(i>=3)								//如果发送3遍指令仍然没有返回正确指令，则返回0
 		return 0;
+	return 0;
 }
 
 /* 升级单台逆变器
@@ -304,7 +315,6 @@ int Restore(inverter_info *inverter)		//发送还原指令
 int remote_update_single(inverter_info *inverter)
 {
 	int ret_sendsingle,ret_complement,ret_update_start=0;
-	char flag;
 	int i;
 
 	Update_success_end(inverter);
@@ -371,6 +381,7 @@ int remote_update_single(inverter_info *inverter)
 	else{
 		return 1; //发送开始升级数据包失败
 	}
+	return 1;
 }
 
 int remote_update_result(char *id, int version, int update_result)
@@ -397,66 +408,71 @@ int remote_update_result(char *id, int version, int update_result)
  */
 int remote_update(inverter_info *firstinverter)
 {
-	sqlite3 *db=NULL;
-	char *zErrMsg = 0;
-	int i=0, nrow = 0, ncolumn = 0, j=0;
-	char **azResult;
-	char sql[1024]={'\0'};
+	int i=0, j=0;
 	int update_result = 0;
-
+	char data[200];
+	char splitdata[4][32];
 	inverter_info *curinverter = firstinverter;
-
-	sqlite3_open("/home/database.db", &db);
 
 
 	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++,curinverter++)
 	{
-		sprintf(sql, "SELECT id FROM update_inverter WHERE id='%s' AND update_flag=1", curinverter->id);
-		sqlite3_get_table( db , sql , &azResult , &nrow , &ncolumn , &zErrMsg );
-		//print2msg("zErrMsg=",zErrMsg);
-
-		if(1==nrow)
+		//读取所在ID行
+		if(1 == read_line("/home/data/upinv",data,curinverter->id,12))
 		{
-			printmsg(curinverter->id);
-			if(curinverter->updating==0)
+			splitString(data,splitdata);
+			memset(data,0x00,200);
+			
+			if(1 == atoi(splitdata[3]))
 			{
-				if(1 == zb_shutdown_single(curinverter))
+				printmsg("main",curinverter->id);
+				if(curinverter->updating==0)
 				{
-					curinverter->updating=1;
-					curinverter->updating_time=time(NULL);
-				}
-				continue;
-			}
-			else
-			{
-				if((time(NULL)-curinverter->updating_time)<1800)
+					if(1 == zb_shutdown_single(curinverter))
+					{
+						curinverter->updating=1;
+						curinverter->updating_time=acquire_time();
+					}
 					continue;
-				else curinverter->updating=0;
-			}
-			update_result = remote_update_single(curinverter);
-			sprintf(sql,"UPDATE update_inverter SET update_flag=0 WHERE id='%s' ",curinverter->id);
-			for(j=0;j<3;j++)
-			{
-				if(SQLITE_OK == sqlite3_exec( db , sql , 0 , 0 , &zErrMsg ))
-					break;
-				sleep(1);
-			}
-			for(j=0;j<3;j++)
-			{
-				if(1 == zb_query_inverter_info(curinverter)) //读取逆变器版本号
-				{
-					update_inverter_model_version(curinverter);
-					break;
 				}
+				else
+				{	
+					if(compareTime(acquire_time() ,curinverter->updating_time,1800))
+						continue;
+					else curinverter->updating=0;
+				}
+				update_result = remote_update_single(curinverter);
+				//删除ID所在行
+				delete_line("/home/data/upinv","/home/data/upinv.t",curinverter->id,12);
+				sprintf(data,"%s,%s,%s,0\n",curinverter->id,splitdata[1],splitdata[2]);
+				for(j=0;j<3;j++)
+				{		
+					if(1 == insert_line("/home/data/upinv",data))
+						break;
+					rt_thread_delay(RT_TICK_PER_SECOND);
+				}
+				for(j=0;j<3;j++)
+				{
+					if(1 == zb_query_inverter_info(curinverter)) //读取逆变器版本号
+					{
+						updateID();
+						//删除ID所在行
+						delete_line("/home/data/upinv","/home/data/upinv.t",curinverter->id,12);
+						sprintf(data,"%s,%d,%s,0\n",curinverter->id,curinverter->version,splitdata[2]);
+						for(j=0;j<3;j++)
+						{		
+							if(1 == insert_line("/home/data/upinv",data))
+								break;
+							rt_thread_delay(RT_TICK_PER_SECOND);
+						}
+						break;
+					}
+				}
+				if(j>=3)update_result += 10;
+				remote_update_result(curinverter->id, curinverter->version, update_result);
 			}
-			if(j>=3)update_result += 10;
-			remote_update_result(curinverter->id, curinverter->version, update_result);
 		}
-		sqlite3_free_table( azResult );
-
-	}
-
-	sqlite3_close( db );
-
+	}	
+	return 0;
 }
 

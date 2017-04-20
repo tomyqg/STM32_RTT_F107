@@ -59,8 +59,4 @@ typedef rt_mutex_t sys_mutex_t;
 typedef rt_mailbox_t  sys_mbox_t;
 typedef rt_thread_t sys_thread_t;
 
-void dhcp_reset(void);
-
-
-
 #endif /* __ARCH_SYS_ARCH_H__ */

@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "remote_update.h"
 #define MAIN_VERSION "R-1.0.0"
 
 
@@ -236,7 +237,7 @@ void main_thread_entry(void* parameter)
 			
 			reset_inverter(inverter);											//重置每个逆变器
 			
-			//remote_update(inverter);
+			remote_update(inverter);
 			
 			if((cur_time_hour>9)&&(1 == ecu.flag_ten_clock_getshortaddr))
 			{
@@ -249,9 +250,9 @@ void main_thread_entry(void* parameter)
 
 			//对于轮训没有数据的逆变器进行重新获取短地址操作
 			bind_nodata_inverter(inverter);
-			
+			process_all(inverter);
 		}
-		process_all(inverter);
+		
 		rt_thread_delay(RT_TICK_PER_SECOND);
 
 		durabletime = acquire_time();				//如果轮训一边的时间不到5分钟,那么一直等到5分钟再轮训下一遍,超过5分钟则等待10分钟。。。5分钟起跳

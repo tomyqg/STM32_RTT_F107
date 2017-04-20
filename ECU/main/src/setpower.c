@@ -82,13 +82,16 @@ int get_fixed_power(inverter_info *inverter)
 	char splitdata[6][32];
 	int power;
 	//读取所在ID行
-	read_line("/home/data/power",linedata,inverter->id,12);
+	if(1 == read_line("/home/data/power",linedata,inverter->id,12))
+	{
+		//将所在行分裂
+		splitString(linedata,splitdata);
+		power = atoi(splitdata[3]);
 
-	//将所在行分裂
-	splitString(linedata,splitdata);
-	power = atoi(splitdata[3]);
+		printdecmsg("main","Fixed power", power);
+	}
 
-	printdecmsg("main","Fixed power", power);
+
 
 	return power;
 }
@@ -119,26 +122,29 @@ int updatemaxpower(inverter_info *inverter, int limitedresult)//更新逆变器�
 	int i;
 	
 	//读取所在ID行
-	read_line("/home/data/power",linedata,inverter->id,12);
-	
-	//将所在行分裂
-	splitString(linedata,splitdata);
-	memset(linedata,0x00,100);
-	sprintf(linedata,"%s,%d,%d,%d,%d,0\n",inverter->id,limitedresult,atoi(splitdata[2]),atoi(splitdata[3]),atoi(splitdata[4]));
-	//删除id所在行
-	delete_line("/home/data/power","/home/data/_power",inverter->id,12);
-
-	//更新所在行
-	for(i=0; i<3; i++)
+	if(1 == read_line("/home/data/power",linedata,inverter->id,12))
 	{
-		if(1 == insert_line("/home/data/power",linedata))
+		//将所在行分裂
+		splitString(linedata,splitdata);
+		memset(linedata,0x00,100);
+		sprintf(linedata,"%s,%d,%d,%d,%d,0\n",inverter->id,limitedresult,atoi(splitdata[2]),atoi(splitdata[3]),atoi(splitdata[4]));
+		//删除id所在行
+		delete_line("/home/data/power","/home/data/_power",inverter->id,12);
+
+		//更新所在行
+		for(i=0; i<3; i++)
 		{
-			print2msg("main",inverter->id, "Update maximun power successfully");
-			break;
+			if(1 == insert_line("/home/data/power",linedata))
+			{
+				print2msg("main",inverter->id, "Update maximun power successfully");
+				break;
+			}
+			else
+				print2msg("main",inverter->id, "Failed to update maximun power");
 		}
-		else
-			print2msg("main",inverter->id, "Failed to update maximun power");
 	}
+	
+
 
 	return 0;
 }
@@ -151,26 +157,28 @@ int updatemaxflag(inverter_info *inverter)			//更新逆变器为最大功率模
 
 	
 	//读取所在ID行
-	read_line("/home/data/power",linedata,inverter->id,12);
-	
-	//将所在行分裂
-	splitString(linedata,splitdata);
-	memset(linedata,0x00,100);
-	sprintf(linedata,"%s,%d,%d,%d,%d,0\n",inverter->id,atoi(splitdata[1]),atoi(splitdata[2]),atoi(splitdata[3]),atoi(splitdata[4]));
-	//删除id所在行
-	delete_line("/home/data/power","/home/data/_power",inverter->id,12);
-	
-	for(i=0; i<3; i++)
+	if(1 == read_line("/home/data/power",linedata,inverter->id,12))
 	{
-		if(1 == insert_line("/home/data/power",linedata))
+		//将所在行分裂
+		splitString(linedata,splitdata);
+		memset(linedata,0x00,100);
+		sprintf(linedata,"%s,%d,%d,%d,%d,0\n",inverter->id,atoi(splitdata[1]),atoi(splitdata[2]),atoi(splitdata[3]),atoi(splitdata[4]));
+		//删除id所在行
+		delete_line("/home/data/power","/home/data/_power",inverter->id,12);
+		
+		for(i=0; i<3; i++)
 		{
-			print2msg("main",inverter->id, "Update maximun power flag successfully");
-				break;
+			if(1 == insert_line("/home/data/power",linedata))
+			{
+				print2msg("main",inverter->id, "Update maximun power flag successfully");
+					break;
+			}
+			else
+				print2msg("main",inverter->id, "Failed to update maximun flag power");
 		}
-		else
-			print2msg("main",inverter->id, "Failed to update maximun flag power");
+		print2msg("main",inverter->id, "has been changed to Maximun power Mode");
 	}
-	print2msg("main",inverter->id, "has been changed to Maximun power Mode");
+	
 	return 0;
 }
 
@@ -181,27 +189,29 @@ int updatefixedpower(inverter_info *inverter, int stationaryresult)
 	int i;
 	
 	//读取所在ID行
-	read_line("/home/data/power",linedata,inverter->id,12);
-	
-	//将所在行分裂
-	splitString(linedata,splitdata);
-	memset(linedata,0x00,100);
-	sprintf(linedata,"%s,%d,%d,%d,%d,0\n",inverter->id,atoi(splitdata[1]),atoi(splitdata[2]),atoi(splitdata[3]),stationaryresult);
-	//删除id所在行
-	delete_line("/home/data/power","/home/data/_power",inverter->id,12);
-
-	for(i=0; i<3; i++)
+	if(1 == read_line("/home/data/power",linedata,inverter->id,12))
 	{
-		if(1 == insert_line("/home/data/power",linedata))
-		{
-			print2msg("main",inverter->id, "Update fixed power flag successfully");
-				break;
-		}
-		else
-			print2msg("main",inverter->id, "Failed to update fixed flag power");
-	}
+		//将所在行分裂
+		splitString(linedata,splitdata);
+		memset(linedata,0x00,100);
+		sprintf(linedata,"%s,%d,%d,%d,%d,0\n",inverter->id,atoi(splitdata[1]),atoi(splitdata[2]),atoi(splitdata[3]),stationaryresult);
+		//删除id所在行
+		delete_line("/home/data/power","/home/data/_power",inverter->id,12);
 
-	printdecmsg("main","Fixed power from inverter", stationaryresult);
+		for(i=0; i<3; i++)
+		{
+			if(1 == insert_line("/home/data/power",linedata))
+			{
+				print2msg("main",inverter->id, "Update fixed power flag successfully");
+					break;
+			}
+			else
+				print2msg("main",inverter->id, "Failed to update fixed flag power");
+		}
+
+		printdecmsg("main","Fixed power from inverter", stationaryresult);
+	}
+	
 	return 0;
 }
 
@@ -212,28 +222,30 @@ int updatefixedflag(inverter_info *inverter)
 	int i;
 	
 	//读取所在ID行
-	read_line("/home/data/power",linedata,inverter->id,12);
-	
-	//将所在行分裂
-	splitString(linedata,splitdata);
-	memset(linedata,0x00,100);
-	sprintf(linedata,"%s,%d,%d,%d,%d,1\n",inverter->id,atoi(splitdata[1]),atoi(splitdata[2]),atoi(splitdata[3]),atoi(splitdata[4]));
-	//删除id所在行
-	delete_line("/home/data/power","/home/data/_power",inverter->id,12);
+	if (1 == read_line("/home/data/power",linedata,inverter->id,12))
+	{	
+		//将所在行分裂
+		splitString(linedata,splitdata);
+		memset(linedata,0x00,100);
+		sprintf(linedata,"%s,%d,%d,%d,%d,1\n",inverter->id,atoi(splitdata[1]),atoi(splitdata[2]),atoi(splitdata[3]),atoi(splitdata[4]));
+		//删除id所在行
+		delete_line("/home/data/power","/home/data/_power",inverter->id,12);
 
 
-	for(i=0; i<3; i++)
-	{
-		if(1 == insert_line("/home/data/power",linedata))
+		for(i=0; i<3; i++)
 		{
-			print2msg("main",inverter->id, "Update fixed power flag successfully");
-				break;
+			if(1 == insert_line("/home/data/power",linedata))
+			{
+				print2msg("main",inverter->id, "Update fixed power flag successfully");
+					break;
+			}
+			else
+				print2msg("main",inverter->id, "Failed to update fixed flag power");
 		}
-		else
-			print2msg("main",inverter->id, "Failed to update fixed flag power");
-	}
 
-	print2msg("main",inverter->id, "has been changed to fixed power Mode!\n");
+		print2msg("main",inverter->id, "has been changed to fixed power Mode!\n");
+	}
+	
 	return 0;
 }
 

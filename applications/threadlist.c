@@ -7,10 +7,8 @@
 #include "client.h"
 #include "control_client.h"
 #include "remoteUpdate.h"
-#include "ntpapp.h"
 #include <board.h>
 #include <rtthread.h>
-#include "arch/sys_arch.h"
 
 
 #ifdef RT_USING_DFS
@@ -28,10 +26,6 @@ extern int lwip_system_init(void);
 #ifdef RT_USING_FINSH
 #include <shell.h>
 #include <finsh.h>
-#endif
-
-#ifdef W25QXX		
-#include "w25q64flash.h"
 #endif
 
 #ifdef EEPROM		
@@ -63,25 +57,12 @@ rt_uint8_t control_client_stack[ 8192 ];
 struct rt_thread control_client_thread;
 #endif
 
-#ifdef THREAD_PRIORITY_DHCPRESET
-#ifdef RT_USING_LWIP
-ALIGN(RT_ALIGN_SIZE)
-static rt_uint8_t dhcp_stack[1024];
-static struct rt_thread dhcp_thread;
-#endif
-#endif
-
 #ifdef THREAD_PRIORITY_UPDATE
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t update_stack[4096];
 static struct rt_thread update_thread;
 #endif
 
-#ifdef THREAD_PRIORITY_NTP
-ALIGN(RT_ALIGN_SIZE)
-static rt_uint8_t ntp_stack[1024];
-static struct rt_thread ntp_thread;
-#endif
 
 rt_mutex_t record_data_lock = RT_NULL;
 
@@ -91,10 +72,7 @@ void rt_init_thread_entry(void* parameter)
         extern void rt_platform_init(void);
         rt_platform_init();
     }
-#ifdef W25QXX		
-	  SPI_init();
-#endif
-		
+
 #ifdef EEPROM		
 	  EEPROM_Init();
 #endif
@@ -170,35 +148,6 @@ static void led_thread_entry(void* parameter)
     }
 }
 
-#ifdef THREAD_PRIORITY_DHCPRESET	
-#ifdef RT_USING_LWIP
-static void dhcp_reset_thread_entry(void* parameter)
-{ 
-	while(1)
-	{
-		rt_thread_delay( RT_TICK_PER_SECOND * 600);
-		if(ETH_ReadPHYRegister(PHY_ADDRESS, PHY_BSR) & PHY_Linked_Status)
-		{
-			//写重新DHCP的代码
-			//printf("network link\n");
-			//dhcp_reset();
-		}
-	}
-}
-#endif
-#endif
-#ifdef THREAD_PRIORITY_NTP
-static void ntp_thread_entry(void* parameter)
-{
-  while(1)
-  {
-    get_time_from_NTP();
-    rt_thread_delay( RT_TICK_PER_SECOND*10);		//259200
-  }  
-
-}
-#endif
-
 void tasks_new(void)//创建任务线程
 {
 	rt_err_t result;
@@ -225,26 +174,7 @@ void tasks_new(void)//创建任务线程
     rt_thread_startup(&update_thread);
   }
 #endif
-	
-#ifdef THREAD_PRIORITY_DHCPRESET	
-#ifdef RT_USING_LWIP
-  result = rt_thread_init(&dhcp_thread,"dhcp_reset",dhcp_reset_thread_entry,RT_NULL,(rt_uint8_t*)&dhcp_stack[0],sizeof(dhcp_stack),THREAD_PRIORITY_DHCPRESET,5);
-  if (result == RT_EOK)
-  {
-    rt_thread_startup(&dhcp_thread);
-  }	
-#endif
-#endif
-	
-#ifdef THREAD_PRIORITY_NTP		
-  /* init ntp thread */
-	result = rt_thread_init(&ntp_thread,"ntp",ntp_thread_entry,RT_NULL,(rt_uint8_t*)&ntp_stack[0],sizeof(ntp_stack),THREAD_PRIORITY_NTP,5);
-  if (result == RT_EOK)
-  {
-    rt_thread_startup(&ntp_thread);
-  }
-#endif
-	
+		
 #ifdef THREAD_PRIORITY_MAIN
 	/* init main thread */
 	result = rt_thread_init(&main_thread,"main",main_thread_entry,RT_NULL,(rt_uint8_t*)&main_stack[0],sizeof(main_stack),THREAD_PRIORITY_MAIN,5);
@@ -344,8 +274,6 @@ void restartThread(threadType type)
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
-FINSH_FUNCTION_EXPORT(dhcp_reset, eg:dhcp_reset());
-
 void restart(int type)
 {
 	restartThread((threadType)type);
