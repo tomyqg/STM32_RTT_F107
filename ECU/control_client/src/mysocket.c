@@ -78,7 +78,7 @@ int connect__socket(int sockfd, int port, const char *ip, const char *domain)
 	{
 		print2msg("control_client","Failed to connect to ",time);
 		printmsg("control_client","connect");
-		close(sockfd);
+		closesocket(sockfd);
 		return -1;
 	}
 	print2msg("control_client","Connecting EMA successfully", time);
@@ -132,7 +132,7 @@ int recv_socket(int sockfd, char *recvbuffer, int size, int timeout_s)
 				printmsg("control_client","select");
 			case 0:
 				printmsg("control_client","Receive date from EMA timeout");
-				close(sockfd);
+				closesocket(sockfd);
 				printmsg("control_client",">>End");
 				return -1;
 			default:

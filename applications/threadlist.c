@@ -63,6 +63,12 @@ static rt_uint8_t update_stack[4096];
 static struct rt_thread update_thread;
 #endif
 
+#ifdef THREAD_PRIORITY_LAN8720_RST
+ALIGN(RT_ALIGN_SIZE)
+static rt_uint8_t lan8720_rst_stack[200];
+static struct rt_thread lan8720_rst_thread;
+#endif 
+
 
 rt_mutex_t record_data_lock = RT_NULL;
 
@@ -93,6 +99,11 @@ void rt_init_thread_entry(void* parameter)
     else
     {
         rt_kprintf("File System initialzation failed!\n");
+				dfs_mkfs("elm","flash");
+				if (dfs_mount("flash", "/", "elm", 0, 0) == 0)
+				{
+					rt_kprintf("File System initialized!\n");
+				}
     }
 #endif /* RT_USING_DFS && RT_USING_DFS_ELMFAT */
 
@@ -127,7 +138,7 @@ void rt_init_thread_entry(void* parameter)
 	}
 }
 
-
+#ifdef THREAD_PRIORITY_LED
 static void led_thread_entry(void* parameter)
 {
     unsigned int count=0;
@@ -147,6 +158,29 @@ static void led_thread_entry(void* parameter)
         rt_thread_delay( RT_TICK_PER_SECOND/2 );
     }
 }
+#endif
+
+#ifdef THREAD_PRIORITY_LAN8720_RST
+static void lan8720_rst_thread_entry(void* parameter)
+{
+	  int i;
+    int value;
+		//配置IO为推挽输出
+	
+	  while (1)
+    {
+			value = ETH_ReadPHYRegister(0x00, 0);
+			if(0 == value)	//判断控制寄存器是否变为0  表示断开
+			{
+				//断电RST脚
+        rt_thread_delay( RT_TICK_PER_SECOND/2 ); /* sleep 0.5 second and switch to other thread */
+				//重新上电RST脚
+			}
+      rt_thread_delay( RT_TICK_PER_SECOND*5 );
+    }
+
+}
+#endif
 
 void tasks_new(void)//创建任务线程
 {

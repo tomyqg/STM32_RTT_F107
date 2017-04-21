@@ -72,7 +72,7 @@ int connecttoserver(int sockfd, struct sockaddr_in * serversocket_in)
       #ifdef MAINNTPDEBUG
         rt_kprintf("Connect error!\n");
       #endif
-      close(sockfd);
+      closesocket(sockfd);
       return -1;
     }
     else{
@@ -138,7 +138,7 @@ int receive_packet(int sockfd, NTPPACKET *recvpacked, struct sockaddr_in * serve
       #ifdef MAINNTPDEBUG
         rt_kprintf("Receive error!\n");
       #endif
-      close(sockfd);
+      closesocket(sockfd);
       return -1;
     }
 

@@ -170,7 +170,7 @@ int connect_socket(int fd_sock)				//连接到服务器
 
 void close_socket(int fd_sock)					//关闭套接字
 {
-	close(fd_sock);
+	closesocket(fd_sock);
 	printmsg("CLIENT","Close socket");
 }
 

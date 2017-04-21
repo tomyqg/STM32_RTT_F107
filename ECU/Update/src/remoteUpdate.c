@@ -8,12 +8,16 @@
 #define REMOTE_PATH "/Result/ecu1_0.bin"
 #define UPDATE_PATH "/FTP/ecu.bin"
 
+extern rt_mutex_t record_data_lock; 
+
 void remote_update_thread_entry(void* parameter)
 {
+	rt_err_t result;
 	rt_thread_delay(RT_TICK_PER_SECOND * 5);
 	while(1)
 	{
-		if(!ftpgetfile("192.168.1.118", 21, "admin", "admin",REMOTE_PATH,UPDATE_PATH))
+		 result= rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+		if(!ftpgetfile("192.168.1.107", 21, "admin", "admin",REMOTE_PATH,UPDATE_PATH))
 		{
 			//获取到文件，进行更新
 			FLASH_Unlock();
@@ -23,8 +27,10 @@ void remote_update_thread_entry(void* parameter)
 			reboot();
 		}else
 		{
+
 			unlink(UPDATE_PATH);
 		}
+		rt_mutex_release(record_data_lock);
 
 		rt_thread_delay(RT_TICK_PER_SECOND*86400);		
 	}	

@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include "ema_control.h"
 #include "file.h"
+#include "rthw.h"
 
 #include "setpower.h"
 #include "set_ird.h"
@@ -48,6 +49,7 @@ int selectZigbee(int timeout)			//zigbee´®¿ÚÊı¾İ¼ì²â ·µ»Ø0 ±íÊ¾´®¿ÚÃ»ÓĞÊı¾İ  ·µ»
 					 RT_TIMER_FLAG_ONE_SHOT); /* µ¥ÖÜÆÚ¶¨Ê±Æ÷ */
 	if (readtimer != RT_NULL) rt_timer_start(readtimer);
 	zigbeereadtimeoutflag = 0;
+
 	while(1)
 	{
 		if(zigbeereadtimeoutflag)
@@ -56,6 +58,7 @@ int selectZigbee(int timeout)			//zigbee´®¿ÚÊı¾İ¼ì²â ·µ»Ø0 ±íÊ¾´®¿ÚÃ»ÓĞÊı¾İ  ·µ»
 			return 0;
 		}else 
 		{
+			rt_hw_us_delay(1);
 			if(zigbeeReadFlag == 1)	//´®¿ÚÊı¾İ¼à²â,Èç¹ûÓĞÊı¾İÔò·µ»Ø1
 			{
 				rt_timer_delete(readtimer);
@@ -315,7 +318,7 @@ int zb_get_reply_restore(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷Ô¶³Ì¸
 
 int zb_get_reply_from_module(char *data)			//¶ÁÈ¡zigbeeÄ£¿éµÄ·µ»ØÖ¡
 {
-	int size;
+	int size = 0;
 
 	if(selectZigbee(2) <= 0)
 	{
@@ -933,8 +936,8 @@ int zb_query_data(inverter_info *inverter)		//ÇëÇóÄæ±äÆ÷ÊµÊ±Êı¾İ
 int zb_test_communication(void)		//zigbee²âÊÔÍ¨ĞÅÓĞÃ»ÓĞ¶Ï¿ª
 {
 	unsigned char sendbuff[512] = {'\0'};
-	int i=0, ret;
-	char data[256];
+	int i=0, ret = 0;
+	char data[256] =  {'\0'};
 	int check=0;
 
 	printmsg("main","test zigbee communication");

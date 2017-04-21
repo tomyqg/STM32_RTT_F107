@@ -29,7 +29,7 @@ static struct rt_device rtc;
 
 void ds1302_writebyte(unsigned char dat)
 {
-	unsigned char i;
+	unsigned char i = 0;
 	//设置为推免输出
 	GPIO_InitTypeDef GPIO_InitStructure;
 	GPIO_InitStructure.GPIO_Pin =  DS1302DAT;   
@@ -56,20 +56,21 @@ void ds1302_writebyte(unsigned char dat)
 
 unsigned char ds1302_readbyte(void)
 {
-	unsigned char i,dat;
+	unsigned char i = 0,dat = 0;
 	//设置为上拉输入
 	GPIO_InitTypeDef GPIO_InitStructure;
 	GPIO_InitStructure.GPIO_Pin =  DS1302DAT;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;    
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
-	
+
 	for(i=0;i<8;i++)
 	{
 		dat>>=1;        //要返回的数据左移一位
 		if(GPIO_ReadInputDataBit(GPIOC,DS1302DAT) == 1)     //当数据线为高时，证明该位数据为 1
 			dat|=0x80;  //要传输数据的当前值置为 1,若不是,则为 0
 		GPIO_SetBits(GPIOC,DS1302CLK);       //拉高时钟线
+
 		GPIO_ResetBits(GPIOC,DS1302CLK);       //制造下降沿
 	}
 	return dat;         //返回读取出的数据
@@ -77,14 +78,14 @@ unsigned char ds1302_readbyte(void)
 
 unsigned char ds1302_read(unsigned char cmd)
 {
-	unsigned char data;
+	unsigned char data = 0;
 
-	GPIO_ResetBits(GPIOC,DS1302RST);	
+	GPIO_ResetBits(GPIOC,DS1302RST);
 	GPIO_ResetBits(GPIOC,DS1302CLK);	
-	GPIO_SetBits(GPIOC,DS1302RST);		
+	GPIO_SetBits(GPIOC,DS1302RST);	
 	ds1302_writebyte(cmd);
 	data = ds1302_readbyte();
-	GPIO_SetBits(GPIOC,DS1302CLK);		
+	GPIO_SetBits(GPIOC,DS1302CLK);
 	GPIO_ResetBits(GPIOC,DS1302RST);	
 
 	return data;
@@ -92,13 +93,13 @@ unsigned char ds1302_read(unsigned char cmd)
 
 void ds1302_write(unsigned char cmd, unsigned char data)
 {
-	GPIO_ResetBits(GPIOC,DS1302RST);	
-	GPIO_ResetBits(GPIOC,DS1302CLK);	
+	GPIO_ResetBits(GPIOC,DS1302RST);
+	GPIO_ResetBits(GPIOC,DS1302CLK);
 	GPIO_SetBits(GPIOC,DS1302RST);		
-
+	
 	ds1302_writebyte(cmd);
 	ds1302_writebyte(data);
-	GPIO_SetBits(GPIOC,DS1302CLK);	
+	GPIO_SetBits(GPIOC,DS1302CLK);
 	GPIO_ResetBits(GPIOC,DS1302RST);	
 }
 

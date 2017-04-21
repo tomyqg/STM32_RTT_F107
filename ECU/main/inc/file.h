@@ -16,7 +16,6 @@ void update_life_energy(float lifetime_power);
 
 void updateID(void);
 
-
 int splitString(char *data,char splitdata[][32]);
 
 int get_id_from_file(inverter_info *firstinverter);

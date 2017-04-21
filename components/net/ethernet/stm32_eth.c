@@ -21,6 +21,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32_eth.h"
 #include "stm32f10x_rcc.h"
+#include "file.h"
 
 /* STM32F107 ETH dirver options */
 #define CHECKSUM_BY_HARDWARE    1      /* don't ues hardware checksum. */
@@ -3584,10 +3585,10 @@ void rt_hw_stm32_eth_init()
     stm32_eth_device.dev_addr[1] = 0x97;
     stm32_eth_device.dev_addr[2] = 0x1B;
     // generate MAC addr from 96bit unique ID (only for test)
-    stm32_eth_device.dev_addr[3] = (0x03);
+    stm32_eth_device.dev_addr[3] = (0x04);
     stm32_eth_device.dev_addr[4] = (0x72);
     stm32_eth_device.dev_addr[5] = (0x1C);
-
+		get_mac(stm32_eth_device.dev_addr);
     stm32_eth_device.parent.parent.init       = rt_stm32_eth_init;
     stm32_eth_device.parent.parent.open       = rt_stm32_eth_open;
     stm32_eth_device.parent.parent.close      = rt_stm32_eth_close;

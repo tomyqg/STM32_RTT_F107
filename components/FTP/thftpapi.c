@@ -88,7 +88,7 @@ int connect_server( char *host, int port )
 			buf[len] = 0;
 			sscanf( buf, "%d", &result );
 			if ( result != 220 ) {
-					close( ctrl_sock );
+					closesocket( ctrl_sock );
 					return -1;
 			}
 			 
@@ -173,26 +173,26 @@ int create_datasock( int ctrl_sock )
     memset( (char *)&sin, 0, sizeof(sin) );
     sin.sin_family = AF_INET;
     if( bind(lsn_sock, (struct sockaddr *)&sin, sizeof(sin)) == -1 ) {
-        close( lsn_sock );
+        closesocket( lsn_sock );
         return -1;
     }
      
     if( listen(lsn_sock, 2) == -1 ) {
-        close( lsn_sock );
+        closesocket( lsn_sock );
         return -1;
     }
      
     len = sizeof( struct sockaddr );
     if ( getsockname( lsn_sock, (struct sockaddr *)&sin, (socklen_t *)&len ) == -1 )
     {
-        close( lsn_sock );
+        closesocket( lsn_sock );
         return -1;
     }
     port = sin.sin_port;
      
     if( getsockname( ctrl_sock, (struct sockaddr *)&sin, (socklen_t *)&len ) == -1 )
     {
-        close( lsn_sock );
+        closesocket( lsn_sock );
         return -1;
     }
      
@@ -204,7 +204,7 @@ int create_datasock( int ctrl_sock )
             port>>8, port&0xff );
      
     if ( ftp_sendcmd( ctrl_sock, cmd ) != 200 ) {
-        close( lsn_sock );
+        closesocket( lsn_sock );
         return -1;
     }
     return lsn_sock;
@@ -324,7 +324,7 @@ int ftp_list( int c_sock, char *path, void **data, unsigned long long *data_len)
 //        memcpy(re_buf+total_len, buf, len);
         total_len += len;
     }
-    close( d_sock );
+    closesocket( d_sock );
      
     //向服务器接收返回值
     memset(buf,0x00, sizeof(buf));
@@ -346,11 +346,11 @@ int ftp_list( int c_sock, char *path, void **data, unsigned long long *data_len)
 //下载文件
 int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, int *stop)
 {
-    int     d_sock;
+    int     d_sock = 0;
     ssize_t     len,write_len,sum=0;
     char    buf[1461];
     int     handle;
-    int     result;
+    int     result =0;
     fd_set rd;
 		struct timeval timeout;	
 	  //char time[20];
@@ -395,7 +395,7 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
 			len = select(d_sock+1, &rd, NULL, NULL, &timeout);
 			if(len <= 0){
 				printf("select out\n");
-				close( d_sock );
+				closesocket( d_sock );
 				fileclose( handle );
 				return -1;
 			}else
@@ -410,7 +410,7 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
 					write_len = fileWrite( handle, buf, len );
 					if (write_len != len || (stop != NULL && *stop))
 					{
-							close( d_sock );
+							closesocket( d_sock );
 							fileclose( handle );
 							return -1;
 					}
@@ -432,7 +432,7 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
 				}
 			}				
 		}
-		close( d_sock );
+		closesocket( d_sock );
 		fileclose( handle );
 		
 		
@@ -456,7 +456,7 @@ int ftp_storfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
     char    buf[512];
     int     handle;
     int send_re;
-    int result;
+    int result = 0;
 	
     //打开本地文件
     handle = fileopen( s,  O_RDONLY,0);
@@ -488,11 +488,11 @@ int ftp_storfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
     while ( (len = fileRead( handle, buf, 512)) > 0)
     {
         send_len = send(d_sock, buf, len, 0);
-			printf("%d\n",send_len);
+			
         if (send_len != len ||
             (stop != NULL && *stop))
         {
-            close( d_sock );
+            closesocket( d_sock );
             fileclose( handle );
             return -1;
         }
@@ -502,7 +502,7 @@ int ftp_storfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
             *stor_size += send_len;
         }
     }
-    close( d_sock );
+    closesocket( d_sock );
     fileclose( handle );
      
     //向服务器接收返回值
@@ -562,7 +562,7 @@ int ftp_connect( char *host, int port, char *user, char *pwd )
     c_sock = connect_server( host, port );
     if ( c_sock == -1 ) return -1;
     if ( login_server( c_sock, user, pwd ) == -1 ) {
-        close( c_sock );
+        closesocket( c_sock );
         return -1;
     }
     return c_sock;
@@ -573,7 +573,7 @@ int ftp_quit( int c_sock)
 {
     int re = 0;
     re = ftp_sendcmd( c_sock, "QUIT\r\n" );
-    close( c_sock );
+    closesocket( c_sock );
     return re;
 }
 
@@ -581,7 +581,7 @@ int ftp_quit( int c_sock)
 int ftpgetfile(char *host, int port, char *user, char *pwd,char *remotefile,char *localfile)
 {
 	unsigned long long stor_size = 0;
-	int stop = 0,ret;
+	int stop = 0,ret = 0;
 	int sockfd = ftp_connect( host, port, user, pwd  );
 	if(sockfd != -1)
 	{
@@ -598,7 +598,7 @@ int ftpgetfile(char *host, int port, char *user, char *pwd,char *remotefile,char
 int ftpputfile(char *host, int port, char *user, char *pwd,char *remotefile,char *localfile)
 {
 	unsigned long long stor_size = 0;
-	int stop = 0,ret;
+	int stop = 0,ret = 0;
 	int sockfd = ftp_connect( host, port, user, pwd  );
 
 	if(sockfd != -1)
@@ -615,15 +615,15 @@ int ftpputfile(char *host, int port, char *user, char *pwd,char *remotefile,char
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 
-void getfile(char *host, int port, char *user, char *pwd)
+void getfile(char *remoteFile, char *localFile)
 {
-	ftpgetfile(host,port,user,pwd,"/Result/ecu1_0.bin","/ftp/ecu.bin");
+	ftpgetfile("192.168.1.107",21,"admin","admin",remoteFile,localFile);
 }
 FINSH_FUNCTION_EXPORT(getfile,get file from ftp.)
 
-void putfile(char *host, int port, char *user, char *pwd)
+void putfile(char *remoteFile, char *localFile)
 {
-	ftpgetfile(host,port,user,pwd,"/RESULT/ecu1.bin","/ftp/ecu.bin");
+	ftpputfile("192.168.1.107",21,"admin","admin",remoteFile,localFile);
 }
 FINSH_FUNCTION_EXPORT(putfile,put file from ftp.)
 #endif
