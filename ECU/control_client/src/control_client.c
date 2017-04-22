@@ -1051,7 +1051,7 @@ void control_client_thread_entry(void* parameter)
 	char buffer[16] = {'\0'};
 	MyArray array[ARRAYNUM] = {'\0'};
 	FILE *fp;
-	rt_thread_delay(RT_TICK_PER_SECOND*60);
+	rt_thread_delay(RT_TICK_PER_SECOND*90);
 	//添加功能函数
   add_functions();
 

@@ -9,6 +9,7 @@
 #include "remoteUpdate.h"
 #include <board.h>
 #include <rtthread.h>
+#include "lan8720rst.h"
 
 
 #ifdef RT_USING_DFS
@@ -65,7 +66,7 @@ static struct rt_thread update_thread;
 
 #ifdef THREAD_PRIORITY_LAN8720_RST
 ALIGN(RT_ALIGN_SIZE)
-static rt_uint8_t lan8720_rst_stack[200];
+static rt_uint8_t lan8720_rst_stack[400];
 static struct rt_thread lan8720_rst_thread;
 #endif 
 
@@ -163,18 +164,17 @@ static void led_thread_entry(void* parameter)
 #ifdef THREAD_PRIORITY_LAN8720_RST
 static void lan8720_rst_thread_entry(void* parameter)
 {
-	  int i;
     int value;
 		//配置IO为推挽输出
 	
 	  while (1)
     {
 			value = ETH_ReadPHYRegister(0x00, 0);
+			
 			if(0 == value)	//判断控制寄存器是否变为0  表示断开
 			{
-				//断电RST脚
-        rt_thread_delay( RT_TICK_PER_SECOND/2 ); /* sleep 0.5 second and switch to other thread */
-				//重新上电RST脚
+				printf("reg 0:%x\n",value);
+				rt_hw_lan8720_rst();
 			}
       rt_thread_delay( RT_TICK_PER_SECOND*5 );
     }
@@ -196,6 +196,15 @@ void tasks_new(void)//创建任务线程
   if (result == RT_EOK)
   {
     rt_thread_startup(&led_thread);
+  }
+#endif
+
+#ifdef THREAD_PRIORITY_LAN8720_RST
+  /* init LAN8720RST thread */
+  result = rt_thread_init(&lan8720_rst_thread,"lanrst",lan8720_rst_thread_entry,RT_NULL,(rt_uint8_t*)&lan8720_rst_stack[0],sizeof(lan8720_rst_stack),THREAD_PRIORITY_LAN8720_RST,5);
+  if (result == RT_EOK)
+  {
+    rt_thread_startup(&lan8720_rst_thread);
   }
 #endif
 	
@@ -254,6 +263,19 @@ void restartThread(threadType type)
 			}
 			break;
 #endif 
+
+#ifdef THREAD_PRIORITY_LAN8720_RST
+		case TYPE_LANRST:
+			rt_thread_detach(&lan8720_rst_thread);
+			/* init LAN8720RST thread */
+			result = rt_thread_init(&lan8720_rst_thread,"lanrst",lan8720_rst_thread_entry,RT_NULL,(rt_uint8_t*)&lan8720_rst_stack[0],sizeof(lan8720_rst_stack),THREAD_PRIORITY_LAN8720_RST,5);
+			if (result == RT_EOK)
+			{
+				rt_thread_startup(&lan8720_rst_thread);
+			}
+			break;
+#endif 			
+			
 #ifdef THREAD_PRIORITY_UPDATE
 		case TYPE_UPDATE:
 			rt_thread_detach(&update_thread);

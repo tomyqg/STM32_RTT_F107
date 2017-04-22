@@ -607,7 +607,7 @@ void client_thread_entry(void* parameter)
 	int thistime=0, lasttime=0,res,flag;
 	char data[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};//查询到的数据
 	char time[15] = {'\0'};
-	rt_thread_delay(RT_TICK_PER_SECOND*20);
+	rt_thread_delay(RT_TICK_PER_SECOND*60);
 	printmsg("CLIENT","Started");
 	
 	while(1)
