@@ -11,6 +11,11 @@
 #include <rtthread.h>
 #include "lan8720rst.h"
 #include "file.h"
+#include "usr_wifi232.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <lwip/netdb.h> /* 为了解析主机名，需要包含netdb.h头文件 */
+#include <lwip/sockets.h> /* 使用BSD socket，需要包含sockets.h头文件 */
 
 
 #ifdef RT_USING_DFS
@@ -71,6 +76,17 @@ static rt_uint8_t lan8720_rst_stack[400];
 static struct rt_thread lan8720_rst_thread;
 #endif 
 
+#ifdef THREAD_PRIORITY_WIFI_TEST
+ALIGN(RT_ALIGN_SIZE)
+static rt_uint8_t wifi_test_stack[1024];
+static struct rt_thread wifi_test_thread;
+#endif 
+
+#ifdef THREAD_PRIORITY_NET_TEST
+ALIGN(RT_ALIGN_SIZE)
+static rt_uint8_t net_test_stack[1024];
+static struct rt_thread net_test_thread;
+#endif 
 
 rt_mutex_t record_data_lock = RT_NULL;
 
@@ -185,6 +201,90 @@ static void lan8720_rst_thread_entry(void* parameter)
 }
 #endif
 
+#ifdef THREAD_PRIORITY_WIFI_TEST
+static void wifi_test_thread_entry(void* parameter)
+{
+	tcp_address_t address ;
+	char data[13] = "WIFI_TEST  ";
+	int length = 12;
+	char ch12 = 'A'; 
+	WiFi_Open();
+	address.address_type = TYPE_IP;
+	address.address.ip[0] = 192;
+	address.address.ip[1] = 168;
+	address.address.ip[2] = 1;
+	address.address.ip[3] = 107;
+	address.port = 65500;
+	data[12] = '\0';
+	while(1)
+	{
+		if(ch12 > 'Z')
+		{
+			ch12 = 'A' - 1;
+		}
+		data[11] = ch12;
+		//printf("%d:%s\n",length,data);
+		WiFi_SendData(address ,data ,length);	
+		rt_thread_delay(RT_TICK_PER_SECOND);
+		ch12++;
+	}
+
+
+}
+#endif
+
+#ifdef THREAD_PRIORITY_NET_TEST
+static void net_test_thread_entry(void* parameter)
+{
+	
+	char send_data[13] = "NET_TEST   ";
+	int length = 12;
+	char ch12 = 'A'; 
+	struct hostent *host;
+	int sock;
+	struct sockaddr_in server_addr;
+	rt_thread_delay(RT_TICK_PER_SECOND * 10);
+	
+	
+	/* 通过函数入口参数url获得host地址（如果是域名，会做域名解析） */
+	host = gethostbyname("192.168.1.107");
+
+	/* 创建一个socket，类型是SOCKET_STREAM，TCP类型 */
+	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+	{
+		/* 创建socket失败 */
+		rt_kprintf("Socket error\n");
+		return;
+	}
+	/* 初始化预连接的服务端地址 */
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(65500);
+	server_addr.sin_addr = *((struct in_addr *) host->h_addr);
+	rt_memset(&(server_addr.sin_zero), 0, sizeof(server_addr.sin_zero));
+	/* 连接到服务端 */
+	if (connect(sock, (struct sockaddr *) &server_addr,
+	sizeof(struct sockaddr)) == -1)
+	{
+		/* 连接失败 */
+		rt_kprintf("Connect error\n");
+		/*释放接收缓冲 */
+		return;
+	}
+	while (1)
+	{
+		if(ch12 > 'Z')
+		{
+			ch12 = 'A' - 1;
+		}
+		send_data[11] = ch12;
+		send(sock, send_data, length, 0);
+		rt_thread_delay(RT_TICK_PER_SECOND);
+		ch12++;
+	}
+
+}
+#endif
+
 void tasks_new(void)//创建任务线程
 {
 	rt_err_t result;
@@ -211,6 +311,23 @@ void tasks_new(void)//创建任务线程
   }
 #endif
 	
+#ifdef THREAD_PRIORITY_WIFI_TEST
+  /* init LAN8720RST thread */
+  result = rt_thread_init(&wifi_test_thread,"wifitst",wifi_test_thread_entry,RT_NULL,(rt_uint8_t*)&wifi_test_stack[0],sizeof(wifi_test_stack),THREAD_PRIORITY_WIFI_TEST,5);
+  if (result == RT_EOK)
+  {
+    rt_thread_startup(&wifi_test_thread);
+  }
+#endif	
+	
+#ifdef THREAD_PRIORITY_NET_TEST
+  /* init LAN8720RST thread */
+  result = rt_thread_init(&net_test_thread,"nettst",net_test_thread_entry,RT_NULL,(rt_uint8_t*)&net_test_stack[0],sizeof(net_test_stack),THREAD_PRIORITY_NET_TEST,5);
+  if (result == RT_EOK)
+  {
+    rt_thread_startup(&net_test_thread);
+  }
+#endif		
 	
 #ifdef THREAD_PRIORITY_UPDATE	
   /* init update thread */

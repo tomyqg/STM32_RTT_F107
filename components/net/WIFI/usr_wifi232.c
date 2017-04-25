@@ -39,6 +39,7 @@ int selectWiFi(int timeout)			//Wifi´®¿ÚÊı¾İ¼ì²â ·µ»Ø0 ±íÊ¾´®¿ÚÃ»ÓĞÊı¾İ  ·µ»Ø1±í
 			return 0;
 		}else 
 		{
+			rt_hw_us_delay(1);
 			if(WiFiReadFlag == 1)	//´®¿ÚÊı¾İ¼à²â,Èç¹ûÓĞÊı¾İÔò·µ»Ø1
 			{
 				rt_timer_delete(readtimer);
@@ -87,7 +88,7 @@ int WiFi_SendData(tcp_address_t address ,char *data ,int length)   //ÔÚ´®¿ÚÖ¸ÁîÄ
 {
 	int domain_length = 0,msg_length = 0,index = 0;
 	unsigned char check_sum = 0;
-	char tcp_msg[1024];
+	char tcp_msg[256];
 	if ((data == RT_NULL) || (length <= 0))
 	{
 		rt_kprintf("WIFI_SendData failed ...\n");
@@ -138,7 +139,7 @@ int WiFi_SendData(tcp_address_t address ,char *data ,int length)   //ÔÚ´®¿ÚÖ¸ÁîÄ
 	tcp_msg[4+msg_length] = check_sum;
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,tcp_msg, (msg_length+5));
 	
-	printhexmsg("main","WiFi_SendData", (char *)tcp_msg, (msg_length+5));
+	//printhexmsg("wifi","WiFi_SendData", (char *)tcp_msg, (msg_length+5));
 	return 	(msg_length+5);
 }
 
@@ -151,7 +152,7 @@ int WiFi_RecvData(int timeout,char *data)
 	}
 	if(selectWiFi(timeout) <= 0)
 	{
-		printmsg("main","WIFI Get reply time out");
+		printmsg("wifi","WIFI Get reply time out");
 		return -1;
 	}
 	else
@@ -169,6 +170,7 @@ void testWIFISend(int ip1,int ip2,int ip3,int ip4,int port)	//ÎŞÏß·¢ËÍ²âÊÔ
 	tcp_address_t address ;
 	char data[11] = "YuNeng APS";
 	int length = 10;
+	WiFi_Open();
 	address.address_type = TYPE_IP;
 	address.address.ip[0] = ip1;
 	address.address.ip[1] = ip2;
