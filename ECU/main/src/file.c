@@ -517,6 +517,31 @@ void addInverter(char *inverter_id)
 	echo("/yuneng/limiteid.con","1");
 }
 
+void initPath(void)
+{
+
+	mkdir("/home",0x777);
+	mkdir("/tmp",0x777);
+	mkdir("/yuneng",0x777);
+	mkdir("/home/data",0x777);
+	mkdir("/home/record",0x777);
+	mkdir("/home/data/proc_res",0x777);
+	mkdir("/home/data/iprocres",0x777);
+	mkdir("/ftp",0x777);
+	mkdir("/home/record/data",0x777);
+	mkdir("/home/record/inversta",0x777);
+	echo("/home/data/ltpower","0.000000");
+	echo("/yuneng/area.con","SAA");
+	echo("/yuneng/channel.con","0x10");
+	echo("/yuneng/limiteid.con","1");
+	echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.109\nPort1=8997\nPort2=8997\n");
+	echo("/yuneng/vernum.con","2\n");
+	echo("/yuneng/datacent.con","Domain=111.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
+	echo("/home/data/power","");
+	
+
+}
+
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
@@ -596,8 +621,7 @@ int initsystem(char *ecuid,char *mac)
 	//echo("/yuneng/ecumac.con","80:97:1B:00:72:1C");
 	echo("/yuneng/channel.con","0x10");
 	echo("/yuneng/limiteid.con","1");
-	echo("/yuneng/control.con","Timeout=10\nReport_Interval=15\nDomain=eee.apsema.com\nIP=192.168.1.107\nPort1=8997\nPort2=8997\n");
-	echo("/yuneng/version.con","M1.0\n");
+	echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.109\nPort1=8997\nPort2=8997\n");
 	echo("/yuneng/vernum.con","2\n");
 	echo("/yuneng/datacent.con","Domain=111.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
 	echo("/home/data/power","");

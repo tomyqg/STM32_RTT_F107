@@ -23,7 +23,7 @@ extern struct rt_device serial4;
 
 void saveraduistostruct(char *id,int raduis)
 {
-	FILE *fp;
+	FILE *fp = NULL;
 	fp = fopen("/tmp/radui.txt", "a");
 	if(fp)
 	{

@@ -76,6 +76,6 @@ int get_time_from_NTP()
 			break;
     }
     
-    close(sockfd);
+    closesocket(sockfd);
     return 0;
 }

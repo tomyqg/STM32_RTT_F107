@@ -76,7 +76,7 @@ int connect_server( char *host, int port )
     }
 		FD_ZERO(&rd);
 		FD_SET(ctrl_sock, &rd);
-		timeout.tv_sec = 12;
+		timeout.tv_sec = 10;
 		timeout.tv_usec = 0;
 		len = select(ctrl_sock+1, &rd, NULL, NULL, &timeout);
 		if(len <= 0){
@@ -108,7 +108,7 @@ int ftp_sendcmd_re( int sock, char *cmd, void *re_buf, ssize_t *len)
      
 		FD_ZERO(&rd);
 		FD_SET(sock, &rd);
-		timeout.tv_sec = 12;
+		timeout.tv_sec = 10;
 		timeout.tv_usec = 0;
 		r_len = select(sock+1, &rd, NULL, NULL, &timeout);
 		if(len <= 0){
@@ -492,6 +492,7 @@ int ftp_storfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
         if (send_len != len ||
             (stop != NULL && *stop))
         {
+        printf("send_len:%d len:%d \n",send_len,len);
             closesocket( d_sock );
             fileclose( handle );
             return -1;
@@ -617,13 +618,13 @@ int ftpputfile(char *host, int port, char *user, char *pwd,char *remotefile,char
 
 void getfile(char *remoteFile, char *localFile)
 {
-	ftpgetfile("192.168.1.107",21,"admin","admin",remoteFile,localFile);
+	ftpgetfile("192.168.1.109",21,"admin","admin",remoteFile,localFile);
 }
 FINSH_FUNCTION_EXPORT(getfile,get file from ftp.)
 
 void putfile(char *remoteFile, char *localFile)
 {
-	ftpputfile("192.168.1.107",21,"admin","admin",remoteFile,localFile);
+	ftpputfile("192.168.1.109",21,"admin","admin",remoteFile,localFile);
 }
 FINSH_FUNCTION_EXPORT(putfile,put file from ftp.)
 #endif

@@ -7,6 +7,7 @@
 #include "myfile.h"
 #include "threadlist.h"
 #include "rtthread.h"
+#include "version.h"
 
 extern rt_mutex_t record_data_lock;
 
@@ -25,8 +26,7 @@ int ecu_msg(char *sendbuffer, int num, const char *recvbuffer)
 	/* 处理数据 */
 	file_get_one(ecuid, sizeof(ecuid),
 			"/yuneng/ecuid.con");
-	file_get_one(version, sizeof(version),
-			"/yuneng/version.con");
+	sprintf(version,"%s_%s.%s",ECU_M3_VERSION,MAJORVERSION,MINORVERSION);
 	file_get_one(version_number, sizeof(version_number),
 			"/yuneng/vernum.con");
 	file_get_one(area, sizeof(area),
@@ -99,7 +99,7 @@ int delete_id(const char *msg, int num)
 		strncpy(inverter_id, &msg[i*15], 12);
 		inverter_id[12] = '\0';
 		//删除一个逆变器ID
-		delete_line("/home/data/id","/home/data/id_tmp",inverter_id,12);
+		delete_line("/home/data/id","/home/data/idtmp",inverter_id,12);
 		count++;
 	}
 	return count;

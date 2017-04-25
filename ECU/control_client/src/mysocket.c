@@ -40,7 +40,7 @@ int create_socket(void)
 //	iflags = fcntl(sockfd, F_GETFL, 0);
 //	fcntl(sockfd, F_SETFL, O_NONBLOCK | iflags);
 	if(sockfd == -1){
-		printmsg("control_client","socket");
+		printmsg("control_client","socket failed");
         return -1;
 	}
 	return sockfd;

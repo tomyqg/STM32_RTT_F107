@@ -10,6 +10,7 @@
 #include <board.h>
 #include <rtthread.h>
 #include "lan8720rst.h"
+#include "file.h"
 
 
 #ifdef RT_USING_DFS
@@ -105,6 +106,8 @@ void rt_init_thread_entry(void* parameter)
 				{
 					rt_kprintf("File System initialized!\n");
 				}
+				initPath();
+				rt_kprintf("PATH initialized!\n");
     }
 #endif /* RT_USING_DFS && RT_USING_DFS_ELMFAT */
 

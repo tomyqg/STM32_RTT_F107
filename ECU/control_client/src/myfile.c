@@ -6,6 +6,7 @@
 #include <dfs_posix.h> 
 #include "debug.h"
 #include <stdlib.h>
+#include "rthw.h"
 
 void delete_newline(char *s)
 {
@@ -115,7 +116,7 @@ int clear_file(char *filename)
 int delete_line(char* filename,char* temfilename,char* compareData,int len)
 {
 	FILE *fin,*ftp;
-  char data[512];
+  char data[512] = {'\0'};
   fin=fopen(filename,"r");//读打开原文件123.txt
 	if(fin == NULL)
 	{

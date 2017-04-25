@@ -20,6 +20,7 @@
 #include "datetime.h"
 #include <lwip/netdb.h> 
 #include <lwip/sockets.h> 
+#include "threadlist.h"
 
 extern rt_mutex_t record_data_lock;
 
@@ -69,7 +70,7 @@ int randvalue(void)
 
 	srand((unsigned)acquire_time());
 	i = rand()%2;
-	printdecmsg("CLIENT","Randvalue", i);
+	printdecmsg("client","Randvalue", i);
 
 	return i;
 }
@@ -80,9 +81,9 @@ int createsocket(void)					//创建套接字
 
 	fd_sock=socket(AF_INET,SOCK_STREAM,0);
 	if(-1==fd_sock)
-		printmsg("CLIENT","Failed to create socket");
+		printmsg("client","Failed to create socket");
 	else
-		printmsg("CLIENT","Create socket successfully");
+		printmsg("client","Create socket successfully");
 
 	return fd_sock;
 }
@@ -135,7 +136,7 @@ int connect_socket(int fd_sock)				//连接到服务器
 	host = gethostbyname(domain);
 	if(NULL == host)
 	{
-		printmsg("CLIENT","Resolve domain failure");
+		printmsg("client","Resolve domain failure");
 	}
 	else
 	{
@@ -145,9 +146,9 @@ int connect_socket(int fd_sock)				//连接到服务器
 	}
 
 	strcpy(ip, "139.168.200.158");
-	print2msg("CLIENT","IP", ip);
-	printdecmsg("CLIENT","Port1", port[0]);
-	printdecmsg("CLIENT","Port2", port[1]);
+	print2msg("client","IP", ip);
+	printdecmsg("client","Port1", port[0]);
+	printdecmsg("client","Port2", port[1]);
 
 	memset(&serv_addr,0,sizeof(struct sockaddr_in));
 	serv_addr.sin_family=AF_INET;
@@ -171,7 +172,7 @@ int connect_socket(int fd_sock)				//连接到服务器
 void close_socket(int fd_sock)					//关闭套接字
 {
 	closesocket(fd_sock);
-	printmsg("CLIENT","Close socket");
+	printmsg("client","Close socket");
 }
 
 
@@ -194,11 +195,11 @@ int clear_send_flag(char *readbuff)
 				{
 					if(1 == change_resendflag(recv_date_time,'0'))
 					{
-						print2msg("CLIENT","Clear send flag into database", "1");
+						print2msg("client","Clear send flag into database", "1");
 						break;
 					}
 					else
-						print2msg("CLIENT","Clear send flag into database", "0");
+						print2msg("client","Clear send flag into database", "0");
 					rt_thread_delay(RT_TICK_PER_SECOND);
 				}
 			}
@@ -215,7 +216,7 @@ int update_send_flag(char *send_date_time)
 	{
 		if(1 == change_resendflag(send_date_time,'2'))
 		{
-			print2msg("CLIENT","Update send flag into database", "1");
+			print2msg("client","Update send flag into database", "1");
 			break;
 		}
 		rt_thread_delay(RT_TICK_PER_SECOND * 5);
@@ -240,7 +241,7 @@ int recv_response(int fd_sock, char *readbuff)
 		res = select(fd_sock+1, &rd, NULL, NULL, &timeout);
 		if(res <= 0){
 			//printerrmsg("select");
-			printmsg("CLIENT","Receive data reply from EMA timeout");
+			printmsg("client","Receive data reply from EMA timeout");
 			return -1;
 		}
 		else{
@@ -545,10 +546,10 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 		fclose(fp);
 	}
 	strcat(sendbuff, "\n");
-	print2msg("CLIENT","Sendbuff", sendbuff);
+	print2msg("client","Sendbuff", sendbuff);
 
 	fd_sock = createsocket();
-	printdecmsg("CLIENT","Socket", fd_sock);
+	printdecmsg("client","Socket", fd_sock);
 	if(1 == connect_socket(fd_sock))
 	{
 		while(1)
@@ -580,14 +581,14 @@ int resend_record()
 	
 	//在/home/record/data/目录下查询resendflag为2的记录
 	fd_sock = createsocket();
-	printdecmsg("CLIENT","Socket", fd_sock);
+	printdecmsg("client","Socket", fd_sock);
 	if(1 == connect_socket(fd_sock))
 	{
 		while(search_readflag(data,time,&flag,'2'))		//	获取一条resendflag为1的数据
 		{
 				if(1 == flag)		// 还存在需要上传的数据
 					data[78] = '1';
-			printmsg("CLIENT",data);
+			printmsg("client",data);
 			res = send_record(fd_sock, data, time);
 			if(-1 == res)
 				break;
@@ -607,8 +608,8 @@ void client_thread_entry(void* parameter)
 	int thistime=0, lasttime=0,res,flag;
 	char data[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};//查询到的数据
 	char time[15] = {'\0'};
-	rt_thread_delay(RT_TICK_PER_SECOND*60);
-	printmsg("CLIENT","Started");
+	rt_thread_delay(RT_TICK_PER_SECOND*START_TIME_CLIENT);
+	printmsg("client","Started");
 	
 	while(1)
 	{
@@ -625,7 +626,7 @@ void client_thread_entry(void* parameter)
 		print2msg("client","time",broadcast_time);
 		
 		fd_sock = createsocket();
-		printdecmsg("CLIENT","Socket", fd_sock);
+		printdecmsg("client","Socket", fd_sock);
 		if(1 == connect_socket(fd_sock))
 		{
 			while(search_readflag(data,time,&flag,'1'))		//	获取一条resendflag为1的数据
@@ -636,7 +637,7 @@ void client_thread_entry(void* parameter)
 				}
 				if(1 == flag)		// 还存在需要上传的数据
 						data[78] = '1';
-				printmsg("CLIENT",data);
+				printmsg("client",data);
 				res = send_record(fd_sock, data, time);
 				if(-1 == res)
 					break;

@@ -16,8 +16,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "remote_update.h"
-#define MAIN_VERSION "R-1.0.0"
-
+#include "version.h"
+#include "threadlist.h"
 
 inverter_info inverter[MAXINVERTERCOUNT];
 ecu_info ecu;
@@ -41,6 +41,7 @@ int init_ecu()
 	ecu.type = 0;
 	ecu.zoneflag = 0;				//时区
 	printecuinfo(&ecu);
+	zb_change_ecu_panid();
 	return 1;
 }
 
@@ -182,9 +183,10 @@ void main_thread_entry(void* parameter)
 	char broadcast_hour_minute[3]={'\0'};									//向逆变器发送广播命令时的时间
 	int cur_time_hour;														//当前的时间小时
 
-
-	rt_kprintf("\nmain.exe %s\n", MAIN_VERSION);
+	rt_thread_delay(RT_TICK_PER_SECOND * START_TIME_MAIN);
+	rt_kprintf("\nmain.exe %s_%s_%s\n", ECU_M3_VERSION,MAJORVERSION,MINORVERSION);
 	printmsg("main","Start-------------------------------------------------");
+	
 
 	init_all(inverter);   //初始化所有逆变器
 	
