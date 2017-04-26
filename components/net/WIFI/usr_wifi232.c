@@ -137,6 +137,7 @@ int WiFi_SendData(tcp_address_t address ,char *data ,int length)   //ÔÚ´®¿ÚÖ¸ÁîÄ
 		check_sum += tcp_msg[index+4]; 
 	}
 	tcp_msg[4+msg_length] = check_sum;
+	
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,tcp_msg, (msg_length+5));
 	
 	//printhexmsg("wifi","WiFi_SendData", (char *)tcp_msg, (msg_length+5));

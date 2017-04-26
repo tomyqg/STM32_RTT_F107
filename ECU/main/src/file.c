@@ -534,7 +534,7 @@ void initPath(void)
 	echo("/yuneng/area.con","SAA");
 	echo("/yuneng/channel.con","0x10");
 	echo("/yuneng/limiteid.con","1");
-	echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.109\nPort1=8997\nPort2=8997\n");
+	echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.107\nPort1=8997\nPort2=8997\n");
 	echo("/yuneng/vernum.con","2\n");
 	echo("/yuneng/datacent.con","Domain=111.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
 	echo("/home/data/power","");
@@ -631,6 +631,16 @@ int initsystem(char *ecuid,char *mac)
 	return 0;
 }
 FINSH_FUNCTION_EXPORT(initsystem, eg:initsystem("123456789012","80:97:1B:00:72:1C"));
+
+void changecontrol(char * IP)
+{
+	char str[300]={'\0'};
+	
+	sprintf(str,"Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=%s\nPort1=8997\nPort2=8997\n",IP);
+	
+	echo("/yuneng/control.con",str);
+}	
+FINSH_FUNCTION_EXPORT(changecontrol, eg:changecontrol("192.168.1.104"));
 
 
 FINSH_FUNCTION_EXPORT(addInverter, eg:addInverter("201703150001"));

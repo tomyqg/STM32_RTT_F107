@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <lwip/netdb.h> /* 为了解析主机名，需要包含netdb.h头文件 */
 #include <lwip/sockets.h> /* 使用BSD socket，需要包含sockets.h头文件 */
+#include <zigbee.h>
 
 
 #ifdef RT_USING_DFS
@@ -86,6 +87,12 @@ static struct rt_thread wifi_test_thread;
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t net_test_stack[1024];
 static struct rt_thread net_test_thread;
+#endif 
+
+#ifdef THREAD_PRIORITY_ZIGBEE_TEST
+ALIGN(RT_ALIGN_SIZE)
+static rt_uint8_t zigbee_test_stack[1024];
+static struct rt_thread zigbee_test_thread;
 #endif 
 
 rt_mutex_t record_data_lock = RT_NULL;
@@ -207,26 +214,45 @@ static void wifi_test_thread_entry(void* parameter)
 	tcp_address_t address ;
 	char data[13] = "WIFI_TEST  ";
 	int length = 12;
-	char ch12 = 'A'; 
+	char ch12 = 'A';
+	
 	WiFi_Open();
+	rt_thread_delay(RT_TICK_PER_SECOND*5);	
 	address.address_type = TYPE_IP;
 	address.address.ip[0] = 192;
 	address.address.ip[1] = 168;
 	address.address.ip[2] = 1;
-	address.address.ip[3] = 107;
+	address.address.ip[3] = 100;
 	address.port = 65500;
 	data[12] = '\0';
 	while(1)
 	{
-		if(ch12 > 'Z')
+		if(ch12 >= 'Z')
 		{
 			ch12 = 'A' - 1;
 		}
 		data[11] = ch12;
+		rt_hw_us_delay(1);
 		//printf("%d:%s\n",length,data);
 		WiFi_SendData(address ,data ,length);	
-		rt_thread_delay(RT_TICK_PER_SECOND);
+		rt_thread_delay(RT_TICK_PER_SECOND*5);
 		ch12++;
+	}
+
+
+}
+#endif
+
+#ifdef THREAD_PRIORITY_ZIGBEE_TEST
+static void zigbee_test_thread_entry(void* parameter)
+{
+	rt_thread_delay(RT_TICK_PER_SECOND*10);
+	openzigbee();
+	init_ecu();
+	while(1)
+	{
+		zb_change_inverter_channel_one("201703150001", 0x10);
+		rt_thread_delay(RT_TICK_PER_SECOND);
 	}
 
 
@@ -247,7 +273,7 @@ static void net_test_thread_entry(void* parameter)
 	
 	
 	/* 通过函数入口参数url获得host地址（如果是域名，会做域名解析） */
-	host = gethostbyname("192.168.1.107");
+	host = gethostbyname("192.168.1.100");
 
 	/* 创建一个socket，类型是SOCKET_STREAM，TCP类型 */
 	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -272,7 +298,7 @@ static void net_test_thread_entry(void* parameter)
 	}
 	while (1)
 	{
-		if(ch12 > 'Z')
+		if(ch12 >= 'Z')
 		{
 			ch12 = 'A' - 1;
 		}
@@ -326,6 +352,15 @@ void tasks_new(void)//创建任务线程
   if (result == RT_EOK)
   {
     rt_thread_startup(&net_test_thread);
+  }
+#endif	
+
+#ifdef THREAD_PRIORITY_ZIGBEE_TEST
+  /* init LAN8720RST thread */
+  result = rt_thread_init(&zigbee_test_thread,"zgbtst",zigbee_test_thread_entry,RT_NULL,(rt_uint8_t*)&zigbee_test_stack[0],sizeof(zigbee_test_stack),THREAD_PRIORITY_ZIGBEE_TEST,5);
+  if (result == RT_EOK)
+  {
+    rt_thread_startup(&zigbee_test_thread);
   }
 #endif		
 	

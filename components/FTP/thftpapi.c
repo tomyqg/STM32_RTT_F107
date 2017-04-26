@@ -618,15 +618,61 @@ int ftpputfile(char *host, int port, char *user, char *pwd,char *remotefile,char
 
 void getfile(char *remoteFile, char *localFile)
 {
-	ftpgetfile("192.168.1.109",21,"admin","admin",remoteFile,localFile);
+	ftpgetfile("192.168.1.107",21,"admin","admin",remoteFile,localFile);
 }
 FINSH_FUNCTION_EXPORT(getfile,get file from ftp.)
 
 void putfile(char *remoteFile, char *localFile)
 {
-	ftpputfile("192.168.1.109",21,"admin","admin",remoteFile,localFile);
+	ftpputfile("192.168.1.107",21,"admin","admin",remoteFile,localFile);
 }
 FINSH_FUNCTION_EXPORT(putfile,put file from ftp.)
+
+void sockettest()
+{
+
+	struct hostent *host;
+	int sock;
+	struct sockaddr_in server_addr;
+	rt_thread_delay(RT_TICK_PER_SECOND * 10);
+	
+	
+	/* 通过函数入口参数url获得host地址（如果是域名，会做域名解析） */
+	host = gethostbyname("192.168.1.104");
+
+	while(1)
+	{
+		/* 创建一个socket，类型是SOCKET_STREAM，TCP类型 */
+		if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+		{
+			/* 创建socket失败 */
+			rt_kprintf("Socket error\n");
+			return;
+		}
+		printf("sockfd:%d\n",sock);
+		/* 初始化预连接的服务端地址 */
+		server_addr.sin_family = AF_INET;
+		server_addr.sin_port = htons(65500);
+		server_addr.sin_addr = *((struct in_addr *) host->h_addr);
+		rt_memset(&(server_addr.sin_zero), 0, sizeof(server_addr.sin_zero));
+		/* 连接到服务端 */
+		if (connect(sock, (struct sockaddr *) &server_addr,
+		sizeof(struct sockaddr)) == -1)
+		{
+			/* 连接失败 */
+			rt_kprintf("Connect error\n");
+			/*释放接收缓冲 */
+			return;
+		}
+			
+	}
+
+	
+}
+
+FINSH_FUNCTION_EXPORT(sockettest, eg:sockettest());
+
+
 #endif
 
  
