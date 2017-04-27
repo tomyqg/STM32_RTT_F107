@@ -436,6 +436,7 @@ int save_status(char *result, char *date_time)
 	return 0;
 }
 
+
 void echo(const char* filename,const char* string)
 {
 	int fd;
@@ -621,8 +622,9 @@ int initsystem(char *ecuid,char *mac)
 	//echo("/yuneng/ecumac.con","80:97:1B:00:72:1C");
 	echo("/yuneng/channel.con","0x10");
 	echo("/yuneng/limiteid.con","1");
-	echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
+	echo("/yuneng/control.con","Timeout=10\nReport_Interval=15\nDomain=eee.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
 	echo("/yuneng/vernum.con","2\n");
+	echo("/yuneng/ftpadd.con", "60.190.131.190\n");
 	echo("/yuneng/datacent.con","Domain=111.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
 	echo("/home/data/power","");
 	mkdir("/ftp",0x777);
@@ -636,7 +638,7 @@ void changecontrol(char * IP)
 {
 	char str[300]={'\0'};
 	
-	sprintf(str,"Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=%s\nPort1=8997\nPort2=8997\n",IP);
+	sprintf(str,"Timeout=10\nReport_Interval=15\nDomain=eee.apsema.com\nIP=%s\nPort1=8997\nPort2=8997\n",IP);
 	
 	echo("/yuneng/control.con",str);
 }	

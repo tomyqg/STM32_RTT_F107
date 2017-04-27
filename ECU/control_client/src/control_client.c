@@ -791,7 +791,6 @@ int check_inverter_abnormal_status_sent(int hour)
 	char *send_buffer = NULL;
 	recv_buffer = rt_malloc(2048);
 	send_buffer = rt_malloc(MAXBUFFER);
-
 	if(get_hour() != hour)
 	{
 		rt_free(recv_buffer);
@@ -1164,14 +1163,13 @@ void control_client_thread_entry(void* parameter)
 	}
 
 	printdecmsg("control_client","ecu_flag", ecu_flag);
-	
 	file_get_one(ecuid, sizeof(ecuid), "/yuneng/ecuid.con");
+
 
 	//从配置文件中获取socket通讯参数
 	if(file_get_array(array, ARRAYNUM, "/yuneng/control.con") == 0){
 		get_socket_config(&sockcfg, array);
 	}
-
 	/* ECU轮训主循环 */
 	while(1)
 	{

@@ -21,7 +21,7 @@ void getFTPaddr(char *FTPIP)
 	
 	fp = fopen("/yuneng/ftpadd.con", "r");
 	if(fp == NULL){
-		strcpy(FTPIP,"192.168.1.104");
+		strcpy(FTPIP,"60.190.131.190");
 		return ;
 	}
 	fgets(FTPIP, 50, fp);
@@ -37,11 +37,12 @@ int updateECU(void)
 	char remote_path[100] = {'\0'};
 	rt_thread_delay(RT_TICK_PER_SECOND * START_TIME_UPDATE);
 	getFTPaddr(IPFTPadd);
+	printf("FTP:%s\n",IPFTPadd);
 	
 	//获取服务器IP地址
 	sprintf(remote_path,"/ECU_R_M3/V%s.%s/%s",MAJORVERSION,MINORVERSION,UPDATE_PATH_SUFFIX);
 	rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
-	ret=ftpgetfile(IPFTPadd, 21, "admin", "admin",remote_path,UPDATE_PATH);
+	ret=ftpgetfile(IPFTPadd, 9219, "zhyf", "yuneng",remote_path,UPDATE_PATH);
 	if(!ret)
 	{
 		//获取到文件，进行更新
@@ -68,7 +69,7 @@ void remote_update_thread_entry(void* parameter)
 			if(-1 != updateECU())
 				break;
 		}
-		
+		//rt_thread_delay(RT_TICK_PER_SECOND*10);		
 		rt_thread_delay(RT_TICK_PER_SECOND*86400);		
 	}	
 

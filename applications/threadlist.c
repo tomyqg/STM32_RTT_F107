@@ -7,6 +7,7 @@
 #include "client.h"
 #include "control_client.h"
 #include "remoteUpdate.h"
+#include "idwrite.h"
 #include <board.h>
 #include <rtthread.h>
 #include "lan8720rst.h"
@@ -69,6 +70,12 @@ struct rt_thread control_client_thread;
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t update_stack[4096];
 static struct rt_thread update_thread;
+#endif
+
+#ifdef THREAD_PRIORITY_IDWRITE
+ALIGN(RT_ALIGN_SIZE)
+static rt_uint8_t idwrite_stack[2048];
+static struct rt_thread idwrite_thread;
 #endif
 
 #ifdef THREAD_PRIORITY_LAN8720_RST
@@ -338,7 +345,7 @@ void tasks_new(void)//创建任务线程
 #endif
 	
 #ifdef THREAD_PRIORITY_WIFI_TEST
-  /* init LAN8720RST thread */
+  /* init wifi test thread */
   result = rt_thread_init(&wifi_test_thread,"wifitst",wifi_test_thread_entry,RT_NULL,(rt_uint8_t*)&wifi_test_stack[0],sizeof(wifi_test_stack),THREAD_PRIORITY_WIFI_TEST,5);
   if (result == RT_EOK)
   {
@@ -347,7 +354,7 @@ void tasks_new(void)//创建任务线程
 #endif	
 	
 #ifdef THREAD_PRIORITY_NET_TEST
-  /* init LAN8720RST thread */
+  /* init net test thread */
   result = rt_thread_init(&net_test_thread,"nettst",net_test_thread_entry,RT_NULL,(rt_uint8_t*)&net_test_stack[0],sizeof(net_test_stack),THREAD_PRIORITY_NET_TEST,5);
   if (result == RT_EOK)
   {
@@ -356,7 +363,7 @@ void tasks_new(void)//创建任务线程
 #endif	
 
 #ifdef THREAD_PRIORITY_ZIGBEE_TEST
-  /* init LAN8720RST thread */
+  /* init zigbee test thread */
   result = rt_thread_init(&zigbee_test_thread,"zgbtst",zigbee_test_thread_entry,RT_NULL,(rt_uint8_t*)&zigbee_test_stack[0],sizeof(zigbee_test_stack),THREAD_PRIORITY_ZIGBEE_TEST,5);
   if (result == RT_EOK)
   {
@@ -370,6 +377,15 @@ void tasks_new(void)//创建任务线程
   if (result == RT_EOK)
   {
     rt_thread_startup(&update_thread);
+  }
+#endif
+	
+#ifdef THREAD_PRIORITY_IDWRITE	
+  /* init idwrite thread */
+	result = rt_thread_init(&idwrite_thread,"idwrite",idwrite_thread_entry,RT_NULL,(rt_uint8_t*)&idwrite_stack[0],sizeof(idwrite_stack),THREAD_PRIORITY_IDWRITE,5);
+  if (result == RT_EOK)
+  {
+    rt_thread_startup(&idwrite_thread);
   }
 #endif
 		

@@ -1260,6 +1260,13 @@
         </Group>
         <Group>
           <GroupName>IDWriter</GroupName>
+          <Files>
+            <File>
+              <FileName>idwriter.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ECU\IDWriter\src\idwriter.c</FilePath>
+            </File>
+          </Files>
         </Group>
       </Groups>
     </Target>

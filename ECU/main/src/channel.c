@@ -5,6 +5,8 @@
 #include <dfs_posix.h> 
 #include "channel.h"
 #include "zigbee.h"
+#include "file.h"
+
 extern ecu_info ecu;
 extern inverter_info inverter[MAXINVERTERCOUNT];
 
@@ -76,6 +78,7 @@ int getNewChannel()
 	return 16; //д╛хопе╣ю
 }
 
+/*
 void saveECUChannel(int channel)
 {
 	FILE *fp;
@@ -90,6 +93,25 @@ void saveECUChannel(int channel)
 	}
 	ecu.channel = channel;
 }
+*/
+
+int saveECUChannel(int channel)
+{
+	FILE *fp;
+	char buffer[5] = {'\0'};
+
+	snprintf(buffer, sizeof(buffer), "0x%02X", channel);
+	printf("%s\n", buffer);
+	fp = fopen("/yuneng/channel.con", "w");
+	if (fp) {
+		echo("/yuneng/limiteid.con","1");
+		fputs(buffer, fp);
+		fclose(fp);
+		return 1;
+	}
+	return 0;
+}
+
 
 void changeChannelOfInverters(int oldChannel, int newChannel)
 {

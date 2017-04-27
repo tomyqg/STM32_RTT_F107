@@ -7,4 +7,7 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 
 /* 逆变器异常状态A123 */
 int protocol_status(struct inverter_info_t *firstinverter, char *datetime);
+
+/*保存本地事件*/
+int saveevent(inverter_info *inverter, char *sendcommanddatatime);
 #endif  /*__PROTOCOL_H__*/

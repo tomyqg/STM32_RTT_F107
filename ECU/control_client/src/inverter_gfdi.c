@@ -30,6 +30,9 @@ int clear_all()
 		if(-1 == insert_line("/home/data/clrgfdi",str))
 		{
 			err_count++;
+		}else
+		{
+			break;
 		}
 	}
 	printf("%d\n",err_count);

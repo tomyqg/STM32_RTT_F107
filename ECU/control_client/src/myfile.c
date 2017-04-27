@@ -55,7 +55,6 @@ int file_get_array(MyArray *array, int num, const char *filename)
 	FILE *fp;
 	int count = 0;
 	char buffer[128] = {'\0'};
-
 	memset(array, 0 ,sizeof(MyArray)*num);
 	fp = fopen(filename, "r");
 	if(fp == NULL){

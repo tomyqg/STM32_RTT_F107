@@ -5,7 +5,7 @@
 #include "debug.h"
 #include "protocol.h"
 #include "file.h"
-
+#include "myfile.h"
 extern ecu_info ecu;
 
 int transsyscurgen(char *buff, float curgen)		//增加系统当前一轮发电量
@@ -530,3 +530,37 @@ int protocol_status(struct inverter_info_t *firstinverter, char *datetime)
 	}
 	return 0;
 }
+//  device,eve,data\n
+int saveevent(inverter_info *inverter, char *sendcommanddatatime)			//保存系统当前一轮出现的7种事件(只保存最新一轮的状态)
+{
+	int i=0,j =0;
+	char event_buff[200]={'\0'};
+
+	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->id)); i++){
+		if(1 == inverter->dataflag)
+		{
+			if(0 != strcmp(inverter->status_web, "000000000000000000000000"))
+			{
+				memset(event_buff, '\0', 100);
+			
+				for(j=1; j<=3; j++)
+				{
+				
+					delete_line("/home/record/event","/home/record/event.t",inverter->id,12);
+						sprintf(event_buff,"%s,%s,%s\n", inverter->id, inverter->status_web, sendcommanddatatime);
+
+					if(-1 != insert_line("/home/record/event",event_buff))
+					{
+						break;
+					}
+				}
+			
+			}
+		}
+		inverter++;
+	}
+
+	return 0;
+}
+
+

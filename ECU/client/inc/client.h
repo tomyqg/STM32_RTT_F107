@@ -11,5 +11,5 @@ int change_resendflag(char *time,char flag);
 int send_record(int fd_sock, char *sendbuff, char *send_date_time);
 int preprocess(void);
 void client_thread_entry(void* parameter);
-
+int search_readflag(char *data,char * time, int *flag,char sendflag);
 #endif	/*__CLIENT_H__*/

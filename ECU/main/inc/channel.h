@@ -5,7 +5,7 @@ int process_channel(void);
 int channel_need_change(void);
 int getOldChannel(void);
 int getNewChannel(void);
-void saveECUChannel(int channel);
+int saveECUChannel(int channel);
 void changeChannelOfInverters(int oldChannel, int newChannel);
 
 #endif /*__CHANNEL_H__*/

@@ -226,7 +226,7 @@ void main_thread_entry(void* parameter)
 			{
 				protocol_APS18(inverter, ecu.broadcast_time);
 				protocol_status(inverter, ecu.broadcast_time);
-				//saveevent(inverter, ecu.broadcast_time);							//保存当前一轮逆变器时间
+				saveevent(inverter, ecu.broadcast_time);							//保存当前一轮逆变器事件
 			}
 			/*
 			if(ecu.count>0)
