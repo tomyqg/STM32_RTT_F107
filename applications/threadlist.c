@@ -154,8 +154,6 @@ void rt_init_thread_entry(void* parameter)
 	rt_kprintf("TCP/IP initialized!\n");
 #endif
 
-//	EXTIX_Init();		 	//外部中断初始化
-
 
 #ifdef RT_USING_FINSH
 	/* initialize finsh */
@@ -425,7 +423,7 @@ void restartThread(threadType type)
 	{
 #ifdef THREAD_PRIORITY_LED
 		case TYPE_LED:
-			rt_thread_detach(&led_thread);
+			rt_thread_detach(&idwrite_thread);
 			/* init led thread */
 			result = rt_thread_init(&led_thread,"led",led_thread_entry,RT_NULL,(rt_uint8_t*)&led_stack[0],sizeof(led_stack),THREAD_PRIORITY_LED,5);
 			if (result == RT_EOK)
@@ -455,6 +453,18 @@ void restartThread(threadType type)
 			if (result == RT_EOK)
 			{
 				rt_thread_startup(&update_thread);
+			}
+			break;
+#endif
+			
+#ifdef THREAD_PRIORITY_IDWRITE
+		case TYPE_IDWRITE:
+			rt_thread_detach(&update_thread);
+			/* init idwrite thread */
+			result = rt_thread_init(&idwrite_thread,"idwrite",idwrite_thread_entry,RT_NULL,(rt_uint8_t*)&idwrite_stack[0],sizeof(idwrite_stack),THREAD_PRIORITY_IDWRITE,5);
+			if (result == RT_EOK)
+			{
+				rt_thread_startup(&idwrite_thread);
 			}
 			break;
 #endif

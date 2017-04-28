@@ -17,6 +17,7 @@
 #include "board.h"
 #include "usart.h"
 #include "lan8720rst.h"
+#include "key.h"
 
 /**
  * @addtogroup STM32
@@ -70,6 +71,7 @@ void rt_hw_board_init(void)
 	
 		rt_hw_lan8720_init();
     rt_hw_usart_init();		//串口初始化
+		EXTIX_Init();		 	//外部中断初始化
     rt_console_set_device(RT_CONSOLE_DEVICE_NAME);
 
 }

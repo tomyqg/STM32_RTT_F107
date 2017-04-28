@@ -133,7 +133,7 @@ int delete_line(char* filename,char* temfilename,char* compareData,int len)
 	{
 		if(memcmp(data,compareData,len))
 		{
-			printf("%s\n",data);
+			//printf("%s\n",data);
 			fputs(data,ftp);//不是则将这一行写入临时文件
 		}
 	}
@@ -196,7 +196,7 @@ int insert_line(char * filename,char *str)
 int search_line(char* filename,char* compareData,int len)
 {
 	FILE *fin;
-  char data[50];
+  char data[300];
   fin=fopen(filename,"r");
 	if(fin == NULL)
 	{
@@ -204,7 +204,7 @@ int search_line(char* filename,char* compareData,int len)
     return -1;
 	}
 	
-  while(fgets(data,50,fin))//从原文件读取一行
+  while(fgets(data,300,fin))//从原文件读取一行
 	{
 		if(!memcmp(data,compareData,len))
 		{

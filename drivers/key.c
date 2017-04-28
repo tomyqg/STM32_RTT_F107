@@ -1,6 +1,9 @@
 #include "key.h"
 #include <rtthread.h>
 #include <stm32f10x.h>
+#include "file.h"
+#include "rthw.h"
+
 void KEY_Init(void) //IO初始化
 { 
  	GPIO_InitTypeDef GPIO_InitStructure;
@@ -32,7 +35,7 @@ void EXTIX_Init(void)
  	EXTI_Init(&EXTI_InitStructure);	 	//根据EXTI_InitStruct中指定的参数初始化外设EXTI寄存器
 
  	NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;			//使能按键KEY_RESET所在的外部中断通道
- 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x02;	//抢占优先级2
+ 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;	//抢占优先级2
  	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x03;					//子优先级3
  	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;								//使能外部中断通道
  	NVIC_Init(&NVIC_InitStructure);  
@@ -42,11 +45,13 @@ void EXTIX_Init(void)
 //外部中断0服务程序
 void EXTI9_5_IRQHandler(void)
 {
-	rt_thread_delay(RT_TICK_PER_SECOND/100);//消除抖动
 	if(KEY_Reset==1)	 	 
-	{				 
-		//rt_kprintf("EXTI9_5_IRQHandler\n");  //添加恢复出厂设置的功能
-		//。。。。。。
+	{
+		//将配置文件恢复到出厂设置
+		initPath();
+		rt_kprintf("EXTI9_5_IRQHandler\n");  //添加恢复出厂设置的功能
+		reboot();
+		for(;;);
 	}
 	EXTI_ClearITPendingBit(EXTI_Line9); //清除LINE9上的中断标志位z  
 }

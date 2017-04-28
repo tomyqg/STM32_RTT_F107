@@ -547,7 +547,7 @@ int saveevent(inverter_info *inverter, char *sendcommanddatatime)			//保存系�
 				{
 				
 					delete_line("/home/record/event","/home/record/event.t",inverter->id,12);
-						sprintf(event_buff,"%s,%s,%s\n", inverter->id, inverter->status_web, sendcommanddatatime);
+					sprintf(event_buff,"%s,%s,%s\n", inverter->id, inverter->status_web, sendcommanddatatime);
 
 					if(-1 != insert_line("/home/record/event",event_buff))
 					{

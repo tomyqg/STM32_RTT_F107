@@ -232,6 +232,8 @@ void idwrite_thread_entry(void* parameter)
 	char sendbuff[3];
 	char gettime[14]={'\0'};
 
+	
+	rt_thread_delay(START_TIME_IDWRITE * RT_TICK_PER_SECOND);
 	sockfd=create_socket_idwrite();
 	bind_socket(sockfd);
 	listen_socket(sockfd);
@@ -310,11 +312,12 @@ void idwrite_thread_entry(void* parameter)
 
 		//ÉèÖÃÄæ±äÆ÷µÄID
 		if(!strncmp(recvbuff, "set_inverter_id", 15)){
-
+			/*
 			if(1 == saveECUChannel(18))
 				send(clientfd, "0x12", 4, 0);
 			else
 				send(clientfd, "change channel failed", 21, 0);
+			*/
 			row = insertinverter(&recvbuff[16]);
 			snprintf(sendbuff, sizeof(sendbuff), "%02d", row);
 			send(clientfd, sendbuff, 3, 0);

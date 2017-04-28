@@ -458,6 +458,7 @@ void delete_file_resendflag0()		//清空数据resend标志全部为0的目录
 	char path[100];
 	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
 	FILE *fp;
+	int flag = 0;
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	if(result == RT_EOK)
 	{
@@ -476,6 +477,7 @@ void delete_file_resendflag0()		//清空数据resend标志全部为0的目录
 				memset(path,0,100);
 				memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
 				sprintf(path,"%s/%s",dir,d->d_name);
+				flag = 0;
 				//printf("%s\n",path);
 				//打开文件一行行判断是否有flag!=0的  如果存在直接关闭文件并返回,如果不存在，删除文件
 				fp = fopen(path, "r");
@@ -485,15 +487,21 @@ void delete_file_resendflag0()		//清空数据resend标志全部为0的目录
 					{
 						if(buff[strlen(buff)-2] != '0')			//检测是否存在resendflag != 0的记录   若存在则直接退出函数
 						{
-							fclose(fp);
-							closedir(dirp);
-							rt_mutex_release(record_data_lock);
-							return;
+							flag = 1;
+							break;
+							//fclose(fp);
+							//closedir(dirp);
+							//rt_mutex_release(record_data_lock);
+							//return;
 						}		
 					}
 					fclose(fp);
-					//遍历完文件都没发现flag != 0的记录直接删除文件
-					unlink(path);
+					if(flag == 0)
+					{
+						printf("unlink:%s\n",path);
+						//遍历完文件都没发现flag != 0的记录直接删除文件
+						unlink(path);
+					}	
 				}
 				
 			}
@@ -647,7 +655,7 @@ void client_thread_entry(void* parameter)
 			}
 		}
 		close_socket(fd_sock);
-		
+		delete_file_resendflag0();		//清空数据resend标志全部为0的目录
 		if((thistime < 300) && (lasttime > 300))
 		{
 			if((thistime+(24*60*60+1)-lasttime) < 300)

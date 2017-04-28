@@ -520,7 +520,6 @@ void addInverter(char *inverter_id)
 
 void initPath(void)
 {
-
 	mkdir("/home",0x777);
 	mkdir("/tmp",0x777);
 	mkdir("/yuneng",0x777);
@@ -528,17 +527,19 @@ void initPath(void)
 	mkdir("/home/record",0x777);
 	mkdir("/home/data/proc_res",0x777);
 	mkdir("/home/data/iprocres",0x777);
-	mkdir("/ftp",0x777);
+	echo("/home/data/ltpower","0.000000");
 	mkdir("/home/record/data",0x777);
 	mkdir("/home/record/inversta",0x777);
-	echo("/home/data/ltpower","0.000000");
 	echo("/yuneng/area.con","SAA");
 	echo("/yuneng/channel.con","0x10");
 	echo("/yuneng/limiteid.con","1");
-	echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.107\nPort1=8997\nPort2=8997\n");
+	echo("/yuneng/control.con","Timeout=10\nReport_Interval=15\nDomain=eee.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
 	echo("/yuneng/vernum.con","2\n");
+	echo("/yuneng/ftpadd.con", "60.190.131.190\n");
 	echo("/yuneng/datacent.con","Domain=111.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
 	echo("/home/data/power","");
+	mkdir("/ftp",0x777);
+
 	
 
 }
