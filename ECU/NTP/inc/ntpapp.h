@@ -44,7 +44,7 @@ typedef struct ntppacket
     NTPTIME tratimestamp;
 }NTPPACKET;
 
-int create_socket( void );
+int create_socket_ntp( void );
 int connecttoserver(int sockfd, struct sockaddr_in * serversocket_in);
 void send_packet(int sockfd);
 int receive_packet(int sockfd, NTPPACKET *recvpacked, struct sockaddr_in * serversocket_in);

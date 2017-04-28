@@ -114,6 +114,8 @@ static void tcpip_init_done_callback(void *arg)
                 /* set interface up */
                 netif_set_up(ethif->netif);
             }
+			netif_set_up(ethif->netif);
+
 
             if (!(ethif->flags & ETHIF_LINK_PHYUP))
             {
@@ -162,7 +164,7 @@ int lwip_system_init(void)
     rt_sem_detach(&done_sem);
 
     /* set default ip address */
-#if !LWIP_DHCP
+#if LWIP_DHCP
     if (netif_default != RT_NULL)
     {
         struct ip_addr ipaddr, netmask, gw;

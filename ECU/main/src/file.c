@@ -535,7 +535,7 @@ void initPath(void)
 	echo("/yuneng/limiteid.con","1");
 	echo("/yuneng/control.con","Timeout=10\nReport_Interval=15\nDomain=eee.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
 	echo("/yuneng/vernum.con","2\n");
-	echo("/yuneng/ftpadd.con", "60.190.131.190\n");
+	echo("/yuneng/ftpadd.con", "IP=60.190.131.190\nPort=9219\nuser=zhyf\npassword=yuneng\n");
 	echo("/yuneng/datacent.con","Domain=111.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
 	echo("/home/data/power","");
 	mkdir("/ftp",0x777);
@@ -625,7 +625,7 @@ int initsystem(char *ecuid,char *mac)
 	echo("/yuneng/limiteid.con","1");
 	echo("/yuneng/control.con","Timeout=10\nReport_Interval=15\nDomain=eee.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
 	echo("/yuneng/vernum.con","2\n");
-	echo("/yuneng/ftpadd.con", "60.190.131.190\n");
+	echo("/yuneng/ftpadd.con", "IP=60.190.131.190\nPort=9219\nuser=zhyf\npassword=yuneng\n");
 	echo("/yuneng/datacent.con","Domain=111.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
 	echo("/home/data/power","");
 	mkdir("/ftp",0x777);

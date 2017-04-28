@@ -14,35 +14,23 @@
 
 extern rt_mutex_t record_data_lock; 
 
-
-void getFTPaddr(char *FTPIP)
-{
-	FILE *fp;
-	
-	fp = fopen("/yuneng/ftpadd.con", "r");
-	if(fp == NULL){
-		strcpy(FTPIP,"60.190.131.190");
-		return ;
-	}
-	fgets(FTPIP, 50, fp);
-	fclose(fp);
-	return;
-}
-
-
 int updateECU(void)
 {
 	int ret = 0;
 	char IPFTPadd[50] = {'\0'};
 	char remote_path[100] = {'\0'};
+	int port=0;
+	char user[20]={'\0'};
+	char password[20]={'\0'};
 	rt_thread_delay(RT_TICK_PER_SECOND * START_TIME_UPDATE);
-	getFTPaddr(IPFTPadd);
-	printf("FTP:%s\n",IPFTPadd);
+	getFTPConf(IPFTPadd,&port,user,password);
+
+	printf("FTPIP:%s\nport:%d\nuser:%s\npassword:%s\n ",IPFTPadd,port,user,password);
 	
 	//获取服务器IP地址
 	sprintf(remote_path,"/ECU_R_M3/V%s.%s/%s",MAJORVERSION,MINORVERSION,UPDATE_PATH_SUFFIX);
 	rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
-	ret=ftpgetfile(IPFTPadd, 9219, "zhyf", "yuneng",remote_path,UPDATE_PATH);
+	ret=ftpgetfile(IPFTPadd, port, user, password,remote_path,UPDATE_PATH);
 	if(!ret)
 	{
 		//获取到文件，进行更新

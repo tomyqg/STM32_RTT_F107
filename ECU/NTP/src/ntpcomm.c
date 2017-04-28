@@ -16,7 +16,7 @@ Version:1.0
 #define MAINNTPDEBUG 0
 #define NTPFRAC(x) (4294 * (x) + ((1981 * (x))>>11))
 /****************************创建socket***************************************/
-int create_socket( void )
+int create_socket_ntp( void )
 {
     int sockfd;
     int addr_len;

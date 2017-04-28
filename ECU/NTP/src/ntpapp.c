@@ -23,7 +23,7 @@ int get_time_from_NTP()
   NTPPACKET receivepacket;
   fd_set readfd;
 
-  sockfd = create_socket();
+  sockfd = create_socket_ntp();
   if(-1==sockfd)
   {
     #ifdef NTPDEBUG

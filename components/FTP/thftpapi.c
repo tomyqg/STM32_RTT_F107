@@ -25,6 +25,52 @@
 #include "datetime.h"
 
 
+void getFTPConf(char *FTPIP,int *port,char* user,char *password)
+{
+	FILE *fp;
+	char buff[50];
+	fp = fopen("/yuneng/ftpadd.con", "r");
+	if(fp)
+	{
+		while(1)
+		{
+			memset(buff, '\0', sizeof(buff));
+			fgets(buff, sizeof(buff), fp);
+			if(!strlen(buff))
+				break;
+			if(!strncmp(buff, "IP", 2))
+			{
+				strcpy(FTPIP, &buff[3]);
+				if('\n' == FTPIP[strlen(FTPIP)-1])
+					FTPIP[strlen(FTPIP)-1] = '\0';
+			}
+			if(!strncmp(buff, "Port", 4))
+				*port = atoi(&buff[5]);
+			if(!strncmp(buff, "user", 4))
+			{
+				strcpy(user, &buff[5]);
+				if('\n' == user[strlen(user)-1])
+					user[strlen(user)-1] = '\0';				
+			}
+			if(!strncmp(buff, "password", 8))
+			{
+				strcpy(password, &buff[9]);
+				if('\n' == password[strlen(password)-1])
+					password[strlen(password)-1] = '\0';				
+			}
+		}
+		fclose(fp);
+	}else
+	{
+		strcpy(FTPIP,"60.190.131.190");
+		*port = 9219;
+		strcpy(user,"zhyf");
+		strcpy(password,"yuneng");
+	}
+	
+	
+}
+
  
 //创建一个socket并返回
 int socket_connect(char *host,int port)
@@ -64,14 +110,15 @@ int socket_connect(char *host,int port)
 int connect_server( char *host, int port )
 {   
     int       ctrl_sock;
-    char      buf[512];
+    char      *buf;
     int       result;
     ssize_t   len;
     fd_set rd;
 		struct timeval timeout;
-	
+	buf = malloc(512);
     ctrl_sock = socket_connect(host, port);
     if (ctrl_sock == -1) {
+		free(buf);
         return -1;
     }
 		FD_ZERO(&rd);
@@ -80,18 +127,20 @@ int connect_server( char *host, int port )
 		timeout.tv_usec = 0;
 		len = select(ctrl_sock+1, &rd, NULL, NULL, &timeout);
 		if(len <= 0){
+			free(buf);
 			return -1;
 		}else
 		{
-			memset(buf,0x00,sizeof(buf));
+			memset(buf,0x00,512);
 			len = recv( ctrl_sock, buf, 512, 0 );
 			buf[len] = 0;
 			sscanf( buf, "%d", &result );
 			if ( result != 220 ) {
 					closesocket( ctrl_sock );
+					free(buf);
 					return -1;
 			}
-			 
+			free(buf);
 			return ctrl_sock;
 		}
 }
@@ -99,29 +148,39 @@ int connect_server( char *host, int port )
 //发送命令,返回结果
 int ftp_sendcmd_re( int sock, char *cmd, void *re_buf, ssize_t *len)
 {
-    char        buf[512];
+    char        *buf;
     ssize_t     r_len;
     fd_set rd;
-		struct timeval timeout;	
+		struct timeval timeout;
+	
+	buf = malloc(512);
     if ( send( sock, cmd, strlen(cmd), 0 ) == -1 )
-        return -1;
-     
+		{
+			free(buf);
+      return -1;
+		}
+		
 		FD_ZERO(&rd);
 		FD_SET(sock, &rd);
 		timeout.tv_sec = 10;
 		timeout.tv_usec = 0;
 		r_len = select(sock+1, &rd, NULL, NULL, &timeout);
 		if(len <= 0){
+			free(buf);
 			return -1;
 		}else
 		{
 			r_len = recv( sock, buf, 512, 0 );
-			if ( r_len < 1 ) return -1;
+			if ( r_len < 1 ) 
+			{
+				free(buf);
+				return -1;
+			}
 			buf[r_len] = 0;
 			 
 			if (len != NULL) *len = r_len;
 			if (re_buf != NULL) sprintf(re_buf, "%s", buf);
-			 
+			free(buf);
 			return 0;
 		}
 }
@@ -129,35 +188,50 @@ int ftp_sendcmd_re( int sock, char *cmd, void *re_buf, ssize_t *len)
 //发送命令,返回编号
 int ftp_sendcmd( int sock, char *cmd )
 {
-    char     buf[512];
+    char     *buf;
     int      result;
     ssize_t  len;
-     
+
+	buf = malloc(512);
     result = ftp_sendcmd_re(sock, cmd, buf, &len);
     if (result == 0)
     {
         sscanf( buf, "%d", &result );
     }
-     
+    free(buf); 
     return result;
 }
  
 //登录ftp服务器
 int login_server( int sock, char *user, char *pwd )
 {
-    char    buf[128];
+    char    *buf;
     int     result;
-     
+
+	buf = malloc(128); 
     sprintf( buf, "USER %s\r\n", user );
     result = ftp_sendcmd( sock, buf );
-    if ( result == 230 ) return 0;
+    if ( result == 230 )
+	{
+		free(buf);
+		return 0;
+	}
     else if ( result == 331 ) {
         sprintf( buf, "PASS %s\r\n", pwd );
-        if ( ftp_sendcmd( sock, buf ) != 230 ) return -1;
+        if ( ftp_sendcmd( sock, buf ) != 230 ) 
+		{
+			free(buf);
+			return -1;
+		}
+		free(buf);
         return 0;
     }
     else
-        return -1;
+    {
+    	free(buf);
+    	return -1;
+    }
+        
 }
  
 int create_datasock( int ctrl_sock )
@@ -348,16 +422,18 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
 {
     int     d_sock = 0;
     ssize_t     len,write_len,sum=0;
-    char    buf[1461];
+    char    *buf;
     int     handle;
     int     result =0;
     fd_set rd;
 		struct timeval timeout;	
 	  //char time[20];
+	 buf = malloc(1461);
     //打开本地文件
     handle = fileopen( d,  O_WRONLY | O_CREAT | O_TRUNC, 0 );
     if ( handle == -1 ) 
 		{
+			free(buf);
 			printf("fffffffff\n");
 			return -1;
 		}
@@ -370,6 +446,7 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
     {
 			printf("qqqqqqqqq\n");
         fileclose(handle);
+		free(buf);
         return -1;
     }
      
@@ -381,6 +458,7 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
     {
 			printf("111111111\n");
         fileclose(handle);
+		free(buf);
         return result;
     }
      
@@ -397,6 +475,7 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
 				printf("select out\n");
 				closesocket( d_sock );
 				fileclose( handle );
+				free(buf);
 				return -1;
 			}else
 			{
@@ -412,6 +491,7 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
 					{
 							closesocket( d_sock );
 							fileclose( handle );
+							free(buf);
 							return -1;
 					}
 					 
@@ -442,8 +522,10 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
     buf[len] = 0;
     sscanf( buf, "%d", &result );
     if ( result >= 300 ) {
+		free(buf);
         return result;
     }
+	free(buf);
     return 0;
 }
 
@@ -453,14 +535,19 @@ int ftp_storfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
 {
     int     d_sock;
     ssize_t     len,send_len;
-    char    buf[512];
+    char    *buf;
     int     handle;
     int send_re;
     int result = 0;
-	
+
+		buf = malloc(512);
     //打开本地文件
     handle = fileopen( s,  O_RDONLY,0);
-    if ( handle == -1 ) return -1;
+    if ( handle == -1 ) 
+		{
+			free(buf);
+			return -1;
+		}
      
     //设置传输模式
     ftp_type(c_sock, 'I');
@@ -469,8 +556,9 @@ int ftp_storfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
     d_sock = ftp_pasv_connect(c_sock);
     if (d_sock == -1)
     {
-        fileclose(handle);
-        return -1;
+      fileclose(handle);
+			free(buf);
+      return -1;
     }
 
     //发送STOR命令
@@ -479,8 +567,9 @@ int ftp_storfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
     send_re = ftp_sendcmd( c_sock, buf );
     if (send_re >= 300 || send_re == 0)
     {
-        fileclose(handle);
-        return send_re;
+      fileclose(handle);
+			free(buf);
+      return send_re;
     }
      
     //开始向PASV通道写数据
@@ -492,10 +581,11 @@ int ftp_storfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
         if (send_len != len ||
             (stop != NULL && *stop))
         {
-        printf("send_len:%d len:%d \n",send_len,len);
-            closesocket( d_sock );
-            fileclose( handle );
-            return -1;
+					printf("send_len:%d len:%d \n",send_len,len);
+          closesocket( d_sock );
+          fileclose( handle );
+					free(buf);
+          return -1;
         }
          
         if (stor_size != NULL)
@@ -512,8 +602,10 @@ int ftp_storfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
     buf[len] = 0;
     sscanf( buf, "%d", &result );
     if ( result >= 300 ) {
-        return result;
+			free(buf);
+      return result;
     }
+		free(buf);
     return 0;
 }
  
@@ -618,13 +710,29 @@ int ftpputfile(char *host, int port, char *user, char *pwd,char *remotefile,char
 
 void getfile(char *remoteFile, char *localFile)
 {
-	ftpgetfile("192.168.1.107",21,"admin","admin",remoteFile,localFile);
+	char FTPIP[50];
+	int port=0;
+	char user[20]={'\0'};
+	char password[20]={'\0'};
+	getFTPConf(FTPIP,&port,user,password);
+
+	printf("FTPIP:%s\nport:%d\nuser:%s\npassword:%s\n ",FTPIP,port,user,password);
+
+	ftpgetfile(FTPIP,port, user, password,remoteFile,localFile);
 }
 FINSH_FUNCTION_EXPORT(getfile,get file from ftp.)
 
 void putfile(char *remoteFile, char *localFile)
 {
-	ftpputfile("192.168.1.107",21,"admin","admin",remoteFile,localFile);
+	char FTPIP[50];
+	int port=0;
+	char user[20]={'\0'};
+	char password[20]={'\0'};
+	getFTPConf(FTPIP,&port,user,password);
+
+	printf("FTPIP:%s\nport:%d\nuser:%s\npassword:%s\n ",FTPIP,port,user,password);
+
+	ftpputfile(FTPIP,port, user, password,remoteFile,localFile);
 }
 FINSH_FUNCTION_EXPORT(putfile,put file from ftp.)
 

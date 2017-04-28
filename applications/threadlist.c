@@ -8,6 +8,7 @@
 #include "control_client.h"
 #include "remoteUpdate.h"
 #include "idwrite.h"
+#include "ntpapp.h"
 #include <board.h>
 #include <rtthread.h>
 #include "lan8720rst.h"
@@ -68,7 +69,7 @@ struct rt_thread control_client_thread;
 
 #ifdef THREAD_PRIORITY_UPDATE
 ALIGN(RT_ALIGN_SIZE)
-static rt_uint8_t update_stack[4096];
+static rt_uint8_t update_stack[2048];
 static struct rt_thread update_thread;
 #endif
 
@@ -100,6 +101,12 @@ static struct rt_thread net_test_thread;
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t zigbee_test_stack[1024];
 static struct rt_thread zigbee_test_thread;
+#endif 
+
+#ifdef THREAD_PRIORITY_NTP
+ALIGN(RT_ALIGN_SIZE)
+static rt_uint8_t ntp_stack[1024];
+static struct rt_thread ntp_thread;
 #endif 
 
 rt_mutex_t record_data_lock = RT_NULL;
@@ -264,10 +271,22 @@ static void zigbee_test_thread_entry(void* parameter)
 }
 #endif
 
+#ifdef THREAD_PRIORITY_NTP
+static void ntp_thread_entry(void* parameter)
+{
+
+	while(1)
+	{
+		get_time_from_NTP();
+		rt_thread_delay(RT_TICK_PER_SECOND * 86400);
+	}
+
+}
+#endif
+
 #ifdef THREAD_PRIORITY_NET_TEST
 static void net_test_thread_entry(void* parameter)
 {
-	
 	char send_data[13] = "NET_TEST   ";
 	int length = 12;
 	char ch12 = 'A'; 
@@ -368,6 +387,15 @@ void tasks_new(void)//创建任务线程
     rt_thread_startup(&zigbee_test_thread);
   }
 #endif		
+	
+#ifdef THREAD_PRIORITY_NTP
+  /* init ntp thread */
+  result = rt_thread_init(&ntp_thread,"ntp",ntp_thread_entry,RT_NULL,(rt_uint8_t*)&ntp_stack[0],sizeof(ntp_stack),THREAD_PRIORITY_NTP,5);
+  if (result == RT_EOK)
+  {
+    rt_thread_startup(&ntp_thread);
+  }
+#endif
 	
 #ifdef THREAD_PRIORITY_UPDATE	
   /* init update thread */

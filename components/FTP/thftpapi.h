@@ -4,7 +4,8 @@
 //  THFTPAPI.h
 //  MyFTP
 //
-
+//获取连接服务器IP
+void getFTPConf(char *FTPIP,int *port,char* user,char *password);
  
 //连接服务器  OK
 int ftp_connect( char *host, int port, char *user, char *pwd );
