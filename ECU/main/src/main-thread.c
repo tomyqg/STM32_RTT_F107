@@ -185,7 +185,7 @@ void main_thread_entry(void* parameter)
 
 	rt_thread_delay(RT_TICK_PER_SECOND * START_TIME_MAIN);
 	rt_kprintf("\nmain.exe %s_%s_%s\n", ECU_M3_VERSION,MAJORVERSION,MINORVERSION);
-	printmsg("main","Start-------------------------------------------------");
+	printmsg(ECU_DBG_MAIN,"Start-------------------------------------------------");
 	
 
 	init_all(inverter);   //初始化所有逆变器
@@ -199,8 +199,8 @@ void main_thread_entry(void* parameter)
 
 			cur_time_hour = get_time(ecu.broadcast_time, broadcast_hour_minute);					//重新获取本次广播事件
 
-			printmsg("main","****************************************");
-			print2msg("main","ecu.broadcast_time",ecu.broadcast_time);
+			printmsg(ECU_DBG_MAIN,"****************************************");
+			print2msg(ECU_DBG_MAIN,"ecu.broadcast_time",ecu.broadcast_time);
 			
 			ecu.count = getalldata(inverter);			//获取所有逆变器数据,返回当前有数据的逆变器数量
 			//printf("ecu.count:%d\n",ecu.count);

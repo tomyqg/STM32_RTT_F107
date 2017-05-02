@@ -43,8 +43,8 @@ int getpower(inverter_info *inverter, int *limitedpower, int *stationarypower)	/
 		*limitedpower = atoi(splitdata[1]);
 		*stationarypower = atoi(splitdata[3]);
 
-		printdecmsg("main","Maximun power", *limitedpower);
-		printdecmsg("main","Fixed power", *stationarypower);
+		printdecmsg(ECU_DBG_MAIN,"Maximun power", *limitedpower);
+		printdecmsg(ECU_DBG_MAIN,"Fixed power", *stationarypower);
 	}
 	return 0;
 }
@@ -88,7 +88,7 @@ int get_fixed_power(inverter_info *inverter)
 		splitString(linedata,splitdata);
 		power = atoi(splitdata[3]);
 
-		printdecmsg("main","Fixed power", power);
+		printdecmsg(ECU_DBG_MAIN,"Fixed power", power);
 	}
 
 
@@ -110,7 +110,7 @@ int getsyspower()		//读取系统最大总功率
 
 	syspower = atoi(splitdata[2]);
 
-	printdecmsg("main","Maximun system power", syspower);
+	printdecmsg(ECU_DBG_MAIN,"Maximun system power", syspower);
 
 	return syspower;
 }
@@ -136,11 +136,11 @@ int updatemaxpower(inverter_info *inverter, int limitedresult)//更新逆变器�
 		{
 			if(1 == insert_line("/home/data/power",linedata))
 			{
-				print2msg("main",inverter->id, "Update maximun power successfully");
+				print2msg(ECU_DBG_MAIN,inverter->id, "Update maximun power successfully");
 				break;
 			}
 			else
-				print2msg("main",inverter->id, "Failed to update maximun power");
+				print2msg(ECU_DBG_MAIN,inverter->id, "Failed to update maximun power");
 		}
 	}
 	
@@ -170,13 +170,13 @@ int updatemaxflag(inverter_info *inverter)			//更新逆变器为最大功率模
 		{
 			if(1 == insert_line("/home/data/power",linedata))
 			{
-				print2msg("main",inverter->id, "Update maximun power flag successfully");
+				print2msg(ECU_DBG_MAIN,inverter->id, "Update maximun power flag successfully");
 					break;
 			}
 			else
-				print2msg("main",inverter->id, "Failed to update maximun flag power");
+				print2msg(ECU_DBG_MAIN,inverter->id, "Failed to update maximun flag power");
 		}
-		print2msg("main",inverter->id, "has been changed to Maximun power Mode");
+		print2msg(ECU_DBG_MAIN,inverter->id, "has been changed to Maximun power Mode");
 	}
 	
 	return 0;
@@ -202,14 +202,14 @@ int updatefixedpower(inverter_info *inverter, int stationaryresult)
 		{
 			if(1 == insert_line("/home/data/power",linedata))
 			{
-				print2msg("main",inverter->id, "Update fixed power flag successfully");
+				print2msg(ECU_DBG_MAIN,inverter->id, "Update fixed power flag successfully");
 					break;
 			}
 			else
-				print2msg("main",inverter->id, "Failed to update fixed flag power");
+				print2msg(ECU_DBG_MAIN,inverter->id, "Failed to update fixed flag power");
 		}
 
-		printdecmsg("main","Fixed power from inverter", stationaryresult);
+		printdecmsg(ECU_DBG_MAIN,"Fixed power from inverter", stationaryresult);
 	}
 	
 	return 0;
@@ -236,14 +236,14 @@ int updatefixedflag(inverter_info *inverter)
 		{
 			if(1 == insert_line("/home/data/power",linedata))
 			{
-				print2msg("main",inverter->id, "Update fixed power flag successfully");
+				print2msg(ECU_DBG_MAIN,inverter->id, "Update fixed power flag successfully");
 					break;
 			}
 			else
-				print2msg("main",inverter->id, "Failed to update fixed flag power");
+				print2msg(ECU_DBG_MAIN,inverter->id, "Failed to update fixed flag power");
 		}
 
-		print2msg("main",inverter->id, "has been changed to fixed power Mode!\n");
+		print2msg(ECU_DBG_MAIN,inverter->id, "has been changed to fixed power Mode!\n");
 	}
 	
 	return 0;
@@ -262,7 +262,7 @@ int calcount(inverter_info *firstinverter)
 			panelcount++;
 	}
 
-	printdecmsg("main","Panel count", panelcount);
+	printdecmsg(ECU_DBG_MAIN,"Panel count", panelcount);
 
 	return panelcount;
 }
@@ -288,29 +288,29 @@ int setfixedpowerone(inverter_info *inverter, char power)//固定功率限定单
 	sendbuff[i++] = 0xFE;
 
 	zb_send_cmd(inverter, sendbuff, i);
-	printmsg("main","Set fixed power single");
+	printmsg(ECU_DBG_MAIN,"Set fixed power single");
 	ret = zb_get_reply(data, inverter);
 	if ((13 == ret) && (0xFB == data[0]) && (0xFB == data[1])&& (0xFE == data[11]) && (0xFE == data[12]))
 	{
 		if (0xDE == data[3])
 		{
-			printmsg("main","Set success");
+			printmsg(ECU_DBG_MAIN,"Set success");
 			return 1;
 		}
 		else if (0xDF == data[3])
 		{
-			printmsg("main","Set failed");
+			printmsg(ECU_DBG_MAIN,"Set failed");
 			return 2;
 		}
 		else
 		{
-			printmsg("main","Set failed");
+			printmsg(ECU_DBG_MAIN,"Set failed");
 			return -1;
 		}
 	}
 	else
 	{
-		printmsg("main","Set failed");
+		printmsg(ECU_DBG_MAIN,"Set failed");
 		return -1;
 	}
 }
@@ -335,7 +335,7 @@ int setfixedpowerall(char power)	//固定功率限定广播，zb_constpower_broa
 	sendbuff[i++] = 0xFE;
 
 	zb_broadcast_cmd(sendbuff, i);
-	printmsg("main","Set fixed power broadcast");
+	printmsg(ECU_DBG_MAIN,"Set fixed power broadcast");
 	return 1;
 
 }
@@ -361,29 +361,29 @@ int setlimitedpowerone(inverter_info *inverter, char power)	//发送命令，设
 	sendbuff[i++] = 0xFE;
 
 	zb_send_cmd(inverter, sendbuff, i);
-	printmsg("main","Set max power single");
+	printmsg(ECU_DBG_MAIN,"Set max power single");
 	ret = zb_get_reply(data, inverter);
 	if ((13 == ret) && (0xFB == data[0]) && (0xFB == data[1])&& (0xFE == data[11]) && (0xFE == data[12]))
 	{
 		if (0xDE == data[3])
 		{
-			printmsg("main","Set success");
+			printmsg(ECU_DBG_MAIN,"Set success");
 			return 1;
 		}
 		else if (0xDF == data[3])
 		{
-			printmsg("main","Set failed");
+			printmsg(ECU_DBG_MAIN,"Set failed");
 			return 2;
 		}
 		else
 		{
-			printmsg("main","Set failed");
+			printmsg(ECU_DBG_MAIN,"Set failed");
 			return -1;
 		}
 	}
 	else
 	{
-		printmsg("main","Set failed");
+		printmsg(ECU_DBG_MAIN,"Set failed");
 		return -1;
 	}
 }
@@ -408,7 +408,7 @@ int setlimitedpowerall(char power)	//最大功率限定广播，zb_powerlimited_
 	sendbuff[i++] = 0xFE;
 
 	zb_broadcast_cmd(sendbuff, i);
-	printmsg("main","Set max power broadcast");
+	printmsg(ECU_DBG_MAIN,"Set max power broadcast");
 	return 0;
 }
 
@@ -564,7 +564,7 @@ int process_max_power(inverter_info *firstinverter)
 						memset(readpresetdata, '\0', sizeof(readpresetdata));
 
 						res = zb_query_protect_parameter(curinverter, readpresetdata);
-						printdecmsg("main","res", res);
+						printdecmsg(ECU_DBG_MAIN,"res", res);
 						if(1 == res)
 						{
 							limitedresult = (readpresetdata[5] << 14) / 7395;

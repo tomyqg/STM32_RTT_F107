@@ -153,7 +153,7 @@ int WiFi_RecvData(int timeout,char *data)
 	}
 	if(selectWiFi(timeout) <= 0)
 	{
-		printmsg("wifi","WIFI Get reply time out");
+		printmsg(ECU_DBG_OTHER,"WIFI Get reply time out");
 		return -1;
 	}
 	else

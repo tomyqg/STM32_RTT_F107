@@ -35,7 +35,7 @@ void rt_hw_lan8720_init(void)
 void rt_hw_lan8720_rst(void)
 {
   GPIO_ResetBits(LAN8720_GPIO, LAN8720_PIN);
-	rt_thread_delay(RT_TICK_PER_SECOND/5);
+	rt_thread_delay(RT_TICK_PER_SECOND);
 	GPIO_SetBits(LAN8720_GPIO, LAN8720_PIN);
 }
 

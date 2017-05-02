@@ -157,7 +157,7 @@ int zb_shortaddr_cmd(int shortaddr, char *buff, int length)		//zigbee ¶ÌµØÖ·±¨Í·
 	if(0!=shortaddr)
 	{
 		ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0,sendbuff, (length+15));
-		printhexmsg("main","zb_shortaddr_cmd", (char *)sendbuff, 15);
+		printhexmsg(ECU_DBG_MAIN,"zb_shortaddr_cmd", (char *)sendbuff, 15);
 		return 1;
 	}
 	else
@@ -174,7 +174,7 @@ int zb_shortaddr_reply(char *data,int shortaddr,char *id)			//¶ÁÈ¡Äæ±äÆ÷µÄ·µ»ØÖ¡
 	
 	if(selectZigbee(2) <= 0)
 	{
-		printmsg("main","Get reply time out");
+		printmsg(ECU_DBG_MAIN,"Get reply time out");
 	
 		return -1;
 	}
@@ -189,7 +189,7 @@ int zb_shortaddr_reply(char *data,int shortaddr,char *id)			//¶ÁÈ¡Äæ±äÆ÷µÄ·µ»ØÖ¡
 		{
 			data[i]=data_all[i+12];
 		}
-		printhexmsg("main","Reply", data_all, temp_size);
+		printhexmsg(ECU_DBG_MAIN,"Reply", data_all, temp_size);
 		rt_sprintf(inverterid,"%02x%02x%02x%02x%02x%02x",data_all[6],data_all[7],data_all[8],data_all[9],data_all[10],data_all[11]);
 		if((size>0)&&(0xFC==data_all[0])&&(0xFC==data_all[1])&&(data_all[2]==shortaddr/256)&&(data_all[3]==shortaddr%256)&&(data_all[5]==0xA5)&&(0==rt_strcmp(id,inverterid)))
 		{
@@ -212,7 +212,7 @@ int zb_get_reply(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷µÄ·µ»ØÖ¡
 
 	if(selectZigbee(2) <= 0)
 	{
-		printmsg("main","Get reply time out");
+		printmsg(ECU_DBG_MAIN,"Get reply time out");
 		inverter->signalstrength=0;
 		return -1;
 	}
@@ -227,7 +227,7 @@ int zb_get_reply(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷µÄ·µ»ØÖ¡
 		{
 			data[i]=data_all[i+12];
 		}
-		printhexmsg("main","Reply", data_all, temp_size);
+		printhexmsg(ECU_DBG_MAIN,"Reply", data_all, temp_size);
 		rt_sprintf(inverterid,"%02x%02x%02x%02x%02x%02x",data_all[6],data_all[7],data_all[8],data_all[9],data_all[10],data_all[11]);
 		if((size>0)&&(0xFC==data_all[0])&&(0xFC==data_all[1])&&(data_all[2]==inverter->shortaddr/256)&&(data_all[3]==inverter->shortaddr%256)&&(0==rt_strcmp(inverter->id,inverterid)))
 		{
@@ -253,7 +253,7 @@ int zb_get_reply_update_start(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷
 
 	if(selectZigbee(10) <= 0)
 	{
-		printmsg("main","Get reply time out");
+		printmsg(ECU_DBG_MAIN,"Get reply time out");
 		return -1;
 	}
 	else
@@ -266,7 +266,7 @@ int zb_get_reply_update_start(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷
 		{
 			data[i]=data_all[i+12];
 		}
-		printhexmsg("main","Reply", data_all, temp_size);
+		printhexmsg(ECU_DBG_MAIN,"Reply", data_all, temp_size);
 		rt_sprintf(inverterid,"%02x%02x%02x%02x%02x%02x",data_all[6],data_all[7],data_all[8],data_all[9],data_all[10],data_all[11]);
 		if((size>0)&&(0xFC==data_all[0])&&(0xFC==data_all[1])&&(data_all[2]==inverter->shortaddr/256)&&(data_all[3]==inverter->shortaddr%256)&&(data_all[5]==0xA5)&&(0==rt_strcmp(inverter->id,inverterid)))
 		{
@@ -289,7 +289,7 @@ int zb_get_reply_restore(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷Ô¶³Ì¸
 
 	if(selectZigbee(200) <= 0)
 	{
-		printmsg("main","Get reply time out");
+		printmsg(ECU_DBG_MAIN,"Get reply time out");
 		return -1;
 	}
 	else
@@ -302,7 +302,7 @@ int zb_get_reply_restore(char *data,inverter_info *inverter)			//¶ÁÈ¡Äæ±äÆ÷Ô¶³Ì¸
 		{
 			data[i]=data_all[i+12];
 		}
-		printhexmsg("main","Reply", data_all, temp_size);
+		printhexmsg(ECU_DBG_MAIN,"Reply", data_all, temp_size);
 		rt_sprintf(inverterid,"%02x%02x%02x%02x%02x%02x",data_all[6],data_all[7],data_all[8],data_all[9],data_all[10],data_all[11]);
 
 		if((size>0)&&(0xFC==data_all[0])&&(0xFC==data_all[1])&&(data_all[2]==inverter->shortaddr/256)&&(data_all[3]==inverter->shortaddr%256)&&(data_all[5]==0xA5)&&(0==rt_strcmp(inverter->id,inverterid)))
@@ -322,7 +322,7 @@ int zb_get_reply_from_module(char *data)			//¶ÁÈ¡zigbeeÄ£¿éµÄ·µ»ØÖ¡
 
 	if(selectZigbee(2) <= 0)
 	{
-		printmsg("main","Get reply time out");
+		printmsg(ECU_DBG_MAIN,"Get reply time out");
 		return -1;
 	}else
 	{
@@ -330,7 +330,7 @@ int zb_get_reply_from_module(char *data)			//¶ÁÈ¡zigbeeÄ£¿éµÄ·µ»ØÖ¡
 		size = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data, 255);
 		if(size > 0)
 		{
-			printhexmsg("main","Reply", data, size);
+			printhexmsg(ECU_DBG_MAIN,"Reply", data, size);
 			return size;
 		}else
 		{
@@ -344,13 +344,13 @@ int zb_get_id(char *data)			//»ñÈ¡Äæ±äÆ÷ID
 	int size;
 
 	if(selectZigbee(30) <= 0){
-		printmsg("main","Get id time out");
+		printmsg(ECU_DBG_MAIN,"Get id time out");
 		return -1;
 	}
 	else{
 		//rt_thread_delay(RT_TICK_PER_SECOND/5);
 		size = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data, 255);
-		printhexmsg("main","Reply", data, size);
+		printhexmsg(ECU_DBG_MAIN,"Reply", data, size);
 		return size;
 	}
 }
@@ -383,9 +383,9 @@ int zb_turnoff_limited_rptid(int short_addr,inverter_info *inverter)			//¹Ø±ÕÏÞ¶
 
 	if(0!=inverter->shortaddr)
 	{
-		printmsg("main","Turn off limited report id");
+		printmsg(ECU_DBG_MAIN,"Turn off limited report id");
 		ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0,sendbuff, 15);
-		printhexmsg("main","sendbuff",(char *)sendbuff,15);
+		printhexmsg(ECU_DBG_MAIN,"sendbuff",(char *)sendbuff,15);
 		ret = zb_get_reply_from_module(data);
 		if((11 == ret)&&(0xA5 == data[2])&&(0xA5 == data[3]))
 		{
@@ -409,7 +409,7 @@ int zb_turnoff_rptid(int short_addr)			//¹Ø±Õµ¥¸öÄæ±äÆ÷ÉÏ±¨ID¹¦ÄÜ
 	unsigned char sendbuff[512] = {'\0'};
 	int i=0;
 	int check=0;
-	printmsg("main","Turn off report id");
+	printmsg(ECU_DBG_MAIN,"Turn off report id");
 
 	sendbuff[0]  = 0xAA;
 	sendbuff[1]  = 0xAA;
@@ -444,7 +444,7 @@ int zb_get_inverter_shortaddress_single(inverter_info *inverter)			//»ñÈ¡µ¥Ì¨Ö¸¶
 	char data[256];
 	char inverterid[13] = {'\0'};
 	int check=0;
-	printmsg("main","Get inverter shortaddresssingle");
+	printmsg(ECU_DBG_MAIN,"Get inverter shortaddresssingle");
 
 	clear_zbmodem();			//·¢ËÍÖ¸ÁîÇ°ÏÈÇå¿Õ»º³åÇø
 	sendbuff[0]  = 0xAA;
@@ -476,7 +476,7 @@ int zb_get_inverter_shortaddress_single(inverter_info *inverter)			//»ñÈ¡µ¥Ì¨Ö¸¶
 
 
 	ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0, sendbuff, 21);
-	printhexmsg("main","sendbuff",(char *)sendbuff,21);
+	printhexmsg(ECU_DBG_MAIN,"sendbuff",(char *)sendbuff,21);
 	ret = zb_get_reply_from_module(data);
 
 	rt_sprintf(inverterid,"%02x%02x%02x%02x%02x%02x",data[4],data[5],data[6],data[7],data[8],data[9]);
@@ -508,7 +508,7 @@ int zb_turnon_rtpid(inverter_info *firstinverter)			//¿ªÆôÄæ±äÆ÷×Ô¶¯ÉÏ±¨ID
 	int short_addr;
 	char inverterid[256] = {'\0'};
 	int check=0;
-	printmsg("main","Turn on report id");
+	printmsg(ECU_DBG_MAIN,"Turn on report id");
 
 	sendbuff[0]  = 0xAA;
 	sendbuff[1]  = 0xAA;
@@ -541,7 +541,7 @@ int zb_turnon_rtpid(inverter_info *firstinverter)			//¿ªÆôÄæ±äÆ÷×Ô¶¯ÉÏ±¨ID
 				inverterid[2*i] = (data[i+4]>>4) + 0x30;
 				inverterid[2*i+1] = (data[i+4]&0x0f) + 0x30;
 			}
-			print2msg("main","inverterid",inverterid);
+			print2msg(ECU_DBG_MAIN,"inverterid",inverterid);
 //			save_inverter_id(inverterid,short_addr);  //±£´æÄæ±äÆ÷ÒÔ¼°¶ÌµØÖ·
 			rt_thread_delay(RT_TICK_PER_SECOND*5);
 			zb_turnoff_rptid(short_addr);
@@ -581,7 +581,7 @@ int zb_change_inverter_panid_broadcast(void)	//¹ã²¥¸Ä±äÄæ±äÆ÷µÄPANID£¬ZK
 	sendbuff[14] = 0x00;
 
 	ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0, sendbuff, 15);
-	printhexmsg("main","sendbuff",sendbuff,15);
+	printhexmsg(ECU_DBG_MAIN,"sendbuff",sendbuff,15);
 
 	return 1;
 }
@@ -616,7 +616,7 @@ int zb_change_inverter_panid_single(inverter_info *inverter)	//µ¥µã¸Ä±äÄæ±äÆ÷µÄP
 	sendbuff[20]=((inverter->id[10]-0x30)*16+(inverter->id[11]-0x30));
 	
 	ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0, sendbuff, 21);
-	printhexmsg("main","sendbuff",sendbuff,21);
+	printhexmsg(ECU_DBG_MAIN,"sendbuff",sendbuff,21);
 
 	rt_thread_delay(RT_TICK_PER_SECOND);
 	return 1;
@@ -653,7 +653,7 @@ int zb_restore_inverter_panid_channel_single_0x8888_0x10(inverter_info *inverter
 	sendbuff[20]=((inverter->id[10]-0x30)*16+(inverter->id[11]-0x30));
 
 	ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0, sendbuff, 21);
-	printhexmsg("main","sendbuff",sendbuff,21);
+	printhexmsg(ECU_DBG_MAIN,"sendbuff",sendbuff,21);
 
 	rt_thread_delay(RT_TICK_PER_SECOND);
 	return 1;
@@ -687,7 +687,7 @@ int zb_change_ecu_panid(void)
 	sendbuff[14] = 0x00;
 
 	ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0, sendbuff, 15);
-	printhexmsg("main","Set ECU PANID and Channel", (char *)sendbuff, 15);
+	printhexmsg(ECU_DBG_MAIN,"Set ECU PANID and Channel", (char *)sendbuff, 15);
 
 	if ((3 == zb_get_reply_from_module(recvbuff))
 			&& (0xAB == recvbuff[0])
@@ -725,7 +725,7 @@ int zb_restore_ecu_panid_0x8888(void)			//»Ö¸´ECUµÄPANIDÎª0x8888,ZK
 	sendbuff[14] = 0x00;
 
 	ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0, sendbuff, 15);
-	printhexmsg("main","sendbuff",(char *)sendbuff,15);
+	printhexmsg(ECU_DBG_MAIN,"sendbuff",(char *)sendbuff,15);
 	ret = zb_get_reply_from_module(data);
 	if((3 == ret)&&(0xAB == data[0])&&(0xCD == data[1])&&(0xEF == data[2]))
 		return 1;
@@ -760,7 +760,7 @@ int zb_restore_ecu_panid_0xffff(int channel)
 	sendbuff[13] = check%256;
 	sendbuff[14] = 0x00;
 	ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL,0, sendbuff, 15);
-	printhexmsg("main","Change ECU channel (PANID:0xFFFF)", (char *)sendbuff, 15);
+	printhexmsg(ECU_DBG_MAIN,"Change ECU channel (PANID:0xFFFF)", (char *)sendbuff, 15);
 
 	//½ÓÊÕ·´À¡
 	if ((3 == zb_get_reply_from_module(recvbuff))
@@ -796,7 +796,7 @@ int zb_send_cmd(inverter_info *inverter, char *buff, int length)		//zigbee°üÍ·
 	sendbuff[13] = check%256;
 	sendbuff[14] = length;
 
-	printdecmsg("main","shortaddr",inverter->shortaddr);
+	printdecmsg(ECU_DBG_MAIN,"shortaddr",inverter->shortaddr);
 	for(i=0; i<length; i++)
 	{
 		sendbuff[15+i] = buff[i];
@@ -866,7 +866,7 @@ int zb_query_inverter_info(inverter_info *inverter)		//ÇëÇóÄæ±äÆ÷µÄ»úÐÍÂë
 	sendbuff[i++] = 0xFE;
 	sendbuff[i++] = 0xFE;
 	zb_send_cmd(inverter, sendbuff, i);
-	print2msg("main","Query Inverter's Model and Version", inverter->id);
+	print2msg(ECU_DBG_MAIN,"Query Inverter's Model and Version", inverter->id);
 
 	if ((16 == zb_get_reply(recvbuff, inverter))
 			&& (0xFB == recvbuff[0])
@@ -890,7 +890,7 @@ int zb_query_data(inverter_info *inverter)		//ÇëÇóÄæ±äÆ÷ÊµÊ±Êý¾Ý
 	char sendbuff[256];
 	char data[256];
 
-	print2msg("main","Query inverter data",inverter->id);
+	print2msg(ECU_DBG_MAIN,"Query inverter data",inverter->id);
 	clear_zbmodem();			//·¢ËÍÖ¸ÁîÇ°,ÏÈÇå¿Õ»º³åÇø
 	sendbuff[i++] = 0xFB;
 	sendbuff[i++] = 0xFB;
@@ -940,7 +940,7 @@ int zb_test_communication(void)		//zigbee²âÊÔÍ¨ÐÅÓÐÃ»ÓÐ¶Ï¿ª
 	char data[256] =  {'\0'};
 	int check=0;
 
-	printmsg("main","test zigbee communication");
+	printmsg(ECU_DBG_MAIN,"test zigbee communication");
 	clear_zbmodem();			//·¢ËÍÖ¸ÁîÇ°,ÏÈÇå¿Õ»º³åÇø
 	sendbuff[0]  = 0xAA;
 	sendbuff[1]  = 0xAA;
@@ -1000,8 +1000,8 @@ int zb_set_protect_parameter(inverter_info *inverter, char *protect_parameter)		
 	sendbuff[i++] = 0xFE;
 	sendbuff[i++] = 0xFE;
 	
-	print2msg("main",inverter->id,"Set protect parameters");
-	printhexmsg("main","Set protect parameters", sendbuff, i);
+	print2msg(ECU_DBG_MAIN,inverter->id,"Set protect parameters");
+	printhexmsg(ECU_DBG_MAIN,"Set protect parameters", sendbuff, i);
 	zb_send_cmd(inverter, sendbuff, i);
 	ret = zb_get_reply(data,inverter);
 	if((13 == ret) && (0xDE == data[3]) && (0xFB == data[0]) && (0xFB == data[1]) && (0xFE == data[11]) && (0xFE == data[12]))
@@ -1029,7 +1029,7 @@ int zb_query_protect_parameter(inverter_info *inverter, char *protect_data_DD_re
 	sendbuff[i++] = 0xFE;
 	sendbuff[i++] = 0xFE;
 	
-	print2msg("main",inverter->id, "Query protect parameter");
+	print2msg(ECU_DBG_MAIN,inverter->id, "Query protect parameter");
 	zb_send_cmd(inverter, sendbuff, i);
 	ret = zb_get_reply(protect_data_DD_reply,inverter);
 	if((33 == ret) && (0xDD == protect_data_DD_reply[3]) && (0xFB == protect_data_DD_reply[0]) && (0xFB == protect_data_DD_reply[1]) && (0xFE == protect_data_DD_reply[31]) && (0xFE == protect_data_DD_reply[32]))
@@ -1415,7 +1415,7 @@ int process_gfdi(inverter_info *firstinverter)
 				{
 					if(1 == zb_clear_gfdi(curinverter))
 					{
-						print2msg("main","Clear GFDI", curinverter->id);
+						print2msg(ECU_DBG_MAIN,"Clear GFDI", curinverter->id);
 						break;
 					}
 					j++;
@@ -1574,7 +1574,7 @@ int process_protect_data(inverter_info *firstinverter)
 				{
 					if(1 == zb_set_protect_parameter(curinverter,protect_data_yc500_yc200))
 					{
-						print2msg("main","set_protect_parameter_successful", curinverter->id);
+						print2msg(ECU_DBG_MAIN,"set_protect_parameter_successful", curinverter->id);
 
 						if(1 == zb_query_protect_parameter(curinverter, protect_data_DD_reply))
 						{
@@ -1582,7 +1582,7 @@ int process_protect_data(inverter_info *firstinverter)
 
 							if(0 == compare_protect_data(protect_data_yc500_yc200, &protect_data_DD_reply[7]))	//????,???????????
 							{
-								print2msg("main","compare_protect_parameter_successful", curinverter->id);
+								print2msg(ECU_DBG_MAIN,"compare_protect_parameter_successful", curinverter->id);
 								break;
 							}
 
@@ -1596,13 +1596,13 @@ int process_protect_data(inverter_info *firstinverter)
 				{
 					if(1 == zb_set_protect_parameter(curinverter,protect_data_yc1000))
 					{
-						print2msg("main","set_protect_parameter_successful", curinverter->id);
+						print2msg(ECU_DBG_MAIN,"set_protect_parameter_successful", curinverter->id);
 						if(1 == zb_query_protect_parameter(curinverter, protect_data_DD_reply))
 						{
 							resolve_and_update_inverter_protect_parameter(curinverter, &protect_data_DD_reply[4]);
 							if(0 == compare_protect_data(protect_data_yc1000, &protect_data_DD_reply[7]))		//????,???????????
 							{
-								print2msg("main","compare_protect_parameter_successful", curinverter->id);
+								print2msg(ECU_DBG_MAIN,"compare_protect_parameter_successful", curinverter->id);
 								break;
 							}
 						}
@@ -1664,12 +1664,12 @@ int process_turn_on_off(inverter_info *firstinverter)
 			command[strlen(command)-1] = '\0';
 		if(!strncmp(command, "connect all", 11)){
 			zb_turnon_inverter_broadcast();
-			printmsg("main","turn on all");
+			printmsg(ECU_DBG_MAIN,"turn on all");
 			break;
 		}
 		if(!strncmp(command, "disconnect all", 14)){
 			zb_shutdown_broadcast();
-			printmsg("main","turn off all");
+			printmsg(ECU_DBG_MAIN,"turn off all");
 			break;
 		}
 
@@ -1683,7 +1683,7 @@ int process_turn_on_off(inverter_info *firstinverter)
 					{
 						if(1 == zb_boot_single(curinverter))
 						{
-							print2msg("main","turn on", curinverter->id);
+							print2msg(ECU_DBG_MAIN,"turn on", curinverter->id);
 							break;
 						}
 						j++;
@@ -1695,7 +1695,7 @@ int process_turn_on_off(inverter_info *firstinverter)
 					{
 						if(1 == zb_shutdown_single(curinverter))
 						{
-							print2msg("main","turn off", curinverter->id);
+							print2msg(ECU_DBG_MAIN,"turn off", curinverter->id);
 							break;
 						}
 						j++;
@@ -1733,7 +1733,7 @@ int process_quick_boot(inverter_info *firstinverter)
 			for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++)
 			{
 				zb_boot_waitingtime_single(curinverter);
-				print2msg("main","quick boot",curinverter->id);
+				print2msg(ECU_DBG_MAIN,"quick boot",curinverter->id);
 				curinverter++;
 			}
 		}
@@ -1770,7 +1770,7 @@ int process_ipp(inverter_info *firstinverter)
 				command[strlen(command)-1] = '\0';
 			if(!strncmp(command, "set ipp all", 11)){
 				zb_ipp_broadcast();
-				printmsg("main","set ipp all");
+				printmsg(ECU_DBG_MAIN,"set ipp all");
 				break;
 			}
 
@@ -1782,7 +1782,7 @@ int process_ipp(inverter_info *firstinverter)
 					{
 						if(1 == zb_ipp_single(curinverter))
 						{
-							print2msg("main","set ipp single", curinverter->id);
+							print2msg(ECU_DBG_MAIN,"set ipp single", curinverter->id);
 							break;
 						}
 						j++;
@@ -2006,7 +2006,7 @@ int get_inverter_shortaddress(inverter_info *firstinverter)		//»ñÈ¡Ã»ÓÐÊý¾ÝµÄÄæ±
 	{
 		if(1==zb_restore_ecu_panid_0xffff(0x10))		//°ÑECUµÄPANIDÉèÖÃÎªÄ¬ÈÏµÄ0xffff
 			current_panid = 0xffff;
-		printdecmsg("main","PANID",current_panid);
+		printdecmsg(ECU_DBG_MAIN,"PANID",current_panid);
 		rt_thread_delay(5*RT_TICK_PER_SECOND);
 
 
@@ -2023,13 +2023,13 @@ int get_inverter_shortaddress(inverter_info *firstinverter)		//»ñÈ¡Ã»ÓÐÊý¾ÝµÄÄæ±
 
 		if(1==zb_change_ecu_panid())						//°ÑECUµÄpanid¸Ä³É´ËÌ¨ECUÔ­±¾panid
 			current_panid = ecu.panid;
-		printdecmsg("main","PANID",current_panid);
+		printdecmsg(ECU_DBG_MAIN,"PANID",current_panid);
 		rt_thread_delay(5*RT_TICK_PER_SECOND);
 
 		curinverter = firstinverter;
 		for(i=0; (i<MAXINVERTERCOUNT)&&(12==rt_strlen(curinverter->id)); i++)
 		{
-			printdecmsg("main","no_getdata_num",curinverter->no_getdata_num);
+			printdecmsg(ECU_DBG_MAIN,"no_getdata_num",curinverter->no_getdata_num);
 			if((0==curinverter->shortaddr)||(curinverter->no_getdata_num>5))
 			{
 				zb_get_inverter_shortaddress_single(curinverter);
@@ -2090,7 +2090,7 @@ int zb_change_inverter_channel_one(char *inverter_id, int channel)
 	sendbuff[19]=((inverter_id[8]-0x30)*16+(inverter_id[9]-0x30));
 	sendbuff[20]=((inverter_id[10]-0x30)*16+(inverter_id[11]-0x30));
 	ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL,0, sendbuff, 21);
-	printhexmsg("main","Change Inverter Channel (one)", sendbuff, 21);
+	printhexmsg(ECU_DBG_MAIN,"Change Inverter Channel (one)", sendbuff, 21);
 
 	rt_thread_delay(RT_TICK_PER_SECOND); //´Ë´¦ÑÓÊ±±ØÐë´óÓÚ1S
 	return 0;
@@ -2125,7 +2125,7 @@ int zb_change_channel(int num, char **ids)
 		zb_restore_ecu_panid_0xffff(ecu_channel[i]); //¸Ä±äECUÐÅµÀ
 		for (j=1; j<=num; j++) {
 			if (RT_NULL != ids[j] && rt_strlen(ids[j])) {
-				print2msg("main","inverter", ids[j]);
+				print2msg(ECU_DBG_MAIN,"inverter", ids[j]);
 				zb_change_inverter_channel_one(ids[j], ecu.channel);
 			}
 		}
@@ -2167,7 +2167,7 @@ int zb_reset_channel(int num, char **ids)
 		zb_restore_ecu_panid_0xffff(ecu_channel[i]); //¸Ä±äECUÐÅµÀ
 		for (j=1; j<=num; j++) {
 			if (RT_NULL != ids[j] && rt_strlen(ids[j])) {
-				print2msg("main","inverter", ids[j]);
+				print2msg(ECU_DBG_MAIN,"inverter", ids[j]);
 				zb_change_inverter_channel_one(ids[j], 0x10);
 			}
 		}
@@ -2210,7 +2210,7 @@ int zb_off_report_id_and_bind(int short_addr)
 		sendbuff[13] = check%256;
 		sendbuff[14] = 0x00;
 		ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL,0, sendbuff, 15);
-		printhexmsg("main","Bind ZigBee", sendbuff, 15);
+		printhexmsg(ECU_DBG_MAIN,"Bind ZigBee", sendbuff, 15);
 
 		//½ÓÊÕÄæ±äÆ÷Ó¦´ð(¶ÌµØÖ·,ZigBee°æ±¾ºÅ,ÐÅºÅÇ¿¶È)
 		if ((11 == zb_get_reply_from_module(recvbuff))
@@ -2218,7 +2218,7 @@ int zb_off_report_id_and_bind(int short_addr)
 				&& (0xA5 == recvbuff[3])) {
 			//update_turned_off_rpt_flag(short_addr, (int)recvbuff[9]);
 			//update_bind_zigbee_flag(short_addr);
-			printmsg("main","Bind Successfully");
+			printmsg(ECU_DBG_MAIN,"Bind Successfully");
 			return 1;
 		}
 	}while(--times);
@@ -2230,12 +2230,12 @@ int zigbeeRecvMsg(char *data, int timeout_sec)
 {
 	int count;
 	if (selectZigbee(timeout_sec) <= 0) {
-		printmsg("main","Get reply time out");
+		printmsg(ECU_DBG_MAIN,"Get reply time out");
 		return -1;
 	} else {
 		
 		count = ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data, 255);
-		printhexmsg("main","Reply", data, count);
+		printhexmsg(ECU_DBG_MAIN,"Reply", data, count);
 		return count;
 	}
 }

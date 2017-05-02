@@ -75,8 +75,8 @@ int getaddrOldOrNew(char *id)
 	//发送上报单台逆变器ID的命令
 	clear_zbmodem();
 	ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0,command, 21);
-	print2msg("main","Get each inverter's short address", id);
-	printhexmsg("main","Sent", command, 21);
+	print2msg(ECU_DBG_MAIN,"Get each inverter's short address", id);
+	printhexmsg(ECU_DBG_MAIN,"Sent", command, 21);
 
 	//接收
 	ret = zigbeeRecvMsg(recvMsg, 5);
@@ -150,7 +150,7 @@ void send11order(char *inverterid,int count)
 	sendbuff[21]=(2*count)/256;
 	sendbuff[22]=(2*count)%256;
 	ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0,sendbuff, 21);
-	printhexmsg("main","Ready Change Inverter Panid (11order)", sendbuff, 23);
+	printhexmsg(ECU_DBG_MAIN,"Ready Change Inverter Panid (11order)", sendbuff, 23);
 	rt_thread_delay(RT_TICK_PER_SECOND);
 }
 
@@ -169,7 +169,7 @@ void send22order()
 
 	for(i=0;i<3;i++){
 		ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0,sendbuff, 15);
-		printhexmsg("main","Change Panid Now (22order)", sendbuff, 15);
+		printhexmsg(ECU_DBG_MAIN,"Change Panid Now (22order)", sendbuff, 15);
 		rt_thread_delay(RT_TICK_PER_SECOND);
 	}
 }

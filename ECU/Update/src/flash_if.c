@@ -2,6 +2,7 @@
 #include "file.h"
 #include <unistd.h>
 #include "rtthread.h"
+#include "debug.h"
 
 //从文件中读取数据并烧写到内部的Flash
 uint32_t FLASH_IF_FILE_COPY_TO_APP2(char * updateFileName)
@@ -12,7 +13,7 @@ uint32_t FLASH_IF_FILE_COPY_TO_APP2(char * updateFileName)
 	fd = fileopen(updateFileName,O_RDONLY,0);
 	if(fd < 0)
 	{
-		printf("error 1\n");
+		printmsg(ECU_DBG_UPDATE,"FILE  open error");
 		return 666;
 	}
 	while (app2addr < 0x080FFFFF)
@@ -21,12 +22,11 @@ uint32_t FLASH_IF_FILE_COPY_TO_APP2(char * updateFileName)
 		
 		if (FLASH_ProgramWord(app2addr, filedata) == FLASH_COMPLETE)
     {
-			//printf("[%d] :  %u,%u\n",count,(*(unsigned int *)(app2addr)),(uint32_t)filedata);
      /* Check the written value */
 			
       if ((*(uint32_t *)(app2addr)) != (uint32_t)filedata)
       {
-				printf("error 2\n");
+				printmsg(ECU_DBG_UPDATE,"compare error");
 				fileclose(fd);
         /* Flash content doesn't match SRAM content */
         return(2);
@@ -36,7 +36,7 @@ uint32_t FLASH_IF_FILE_COPY_TO_APP2(char * updateFileName)
     }
     else
     {
-			printf("error 3\n");
+			printmsg(ECU_DBG_UPDATE," FLASH_ProgramWord  error");
 			fileclose(fd);
       /* Error occurred while writing data in Flash memory */
       return (1);
@@ -53,7 +53,7 @@ uint32_t FLASH_IF_FILE_COPY_TO_APP2(char * updateFileName)
 	while(FLASH_COMPLETE != FLASH_ProgramHalfWord(0x08004000, 1))
 	{}
 	
-	printf("success\n");
+	printmsg(ECU_DBG_UPDATE,"Program success");
 	return (0);
 }
 

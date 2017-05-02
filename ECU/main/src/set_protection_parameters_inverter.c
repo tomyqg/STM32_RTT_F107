@@ -64,7 +64,7 @@ int set_protection_yc600_one(int shortaddr,int order,int data,int num)
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set yc600 single", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set yc600 single", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -359,7 +359,7 @@ int set_regulated_dc_working_point_yc1000_one(int shortaddr, char *value)  			//
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set dc voltage stabilization one", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set dc voltage stabilization one", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -396,7 +396,7 @@ int set_undervoltage_slow_yc1000_one(int shortaddr, char *value)  //ƒ⁄ŒßµÁ—πœ¬œﬁ
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set undervoltage slow one", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set undervoltage slow one", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -433,7 +433,7 @@ int set_overvoltage_slow_yc1000_one(int shortaddr, char *value)  //ƒ⁄ŒßµÁ—π…œœﬁ÷
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set overvoltage slow one", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set overvoltage slow one", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -469,7 +469,7 @@ int set_overvoltage_fast_yc1000_one(int shortaddr, char *value)		//Õ‚ŒßµÁ—π…œœﬁ÷
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set overvoltage fast one", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set overvoltage fast one", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -505,7 +505,7 @@ int set_undervoltage_fast_yc1000_one(int shortaddr, char *value)		//Õ‚ŒßµÁ—πœ¬œﬁ
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set undervoltage fast one", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set undervoltage fast one", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -543,7 +543,7 @@ int set_underfrequency_fast_yc1000_one(int shortaddr, char *value)				//Õ‚Œß∆µ¬ 
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set underfrequency fast one", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set underfrequency fast one", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -581,7 +581,7 @@ int set_overfrequency_fast_yc1000_one(int shortaddr, char *value)				//Õ‚Œß∆µ¬ …
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set overfrequency fast one", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set overfrequency fast one", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -619,7 +619,7 @@ int set_underfrequency_slow_yc1000_one(int shortaddr, char *value)				//ƒ⁄Œß∆µ¬ 
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set underfrequency slow one", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set underfrequency slow one", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -657,7 +657,7 @@ int set_overfrequency_slow_yc1000_one(int shortaddr, char *value)				//ƒ⁄Œß∆µ¬ …
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set overfrequency slow one", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set overfrequency slow one", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -696,7 +696,7 @@ int set_voltage_triptime_fast_yc1000_one(int shortaddr, char *value)				//Õ‚ŒßµÁ
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set voltage triptime fast one", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set voltage triptime fast one", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -734,7 +734,7 @@ int set_voltage_triptime_slow_yc1000_one(int shortaddr, char *value)				//ƒ⁄ŒßµÁ
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set voltage triptime slow one", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set voltage triptime slow one", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -772,7 +772,7 @@ int set_frequency_triptime_fast_yc1000_one(int shortaddr, char *value)				//Õ‚Œß
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set frequency triptime fast one", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set frequency triptime fast one", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -811,7 +811,7 @@ int set_frequency_triptime_slow_yc1000_one(int shortaddr, char *value)				//ƒ⁄Œß
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set frequency triptime slow one", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set frequency triptime slow one", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -849,7 +849,7 @@ int set_grid_recovery_time_yc1000_one(int shortaddr, char *value)						//≤¢Õ¯ª÷∏
 	sendbuff[12] = 0xFE;		//ccuid
 
 
-	printhexmsg("main","Set grid recovery time one", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set grid recovery time one", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -887,7 +887,7 @@ int set_under_voltage_stage_2_yc1000_one(int shortaddr, char *value)  			//ƒ⁄ƒ⁄Œ
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set voltage slow2 one", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set voltage slow2 one", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -926,7 +926,7 @@ int set_voltage_3_clearance_time_yc1000_one(int shortaddr, char *value)				//ƒ⁄ƒ
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set voltage triptime slow2 one", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set voltage triptime slow2 one", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -963,7 +963,7 @@ int set_start_time_yc1000_one(int shortaddr, char *value)				//÷±¡˜∆Ù∂Ø ±º‰
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set DC startime ", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set DC startime ", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -1294,7 +1294,7 @@ int set_undervoltage_slow_yc1000_one_5(int shortaddr, char *value, char *inverte
 	sendbuff[21] = 0xFE;
 	sendbuff[22] = 0xFE;
 
-	printhexmsg("main","Set undervoltage slow one (5)", (char *)sendbuff, 23);
+	printhexmsg(ECU_DBG_MAIN,"Set undervoltage slow one (5)", (char *)sendbuff, 23);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 23);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -1343,7 +1343,7 @@ int set_overvoltage_slow_yc1000_one_5(int shortaddr, char *value, char *inverter
 	sendbuff[21] = 0xFE;
 	sendbuff[22] = 0xFE;
 
-	printhexmsg("main","Set overvoltage slow one (5)", (char *)sendbuff, 23);
+	printhexmsg(ECU_DBG_MAIN,"Set overvoltage slow one (5)", (char *)sendbuff, 23);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 23);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -1393,7 +1393,7 @@ int set_underfrequency_slow_yc1000_one_5(int shortaddr, char *value, char *inver
 	sendbuff[21] = 0xFE;
 	sendbuff[22] = 0xFE;
 
-	printhexmsg("main","Set underfrequency slow one (5)", (char *)sendbuff, 23);
+	printhexmsg(ECU_DBG_MAIN,"Set underfrequency slow one (5)", (char *)sendbuff, 23);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 23);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -1442,7 +1442,7 @@ int set_overfrequency_slow_yc1000_one_5(int shortaddr, char *value, char *invert
 	sendbuff[21] = 0xFE;
 	sendbuff[22] = 0xFE;
 
-	printhexmsg("main","Set overfrequency slow one (5)", (char *)sendbuff, 23);
+	printhexmsg(ECU_DBG_MAIN,"Set overfrequency slow one (5)", (char *)sendbuff, 23);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 23);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -1491,7 +1491,7 @@ int set_grid_recovery_time_yc1000_one_5(int shortaddr, char *value, char *invert
 	sendbuff[21] = 0xFE;
 	sendbuff[22] = 0xFE;
 
-	printhexmsg("main","Set grid recovery time one (5)", (char *)sendbuff, 23);
+	printhexmsg(ECU_DBG_MAIN,"Set grid recovery time one (5)", (char *)sendbuff, 23);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 23);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);
@@ -1528,7 +1528,7 @@ int set_under_voltage_stage_3_yc1000_one(int shortaddr, char *value)
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set under voltage (stage 3) one", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set under voltage (stage 3) one", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(RT_TICK_PER_SECOND/5);

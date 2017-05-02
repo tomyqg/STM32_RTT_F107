@@ -223,7 +223,7 @@ int get_id_from_file(inverter_info *firstinverter)
 	{
 		while(NULL != fgets(data,200,fp))
 		{
-			printf("%s\n",data);
+			print2msg(ECU_DBG_MAIN,"ID",data);
 			memset(list,0,sizeof(list));
 			splitString(data,list);
 			//判断是否存在该逆变器
@@ -302,20 +302,20 @@ int get_id_from_file(inverter_info *firstinverter)
 
 
 	inverter = firstinverter;
-	printmsg("main","--------------");
+	printmsg(ECU_DBG_MAIN,"--------------");
 	for(i=1; i<=num; i++, inverter++)
-		printdecmsg("main",inverter->id, inverter->shortaddr);
-	printmsg("main","--------------");
-	printdecmsg("main","total", num);
+		printdecmsg(ECU_DBG_MAIN,inverter->id, inverter->shortaddr);
+	printmsg(ECU_DBG_MAIN,"--------------");
+	printdecmsg(ECU_DBG_MAIN,"total", num);
 
 
 	inverter = firstinverter;
-	printmsg("main","--------------");
+	printmsg(ECU_DBG_MAIN,"--------------");
 	for(i=1; i<=num; i++,inverter++)
 	{
 		if(inverter->shortaddr == 0)
 		{
-			printmsg("main",inverter->id);
+			printmsg(ECU_DBG_MAIN,inverter->id);
 		}
 	}
 	return num;
@@ -540,9 +540,34 @@ void initPath(void)
 	echo("/home/data/power","");
 	mkdir("/ftp",0x777);
 
-	
-
 }
+
+int getTimeZone()
+{
+	int timeZone = 8;
+	char s[10] = { '\0' };
+	FILE *fp;
+	
+	fp = fopen("/yuneng/timezone.con", "r");
+	if(fp == NULL){
+		print2msg(ECU_DBG_NTP,"/yuneng/timezone.con","open error!");
+		return timeZone;
+	}
+	fgets(s, 10, fp);
+	//printf("getTimeZone:%s  \n",s);
+	//s[strlen(s) - 1] = '\0';
+	fclose(fp);
+	
+	timeZone = atoi(s);
+	if(timeZone >= 12 || timeZone <= -12)
+	{
+		return 8;
+	}
+	return timeZone;
+	
+}
+
+
 
 
 #ifdef RT_USING_FINSH

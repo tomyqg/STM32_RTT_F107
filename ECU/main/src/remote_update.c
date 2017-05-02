@@ -35,7 +35,7 @@ int Sendupdatepackage_start(inverter_info *inverter)	//发送单点开始数据包
 	for(i=0;i<10;i++)
 	{
 		zb_send_cmd(inverter,(char *)sendbuff,74);
-		printmsg("main","Sendupdatepackage_start");
+		printmsg(ECU_DBG_MAIN,"Sendupdatepackage_start");
 		ret = zb_get_reply((char *)data,inverter);
 		if((0 == ret%8) && (0x18 == data[3]) && (0xFB == data[0]) && (0xFB == data[1]) && (0xFE == data[6]) && (0xFE == data[7]))
 			break;
@@ -86,15 +86,15 @@ int Sendupdatepackage_single(inverter_info *inverter)	//发送单点数据包
 			for(i=2; i<70; i++)
 				check = check + sendbuff[i];
 
-			printdecmsg("main","check",check);
+			printdecmsg(ECU_DBG_MAIN,"check",check);
 
 			sendbuff[70]=check >> 8;			//校验
 			sendbuff[71]=check;
 
 			zb_send_cmd(inverter,(char *)sendbuff,74);
 			package_num++;
-			printdecmsg("main","package_num",package_num);
-			printhexmsg("main","package_msg", (char *)sendbuff, 74);
+			printdecmsg(ECU_DBG_MAIN,"package_num",package_num);
+			printhexmsg(ECU_DBG_MAIN,"package_msg", (char *)sendbuff, 74);
 			memset(package_buff, 0, sizeof(package_buff));
 			check = 0x00;
 		}
@@ -135,9 +135,9 @@ int Complementupdatepackage_single(inverter_info *inverter)	//检查漏掉的数据包并
 	clear_zbmodem();
 	do{
 		zb_send_cmd(inverter,(char *)checkbuff,74);
-		printmsg("main","Complementupdatepackage_single_checkbuff");
+		printmsg(ECU_DBG_MAIN,"Complementupdatepackage_single_checkbuff");
 		ret = zb_get_reply((char *)data,inverter);
-		printdecmsg("main","ret",ret);
+		printdecmsg(ECU_DBG_MAIN,"ret",ret);
 		i++;
 	}while((12!=ret)&&(i<5));		//(-1==ret)
 
@@ -180,11 +180,11 @@ int Complementupdatepackage_single(inverter_info *inverter)	//检查漏掉的数据包并
 				}
 				if(i>=10)
 				{
-					printmsg("main","Complementupdatepackage single 10 times failed");
+					printmsg(ECU_DBG_MAIN,"Complementupdatepackage single 10 times failed");
 					close(fd);
 					return -1;		//补单包3次没响应的情况
 				}
-				printdecmsg("main","Complement_package",(data[6]*256+data[7]));
+				printdecmsg(ECU_DBG_MAIN,"Complement_package",(data[6]*256+data[7]));
 				rt_hw_us_delay(30000);
 				check = 0x00;
 			}
@@ -196,12 +196,12 @@ int Complementupdatepackage_single(inverter_info *inverter)	//检查漏掉的数据包并
 	}
 	else if((12 == ret) && (0x45 == data[3]) && (0xFB == data[0]) && (0xFB == data[1]) && (0xFE == data[10]) && (0xFE == data[11]))//补包如果超过512包就直接还原
 	{
-		printmsg("main","Complementupdatepackage over 512");
+		printmsg(ECU_DBG_MAIN,"Complementupdatepackage over 512");
 		return -1;
 	}
 	else
 	{
-		printmsg("main","Complement checkbuff no response");
+		printmsg(ECU_DBG_MAIN,"Complement checkbuff no response");
 		return 0;	//发补包check指令没响应的情况
 	}
 
@@ -224,7 +224,7 @@ int Update_start(inverter_info *inverter)		//发送更新指令
 	for(i=0;i<3;i++)
 	{
 		zb_send_cmd(inverter,(char *)sendbuff,74);
-		printmsg("main","Update_start");
+		printmsg(ECU_DBG_MAIN,"Update_start");
 		ret = zb_get_reply_update_start((char *)data,inverter);
 		if((8 == ret) && (0x05 == data[3]) && (0xFB == data[0]) && (0xFB == data[1]) && (0xFE == data[6]) && (0xFE == data[7]))//更新成功
 			return 1;
@@ -255,7 +255,7 @@ int Update_success_end(inverter_info *inverter)		//更新成功结束指令
 	for(i=0;i<3;i++)
 	{
 		zb_send_cmd(inverter,(char *)sendbuff,74);
-		printmsg("main","Update_success_end");
+		printmsg(ECU_DBG_MAIN,"Update_success_end");
 		ret = zb_get_reply((char *)data,inverter);
 		if((0 == ret%8) && (0x3C == data[3]) && (0xFB == data[0]) && (0xFB == data[1]) && (0xFE == data[6]) && (0xFE == data[7]))
 			break;
@@ -265,7 +265,7 @@ int Update_success_end(inverter_info *inverter)		//更新成功结束指令
 		return -1;
 	else
 	{
-		printmsg("main","Update_success_end successful");
+		printmsg(ECU_DBG_MAIN,"Update_success_end successful");
 		return 1;
 	}
 
@@ -288,7 +288,7 @@ int Restore(inverter_info *inverter)		//发送还原指令
 	for(i=0;i<3;i++)
 	{
 		zb_send_cmd(inverter,(char *)sendbuff,74);
-		printmsg("main","Restore");
+		printmsg(ECU_DBG_MAIN,"Restore");
 		ret = zb_get_reply_restore((char *)data,inverter);
 		if((8 == ret) && (0x06 == data[3]) && (0xFB == data[0]) && (0xFB == data[1]) && (0xFE == data[6]) && (0xFE == data[7]))//还原成功
 			return 1;
@@ -320,12 +320,12 @@ int remote_update_single(inverter_info *inverter)
 	Update_success_end(inverter);
 	if(1==Sendupdatepackage_start(inverter))
 	{
-		printmsg("main","Sendupdatepackage_start_OK");
+		printmsg(ECU_DBG_MAIN,"Sendupdatepackage_start_OK");
 		ret_sendsingle = Sendupdatepackage_single(inverter);
 
 		if(-1==ret_sendsingle)		//没有对应型号的逆变器
 		{
-			printmsg("main","No corresponding BIN file");
+			printmsg(ECU_DBG_MAIN,"No corresponding BIN file");
 			return 2;
 		}
 		else if(-2==ret_sendsingle)		//打开升级文件失败
@@ -336,7 +336,7 @@ int remote_update_single(inverter_info *inverter)
 		}
 		else if(1==ret_sendsingle)		//文件发送完全的情况
 		{
-			printmsg("main","Complementupdatepackage_single");
+			printmsg(ECU_DBG_MAIN,"Complementupdatepackage_single");
 			ret_complement = Complementupdatepackage_single(inverter); //检查漏掉的数据包并补发
 
 			if(-1==ret_complement)		//补单包超过3次没响应和补包个数直接超过512个的情况
@@ -355,20 +355,20 @@ int remote_update_single(inverter_info *inverter)
 				}
 				if(1==ret_update_start)
 				{
-					printmsg("main","Update start successful");
+					printmsg(ECU_DBG_MAIN,"Update start successful");
 					Update_success_end(inverter);
 					return 0; //升级成功
 				}
 				else if(-1==ret_update_start)
 				{
-					printmsg("main","Update_start_failed");
+					printmsg(ECU_DBG_MAIN,"Update_start_failed");
 					Restore(inverter);
 					Update_success_end(inverter);
 					return 6; //更新失败
 				}
 				else if(0==ret_update_start)
 				{
-					printmsg("main","Update start no response");
+					printmsg(ECU_DBG_MAIN,"Update start no response");
 					return 7; //更新无响应
 				}
 			}
@@ -425,7 +425,7 @@ int remote_update(inverter_info *firstinverter)
 			
 			if(1 == atoi(splitdata[3]))
 			{
-				printmsg("main",curinverter->id);
+				printmsg(ECU_DBG_MAIN,curinverter->id);
 				if(curinverter->updating==0)
 				{
 					if(1 == zb_shutdown_single(curinverter))

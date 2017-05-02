@@ -40,7 +40,7 @@ int create_socket(void)
 //	iflags = fcntl(sockfd, F_GETFL, 0);
 //	fcntl(sockfd, F_SETFL, O_NONBLOCK | iflags);
 	if(sockfd == -1){
-		printmsg("control_client","socket failed");
+		printmsg(ECU_DBG_CONTROL_CLIENT,"socket failed");
         return -1;
 	}
 	return sockfd;
@@ -63,7 +63,7 @@ int connect__socket(int sockfd, int port, const char *ip, const char *domain)
 	//解析域名
 	host = gethostbyname(domain);
 	if(host == NULL){
-		print2msg("control_client","Get host failed, use default IP : ",(char *)ip);
+		print2msg(ECU_DBG_CONTROL_CLIENT,"Get host failed, use default IP : ",(char *)ip);
 		serv_addr.sin_addr.s_addr = inet_addr(ip); //服务器IP地址
 	}
 	else{
@@ -76,12 +76,12 @@ int connect__socket(int sockfd, int port, const char *ip, const char *domain)
 	//请求连接服务器
 	if(connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(struct sockaddr)) == -1)
 	{
-		print2msg("control_client","Failed to connect to ",time);
-		printmsg("control_client","connect");
+		print2msg(ECU_DBG_CONTROL_CLIENT,"Failed to connect to ",time);
+		printmsg(ECU_DBG_CONTROL_CLIENT,"connect");
 		closesocket(sockfd);
 		return -1;
 	}
-	print2msg("control_client","Connecting EMA successfully", time);
+	print2msg(ECU_DBG_CONTROL_CLIENT,"Connecting EMA successfully", time);
 	return 0;
 }
 
@@ -104,12 +104,12 @@ int send_socket(int sockfd, char *sendbuffer, int size)
 		send_count = send(sockfd, sendbuffer, size, 0);
 		if(send_count >= 0){
 			sendbuffer[strlen(sendbuffer)-1] = '\0';
-			print2msg("control_client","Sent", sendbuffer);
+			print2msg(ECU_DBG_CONTROL_CLIENT,"Sent", sendbuffer);
 //			sleep(2);
 			return send_count;
 		}
 	}
-	printmsg("control_client","Send failed:");
+	printmsg(ECU_DBG_CONTROL_CLIENT,"Send failed:");
 	return -1;
 }
 
@@ -129,11 +129,11 @@ int recv_socket(int sockfd, char *recvbuffer, int size, int timeout_s)
 		timeout.tv_sec = timeout_s;
 		switch(select(sockfd+1, &fds, NULL, NULL, &timeout)){
 			case -1:
-				printmsg("control_client","select");
+				printmsg(ECU_DBG_CONTROL_CLIENT,"select");
 			case 0:
-				printmsg("control_client","Receive date from EMA timeout");
+				printmsg(ECU_DBG_CONTROL_CLIENT,"Receive date from EMA timeout");
 				closesocket(sockfd);
-				printmsg("control_client",">>End");
+				printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
 				return -1;
 			default:
 				if(FD_ISSET(sockfd, &fds)){
@@ -141,13 +141,13 @@ int recv_socket(int sockfd, char *recvbuffer, int size, int timeout_s)
 					recv_each = recv(sockfd, recv_buffer, sizeof(recv_buffer), 0);
 					strcat(recvbuffer, recv_buffer);
 					if(recv_each <= 0){
-						printdecmsg("control_client","Communication over", recv_each);
+						printdecmsg(ECU_DBG_CONTROL_CLIENT,"Communication over", recv_each);
 						return -1;
 					}
-					printdecmsg("control_client","Received each time", recv_each);
+					printdecmsg(ECU_DBG_CONTROL_CLIENT,"Received each time", recv_each);
 					recv_count += recv_each;
 //					debug_msg("Received Total:%d", recv_count);
-					print2msg("control_client","Received", recvbuffer);
+					print2msg(ECU_DBG_CONTROL_CLIENT,"Received", recvbuffer);
 					if(msg_is_complete(recvbuffer)){
 						return recv_count;
 					}

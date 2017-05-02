@@ -12,7 +12,7 @@ version:1.0
 #include <string.h>
 #include <time.h>
 #include "ntpapp.h"
-
+#include "debug.h"
 
 int get_time_from_NTP()
 {
@@ -26,28 +26,22 @@ int get_time_from_NTP()
   sockfd = create_socket_ntp();
   if(-1==sockfd)
   {
-    #ifdef NTPDEBUG
-      rt_kprintf("Create socket error!\n");
-    #endif 
+    printmsg(ECU_DBG_NTP,"Create socket error!");
+
     return 0;
   }
   else{
-    #ifdef NTPDEBUG
-    rt_kprintf("socket=%d\n",sockfd);
-    #endif
+		printdecmsg(ECU_DBG_NTP,"socket",sockfd);
+
   }
   ret = connecttoserver(sockfd, &serversocket);
   if(-1==ret)
   {
-    #ifdef NTPDEBUG
-      rt_kprintf("Connect server error!\n");
-    #endif
+    printmsg(ECU_DBG_NTP,"Connect server error!");
     return 0;
   }
   else{
-    #ifdef NTPDEBUG
-    rt_kprintf("socket=%d\n",ret);
-    #endif
+    printdecmsg(ECU_DBG_NTP,"socket",ret);
   }
 
 	for(i=0; i<5; i++){
@@ -57,18 +51,16 @@ int get_time_from_NTP()
 			timeout.tv_usec = 0;
 			ret = select(sockfd+1, &readfd, NULL, NULL, &timeout);
 			
-#ifdef NTPDEBUG
-		rt_kprintf("ret=%d\n",ret);
-#endif
+		printdecmsg(ECU_DBG_NTP,"ret",ret);
 
 			if(ret>0){
 				if(-1!=receive_packet(sockfd, &receivepacket, &serversocket)){
 					gettimepacket(&receivepacket, &newtime);
-#ifdef NTPDEBUG
-				rt_kprintf("%d\n",newtime.tv_sec);
-#endif
+
+					printdecmsg(ECU_DBG_NTP,"time_t ",newtime.tv_sec);
+
 				}
-				//update_time(&newtime);
+				update_time(&newtime);
 				break;
 			}
 		}
@@ -79,3 +71,13 @@ int get_time_from_NTP()
     closesocket(sockfd);
     return 0;
 }
+
+#ifdef RT_USING_FINSH
+#include <finsh.h>
+void ntpget()
+{
+	get_time_from_NTP();
+}
+FINSH_FUNCTION_EXPORT(ntpget, eg:ntpget());
+#endif
+

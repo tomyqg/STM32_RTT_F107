@@ -31,5 +31,6 @@ void get_mac(rt_uint8_t  dev_addr[6]);
 void echo(const char* filename,const char* string);
 void addInverter(char *inverter_id);
 void initPath(void);
+int getTimeZone(void);
 
 #endif /*__FILE_H__*/

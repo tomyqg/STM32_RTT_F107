@@ -805,7 +805,7 @@ int check_inverter_abnormal_status_sent(int hour)
 		return 0;
 	}
 	//有flag=2的数据,发送一条读取EMA已存时间戳命令
-	printmsg("control_client",">>Start Check abnormal status sent");
+	printmsg(ECU_DBG_CONTROL_CLIENT,">>Start Check abnormal status sent");
 	sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);
 	if(sockfd < 0)
 	{
@@ -881,7 +881,7 @@ int response_inverter_abnormal_status()
 	char data[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};//查询到的数据
 	char time[15] = {'\0'};
 	FILE *fp;	
-	printmsg("control_client",">>Start Response Abnormal Status");
+	printmsg(ECU_DBG_CONTROL_CLIENT,">>Start Response Abnormal Status");
 	recv_buffer = (char *)rt_malloc(2048);
 	command = (char *)rt_malloc(2048);
 	send_buffer = (char *)rt_malloc(1024);
@@ -930,7 +930,7 @@ int response_inverter_abnormal_status()
 		if(strlen(recv_buffer) > (24 + 14*num)){
 			memset(command, 0, sizeof(command));
 			strncpy(command, &recv_buffer[24 + 14*num], sizeof(command));
-			print2msg("control_client","Command", command);
+			print2msg(ECU_DBG_CONTROL_CLIENT,"Command", command);
 			//校验命令
 			if(msg_format_check(command) < 0)
 				continue;
@@ -958,8 +958,8 @@ int response_inverter_abnormal_status()
 						memset(send_buffer,0x00,1024);
 						msg_ACK(send_buffer, "A118", da_time, 0);
 						send_socket(sockfd, send_buffer, strlen(send_buffer));
-						printmsg("control_client",">>End");
-						printdecmsg("control_client","socked",sockfd);
+						printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
+						printdecmsg(ECU_DBG_CONTROL_CLIENT,"socked",sockfd);
 						result=1;break;
 					}
 			}
@@ -1005,7 +1005,7 @@ int communication_with_EMA(int next_cmd_id)
 	
 	while(1)
 	{
-		printmsg("control_client","Start Communication with EMA");
+		printmsg(ECU_DBG_CONTROL_CLIENT,"Start Communication with EMA");
 		sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);
 		if(sockfd < 0) 
 		{
@@ -1074,7 +1074,7 @@ int communication_with_EMA(int next_cmd_id)
 		}
 		//将消息发送给EMA(自动计算长度,补上回车)
 		send_socket(sockfd, send_buffer, strlen(send_buffer));
-		printmsg("control_client",">>End");
+		printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
 		closesocket(sockfd);
 
 		//如果功能函数返回值小于0,则返回-1,程序会自动退出
@@ -1084,7 +1084,7 @@ int communication_with_EMA(int next_cmd_id)
 			return -1;
 		}
 	}
-	printmsg("control_client",">>End");
+	printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
 	rt_free(recv_buffer);
 	rt_free(send_buffer);
 	return 0;
@@ -1106,7 +1106,7 @@ int response_process_result()
 		//逐条上报ECU级别处理结果
 		while(search_pro_result_flag(data,item,&flag,'1'))
 		{
-			printmsg("control_client",">>Start Response ECU Process Result");
+			printmsg(ECU_DBG_CONTROL_CLIENT,">>Start Response ECU Process Result");
 			sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);
 			if(sockfd < 0) return -1;
 			//发送一条记录
@@ -1117,7 +1117,7 @@ int response_process_result()
 			//发送成功则将标志位置0
 			change_pro_result_flag(item,'0');
 			closesocket(sockfd);
-			printmsg("control_client",">>End");
+			printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
 		}				
 		delete_pro_result_flag0();
 		
@@ -1131,7 +1131,7 @@ int response_process_result()
 			sprintf(sendbuffer, "APS1300000A%03dAAA0%.12s%04d00000000000000END", item, ecuid, 1);
 			strcat(sendbuffer, data);
 			//发送数据
-			printmsg("control_client",">>Start Response Inverter Process Result");
+			printmsg(ECU_DBG_CONTROL_CLIENT,">>Start Response Inverter Process Result");
 			sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);
 			if(sockfd < 0) return -1;
 			if(send_socket(sockfd, sendbuffer, strlen(sendbuffer)) < 0){
@@ -1162,7 +1162,7 @@ void control_client_thread_entry(void* parameter)
 		ecu_flag = atoi(buffer);
 	}
 
-	printdecmsg("control_client","ecu_flag", ecu_flag);
+	printdecmsg(ECU_DBG_CONTROL_CLIENT,"ecu_flag", ecu_flag);
 	file_get_one(ecuid, sizeof(ecuid), "/yuneng/ecuid.con");
 
 
@@ -1202,7 +1202,7 @@ void control_client_thread_entry(void* parameter)
 		//程序自行跳过本次循环
 		if(result < 0){
 			result = 0;
-			printmsg("control_client","Quit control_client");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"Quit control_client");
 			continue;
 		}
 		rt_thread_delay(RT_TICK_PER_SECOND*sockcfg.report_interval*60/3);

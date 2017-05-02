@@ -10,7 +10,8 @@ typedef enum THREADTYPE {
 	TYPE_IDWRITE = 4,
   TYPE_MAIN = 5,
   TYPE_CLIENT = 6,
-  TYPE_CONTROL_CLIENT = 7
+  TYPE_CONTROL_CLIENT = 7,
+	TYPE_NTP = 8
 }threadType;
 //每个线程的优先级   宏打开表示线程打开
 //初始化线程
@@ -28,7 +29,7 @@ typedef enum THREADTYPE {
 //更新线程
 //#define THREAD_PRIORITY_UPDATE						21
 
-#define THREAD_PRIORITY_NTP					21
+//#define THREAD_PRIORITY_NTP								22
 //ID Write线程
 //#define THREAD_PRIORITY_IDWRITE						23
 //数据采集主线程

@@ -746,7 +746,7 @@ void sockettest()
 	
 	
 	/* 通过函数入口参数url获得host地址（如果是域名，会做域名解析） */
-	host = gethostbyname("192.168.1.104");
+	host = gethostbyname("60.190.131.190");
 
 	while(1)
 	{
@@ -760,7 +760,7 @@ void sockettest()
 		printf("sockfd:%d\n",sock);
 		/* 初始化预连接的服务端地址 */
 		server_addr.sin_family = AF_INET;
-		server_addr.sin_port = htons(65500);
+		server_addr.sin_port = htons(9219);
 		server_addr.sin_addr = *((struct in_addr *) host->h_addr);
 		rt_memset(&(server_addr.sin_zero), 0, sizeof(server_addr.sin_zero));
 		/* 连接到服务端 */

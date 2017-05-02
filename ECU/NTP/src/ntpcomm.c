@@ -13,8 +13,14 @@ Version:1.0
 #include <time.h>
 #include "ntpapp.h"
 #include "rtc.h"
-#define MAINNTPDEBUG 0
+#include "file.h"
+#include "debug.h"
+
+
 #define NTPFRAC(x) (4294 * (x) + ((1981 * (x))>>11))
+
+extern rt_mutex_t record_data_lock;
+
 /****************************创建socket***************************************/
 int create_socket_ntp( void )
 {
@@ -31,18 +37,14 @@ int create_socket_ntp( void )
 
     if(-1==(sockfd = socket( AF_INET , SOCK_DGRAM , IPPROTO_UDP )))
     {
-      #ifdef MAINNTPDEBUG
-        rt_kprintf("Create socket error!\n");
-      #endif
+      printmsg(ECU_DBG_NTP,"Create socket error");
       return -1;
     }
 
     ret = bind(sockfd , (struct sockaddr*)&addr_src , addr_len);
     if(-1==ret)
     {
-      #ifdef MAINNTPDEBUG
-        rt_kprintf("Bind error!\n");
-      #endif
+     printmsg(ECU_DBG_NTP,"socket Bind error!");
       return -1;
     }
 
@@ -69,16 +71,13 @@ int connecttoserver(int sockfd, struct sockaddr_in * serversocket_in)
     ret = connect(sockfd, (struct sockaddr *)&addr_dst, addr_len);
     if(-1==ret)
     {
-      #ifdef MAINNTPDEBUG
-        rt_kprintf("Connect error!\n");
-      #endif
+      printmsg(ECU_DBG_NTP,"Socket Connect error!");
+
       closesocket(sockfd);
       return -1;
     }
     else{
-      #ifdef NTPDEBUG
-      rt_kprintf("Connect successfully!\n");
-      #endif
+      printmsg(ECU_DBG_NTP,"Connect successfully!");
     }
 
     return sockfd;
@@ -109,15 +108,11 @@ void send_packet(int sockfd)
 
     if((rt_bool_t)(bytes=send(sockfd, &sendpacked, sizeof(sendpacked), 0)))
     {
-      #ifdef NTPDEBUG
-      rt_kprintf("send successfully!\n");
-      rt_kprintf("send bytes=%d\n",bytes);
-      #endif
+      printmsg(ECU_DBG_NTP,"send successfully!");
+      printdecmsg(ECU_DBG_NTP,"send bytes",bytes);
     }
     else{
-      #ifdef NTPDEBUG
-      rt_kprintf("send failure!\n");
-      #endif
+      printmsg(ECU_DBG_NTP,"send failure!");
     }
 }
 
@@ -128,16 +123,12 @@ int receive_packet(int sockfd, NTPPACKET *recvpacked, struct sockaddr_in * serve
 
     {
       receivebytes = recvfrom(sockfd, recvpacked, sizeof(NTPPACKET), 0, (struct sockaddr *)serversocket_in, (socklen_t *)&addr_len);
-      #ifdef NTPDEBUG
-      rt_kprintf("recevicing : %d\n",receivebytes);
-      #endif
+      printdecmsg(ECU_DBG_NTP,"recevicing",receivebytes);
     }
 
     if(-1==receivebytes)
     {
-      #ifdef MAINNTPDEBUG
-        rt_kprintf("Receive error!\n");
-      #endif
+      printmsg(ECU_DBG_NTP,"Receive error!");
       closesocket(sockfd);
       return -1;
     }
@@ -150,18 +141,104 @@ void gettimepacket(NTPPACKET *receivepacket, struct timeval * new_time)
     NTPTIME trantime;
     trantime.sec = ntohl(receivepacket->tratimestamp.sec)-0x83aa7e80;
     new_time->tv_sec = trantime.sec;
-    #ifdef NTPDEBUG
-    rt_kprintf("new time:%d\n",trantime.sec);
-    #endif
+    printdecmsg(ECU_DBG_NTP,"new time:",trantime.sec);
+
 }
 
+//day_tab[0]   表示的是平年    day_tab[1]   表示的是闰年   
+static int day_tab[2][12]={{31,28,31,30,31,30,31,31,30,31,30,31},{31,29,31,30,31,30,31,31,30,31,30,31}}; 
+//判断是否是闰年
+int leap(int year) 
+{ 
+    if(year%4==0 && year%100!=0 || year%400==0) 
+        return 1; 
+    else 
+        return 0; 
+} 
+
+void transfer_time(struct tm *timenow,int timezone)
+{
+	int leapflag = 0;
+	
+	
+	leapflag = leap((timenow->tm_year+1900)); 
+	//转换小时时间
+	timenow->tm_hour  = timenow->tm_hour + timezone;//时间可能  大于24  或者  小于0
+	
+	if(timenow->tm_hour > 24)
+	{
+		timenow->tm_hour  -= 24;
+		//超过24点，时间增加一天
+		//判断是否是当月的最后一天
+		if(timenow->tm_mday == day_tab[leapflag][timenow->tm_mon])
+		{
+			//如果是最后一天，跳转到下个月的第一天
+			timenow->tm_mday = 1;
+			
+			//判断是否是最后一个月
+			if(11 == timenow->tm_mon)
+			{
+				timenow->tm_mon = 0;
+				timenow->tm_year++;
+			}else
+			{
+				timenow->tm_mon++;
+			}
+			
+		}
+		else
+		{
+			timenow->tm_mday++;
+		}
+	}
+	else if(timenow->tm_hour < 0)
+	{
+		//小于 0点，时间减少一天
+		timenow->tm_hour  += 24;
+		//小于24点，时间减少一天
+		//判断是否是当月的第一天
+		if(1 == day_tab[leapflag][timenow->tm_mon])
+		{
+			
+			
+			//判断是否是第一个月
+			if(0 == timenow->tm_mon)
+			{
+				//如果是第一天，跳转到上个月的最后一天
+				timenow->tm_mday = 31;
+				timenow->tm_mon = 11;
+				timenow->tm_year--;
+			}else
+			{
+				//如果是第一天，跳转到上个月的最后一天
+				timenow->tm_mday = day_tab[leapflag][timenow->tm_mon-1];
+				timenow->tm_mon--;
+			}
+			
+		}
+		else
+		{
+			timenow->tm_mday--;
+		}
+	}
+}
 
 void update_time(struct timeval * new_time)
 {
-    //struct tm *timenow;
-		//time_t newtime = (time_t)new_time->tv_sec;
-    //timenow = localtime(&newtime);
-		//set_time(timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
-		//set_date(timenow->tm_year, timenow->tm_mon, timenow->tm_mday);
+	char nowtime[15] = {'\0'};
+	int timezone = 8;
+  struct tm *timenow;
+	time_t newtime = (time_t)new_time->tv_sec;
+	rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+  timenow = localtime(&newtime);
+	//获取时区	文件名为/yuneng/timezone.con
+	timezone = 	getTimeZone();
+	printdecmsg(ECU_DBG_NTP,"timezone",timezone);
+	transfer_time(timenow,timezone);
+	sprintf(nowtime,"%04d%02d%02d%02d%02d%02d",(timenow->tm_year+1900),(timenow->tm_mon+1),timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
+	print2msg(ECU_DBG_NTP,"nowtime",nowtime);
+	set_time(nowtime);
+	rt_mutex_release(record_data_lock);
+	
 }
 

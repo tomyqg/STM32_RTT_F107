@@ -71,7 +71,7 @@ int set_protection_yc600(int order,int data,int num)
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set yc600 all", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set yc600 all", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10*RT_TICK_PER_SECOND);
@@ -264,7 +264,7 @@ int get_recovery_time_from_inverter(inverter_info *inverter)
 	sendbuff[i++] = 0xFE;
 	sendbuff[i++] = 0xFE;
 
-	print2msg("main",inverter->id, "Query protect parameter");
+	print2msg(ECU_DBG_MAIN,inverter->id, "Query protect parameter");
 	zb_send_cmd(inverter, (char *)sendbuff, i);
 	ret = zb_get_reply((char *)readbuff,inverter);
 	if((33 == ret) && (0xDD == readbuff[3]) && (0xFB == readbuff[0]) && (0xFB == readbuff[1]) && (0xFE == readbuff[31]) && (0xFE == readbuff[32]))
@@ -369,7 +369,7 @@ int set_regulated_dc_working_point_yc1000(char *value)  			//直流稳压设置
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set dc voltage stabilization", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set dc voltage stabilization", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -409,7 +409,7 @@ int set_undervoltage_slow_yc1000(char *value)  //内围电压下限值
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set undervoltage slow", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set undervoltage slow", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -448,7 +448,7 @@ int set_overvoltage_slow_yc1000(char *value)  //内围电压上限值
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set overvoltage slow", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set overvoltage slow", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -485,7 +485,7 @@ int set_overvoltage_fast_yc1000(char *value)		//外围电压上限值
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set overvoltage fast", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set overvoltage fast", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -522,7 +522,7 @@ int set_undervoltage_fast_yc1000(char *value)		//外围电压下限值
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set undervoltage fast", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set undervoltage fast", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -561,7 +561,7 @@ int set_underfrequency_fast_yc1000(char *value)				//外围频率下限
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set underfrequency fast", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set underfrequency fast", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -599,7 +599,7 @@ int set_overfrequency_fast_yc1000(char *value)				//外围频率上限
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set overfrequency fast", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set overfrequency fast", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -637,7 +637,7 @@ int set_underfrequency_slow_yc1000(char *value)				//内围频率下限
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set underfrequency slow", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set underfrequency slow", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -675,7 +675,7 @@ int set_overfrequency_slow_yc1000(char *value)				//内围频率上限
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set overfrequency slow", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set overfrequency slow", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -714,7 +714,7 @@ int set_voltage_triptime_fast_yc1000(char *value)				//外围电压延迟保护时间
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set voltage triptime fast", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set voltage triptime fast", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -752,7 +752,7 @@ int set_voltage_triptime_slow_yc1000(char *value)				//内围电压延迟保护时间
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set voltage triptime slow", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set voltage triptime slow", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -791,7 +791,7 @@ int set_frequency_triptime_fast_yc1000(char *value)				//外围频率延迟保护时间
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set frequency triptime fast", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set frequency triptime fast", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -830,7 +830,7 @@ int set_frequency_triptime_slow_yc1000(char *value)				//内围频率延迟保护时间
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set frequency triptime slow", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set frequency triptime slow", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -869,7 +869,7 @@ int set_grid_recovery_time_yc1000(char *value)						//并网恢复时间设置
 	sendbuff[12] = 0xFE;		//ccuid
 
 
-	printhexmsg("main","Set grid recovery time", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set grid recovery time", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -908,7 +908,7 @@ int set_under_voltage_stage_2_yc1000(char *value)  			//内内围电压设置
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set voltage slow2", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set voltage slow2", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -947,7 +947,7 @@ int set_voltage_3_clearance_time_yc1000(char *value)				//内内围电压延迟保护时间
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set voltage triptime slow2", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set voltage triptime slow2", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -984,7 +984,7 @@ int set_start_time_yc1000(char *value)				//直流启动时间
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set DC startime ", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set DC startime ", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -1018,7 +1018,7 @@ int clear_flag(char *para_name)					//设置后清除数据库中参数的设置标志
 				break;
 			}
 			else
-				print2msg("main","Failed to clear protection set flag", para_name);
+				print2msg(ECU_DBG_MAIN,"Failed to clear protection set flag", para_name);
 		}
 	}
 	return 0;
@@ -1411,7 +1411,7 @@ int get_parameters_from_inverter(inverter_info *inverter)
 	sendbuff[10] = check;
 	sendbuff[11] = 0xFE;
 	sendbuff[12] = 0xFE;
-	print2msg("main","Query Inverter's Protection Parameters", inverter->id);
+	print2msg(ECU_DBG_MAIN,"Query Inverter's Protection Parameters", inverter->id);
 	zb_send_cmd(inverter, (char *)sendbuff, 13);
 
 	//接收返回消息
@@ -1613,7 +1613,7 @@ int set_undervoltage_slow_yc1000_5(char *value)
 	sendbuff[21] = 0xFE;
 	sendbuff[22] = 0xFE;
 
-	printhexmsg("main","Set undervoltage slow (5)", (char *)sendbuff, 23);
+	printhexmsg(ECU_DBG_MAIN,"Set undervoltage slow (5)", (char *)sendbuff, 23);
 
 	zb_broadcast_cmd((char *)sendbuff, 23);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -1662,7 +1662,7 @@ int set_overvoltage_slow_yc1000_5(char *value)
 	sendbuff[21] = 0xFE;
 	sendbuff[22] = 0xFE;
 
-	printhexmsg("main","Set overvoltage slow (5)", (char *)sendbuff, 23);
+	printhexmsg(ECU_DBG_MAIN,"Set overvoltage slow (5)", (char *)sendbuff, 23);
 
 	zb_broadcast_cmd((char *)sendbuff, 23);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -1711,7 +1711,7 @@ int set_underfrequency_slow_yc1000_5(char *value)
 	sendbuff[21] = 0xFE;
 	sendbuff[22] = 0xFE;
 
-	printhexmsg("main","Set underfrequency slow (5)", (char *)sendbuff, 23);
+	printhexmsg(ECU_DBG_MAIN,"Set underfrequency slow (5)", (char *)sendbuff, 23);
 
 	zb_broadcast_cmd((char *)sendbuff, 23);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -1760,7 +1760,7 @@ int set_overfrequency_slow_yc1000_5(char *value)
 	sendbuff[21] = 0xFE;
 	sendbuff[22] = 0xFE;
 
-	printhexmsg("main","Set overfrequency slow (5)", (char *)sendbuff, 23);
+	printhexmsg(ECU_DBG_MAIN,"Set overfrequency slow (5)", (char *)sendbuff, 23);
 
 	zb_broadcast_cmd((char *)sendbuff, 23);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -1809,7 +1809,7 @@ int set_grid_recovery_time_yc1000_5(char *value)
 	sendbuff[21] = 0xFE;
 	sendbuff[22] = 0xFE;
 
-	printhexmsg("main","Set grid recovery time (5)", (char *)sendbuff, 23);
+	printhexmsg(ECU_DBG_MAIN,"Set grid recovery time (5)", (char *)sendbuff, 23);
 
 	zb_broadcast_cmd((char *)sendbuff, 23);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
@@ -1847,7 +1847,7 @@ int set_under_voltage_stage_3_yc1000(char *value)
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set under voltage (stage 3)", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set under voltage (stage 3)", (char *)sendbuff, 13);
 
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);

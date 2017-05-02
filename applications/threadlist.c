@@ -487,7 +487,7 @@ void restartThread(threadType type)
 			
 #ifdef THREAD_PRIORITY_IDWRITE
 		case TYPE_IDWRITE:
-			rt_thread_detach(&update_thread);
+			rt_thread_detach(&idwrite_thread);
 			/* init idwrite thread */
 			result = rt_thread_init(&idwrite_thread,"idwrite",idwrite_thread_entry,RT_NULL,(rt_uint8_t*)&idwrite_stack[0],sizeof(idwrite_stack),THREAD_PRIORITY_IDWRITE,5);
 			if (result == RT_EOK)
@@ -531,6 +531,18 @@ void restartThread(threadType type)
 			}	
 			break;
 #endif 
+			
+#ifdef THREAD_PRIORITY_NTP
+		case TYPE_NTP:
+			rt_thread_detach(&ntp_thread);
+			result = rt_thread_init(&ntp_thread,"ntp",ntp_thread_entry,RT_NULL,(rt_uint8_t*)&ntp_stack[0],sizeof(ntp_stack),THREAD_PRIORITY_NTP,5);
+			if (result == RT_EOK)
+			{
+				rt_thread_startup(&ntp_thread);
+			}	
+			break;
+#endif 
+			
 		default:
 			break;
 			

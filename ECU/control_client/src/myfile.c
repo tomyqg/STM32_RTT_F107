@@ -22,7 +22,7 @@ char *file_get_one(char *s, int count, const char *filename)
 	
 	fp = fopen(filename, "r");
 	if(fp == NULL){
-		print2msg("control_client",(char *)filename,"open error!");
+		print2msg(ECU_DBG_CONTROL_CLIENT,(char *)filename,"open error!");
 		return NULL;
 	}
 	fgets(s, count, fp);
@@ -38,7 +38,7 @@ int file_set_one(const char *s, const char *filename)
 	FILE *fp;
 	fp = fopen(filename, "w");
 	if(fp == NULL){
-		printmsg("control_client",(char *)filename);
+		printmsg(ECU_DBG_CONTROL_CLIENT,(char *)filename);
 		return -1;
 	}
 	if(EOF == fputs(s, fp)){
@@ -58,7 +58,7 @@ int file_get_array(MyArray *array, int num, const char *filename)
 	memset(array, 0 ,sizeof(MyArray)*num);
 	fp = fopen(filename, "r");
 	if(fp == NULL){
-		printmsg("control_client",(char *)filename);
+		printmsg(ECU_DBG_CONTROL_CLIENT,(char *)filename);
 		return -1;
 	}
 	while(!feof(fp))
@@ -88,7 +88,7 @@ int file_set_array(const MyArray *array, int num, const char *filename)
 
 	fp = fopen(filename, "w");
 	if(fp == NULL){
-		printmsg("control_client",(char *)filename);
+		printmsg(ECU_DBG_CONTROL_CLIENT,(char *)filename);
 		return -1;
 	}
 	for(i=0; i<num; i++){
@@ -104,7 +104,7 @@ int clear_file(char *filename)
 	FILE *fp;
 	fp = fopen(filename, "w");
 	if(fp == NULL){
-		printmsg("control_client",(char *)filename);
+		printmsg(ECU_DBG_CONTROL_CLIENT,(char *)filename);
 		return -1;
 	}
 	fclose(fp);

@@ -101,7 +101,7 @@ int saveECUChannel(int channel)
 	char buffer[5] = {'\0'};
 
 	snprintf(buffer, sizeof(buffer), "0x%02X", channel);
-	printf("%s\n", buffer);
+	//printf("%s\n", buffer);
 	fp = fopen("/yuneng/channel.con", "w");
 	if (fp) {
 		echo("/yuneng/limiteid.con","1");

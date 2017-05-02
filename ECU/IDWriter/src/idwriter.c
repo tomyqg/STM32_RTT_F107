@@ -16,18 +16,22 @@
 #include "channel.h"
 #include "led.h"
 #include "version.h"
+#include "debug.h"
+
 
 #define SERVERPORT 4540
 #define BACKLOG 2
+
+extern rt_mutex_t record_data_lock;
 
 int create_socket_idwrite(void)
 {
 	int sockfd;
 	if(-1==(sockfd=socket(AF_INET,SOCK_STREAM,0))){
-		printmsg("idwrite","socket error");
+		printmsg(ECU_DBG_IDWRITE,"socket error");
 		return -1;
 	}
-	printmsg("idwrite","Create socket successfully!");
+	printmsg(ECU_DBG_IDWRITE,"Create socket successfully!");
 	return sockfd;
 }
 
@@ -40,20 +44,20 @@ int bind_socket(int sockfd)
 	memset(&(server_sockaddr.sin_zero),0x00,8);
 
 	if(-1==bind(sockfd,(struct sockaddr *)&server_sockaddr,sizeof(struct sockaddr))){
-		printmsg("idwrite","bind error");
+		printmsg(ECU_DBG_IDWRITE,"bind error");
 		return -1;
 	}
-	printmsg("idwrite","Bind socket successfully!");
+	printmsg(ECU_DBG_IDWRITE,"Bind socket successfully!");
 	return 0;
 }
 
 int listen_socket(int sockfd)
 {
 	if(-1==listen(sockfd,BACKLOG)){
-		printmsg("idwrite","listen error");
+		printmsg(ECU_DBG_IDWRITE,"listen error");
 		return -1;
 	}
-	printmsg("idwrite","Listen socket successfully!");
+	printmsg(ECU_DBG_IDWRITE,"Listen socket successfully!");
 	return 0;
 }
 
@@ -65,7 +69,7 @@ int accept_socket(int sockfd)
 
 	sin_size=sizeof(struct sockaddr_in);
 	if(-1==(clientfd=accept(sockfd,(struct sockaddr *)&client_sockaddr,(socklen_t *)&sin_size))){
-		printmsg("idwrite","accept error");
+		printmsg(ECU_DBG_IDWRITE,"accept error");
 		return -1;
 	}
 
@@ -198,7 +202,7 @@ int clearrecord()
 	dirp = opendir("/home/record/data");
 	if(dirp == RT_NULL)
 	{
-		rt_kprintf("open directory error!\n");
+		printmsg(ECU_DBG_IDWRITE,"clearrecord open directory error");
 	}
 	else
 	{
@@ -226,6 +230,7 @@ void idwrite_thread_entry(void* parameter)
 	char mac[32] = {'\0'};
 	char version[50] = {'\0'};
 	char area[8] = {'\0'};
+	char timezone[20] = {'\0'};
 	char *record;
 	char *eve;
 	int row;
@@ -243,11 +248,13 @@ void idwrite_thread_entry(void* parameter)
 		memset(recvbuff, '\0', sizeof(recvbuff));
 		
 		recv_cmd(clientfd, recvbuff);
-		printf("recvbuff: %s \n",recvbuff);
+		print2msg(ECU_DBG_IDWRITE,"recvbuff",recvbuff);
+		rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 		//烧写和读取ECU的ID
 		if(!strncmp(recvbuff, "set_ecu_id", 10)){
 			strncpy(ecuid, &recvbuff[11], 12);
-			printf("ECU id:%s,  length:%d\n",ecuid,strlen(ecuid));
+			print2msg(ECU_DBG_IDWRITE,"ECU id",ecuid);
+			printdecmsg(ECU_DBG_IDWRITE,"length",strlen(ecuid));
 			fp=fopen("/yuneng/ecuid.con","w");
 			fputs(ecuid,fp);
 			fclose(fp);
@@ -256,14 +263,14 @@ void idwrite_thread_entry(void* parameter)
 			fp=fopen("/yuneng/ecuid.con","r");
 			fgets(ecuid,13,fp);
 			fclose(fp);
-			printf("Send %d\n",send(clientfd,ecuid,strlen(ecuid),0));
+			printdecmsg(ECU_DBG_IDWRITE,"Send",send(clientfd,ecuid,strlen(ecuid),0));
 		}
 		if(!strncmp(recvbuff, "get_ecu_id", 10)){
 			memset(ecuid,'\0',sizeof(ecuid));
 			fp=fopen("/yuneng/ecuid.con","r");
 			fgets(ecuid,13,fp);
 			fclose(fp);
-			printf("Send %d\n",send(clientfd,ecuid,strlen(ecuid),0));
+			printdecmsg(ECU_DBG_IDWRITE,"Send",send(clientfd,ecuid,strlen(ecuid),0));
 		}
 
 		//烧写和读取ECU有线网络的MAC
@@ -285,7 +292,8 @@ void idwrite_thread_entry(void* parameter)
 			mac[14] = ':';
 			mac[15] = recvbuff[23];
 			mac[16] = recvbuff[24];
-			printf("ECU eth0 MAC address:%s,	length:%d\n",mac,strlen(mac));
+			print2msg(ECU_DBG_IDWRITE,"ECU eth0 MAC address",mac);
+			printdecmsg(ECU_DBG_IDWRITE,"length",strlen(mac));
 			fp=fopen("/yuneng/ecumac.con","w");
 			fputs(mac,fp);
 			fclose(fp);
@@ -294,14 +302,14 @@ void idwrite_thread_entry(void* parameter)
 			fp=fopen("/yuneng/ecumac.con","r");
 			fgets(mac,18,fp);
 			fclose(fp);
-			printf("Send %d\n",send(clientfd,mac,strlen(mac),0));
+			printdecmsg(ECU_DBG_IDWRITE,"Send",send(clientfd,mac,strlen(mac),0));
 		}
 		if(!strncmp(recvbuff, "get_eth0_mac", 12)){
 			memset(mac,'\0',sizeof(mac));
 			fp=fopen("/yuneng/ecumac.con","r");
 			fgets(mac,18,fp);
 			fclose(fp);
-			printf("Send %d\n",send(clientfd,mac,strlen(mac),0));
+			printdecmsg(ECU_DBG_IDWRITE,"Send",send(clientfd,mac,strlen(mac),0));
 		}
 
 		//设置ECU的本地时间
@@ -372,7 +380,7 @@ void idwrite_thread_entry(void* parameter)
 				fgets(area, sizeof(area), fp);
 				fclose(fp);
 			}
-			printf("Send %d\n",send(clientfd,area,strlen(area),0));
+			printdecmsg(ECU_DBG_IDWRITE,"Send",send(clientfd,area,strlen(area),0));
 		}
 
 		if(!strncmp(recvbuff, "get_area", 8)){
@@ -382,7 +390,7 @@ void idwrite_thread_entry(void* parameter)
 				fgets(area, sizeof(area), fp);
 				fclose(fp);
 			}
-			printf("Send %d\n",send(clientfd,area,strlen(area),0));
+			printdecmsg(ECU_DBG_IDWRITE,"Send",send(clientfd,area,strlen(area),0));
 		}
 
 		//读取ECU软件版本号
@@ -396,7 +404,7 @@ void idwrite_thread_entry(void* parameter)
 				fclose(fp);
 			}
 			strcat(version, area);
-			printf("Send %d\n",send(clientfd, version, strlen(version), 0));
+			printdecmsg(ECU_DBG_IDWRITE,"Send",send(clientfd, version, strlen(version), 0));
 		}
 
 		//读取本地时间
@@ -424,6 +432,27 @@ void idwrite_thread_entry(void* parameter)
 			rt_hw_led_off();		//LED熄灭
 		}
 
+		
+		//更改时区
+		if(!strncmp(recvbuff, "set_zone", 8)){
+			strncpy(timezone, &recvbuff[9], sizeof(timezone));
+
+
+			fp=fopen("/yuneng/timezone.con", "w");
+			fputs(timezone,fp);
+			fclose(fp);
+			restartThread(TYPE_NTP);
+
+			memset(timezone,'\0',sizeof(timezone));
+			rt_thread_delay(RT_TICK_PER_SECOND);
+			fp=fopen("/yuneng/timezone.con","r");
+			if(fp){
+				fgets(timezone, sizeof(timezone), fp);
+				fclose(fp);
+			}
+			send(clientfd,timezone,strlen(timezone),0);
+		}
+		rt_mutex_release(record_data_lock);
 		closesocket(clientfd);
 	}
 }

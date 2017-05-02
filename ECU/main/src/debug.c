@@ -1,111 +1,362 @@
-#define DEBUG
 #include "variation.h"
 #include <rtdef.h>
 #include <rtthread.h>
 #include <stdio.h>
+#include "debug.h"
 
-void printmsg(char * funname,char *msg)		//打印字符串
+char funname[7][20] = {
+		"update",
+		"idwrite",
+		"main",
+		"client",
+		"control",
+		"ntp",
+		"other"
+};
+
+void printmsg(DebugType type,char *msg)		//打印字符串
 {
-#ifdef DEBUG
-	printf("%s==>%s!\n",funname, msg);
+#if ECU_DEBUG
+	switch(type)
+	{
+		case ECU_DBG_UPDATE:
+			#if ECU_DEBUG_UPDATE
+				printf("%s==>%s!\n",funname[type], msg);
+			#endif
+			break;
+		case ECU_DBG_IDWRITE:
+			#if ECU_DEBUG_IDWRITE
+				printf("%s==>%s!\n",funname[type], msg);
+			#endif
+			break;
+		case ECU_DBG_MAIN:
+			#if ECU_DEBUG_MAIN
+				printf("%s==>%s!\n",funname[type], msg);
+			#endif
+			break;
+		case ECU_DBG_CLIENT:
+			#if ECU_DEBUG_CLIENT
+				printf("%s==>%s!\n",funname[type], msg);
+			#endif
+			break;
+		case ECU_DBG_CONTROL_CLIENT:
+			#if ECU_DEBUG_CONTROL_CLIENT
+				printf("%s==>%s!\n",funname[type], msg);
+			#endif
+			break;
+		case ECU_DBG_NTP:
+			#if ECU_DEBUG_NTP
+				printf("%s==>%s!\n",funname[type], msg);
+			#endif
+			break;
+		case ECU_DBG_OTHER:
+			#if ECU_DEBUG_OTHER
+				printf("%s==>%s!\n",funname[type], msg);
+			#endif
+			break;
+	}
+
 #endif
 }
 
-void print2msg(char * funname,char *msg1, char *msg2)		//打印字符串
+void print2msg(DebugType type,char *msg1, char *msg2)		//打印字符串
 {
-#ifdef DEBUG
-	printf("%s==>%s: %s!\n",funname, msg1, msg2);
+#if ECU_DEBUG
+	switch(type)
+	{
+		case ECU_DBG_UPDATE:
+			#if ECU_DEBUG_UPDATE
+				printf("%s==>%s: %s!\n",funname[type], msg1, msg2);
+			#endif
+			break;
+		case ECU_DBG_IDWRITE:
+			#if ECU_DEBUG_IDWRITE
+				printf("%s==>%s: %s!\n",funname[type], msg1, msg2);
+			#endif
+			break;
+		case ECU_DBG_MAIN:
+			#if ECU_DEBUG_MAIN
+				printf("%s==>%s: %s!\n",funname[type], msg1, msg2);
+			#endif
+			break;
+		case ECU_DBG_CLIENT:
+			#if ECU_DEBUG_CLIENT
+				printf("%s==>%s: %s!\n",funname[type], msg1, msg2);
+			#endif
+			break;
+		case ECU_DBG_CONTROL_CLIENT:
+			#if ECU_DEBUG_CONTROL_CLIENT
+				printf("%s==>%s: %s!\n",funname[type], msg1, msg2);
+			#endif
+			break;
+		case ECU_DBG_NTP:
+			#if ECU_DEBUG_NTP
+				printf("%s==>%s: %s!\n",funname[type], msg1, msg2);
+			#endif
+			break;
+		case ECU_DBG_OTHER:
+			#if ECU_DEBUG_OTHER
+				printf("%s==>%s: %s!\n",funname[type], msg1, msg2);
+			#endif
+			break;
+	}
+	
 #endif
 }
 
-
-void printdecmsg(char * funname,char *msg, int data)		//打印整形数据
+void printdecmsg(DebugType type,char *msg, int data)		//打印整形数据
 {
-#ifdef DEBUG
-	printf("%s==>%s: %d!\n",funname, msg, data);
+#if ECU_DEBUG
+	switch(type)
+	{
+		case ECU_DBG_UPDATE:
+			#if ECU_DEBUG_UPDATE
+				printf("%s==>%s: %d!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_IDWRITE:
+			#if ECU_DEBUG_IDWRITE
+				printf("%s==>%s: %d!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_MAIN:
+			#if ECU_DEBUG_MAIN
+				printf("%s==>%s: %d!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_CLIENT:
+			#if ECU_DEBUG_CLIENT
+				printf("%s==>%s: %d!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_CONTROL_CLIENT:
+			#if ECU_DEBUG_CONTROL_CLIENT
+				printf("%s==>%s: %d!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_NTP:
+			#if ECU_DEBUG_NTP
+				printf("%s==>%s: %d!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_OTHER:
+			#if ECU_DEBUG_OTHER
+				printf("%s==>%s: %d!\n",funname[type], msg, data);
+			#endif
+			break;
+	}	
 #endif
 }
 
-void printhexdatamsg(char * funname,char *msg, int data)		//打印16进制数据,ZK
+void printhexdatamsg(DebugType type,char *msg, int data)		//打印16进制数据,ZK
 {
-#ifdef DEBUG
-	printf("%s==>%s: %X!\n",funname, msg, data);
+#if ECU_DEBUG
+	switch(type)
+	{
+		case ECU_DBG_UPDATE:
+			#if ECU_DEBUG_UPDATE
+				printf("%s==>%s: %X!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_IDWRITE:
+			#if ECU_DEBUG_IDWRITE
+				printf("%s==>%s: %X!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_MAIN:
+			#if ECU_DEBUG_MAIN
+				printf("%s==>%s: %X!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_CLIENT:
+			#if ECU_DEBUG_CLIENT
+				printf("%s==>%s: %X!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_CONTROL_CLIENT:
+			#if ECU_DEBUG_CONTROL_CLIENT
+				printf("%s==>%s: %X!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_NTP:
+			#if ECU_DEBUG_NTP
+				printf("%s==>%s: %X!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_OTHER:
+			#if ECU_DEBUG_OTHER
+				printf("%s==>%s: %X!\n",funname[type], msg, data);
+			#endif
+			break;
+	}
 #endif
 }
 
-void printfloatmsg(char * funname,char *msg, float data)		//打印实数
+void printfloatmsg(DebugType type,char *msg, float data)		//打印实数
 {
-#ifdef DEBUG
-	printf("%s==>%s: %f!\n",funname, msg, data);
+#if ECU_DEBUG
+	switch(type)
+	{
+		case ECU_DBG_UPDATE:
+			#if ECU_DEBUG_UPDATE
+				printf("%s==>%s: %f!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_IDWRITE:
+			#if ECU_DEBUG_IDWRITE
+				printf("%s==>%s: %f!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_MAIN:
+			#if ECU_DEBUG_MAIN
+				printf("%s==>%s: %f!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_CLIENT:
+			#if ECU_DEBUG_CLIENT
+				printf("%s==>%s: %f!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_CONTROL_CLIENT:
+			#if ECU_DEBUG_CONTROL_CLIENT
+				printf("%s==>%s: %f!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_NTP:
+			#if ECU_DEBUG_NTP
+				printf("%s==>%s: %f!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_OTHER:
+			#if ECU_DEBUG_OTHER
+				printf("%s==>%s: %f!\n",funname[type], msg, data);
+			#endif
+			break;
+	}	
+	
 #endif
 }
 
-void printhexmsg(char * funname,char *msg, char *data, int size)		//打印十六进制数据
+void printhexmsg(DebugType type,char *msg, char *data, int size)		//打印十六进制数据
 {
-#ifdef DEBUG
+#if ECU_DEBUG
 	int i;
-
-	printf("%s==>%s: ",funname, msg);
-	for(i=0; i<size; i++)
-		printf("%02X, ", data[i]);
-	printf("\n");
+	switch(type)
+	{
+		case ECU_DBG_UPDATE:
+			#if ECU_DEBUG_UPDATE
+				printf("%s==>%s: ",funname[type], msg);
+				for(i=0; i<size; i++)
+					printf("%02X, ", data[i]);
+				printf("\n");
+			#endif
+			break;
+		case ECU_DBG_IDWRITE:
+			#if ECU_DEBUG_IDWRITE
+				printf("%s==>%s: ",funname[type], msg);
+				for(i=0; i<size; i++)
+					printf("%02X, ", data[i]);
+				printf("\n");
+			#endif
+			break;
+		case ECU_DBG_MAIN:
+			#if ECU_DEBUG_MAIN
+				printf("%s==>%s: ",funname[type], msg);
+				for(i=0; i<size; i++)
+					printf("%02X, ", data[i]);
+				printf("\n");
+			#endif
+			break;
+		case ECU_DBG_CLIENT:
+			#if ECU_DEBUG_CLIENT
+				printf("%s==>%s: ",funname[type], msg);
+				for(i=0; i<size; i++)
+					printf("%02X, ", data[i]);
+				printf("\n");
+			#endif
+			break;
+		case ECU_DBG_CONTROL_CLIENT:
+			#if ECU_DEBUG_CONTROL_CLIENT
+				printf("%s==>%s: ",funname[type], msg);
+				for(i=0; i<size; i++)
+					printf("%02X, ", data[i]);
+				printf("\n");
+			#endif
+			break;
+		case ECU_DBG_NTP:
+			#if ECU_DEBUG_NTP
+				printf("%s==>%s: ",funname[type], msg);
+				for(i=0; i<size; i++)
+					printf("%02X, ", data[i]);
+				printf("\n");
+			#endif
+			break;
+		case ECU_DBG_OTHER:
+			#if ECU_DEBUG_OTHER
+				printf("%s==>%s: ",funname[type], msg);
+				for(i=0; i<size; i++)
+					printf("%02X, ", data[i]);
+				printf("\n");
+			#endif
+			break;
+	}
 #endif
 }
 
 void printecuinfo(ecu_info *ecu)
 {
-	print2msg("main","ECU ID", ecu->id);
-	printhexdatamsg("main","PANID", ecu->panid);
-	printhexdatamsg("main","Channel", ecu->channel);
-	print2msg("main","IP", ecu->ip);
-	printfloatmsg("main","Lifetime energy", ecu->life_energy);
-	printfloatmsg("main","Current energy", ecu->current_energy);
-	printdecmsg("main","System power", ecu->system_power);
-	printdecmsg("main","Total", ecu->total);
-	printdecmsg("main","Current count", ecu->count);
-	printdecmsg("main","Type", ecu->type);
-	printdecmsg("main","Zoneflag", ecu->zoneflag);
+	print2msg(ECU_DBG_MAIN,"ECU ID", ecu->id);
+	printhexdatamsg(ECU_DBG_MAIN,"PANID", ecu->panid);
+	printhexdatamsg(ECU_DBG_MAIN,"Channel", ecu->channel);
+	print2msg(ECU_DBG_MAIN,"IP", ecu->ip);
+	printfloatmsg(ECU_DBG_MAIN,"Lifetime energy", ecu->life_energy);
+	printfloatmsg(ECU_DBG_MAIN,"Current energy", ecu->current_energy);
+	printdecmsg(ECU_DBG_MAIN,"System power", ecu->system_power);
+	printdecmsg(ECU_DBG_MAIN,"Total", ecu->total);
+	printdecmsg(ECU_DBG_MAIN,"Current count", ecu->count);
+	printdecmsg(ECU_DBG_MAIN,"Type", ecu->type);
+	printdecmsg(ECU_DBG_MAIN,"Zoneflag", ecu->zoneflag);
 }
 
 void printinverterinfo(inverter_info *inverter)
 {
-	printdecmsg("main","Inverter it", inverter->it);
-	printfloatmsg("main","Inverter gf", inverter->gf);
-	printdecmsg("main","Inverter curacctimet", inverter->curacctime);
-	printfloatmsg("main","Inverter dv", inverter->dv);
-	printfloatmsg("main","Inverter dvb", inverter->dvb);
-	printfloatmsg("main","Inverter di", inverter->di);
-	printfloatmsg("main","Inverter dib", inverter->dib);
-	printfloatmsg("main","Inverter dic", inverter->dic);
-	printfloatmsg("main","Inverter did", inverter->did);
-	printdecmsg("main","Inverter gv", inverter->gv);
-	printdecmsg("main","Inverter gvb", inverter->gvb);
-	printdecmsg("main","Inverter gvc", inverter->gvc);
-	printfloatmsg("main","Inverter curaccgen", inverter->curaccgen);
-	printfloatmsg("main","Inverter curaccgenb", inverter->curaccgenb);
-	printfloatmsg("main","Inverter curaccgenc", inverter->curaccgenc);
-	printfloatmsg("main","Inverter curaccgend", inverter->curaccgend);
-	printfloatmsg("main","Inverter reactive_power", inverter->reactive_power);
-	printfloatmsg("main","Inverter reactive_powerb", inverter->reactive_powerb);
-	printfloatmsg("main","Inverter reactive_powerc", inverter->reactive_powerc);
-	printfloatmsg("main","Inverter active_power", inverter->active_power);
-	printfloatmsg("main","Inverter active_powerb", inverter->active_powerb);
-	printfloatmsg("main","Inverter active_powerc", inverter->active_powerc);
-	printfloatmsg("main","Inverter output_energy", inverter->output_energy);
-	printfloatmsg("main","Inverter output_energyb", inverter->cur_output_energyb);
-	printfloatmsg("main","Inverter output_energyc", inverter->cur_output_energyc);
-	printmsg("main","=================================================");
-	printfloatmsg("main","preaccgen", inverter->preaccgen);
-	printfloatmsg("main","preaccgenb", inverter->preaccgenb);
-	printfloatmsg("main","preaccgenc", inverter->preaccgenc);
-	printfloatmsg("main","preaccgend", inverter->preaccgend);
-	printfloatmsg("main","pre_output_energy", inverter->pre_output_energy);
-	printfloatmsg("main","pre_output_energyb", inverter->pre_output_energyb);
-	printfloatmsg("main","pre_output_energyc", inverter->pre_output_energyc);
-	printdecmsg("main","preacctime", inverter->preacctime);
-	print2msg("main","last_report_time",inverter->last_report_time);
-	printdecmsg("main","Inverter op", inverter->op);
-	printdecmsg("main","Inverter opb", inverter->opb);
-	printdecmsg("main","Inverter opc", inverter->opc);
-	printmsg("main","=================================================");
+	printdecmsg(ECU_DBG_MAIN,"Inverter it", inverter->it);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter gf", inverter->gf);
+	printdecmsg(ECU_DBG_MAIN,"Inverter curacctimet", inverter->curacctime);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter dv", inverter->dv);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter dvb", inverter->dvb);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter di", inverter->di);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter dib", inverter->dib);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter dic", inverter->dic);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter did", inverter->did);
+	printdecmsg(ECU_DBG_MAIN,"Inverter gv", inverter->gv);
+	printdecmsg(ECU_DBG_MAIN,"Inverter gvb", inverter->gvb);
+	printdecmsg(ECU_DBG_MAIN,"Inverter gvc", inverter->gvc);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter curaccgen", inverter->curaccgen);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter curaccgenb", inverter->curaccgenb);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter curaccgenc", inverter->curaccgenc);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter curaccgend", inverter->curaccgend);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter reactive_power", inverter->reactive_power);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter reactive_powerb", inverter->reactive_powerb);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter reactive_powerc", inverter->reactive_powerc);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter active_power", inverter->active_power);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter active_powerb", inverter->active_powerb);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter active_powerc", inverter->active_powerc);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter output_energy", inverter->output_energy);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter output_energyb", inverter->cur_output_energyb);
+	printfloatmsg(ECU_DBG_MAIN,"Inverter output_energyc", inverter->cur_output_energyc);
+	printmsg(ECU_DBG_MAIN,"=================================================");
+	printfloatmsg(ECU_DBG_MAIN,"preaccgen", inverter->preaccgen);
+	printfloatmsg(ECU_DBG_MAIN,"preaccgenb", inverter->preaccgenb);
+	printfloatmsg(ECU_DBG_MAIN,"preaccgenc", inverter->preaccgenc);
+	printfloatmsg(ECU_DBG_MAIN,"preaccgend", inverter->preaccgend);
+	printfloatmsg(ECU_DBG_MAIN,"pre_output_energy", inverter->pre_output_energy);
+	printfloatmsg(ECU_DBG_MAIN,"pre_output_energyb", inverter->pre_output_energyb);
+	printfloatmsg(ECU_DBG_MAIN,"pre_output_energyc", inverter->pre_output_energyc);
+	printdecmsg(ECU_DBG_MAIN,"preacctime", inverter->preacctime);
+	print2msg(ECU_DBG_MAIN,"last_report_time",inverter->last_report_time);
+	printdecmsg(ECU_DBG_MAIN,"Inverter op", inverter->op);
+	printdecmsg(ECU_DBG_MAIN,"Inverter opb", inverter->opb);
+	printdecmsg(ECU_DBG_MAIN,"Inverter opc", inverter->opc);
+	printmsg(ECU_DBG_MAIN,"=================================================");
 }

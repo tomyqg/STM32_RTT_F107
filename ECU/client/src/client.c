@@ -70,7 +70,7 @@ int randvalue(void)
 
 	srand((unsigned)acquire_time());
 	i = rand()%2;
-	printdecmsg("client","Randvalue", i);
+	printdecmsg(ECU_DBG_CLIENT,"Randvalue", i);
 
 	return i;
 }
@@ -81,9 +81,9 @@ int createsocket(void)					//创建套接字
 
 	fd_sock=socket(AF_INET,SOCK_STREAM,0);
 	if(-1==fd_sock)
-		printmsg("client","Failed to create socket");
+		printmsg(ECU_DBG_CLIENT,"Failed to create socket");
 	else
-		printmsg("client","Create socket successfully");
+		printmsg(ECU_DBG_CLIENT,"Create socket successfully");
 
 	return fd_sock;
 }
@@ -136,7 +136,7 @@ int connect_socket(int fd_sock)				//连接到服务器
 	host = gethostbyname(domain);
 	if(NULL == host)
 	{
-		printmsg("client","Resolve domain failure");
+		printmsg(ECU_DBG_CLIENT,"Resolve domain failure");
 	}
 	else
 	{
@@ -146,9 +146,9 @@ int connect_socket(int fd_sock)				//连接到服务器
 	}
 
 	strcpy(ip, "139.168.200.158");
-	print2msg("client","IP", ip);
-	printdecmsg("client","Port1", port[0]);
-	printdecmsg("client","Port2", port[1]);
+	print2msg(ECU_DBG_CLIENT,"IP", ip);
+	printdecmsg(ECU_DBG_CLIENT,"Port1", port[0]);
+	printdecmsg(ECU_DBG_CLIENT,"Port2", port[1]);
 
 	memset(&serv_addr,0,sizeof(struct sockaddr_in));
 	serv_addr.sin_family=AF_INET;
@@ -158,12 +158,12 @@ int connect_socket(int fd_sock)				//连接到服务器
 
 	if(-1==connect(fd_sock,(struct sockaddr *)&serv_addr,sizeof(struct sockaddr))){
 		showdisconnected();
-		printmsg("client","Failed to connect to EMA");
+		printmsg(ECU_DBG_CLIENT,"Failed to connect to EMA");
 		return -1;
 	}
 	else{
 		showconnected();
-		printmsg("client","Connect to EMA successfully");
+		printmsg(ECU_DBG_CLIENT,"Connect to EMA successfully");
 		writeconnecttime();
 		return 1;
 	}
@@ -172,7 +172,7 @@ int connect_socket(int fd_sock)				//连接到服务器
 void close_socket(int fd_sock)					//关闭套接字
 {
 	closesocket(fd_sock);
-	printmsg("client","Close socket");
+	printmsg(ECU_DBG_CLIENT,"Close socket");
 }
 
 
@@ -195,11 +195,11 @@ int clear_send_flag(char *readbuff)
 				{
 					if(1 == change_resendflag(recv_date_time,'0'))
 					{
-						print2msg("client","Clear send flag into database", "1");
+						print2msg(ECU_DBG_CLIENT,"Clear send flag into database", "1");
 						break;
 					}
 					else
-						print2msg("client","Clear send flag into database", "0");
+						print2msg(ECU_DBG_CLIENT,"Clear send flag into database", "0");
 					rt_thread_delay(RT_TICK_PER_SECOND);
 				}
 			}
@@ -216,7 +216,7 @@ int update_send_flag(char *send_date_time)
 	{
 		if(1 == change_resendflag(send_date_time,'2'))
 		{
-			print2msg("client","Update send flag into database", "1");
+			print2msg(ECU_DBG_CLIENT,"Update send flag into database", "1");
 			break;
 		}
 		rt_thread_delay(RT_TICK_PER_SECOND * 5);
@@ -241,7 +241,7 @@ int recv_response(int fd_sock, char *readbuff)
 		res = select(fd_sock+1, &rd, NULL, NULL, &timeout);
 		if(res <= 0){
 			//printerrmsg("select");
-			printmsg("client","Receive data reply from EMA timeout");
+			printmsg(ECU_DBG_CLIENT,"Receive data reply from EMA timeout");
 			return -1;
 		}
 		else{
@@ -278,7 +278,7 @@ int detection_resendflag2()		//存在返回1，不存在返回0
 		
 		if(dirp == RT_NULL)
 		{
-			rt_kprintf("open directory error!\n");
+			printmsg(ECU_DBG_CLIENT,"detection_resendflag2 open directory error!\n");
 		}
 		else
 		{
@@ -332,7 +332,7 @@ int change_resendflag(char *time,char flag)  //改变成功返回1，未找到该时间点返回
 		
 		if(dirp == RT_NULL)
 		{
-			rt_kprintf("open directory error!\n");
+			printmsg(ECU_DBG_CLIENT,"change_resendflag open directory error!\n");
 		}
 		else
 		{
@@ -397,7 +397,7 @@ int search_readflag(char *data,char * time, int *flag,char sendflag)
 		dirp = opendir("/home/record/data");
 		if(dirp == RT_NULL)
 		{
-			rt_kprintf("open directory error!\n");
+			printmsg(ECU_DBG_CLIENT,"search_readflag open directory error!\n");
 		}
 		else
 		{
@@ -467,7 +467,7 @@ void delete_file_resendflag0()		//清空数据resend标志全部为0的目录
 		
 		if(dirp == RT_NULL)
 		{
-			rt_kprintf("open directory error!\n");
+			printmsg(ECU_DBG_CLIENT,"delete_file_resendflag0 open directory error!\n");
 		}
 		else
 		{
@@ -554,10 +554,10 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 		fclose(fp);
 	}
 	strcat(sendbuff, "\n");
-	print2msg("client","Sendbuff", sendbuff);
+	print2msg(ECU_DBG_CLIENT,"Sendbuff", sendbuff);
 
 	fd_sock = createsocket();
-	printdecmsg("client","Socket", fd_sock);
+	printdecmsg(ECU_DBG_CLIENT,"Socket", fd_sock);
 	if(1 == connect_socket(fd_sock))
 	{
 		while(1)
@@ -589,14 +589,14 @@ int resend_record()
 	
 	//在/home/record/data/目录下查询resendflag为2的记录
 	fd_sock = createsocket();
-	printdecmsg("client","Socket", fd_sock);
+	printdecmsg(ECU_DBG_CLIENT,"Socket", fd_sock);
 	if(1 == connect_socket(fd_sock))
 	{
 		while(search_readflag(data,time,&flag,'2'))		//	获取一条resendflag为1的数据
 		{
 				if(1 == flag)		// 还存在需要上传的数据
 					data[78] = '1';
-			printmsg("client",data);
+			printmsg(ECU_DBG_CLIENT,data);
 			res = send_record(fd_sock, data, time);
 			if(-1 == res)
 				break;
@@ -617,7 +617,7 @@ void client_thread_entry(void* parameter)
 	char data[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};//查询到的数据
 	char time[15] = {'\0'};
 	rt_thread_delay(RT_TICK_PER_SECOND*START_TIME_CLIENT);
-	printmsg("client","Started");
+	printmsg(ECU_DBG_CLIENT,"Started");
 	
 	while(1)
 	{
@@ -631,10 +631,10 @@ void client_thread_entry(void* parameter)
 		}
 		
 		get_time(broadcast_time, broadcast_hour_minute);
-		print2msg("client","time",broadcast_time);
+		print2msg(ECU_DBG_CLIENT,"time",broadcast_time);
 		
 		fd_sock = createsocket();
-		printdecmsg("client","Socket", fd_sock);
+		printdecmsg(ECU_DBG_CLIENT,"Socket", fd_sock);
 		if(1 == connect_socket(fd_sock))
 		{
 			while(search_readflag(data,time,&flag,'1'))		//	获取一条resendflag为1的数据
@@ -645,7 +645,7 @@ void client_thread_entry(void* parameter)
 				}
 				if(1 == flag)		// 还存在需要上传的数据
 						data[78] = '1';
-				printmsg("client",data);
+				printmsg(ECU_DBG_CLIENT,data);
 				res = send_record(fd_sock, data, time);
 				if(-1 == res)
 					break;
@@ -671,7 +671,7 @@ void client_thread_entry(void* parameter)
 			}
 		}
 		
-		printf("\n");
+		//printf("\n");
 	}
 }
 

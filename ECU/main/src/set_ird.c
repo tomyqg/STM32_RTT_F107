@@ -39,7 +39,7 @@ int send_ird_command_single(int shortaddr, char value)		//单台设置逆变器i
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set IRD to single", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set IRD to single", (char *)sendbuff, 13);
 
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 	rt_thread_delay(2 * RT_TICK_PER_SECOND);
@@ -73,7 +73,7 @@ int send_ird_command_all(char value)		//广播设置逆变器ird
 	sendbuff[11] = 0xFE;		//ccuid
 	sendbuff[12] = 0xFE;		//ccuid
 
-	printhexmsg("main","Set IRD to all", (char *)sendbuff, 13);
+	printhexmsg(ECU_DBG_MAIN,"Set IRD to all", (char *)sendbuff, 13);
 	zb_broadcast_cmd((char *)sendbuff, 13);
 	rt_thread_delay(10 * RT_TICK_PER_SECOND);
 	
@@ -103,11 +103,11 @@ int resolve_ird(char *id, char *readbuff)		//解析并保存IRD设置结果
 		{
 			if(1 == insert_line("/home/data/ird",data))
 			{
-				print2msg("main",id, "Update resolve ird successfully");
+				print2msg(ECU_DBG_MAIN,id, "Update resolve ird successfully");
 				break;
 			}
 			else
-				print2msg("main",id, "Failed to resolve ird power");
+				print2msg(ECU_DBG_MAIN,id, "Failed to resolve ird power");
 		}
 		sprintf(inverter_result, "%s%01dEND", id, mode);				//这里先注释掉
 		save_inverter_parameters_result2(id, 126, inverter_result);		//把结果保存到数据库，通过远程控制程序上传给EMA
@@ -140,11 +140,11 @@ int resolve_ird_DD(char *id, char *readbuff)		//解析并保存IRD设置结果
 		{
 			if(1 == insert_line("/home/data/ird",data))
 			{
-				print2msg("main",id, "Update resolve ird DD successfully");
+				print2msg(ECU_DBG_MAIN,id, "Update resolve ird DD successfully");
 				break;
 			}
 			else
-				print2msg("main",id, "Failed to resolve ird DD power");
+				print2msg(ECU_DBG_MAIN,id, "Failed to resolve ird DD power");
 		}
 
 		sprintf(inverter_result, "%s%01dEND", id, mode);				//这里先注释掉
@@ -180,7 +180,7 @@ int get_ird_single(int shortaddr,char* id)		//从逆变器读取实际IRD
 	sendbuff[11] = 0xFE;
 	sendbuff[12] = 0xFE;
 
-	print2msg("main",id, "Query protect parameter");
+	print2msg(ECU_DBG_MAIN,id, "Query protect parameter");
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 
 	res = zb_shortaddr_reply((char *)readbuff,shortaddr,id);
@@ -273,11 +273,11 @@ int clear_ird_flag_single(char *id)					//设置后清除数据库中参数的�
 		{
 			if(1 == insert_line("/home/data/ird",data))
 			{
-				print2msg("main",id, "Update clear_ird_flag_single successfully");
+				print2msg(ECU_DBG_MAIN,id, "Update clear_ird_flag_single successfully");
 				break;
 			}
 			else
-				print2msg("main",id, "Failed to clear_ird_flag_single power");
+				print2msg(ECU_DBG_MAIN,id, "Failed to clear_ird_flag_single power");
 		}
 	}
 

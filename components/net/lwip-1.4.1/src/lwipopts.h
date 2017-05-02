@@ -124,9 +124,9 @@
  * setting in the lwip opts.h 
  */
 /* MEMP_NUM_NETBUF: the number of struct netbufs. */
- #define MEMP_NUM_NETBUF             2
+ #define MEMP_NUM_NETBUF             5
 /* MEMP_NUM_NETCONN: the number of struct netconns. */
- #define MEMP_NUM_NETCONN            6
+ #define MEMP_NUM_NETCONN            15
 
 /* MEMP_NUM_TCPIP_MSG_*: the number of struct tcpip_msg, which is used
    for sequential API communication and incoming packets. Used in

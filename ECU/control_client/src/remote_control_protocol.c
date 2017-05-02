@@ -117,7 +117,7 @@ int msg_format_check(const char *msg)
 {
 	//协议头APS
 	if(strncmp(msg, "APS", 3)){
-		printmsg("control_client","Format Error: APS");
+		printmsg(ECU_DBG_CONTROL_CLIENT,"Format Error: APS");
 		return -1;
 	}
 
@@ -126,14 +126,14 @@ int msg_format_check(const char *msg)
 
 	//协议长度
 	if(msg_length(msg) != strlen(msg)){
-		printmsg("control_client","Format Error: length");
+		printmsg(ECU_DBG_CONTROL_CLIENT,"Format Error: length");
 		return -1;
 	}
 
 	//ECU_ID
 	if(strncmp(&msg[18], ecuid, 12)){
 		if(msg_get_int(&msg[10], 4) != 123){ //A123应答没有ECU_ID
-			printmsg("control_client","Format Error: ecu_id");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"Format Error: ecu_id");
 			return -1;
 		}
 	}

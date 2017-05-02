@@ -66,7 +66,7 @@ int clear_gfdi(inverter_info *firstinverter)
 			{
 			//	send_clean_gfdi(curinverter);
 				zb_clear_gfdi(curinverter);
-				print2msg("main",curinverter->id, "Clear GFDI");
+				print2msg(ECU_DBG_MAIN,curinverter->id, "Clear GFDI");
 
 				break;
 			}
