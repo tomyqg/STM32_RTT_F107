@@ -28,7 +28,7 @@ int get_time_from_NTP()
   {
     printmsg(ECU_DBG_NTP,"Create socket error!");
 
-    return 0;
+    return -1;
   }
   else{
 		printdecmsg(ECU_DBG_NTP,"socket",sockfd);
@@ -38,20 +38,22 @@ int get_time_from_NTP()
   if(-1==ret)
   {
     printmsg(ECU_DBG_NTP,"Connect server error!");
-    return 0;
+    return -1;
   }
   else{
     printdecmsg(ECU_DBG_NTP,"socket",ret);
   }
 
-	for(i=0; i<5; i++){
+	for(i=0; i<2; i++){
 		send_packet(sockfd);
-		for(times=0;times<5;times++){
+		rt_hw_us_delay(1);
+		for(times=0;times<2;times++){
 			timeout.tv_sec = 6;
 			timeout.tv_usec = 0;
+			rt_hw_us_delay(1);
 			ret = select(sockfd+1, &readfd, NULL, NULL, &timeout);
 			
-		printdecmsg(ECU_DBG_NTP,"ret",ret);
+			printdecmsg(ECU_DBG_NTP,"ret",ret);
 
 			if(ret>0){
 				if(-1!=receive_packet(sockfd, &receivepacket, &serversocket)){
@@ -61,7 +63,8 @@ int get_time_from_NTP()
 
 				}
 				update_time(&newtime);
-				break;
+				closesocket(sockfd);
+				return 0;
 			}
 		}
 		if(ret>0)
@@ -69,7 +72,7 @@ int get_time_from_NTP()
     }
     
     closesocket(sockfd);
-    return 0;
+    return -1;
 }
 
 #ifdef RT_USING_FINSH

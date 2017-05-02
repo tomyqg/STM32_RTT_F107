@@ -32,8 +32,7 @@
 #include "inverter_update.h"
 #include "set_autoflag_report.h"
 #include "inverter_ac_protection.h"
-
-
+#include "time_zone.h"
 
 extern rt_mutex_t record_data_lock;
 char ecuid[13] = {'\0'};
@@ -68,8 +67,8 @@ void add_functions()
 {
   pfun[A102] = response_inverter_id; 			//上报逆变器ID  										OK
   pfun[A103] = set_inverter_id; 				//设置逆变器ID												OK
-//  pfun[A104] = response_time_zone; 			//上报ECU本地时区
-//	pfun[A105] = set_time_zone; 				//设置ECU本地时区
+  pfun[A104] = response_time_zone; 			//上报ECU本地时区
+	pfun[A105] = set_time_zone; 				//设置ECU本地时区
 	pfun[A106] = response_comm_config;			//上报ECU通讯配置参数								OK
 	pfun[A107] = set_comm_config;				//设置ECU通讯配置参数										OK
 //	pfun[A108] = custom_command;				//向ECU发送自定义命令

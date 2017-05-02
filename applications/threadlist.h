@@ -29,7 +29,7 @@ typedef enum THREADTYPE {
 //更新线程
 //#define THREAD_PRIORITY_UPDATE						21
 
-//#define THREAD_PRIORITY_NTP								22
+#define THREAD_PRIORITY_NTP								22
 //ID Write线程
 //#define THREAD_PRIORITY_IDWRITE						23
 //数据采集主线程

@@ -19,6 +19,7 @@
 #include <lwip/netdb.h> /* 为了解析主机名，需要包含netdb.h头文件 */
 #include <lwip/sockets.h> /* 使用BSD socket，需要包含sockets.h头文件 */
 #include <zigbee.h>
+#include "debug.h"
 
 
 #ifdef RT_USING_DFS
@@ -274,11 +275,21 @@ static void zigbee_test_thread_entry(void* parameter)
 #ifdef THREAD_PRIORITY_NTP
 static void ntp_thread_entry(void* parameter)
 {
-
+	int i = 0;
 	while(1)
 	{
-		get_time_from_NTP();
+		printmsg(ECU_DBG_NTP,"start--------------------------------------------------------");
+		i = 0;
+		for(i = 0;i < 5;i++)
+		{
+			if(0 == get_time_from_NTP())
+				break;
+			rt_thread_delay(RT_TICK_PER_SECOND * 10);
+		}
+		printmsg(ECU_DBG_NTP,"end----------------------------------------------------------");
+		//rt_thread_delay(RT_TICK_PER_SECOND * 60);
 		rt_thread_delay(RT_TICK_PER_SECOND * 86400);
+		
 	}
 
 }
