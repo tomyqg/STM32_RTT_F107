@@ -1196,6 +1196,11 @@
               <FileType>1</FileType>
               <FilePath>..\ECU\control_client\src\time_zone.c</FilePath>
             </File>
+            <File>
+              <FileName>custom_command.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ECU\control_client\src\custom_command.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

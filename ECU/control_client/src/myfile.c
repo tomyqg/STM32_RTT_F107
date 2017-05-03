@@ -275,7 +275,7 @@ int read_line_end(char* filename,char *linedata,char* compareData,int len)
 	if(fin == NULL)
 	{
 		printf("read_line_end %s failure3...\n",filename);
-    return -1;
+    	return -1;
 	}
 	
   while(fgets(linedata,100,fin))//从原文件读取一行

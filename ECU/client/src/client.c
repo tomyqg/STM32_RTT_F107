@@ -583,10 +583,12 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 int resend_record()
 {
 	int fd_sock;
-	char data[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};//查询到的数据
+	char *data = NULL;//查询到的数据
 	char time[15] = {'\0'};
 	int flag,res;
 	
+	data = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
+	memset(data,0x00,MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 	//在/home/record/data/目录下查询resendflag为2的记录
 	fd_sock = createsocket();
 	printdecmsg(ECU_DBG_CLIENT,"Socket", fd_sock);
@@ -603,7 +605,7 @@ int resend_record()
 		}
 	}
 	close_socket(fd_sock);
-		
+	free(data);
 	return 0;
 }
 
@@ -623,7 +625,8 @@ void client_thread_entry(void* parameter)
 	{
 		thistime = lasttime = acquire_time();
 		
-		if(1 == get_hour())
+		if((2 == get_hour())||(1 == get_hour()))
+		//if(1)
 		{
 			preprocess();		//预处理,先发送一个头信息给EMA,让EMA把标记为2的记录的时间返回ECU,然后ECU再把标记为2的记录再次发送给EMA,防止EMA收到记录返回收到标志而没有存入数据库的请情况
 			resend_record();

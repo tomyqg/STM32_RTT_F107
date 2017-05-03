@@ -276,6 +276,7 @@ static void zigbee_test_thread_entry(void* parameter)
 static void ntp_thread_entry(void* parameter)
 {
 	int i = 0;
+	rt_thread_delay(START_TIME_NTP * RT_TICK_PER_SECOND);
 	while(1)
 	{
 		printmsg(ECU_DBG_NTP,"start--------------------------------------------------------");
@@ -567,4 +568,11 @@ void restart(int type)
 	restartThread((threadType)type);
 }
 FINSH_FUNCTION_EXPORT(restart, eg:restart());
+
+#include "arch/sys_arch.h"
+void dhcpreset()
+{
+	dhcp_reset();
+}
+FINSH_FUNCTION_EXPORT(dhcpreset, eg:dhcpreset());
 #endif

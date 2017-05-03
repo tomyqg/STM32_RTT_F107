@@ -33,6 +33,7 @@
 #include "set_autoflag_report.h"
 #include "inverter_ac_protection.h"
 #include "time_zone.h"
+#include "custom_command.h"
 
 extern rt_mutex_t record_data_lock;
 char ecuid[13] = {'\0'};
@@ -71,7 +72,7 @@ void add_functions()
 	pfun[A105] = set_time_zone; 				//设置ECU本地时区
 	pfun[A106] = response_comm_config;			//上报ECU通讯配置参数								OK
 	pfun[A107] = set_comm_config;				//设置ECU通讯配置参数										OK
-//	pfun[A108] = custom_command;				//向ECU发送自定义命令
+	pfun[A108] = custom_command;				//向ECU发送自定义命令
 	pfun[A109] = set_inverter_ac_protection_5; 	//设置逆变器交流保护参数(5项)
 	pfun[A110] = set_inverter_maxpower;			//设置逆变器最大功率								OK
 	pfun[A111] = set_inverter_onoff;			//设置逆变器开关机										OK

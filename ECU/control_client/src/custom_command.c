@@ -1,9 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
-#include <sys/wait.h>
 #include "remote_control_protocol.h"
-#include "mydebug.h"
-#include "mycommand.h"
+#include "debug.h"
 
 /* 【A108】EMA向ECU发送自定义命令 */
 int custom_command(const char *recvbuffer, char *sendbuffer)
@@ -22,12 +20,12 @@ int custom_command(const char *recvbuffer, char *sendbuffer)
 	else{
 		//结束程序命令
 		if(!strncmp(command, "quit", 4)){
-			debug_msg("Ready to quit");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"Ready to quit");
 			msg_ACK(sendbuffer, "A108", timestamp, ack_flag);
 			return -1;
 		}
 		//执行自定义命令
-		ack_flag = mysystem(command);
+		//ack_flag = mysystem(command);
 	}
 	msg_ACK(sendbuffer, "A108", timestamp, ack_flag);
 	return 0;

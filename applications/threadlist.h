@@ -27,22 +27,23 @@ typedef enum THREADTYPE {
 //#define THREAD_PRIORITY_ZIGBEE_TEST				22
 
 //更新线程
-//#define THREAD_PRIORITY_UPDATE						21
+#define THREAD_PRIORITY_UPDATE						22
 
-#define THREAD_PRIORITY_NTP								22
+#define THREAD_PRIORITY_NTP								21
 //ID Write线程
-//#define THREAD_PRIORITY_IDWRITE						23
+#define THREAD_PRIORITY_IDWRITE						23
 //数据采集主线程
-//#define THREAD_PRIORITY_MAIN	            24
+#define THREAD_PRIORITY_MAIN	            24
 //远程控制线程
-//#define THREAD_PRIORITY_CONTROL_CLIENT		26
+#define THREAD_PRIORITY_CONTROL_CLIENT		26
 //数据上传线程
-//#define THREAD_PRIORITY_CLIENT						27
+#define THREAD_PRIORITY_CLIENT						27
 
 //每个线程在开机后的启动时间,单位S
 #define START_TIME_UPDATE									0
+#define START_TIME_NTP										10
 #define START_TIME_IDWRITE								5
-#define START_TIME_MAIN										10
+#define START_TIME_MAIN										20
 #define START_TIME_CONTROL_CLIENT					60
 #define START_TIME_CLIENT									60
 void tasks_new(void);//创建系统需要的线程
