@@ -22,13 +22,14 @@ typedef enum DEBUG {
 #define ECU_DEBUG									ECU_DBG_ON
 #endif 
 
-#define ECU_DEBUG_UPDATE					ECU_DBG_ON
-#define ECU_DEBUG_IDWRITE					ECU_DBG_ON
-#define ECU_DEBUG_MAIN						ECU_DBG_ON
-#define ECU_DEBUG_CLIENT					ECU_DBG_ON
-#define ECU_DEBUG_CONTROL_CLIENT	ECU_DBG_ON
+//宏开关，打开关闭线程打印信息
+#define ECU_DEBUG_UPDATE					ECU_DBG_OFF
+#define ECU_DEBUG_IDWRITE					ECU_DBG_OFF
+#define ECU_DEBUG_MAIN						ECU_DBG_OFF
+#define ECU_DEBUG_CLIENT					ECU_DBG_OFF
+#define ECU_DEBUG_CONTROL_CLIENT	ECU_DBG_OFF
 #define ECU_DEBUG_NTP							ECU_DBG_ON
-
+#define ECU_DEBUG_OTHER						ECU_DBG_OFF
 
 
 extern void printmsg(DebugType type,char *msg);		//打印字符串

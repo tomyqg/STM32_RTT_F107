@@ -2,6 +2,7 @@
 #include "datetime.h"
 #include <string.h>
 #include <rtthread.h>
+#include "debug.h"
 
 
 int get_time(char *sendcommanddatetime, char *sendcommandtime)		//·¢¸øEMA¼ÇÂ¼Ê±»ñÈ¡µÄÊ±¼ä£¬¸ñÊ½£ºÄêÔÂÈÕÊ±·ÖÃë£¬Èç20120902142835
@@ -17,9 +18,8 @@ int get_time(char *sendcommanddatetime, char *sendcommandtime)		//·¢¸øEMA¼ÇÂ¼Ê±»
 	sendcommandtime[0] = hour;
 	sendcommandtime[1] = minute;
     
-#ifdef DEBUGINFO
-	printf("Broadcast time:%s\n", sendcommanddatetime);
-#endif
+	//print2msg(ECU_DBG_OTHER,"Broadcast time", sendcommanddatetime);
+
 
 	return hour;
 }
@@ -43,7 +43,7 @@ int acquire_time()
 	hour = ((datetime[8] - 0x30) *10) + (datetime[9] - 0x30);
 	minute = ((datetime[10] - 0x30) *10) + (datetime[11] - 0x30);
 	second = ((datetime[12] - 0x30) *10) + (datetime[13] - 0x30);
-	//rt_kprintf("%d %d %d \n",hour,minute,second);
+	//rt_kprintf("%d %d %d ",hour,minute,second);
 	return (hour*60*60+minute*60+second);
 }
 

@@ -303,6 +303,7 @@ void printhexmsg(DebugType type,char *msg, char *data, int size)		//打印十六进制
 #endif
 }
 
+
 void printecuinfo(ecu_info *ecu)
 {
 	print2msg(ECU_DBG_MAIN,"ECU ID", ecu->id);

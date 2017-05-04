@@ -181,7 +181,7 @@ int detection_statusflag(char flag)		//¼ì²â/home/record/inverstaÄ¿Â¼ÏÂÊÇ·ñ´æÔÚfl
 		
 		if(dirp == RT_NULL)
 		{
-			rt_kprintf("open directory error!\n");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"detection_statusflag open directory error");
 		}
 		else
 		{
@@ -191,7 +191,7 @@ int detection_statusflag(char flag)		//¼ì²â/home/record/inverstaÄ¿Â¼ÏÂÊÇ·ñ´æÔÚfl
 				memset(path,0,100);
 				memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
 				sprintf(path,"%s/%s",dir,d->d_name);
-				//printf("%s\n",path);
+				//print2msg(ECU_DBG_CLIENT,"detection_statusflag",path);
 				//´ò¿ªÎÄ¼þÒ»ÐÐÐÐÅÐ¶ÏÊÇ·ñÓÐflag=2µÄ  Èç¹û´æÔÚÖ±½Ó¹Ø±ÕÎÄ¼þ²¢·µ»Ø1
 				fp = fopen(path, "r");
 				if(fp)
@@ -235,7 +235,7 @@ int change_statusflag1()  //¸Ä±ä³É¹¦·µ»Ø1
 		
 		if(dirp == RT_NULL)
 		{
-			rt_kprintf("open directory error!\n");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"change_statusflag1 open directory error");
 		}
 		else
 		{
@@ -290,7 +290,7 @@ void delete_statusflag0()		//Çå¿ÕÊý¾Ýflag±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 		
 		if(dirp == RT_NULL)
 		{
-			rt_kprintf("open directory error!\n");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"delete_statusflag0 open directory error");
 		}
 		else
 		{
@@ -345,7 +345,7 @@ int change_statusflag(char *time,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ±¼äµã·µ»Ø
 		
 		if(dirp == RT_NULL)
 		{
-			rt_kprintf("open directory error!\n");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"change_statusflag open directory error");
 		}
 		else
 		{
@@ -368,7 +368,7 @@ int change_statusflag(char *time,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ±¼äµã·µ»Ø
 						{
 							fseek(fp,-2L,SEEK_CUR);
 							fputc(flag,fp);
-							//printf("%s\n",filetime);
+							//printmsg(ECU_DBG_CONTROL_CLIENT,"change_statusflag filetime",filetime);
 							fclose(fp);
 							closedir(dirp);
 							rt_mutex_release(record_data_lock);
@@ -410,7 +410,7 @@ int search_statusflag(char *data,char * time, int *flag,char sendflag)
 		dirp = opendir("/home/record/inversta");
 		if(dirp == RT_NULL)
 		{
-			rt_kprintf("open directory error!\n");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"search_statusflag open directory error");
 		}
 		else
 		{
@@ -430,7 +430,8 @@ int search_statusflag(char *data,char * time, int *flag,char sendflag)
 							memcpy(time,&buff[strlen(buff)-17],14);				//»ñÈ¡Ã¿Ìõ¼ÇÂ¼µÄÊ±¼ä
 							memcpy(data,buff,(strlen(buff)-18));
 							data[strlen(buff)-18] = '\n';
-							//printf("time:%s   data:%s\n",time,data);
+							//print2msg(ECU_DBG_CONTROL_CLIENT,"time",time);
+							//print2msg(ECU_DBG_CONTROL_CLIENT,"data",data);
 							rt_thread_delay(RT_TICK_PER_SECOND*1);
 							while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	//ÔÙÍùÏÂ¶ÁÊý¾Ý£¬Ñ°ÕÒÊÇ·ñ»¹ÓÐÒª·¢ËÍµÄÊý¾Ý
 							{
@@ -479,7 +480,7 @@ void delete_pro_result_flag0()		//Çå¿ÕÊý¾Ýflag±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 		
 		if(dirp == RT_NULL)
 		{
-			rt_kprintf("open directory error!\n");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"search_statusflag open directory error");
 		}
 		else
 		{
@@ -532,7 +533,7 @@ void delete_inv_pro_result_flag0()		//Çå¿ÕÊý¾Ýflag±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 		
 		if(dirp == RT_NULL)
 		{
-			rt_kprintf("open directory error!\n");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"delete_inv_pro_result_flag0 open directory error");
 		}
 		else
 		{
@@ -587,7 +588,7 @@ int change_pro_result_flag(char *item,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ±¼äµ
 		
 		if(dirp == RT_NULL)
 		{
-			rt_kprintf("open directory error!\n");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"change_pro_result_flag open directory error");
 		}
 		else
 		{
@@ -610,7 +611,7 @@ int change_pro_result_flag(char *item,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ±¼äµ
 						{
 							fseek(fp,-2L,SEEK_CUR);
 							fputc(flag,fp);
-							//printf("%s\n",filetime);
+							//print2msg(ECU_DBG_CLIENT,"filetime",filetime);
 							fclose(fp);
 							closedir(dirp);
 							rt_mutex_release(record_data_lock);
@@ -651,7 +652,7 @@ int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)
 		dirp = opendir("/home/data/proc_res");
 		if(dirp == RT_NULL)
 		{
-			rt_kprintf("open directory error!\n");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"search_pro_result_flag open directory error");
 		}
 		else
 		{
@@ -671,7 +672,8 @@ int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)
 							memcpy(item,&buff[strlen(buff)-6],3);				//»ñÈ¡Ã¿Ìõ¼ÇÂ¼µÄitem
 							memcpy(data,buff,(strlen(buff)-7));
 							data[strlen(buff)-7] = '\n';
-							//printf("time:%s   data:%s\n",time,data);
+							//print2msg(ECU_DBG_CONTROL_CLIENT,"time",time);
+							//print2msg(ECU_DBG_CONTROL_CLIENT,"data",data);
 							rt_thread_delay(RT_TICK_PER_SECOND*1);
 							while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	//ÔÙÍùÏÂ¶ÁÊý¾Ý£¬Ñ°ÕÒÊÇ·ñ»¹ÓÐÒª·¢ËÍµÄÊý¾Ý
 							{
@@ -725,7 +727,7 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 		dirp = opendir("/home/data/iprocres");
 		if(dirp == RT_NULL)
 		{
-			rt_kprintf("open directory error!\n");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"search_inv_pro_result_flag open directory error");
 		}
 		else
 		{
@@ -746,7 +748,8 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 							memcpy(inverterid,&buff[strlen(buff)-18],12);
 							memcpy(data,buff,(strlen(buff)-19));
 							data[strlen(buff)-7] = '\n';
-							//printf("time:%s   data:%s\n",time,data);
+							//print2msg(ECU_DBG_CONTROL_CLIENT,"time",time);
+							//print2msg(ECU_DBG_CONTROL_CLIENT,"data",data);
 							rt_thread_delay(RT_TICK_PER_SECOND*1);
 							while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	//ÔÙÍùÏÂ¶ÁÊý¾Ý£¬Ñ°ÕÒÊÇ·ñ»¹ÓÐÒª·¢ËÍµÄÊý¾Ý
 							{

@@ -119,13 +119,13 @@ int delete_line(char* filename,char* temfilename,char* compareData,int len)
   fin=fopen(filename,"r");//读打开原文件123.txt
 	if(fin == NULL)
 	{
-		printf("Open the file %s failure...\n",filename);
+		print2msg(ECU_DBG_OTHER,"Open the file failure",filename);
     return -1;
 	}
 	
   ftp=fopen(temfilename,"w");
 	if( ftp==NULL){
-		printf("Open the file %s failure...\n",temfilename);
+		print2msg(ECU_DBG_OTHER,"Open the filefailure",temfilename);
 		fclose(fin);
     return -1;
   }
@@ -133,7 +133,7 @@ int delete_line(char* filename,char* temfilename,char* compareData,int len)
 	{
 		if(memcmp(data,compareData,len))
 		{
-			//printf("%s\n",data);
+			//print2msg(ECU_DBG_OTHER,"delete_line",data);
 			fputs(data,ftp);//不是则将这一行写入临时文件
 		}
 	}
@@ -200,7 +200,7 @@ int search_line(char* filename,char* compareData,int len)
   fin=fopen(filename,"r");
 	if(fin == NULL)
 	{
-		printf("search_line %s failure1...\n",filename);
+		print2msg(ECU_DBG_OTHER,"search_line failure1",filename);
     return -1;
 	}
 	
@@ -251,7 +251,7 @@ int read_line(char* filename,char *linedata,char* compareData,int len)
   fin=fopen(filename,"r");
 	if(fin == NULL)
 	{
-		printf("read_line %s failure2...\n",filename);
+		print2msg(ECU_DBG_OTHER,"read_line failure2",filename);
     return -1;
 	}
 	
@@ -274,7 +274,7 @@ int read_line_end(char* filename,char *linedata,char* compareData,int len)
   fin=fopen(filename,"r");
 	if(fin == NULL)
 	{
-		printf("read_line_end %s failure3...\n",filename);
+		print2msg(ECU_DBG_OTHER,"read_line_end failure3",filename);
     	return -1;
 	}
 	

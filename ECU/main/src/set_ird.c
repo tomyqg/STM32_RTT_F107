@@ -126,7 +126,7 @@ int resolve_ird_DD(char *id, char *readbuff)		//解析并保存IRD设置结果
 	
 	mode = (int)readbuff[3+19];
 //读取所在ID行
-	if(1 == read_line("/home/data/power",data,id,12))
+	if(1 == read_line("/home/data/ird",data,id,12))
 	{
 		//将所在行分裂
 		splitString(data,splitdata);
@@ -259,7 +259,7 @@ int clear_ird_flag_single(char *id)					//设置后清除数据库中参数的�
 	int i;
 
 	//读取所在ID行
-	if(1 == read_line("/home/data/power",data,id,12))
+	if(1 == read_line("/home/data/ird",data,id,12))
 	{
 		//将所在行分裂
 		splitString(data,splitdata);
@@ -343,7 +343,7 @@ int set_ird_all(inverter_info *firstinverter)		//设置所有逆变器IRD
 	char value[256]={'\0'};
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	
-	fp = fopen("/tmp/set_ird.conf", "r");
+	fp = fopen("/tmp/set_ird.con", "r");
 	if(fp)
 	{
 		fgets(buff, 255, fp);
@@ -371,13 +371,13 @@ int get_ird_from_inverters(inverter_info *firstinverter)		//设置所有逆变�
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	//set_grid_environment_all(firstinverter);	//在系统中有逆变器上传实时数据时才设置所有
 
-	fp = fopen("/tmp/get_ird.conf", "r");	//不设置只读
+	fp = fopen("/tmp/get_ird.con", "r");	//不设置只读
 	if(fp){
 		fgets(buff, sizeof(buff), fp);
 		fclose(fp);
 
 		if(!strcmp(buff, "ALL")){
-			fp = fopen("/tmp/get_ird.conf", "w");	//清空文件后读取
+			fp = fopen("/tmp/get_ird.con", "w");	//清空文件后读取
 			if(fp){
 				fclose(fp);
 			}

@@ -67,7 +67,7 @@ void tcpserv(void* parameter)
 		while (1)
 		{
 			/* 发送数据到connected socket */
-			//send(connected, send_data, strlen(send_data), 0);
+			send(connected, send_data, strlen(send_data), 0);
 			/*
 			* 从connected socket中接收数据，接收buffer是1024大小，
 			* 但并不一定能够收到1024大小的数据

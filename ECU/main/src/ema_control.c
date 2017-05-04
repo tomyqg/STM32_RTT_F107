@@ -279,7 +279,7 @@ int save_protect_result(inverter_info *firstinverter)
 
 	strcpy(protect_result, "APS13AAAAAA114AAA1");
 
-	fp = fopen("/etc/yuneng/ecuid.conf", "r");		//读取ECU的ID
+	fp = fopen("/yuneng/ecuid.con", "r");		//读取ECU的ID
 	if(fp)
 	{
 		fgets(ecu_id, 13, fp);
@@ -333,7 +333,7 @@ int save_protect_result(inverter_info *firstinverter)
 
 	strcat(protect_result, "\n");
 
-	//save_process_result(114,protect_result);
+	save_process_result(114,protect_result);
 
 	return 0;
 }

@@ -243,7 +243,7 @@ int updatefixedflag(inverter_info *inverter)
 				print2msg(ECU_DBG_MAIN,inverter->id, "Failed to update fixed flag power");
 		}
 
-		print2msg(ECU_DBG_MAIN,inverter->id, "has been changed to fixed power Mode!\n");
+		print2msg(ECU_DBG_MAIN,inverter->id, "has been changed to fixed power Mode!");
 	}
 	
 	return 0;

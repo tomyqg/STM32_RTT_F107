@@ -96,10 +96,10 @@ int openzigbee(void)
 		result = rt_device_open(new, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_INT_RX);
 		if(result)
 		{
-			rt_kprintf("open Zigbee failed : %d\r\n",result);
+			printdecmsg(ECU_DBG_MAIN,"open Zigbee failed ",result);
 		}else
 		{
-			rt_kprintf("open Zigbee success\r\n");
+			printmsg(ECU_DBG_MAIN,"open Zigbee success");
 		}
 	}
 
@@ -122,7 +122,7 @@ void zigbee_reset(void)
 	rt_thread_delay(RT_TICK_PER_SECOND);
 	GPIO_SetBits(GPIOC, GPIO_Pin_7);		//设置引脚为高电平输出
 	rt_thread_delay(RT_TICK_PER_SECOND * 10);
-	rt_kprintf("zigbee reset successful!\n");
+	printmsg(ECU_DBG_MAIN,"zigbee reset successful");
 }
 
 int zb_shortaddr_cmd(int shortaddr, char *buff, int length)		//zigbee 短地址报头
@@ -147,7 +147,6 @@ int zb_shortaddr_cmd(int shortaddr, char *buff, int length)		//zigbee 短地址报头
 	sendbuff[12] = check/256;
 	sendbuff[13] = check%256;
 	sendbuff[14] = length;
-
 
 	for(i=0; i<length; i++)
 	{
@@ -1865,7 +1864,7 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 				if((0 != curinverter->model) )//&& (1 == curinverter->bindflag))
 				//if(1)
 				{
-					//printf("%s---->querydata\n",curinverter->id);
+					//print2msg(ECU_DBG_MAIN,"querydata",curinverter->id);
 					zb_query_data(curinverter);
 					rt_hw_us_delay(200000);
 				}

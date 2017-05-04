@@ -339,13 +339,13 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 	int i;
 	char temp[50] = {'\0'};
 	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL]={'\0'};
-	struct inverter_info_t *inverter = firstinverter;//printf("protocal1\n");
+	struct inverter_info_t *inverter = firstinverter;
 	strcat(buff, "APS1800000AAAAAAA1");
-	strcat(buff, ecu.id);//printf("protocal3 ");
-	transsyspower(buff, ecu.system_power);//printf("protocal4 ");
-	transsyscurgen(buff, ecu.current_energy);//printf("protocal5 ");
-	transltgen(buff, ecu.life_energy*10.0);//printf("protocal6 ");
-	strcat(buff, sendcommanddatetime);//printf("protocal7\n");
+	strcat(buff, ecu.id);
+	transsyspower(buff, ecu.system_power);
+	transsyscurgen(buff, ecu.current_energy);
+	transltgen(buff, ecu.life_energy*10.0);
+	strcat(buff, sendcommanddatetime);
 
 	sprintf(temp, "%d", ecu.count);
 	for(i=0; i<(3-strlen(temp)); i++)
@@ -494,7 +494,7 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 		buff[5+5-strlen(temp)+i] = temp[i];
 
 	//strcat(buff, "\n");
-	save_record(buff,sendcommanddatetime);//printf("point9 ");			//把发送给EMA的记录保存在数据库中
+	save_record(buff,sendcommanddatetime);			//把发送给EMA的记录保存在数据库中
 	print2msg(ECU_DBG_MAIN,"Record", buff);
 
 	return 0;

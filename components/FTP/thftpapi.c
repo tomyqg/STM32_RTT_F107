@@ -23,6 +23,7 @@
 #include <rtthread.h>
 #include "file.h"
 #include "datetime.h"
+#include "debug.h"
 
 
 void getFTPConf(char *FTPIP,int *port,char* user,char *password)
@@ -434,7 +435,7 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
     if ( handle == -1 ) 
 		{
 			free(buf);
-			printf("fffffffff\n");
+			printmsg(ECU_DBG_UPDATE,"ftp_retrfile FILE open failed");
 			return -1;
 		}
     //设置传输模式
@@ -444,10 +445,10 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
     d_sock = ftp_pasv_connect(c_sock);
     if (d_sock == -1)
     {
-			printf("qqqqqqqqq\n");
-        fileclose(handle);
-		free(buf);
-        return -1;
+			printmsg(ECU_DBG_UPDATE,"ftp_pasv_connect failed");
+      fileclose(handle);
+			free(buf);
+       return -1;
     }
      
     //发送STOR命令
@@ -456,10 +457,10 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
     result = ftp_sendcmd( c_sock, buf );
     if (result >= 300 || result == 0)
     {
-			printf("111111111\n");
-        fileclose(handle);
-		free(buf);
-        return result;
+			printmsg(ECU_DBG_UPDATE,"RETR response error");
+      fileclose(handle);
+			free(buf);
+      return result;
     }
      
     //开始向PASV读取数据
@@ -472,7 +473,7 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
 		while (1) {
 			len = select(d_sock+1, &rd, NULL, NULL, &timeout);
 			if(len <= 0){
-				printf("select out\n");
+				printmsg(ECU_DBG_UPDATE,"ftp_retrfile select out");
 				closesocket( d_sock );
 				fileclose( handle );
 				free(buf);
@@ -502,7 +503,7 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
 					memset(buf,0x00, sizeof(buf));
 					if(len < 1){	
 
-						printf("\ntransfer:%d\n",len);
+						printdecmsg(ECU_DBG_UPDATE,"transfer",len);
 						break;
 					}
 				}
@@ -581,7 +582,8 @@ int ftp_storfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
         if (send_len != len ||
             (stop != NULL && *stop))
         {
-					printf("send_len:%d len:%d \n",send_len,len);
+					printdecmsg(ECU_DBG_UPDATE,"send_len ",send_len);
+					printdecmsg(ECU_DBG_UPDATE,"len:%d ",len);
           closesocket( d_sock );
           fileclose( handle );
 					free(buf);
@@ -678,11 +680,13 @@ int ftpgetfile(char *host, int port, char *user, char *pwd,char *remotefile,char
 	int sockfd = ftp_connect( host, port, user, pwd  );
 	if(sockfd != -1)
 	{
-		printf("ftp connect successful %d\n",sockfd);	
+		printdecmsg(ECU_DBG_UPDATE,"ftp connect successful",sockfd);	
 	}
 	
 	ret = ftp_retrfile(sockfd, remotefile, localfile ,&stor_size, &stop);
-	printf("\nret :%d\nstor_size:%lld  stop:%d\n",ret,stor_size,stop);
+	printdecmsg(ECU_DBG_UPDATE,"ret",ret);
+	printdecmsg(ECU_DBG_UPDATE,"stor_size",stor_size);
+	printdecmsg(ECU_DBG_UPDATE,"stop",stop);
 	ftp_quit( sockfd);
 	return ret;
 }
@@ -696,11 +700,14 @@ int ftpputfile(char *host, int port, char *user, char *pwd,char *remotefile,char
 
 	if(sockfd != -1)
 	{
-		printf("ftp connect successful %d\n",sockfd);	
+		printdecmsg(ECU_DBG_UPDATE,"ftp connect successful",sockfd);	
 	}
 
   ret = ftp_storfile(sockfd, localfile,remotefile ,&stor_size, &stop);
-	printf("stor_size:%lld  stop:%d\n",stor_size,stop);
+	printdecmsg(ECU_DBG_UPDATE,"ret",ret);
+	printdecmsg(ECU_DBG_UPDATE,"stor_size",stor_size);
+	printdecmsg(ECU_DBG_UPDATE,"stop",stop);
+
 	ftp_quit( sockfd);
 	return ret;
 }

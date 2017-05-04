@@ -141,7 +141,6 @@ int connect_socket(int fd_sock)				//连接到服务器
 	else
 	{
 		memset(ip, '\0', sizeof(ip));
-		//printf("%s\n",*host->h_addr_list);
 		//inet_ntop(AF_INET, *host->h_addr_list, ip, 32);
 	}
 
@@ -278,7 +277,7 @@ int detection_resendflag2()		//存在返回1，不存在返回0
 		
 		if(dirp == RT_NULL)
 		{
-			printmsg(ECU_DBG_CLIENT,"detection_resendflag2 open directory error!\n");
+			printmsg(ECU_DBG_CLIENT,"detection_resendflag2 open directory error");
 		}
 		else
 		{
@@ -288,7 +287,7 @@ int detection_resendflag2()		//存在返回1，不存在返回0
 				memset(path,0,100);
 				memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
 				sprintf(path,"%s/%s",dir,d->d_name);
-				//printf("%s\n",path);
+				//print2msg(ECU_DBG_CLIENT,"detection_resendflag2",path);
 				//打开文件一行行判断是否有flag=2的  如果存在直接关闭文件并返回1
 				fp = fopen(path, "r");
 				if(fp)
@@ -336,7 +335,7 @@ int change_resendflag(char *time,char flag)  //改变成功返回1，未找到该时间点返回
 		
 		if(dirp == RT_NULL)
 		{
-			printmsg(ECU_DBG_CLIENT,"change_resendflag open directory error!\n");
+			printmsg(ECU_DBG_CLIENT,"change_resendflag open directory error");
 		}
 		else
 		{
@@ -361,7 +360,7 @@ int change_resendflag(char *time,char flag)  //改变成功返回1，未找到该时间点返回
 							{
 								fseek(fp,-2L,SEEK_CUR);
 								fputc(flag,fp);
-								//printf("%s\n",filetime);
+								//print2msg(ECU_DBG_CLIENT,"change_resendflag",filetime);
 								fclose(fp);
 								closedir(dirp);
 								rt_mutex_release(record_data_lock);
@@ -405,7 +404,7 @@ int search_readflag(char *data,char * time, int *flag,char sendflag)
 		dirp = opendir("/home/record/data");
 		if(dirp == RT_NULL)
 		{
-			printmsg(ECU_DBG_CLIENT,"search_readflag open directory error!\n");
+			printmsg(ECU_DBG_CLIENT,"search_readflag open directory error");
 		}
 		else
 		{
@@ -430,7 +429,8 @@ int search_readflag(char *data,char * time, int *flag,char sendflag)
 									memcpy(time,&buff[strlen(buff)-17],14);				//获取每条记录的时间
 									memcpy(data,buff,(strlen(buff)-18));
 									data[strlen(buff)-18] = '\n';
-									//printf("time:%s   data:%s\n",time,data);
+									//print2msg(ECU_DBG_CLIENT,"search_readflag time",time);
+									//print2msg(ECU_DBG_CLIENT,"search_readflag data",data);
 									rt_thread_delay(RT_TICK_PER_SECOND*1);
 									while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	//再往下读数据，寻找是否还有要发送的数据
 									{
@@ -508,7 +508,7 @@ void delete_file_resendflag0()		//清空数据resend标志全部为0的目录
 		
 		if(dirp == RT_NULL)
 		{
-			printmsg(ECU_DBG_CLIENT,"delete_file_resendflag0 open directory error!\n");
+			printmsg(ECU_DBG_CLIENT,"delete_file_resendflag0 open directory error");
 		}
 		else
 		{
@@ -519,7 +519,7 @@ void delete_file_resendflag0()		//清空数据resend标志全部为0的目录
 				memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
 				sprintf(path,"%s/%s",dir,d->d_name);
 				flag = 0;
-				//printf("%s\n",path);
+				//print2msg(ECU_DBG_CLIENT,"delete_file_resendflag0 ",path);
 				//打开文件一行行判断是否有flag!=0的  如果存在直接关闭文件并返回,如果不存在，删除文件
 				fp = fopen(path, "r");
 				if(fp)
@@ -543,7 +543,7 @@ void delete_file_resendflag0()		//清空数据resend标志全部为0的目录
 					fclose(fp);
 					if(flag == 0)
 					{
-						printf("unlink:%s\n",path);
+						print2msg(ECU_DBG_CLIENT,"unlink:",path);
 						//遍历完文件都没发现flag != 0的记录直接删除文件
 						unlink(path);
 					}	
@@ -719,7 +719,6 @@ void client_thread_entry(void* parameter)
 			}
 		}
 		
-		//printf("\n");
 	}
 }
 

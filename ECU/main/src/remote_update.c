@@ -64,13 +64,13 @@ int Sendupdatepackage_single(inverter_info *inverter)	//发送单点数据包
 	sendbuff[73]=0xfe;
 
 	if((1 == inverter->model)||(2 == inverter->model))	//YC250机型
-		fd=open("/home/UPDATE_YC250.BIN", O_RDONLY,0);
+		fd=open("/home/UPYC250.BIN", O_RDONLY,0);
 	else if((3 == inverter->model)||(4 == inverter->model))	//YC500机型
-		fd=open("/home/UPDATE_YC500.BIN", O_RDONLY,0);
+		fd=open("/home/UP500.BIN", O_RDONLY,0);
 	else if((5 == inverter->model)||(6 == inverter->model))		//YC1000CN机型
-		fd=open("/home/UPDATE_YC1000.BIN", O_RDONLY,0);
+		fd=open("/home/UP1000.BIN", O_RDONLY,0);
 	else if((7 == inverter->model))		//YC600CN机型
-		fd=open("/home/UPDATE_YC600.BIN", O_RDONLY,0);
+		fd=open("/home/UP600.BIN", O_RDONLY,0);
 	else
 		return -1;		//没有该类机型
 
@@ -145,13 +145,13 @@ int Complementupdatepackage_single(inverter_info *inverter)	//检查漏掉的数据包并
 	{
 
 		if((1 == inverter->model)||(2 == inverter->model))	//YC250机型
-			fd=open("/home/UPDATE_YC250.BIN", O_RDONLY,0);
+			fd=open("/home/UPYC250.BIN", O_RDONLY,0);
 		else if((3 == inverter->model)||(4 == inverter->model))	//YC500机型
-			fd=open("/home/UPDATE_YC500.BIN", O_RDONLY,0);
+			fd=open("/home/UPYC500.BIN", O_RDONLY,0);
 		else if((5 == inverter->model)||(6 == inverter->model))		//YC1000CN机型
-			fd=open("/home/UPDATE_YC1000.BIN", O_RDONLY,0);
+			fd=open("/home/UPYC1000.BIN", O_RDONLY,0);
 		else if((7 == inverter->model))		//YC600CN机型
-			fd=open("/home/UPDATE_YC600.BIN", O_RDONLY,0);
+			fd=open("/home/UPYC600.BIN", O_RDONLY,0);
 
 		if(fd>0){
 			while((data[6]*256+data[7])>0)

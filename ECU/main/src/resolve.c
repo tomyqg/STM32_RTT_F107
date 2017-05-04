@@ -12,7 +12,7 @@ float sqrt(float number) {
     float last_guess;
     
     if (number < 0) {
-        printf("Cannot compute the square root of a negative number!\n");
+        printmsg(ECU_DBG_OTHER,"Cannot compute the square root of a negative number");
         return -1;
     }
     
@@ -20,7 +20,6 @@ float sqrt(float number) {
     do {
         last_guess = new_guess;
         new_guess = (last_guess + number / last_guess) / 2;
-        printf("%.15e\n", new_guess);
     } while (new_guess != last_guess);
     
     return new_guess;
@@ -679,36 +678,36 @@ int resolvedata_600(char *data, struct inverter_info_t *inverter)
 //	inverter->pre_output_energy=inverter->cur_output_energy;
 
 	if((inverter->curaccgen >= inverter->preaccgen)&&(inverter->curaccgenb >= inverter->preaccgenb)&&(inverter->curacctime >= inverter->preacctime))
-	{	//printf("%d\n",__LINE__);
+	{	
 		seconds = inverter->curacctime - inverter->preacctime;
 		inverter->curgeneration = inverter->curaccgen - inverter->preaccgen;
 		inverter->curgenerationb = inverter->curaccgenb - inverter->preaccgenb;
 	}
 	else
-	{//printf("%d\n",__LINE__);
+	{
 		seconds = inverter->curacctime;
 		inverter->curgeneration = inverter->curaccgen;
 		inverter->curgenerationb = inverter->curaccgenb;
 	}
-	//printf("prtm=%d\n",inverter->preacctime);
+	
 	inverter->preacctime = inverter->curacctime;
 	inverter->preaccgen = inverter->curaccgen;
 	inverter->preaccgenb = inverter->curaccgenb;
 
 	if(0==seconds)//???????????????
-	{//printf("%d\n",__LINE__);
+	{
 		inverter->op = 0;
 		inverter->opb = 0;
 	}
 
 
 	if(inverter->curacctime > 600)		//??????????,?????10????????????????,ZK
-	{//printf("%d\n",__LINE__);printf("%f %d\n",inverter->curgeneration,seconds);
+	{
 		inverter->op = inverter->curgeneration * 1000.0 * 3600.0 / seconds;
 		inverter->opb = inverter->curgenerationb * 1000.0 * 3600.0 / seconds;
 	}
 	else
-	{//printf("%d\n",__LINE__);
+	{
 		inverter->op = (int)(inverter->dv*inverter->di);
 		inverter->opb = (int)(inverter->dvb*inverter->dib);
 	}
@@ -718,11 +717,11 @@ int resolvedata_600(char *data, struct inverter_info_t *inverter)
 		inverter->op = (int)(inverter->dv*inverter->di);
 	if(inverter->opb>360)
 		inverter->opb = (int)(inverter->dvb*inverter->dib);
-
+#if ECU_DEBUG_MAIN
 	printf("tm=%d dv=%f  di=%f  op=%d  gv=%d curaccgen=%f reactive_power=%f active_power=%f cur_output_energy=%f\n",inverter->curacctime,inverter->dv,inverter->di,inverter->op,inverter->gv,inverter->curaccgen,inverter->reactive_power,inverter->active_power,inverter->cur_output_energy);
 	printf("sm=%d dvb=%f dib=%f opb=%d gv=%d curaccgenb=%f reactive_power=%f active_power=%f cur_output_energy=%f\n",seconds,inverter->dvb,inverter->dib,inverter->opb,inverter->gv,inverter->curaccgenb,inverter->reactive_power,inverter->active_power,inverter->cur_output_energy);
 	printf("prtm=%d\n",inverter->preacctime);
-
+#endif
 	for(i=0;i<25;i++)
 		inverter->status_web[i] = 0x30;
 	inverter->status_web[0]=((data[25]>>6)&0x01)+0x30;		//AC Frequency exceeding Range 1bit"??????"

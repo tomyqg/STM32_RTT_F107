@@ -1292,7 +1292,7 @@ int resolve_protection_paras_YC600(inverter_info *inverter, char *readbuff, int 
 		sprintf(data, "%s,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%d,%d,%f,%f,%d,%f,,\n", inverter->id, under_voltage_fast, over_voltage_fast, under_voltage_slow, over_voltage_slow, under_frequency_fast, over_frequency_fast, under_frequency_slow, over_frequency_slow, voltage_triptime_fast, voltage_triptime_slow, frequency_triptime_fast, frequency_triptime_slow, grid_recovery_time, regulated_dc_working_point, under_voltage_stage_2, voltage_3_clearance_time, start_time, power_factor, relay_protect);
 		for(i=0; i<3; i++)
 		{
-			if(1 == insert_line("/home/data/ird",data))
+			if(1 == insert_line("/home/data/proparas",data))
 				break;
 			rt_thread_delay(RT_TICK_PER_SECOND);
 		}
@@ -1474,7 +1474,7 @@ int set_protection_parameters(inverter_info *firstinverter)
 	if(set_protection_paras(firstinverter) > 0)
 		read_protection_parameters(firstinverter);
 
-	fp = fopen("/tmp/presetdata.conf", "r");
+	fp = fopen("/tmp/presdata.con", "r");
 	if(fp)
 	{
 		fgets(buff, 255, fp);
@@ -1493,7 +1493,7 @@ int set_protection_parameters(inverter_info *firstinverter)
 		{
 			read_protection_parameters(firstinverter);
 
-			fp = fopen("/tmp/presetdata.conf", "w");
+			fp = fopen("/tmp/presdata.con", "w");
 			fprintf(fp, "0");
 			fclose(fp);
 		}

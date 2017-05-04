@@ -20,22 +20,21 @@ int clear_all()
 
 	//查询所有逆变器ID号
 	num = get_num_from_id(inverter_ids);
-
+	
 	for(i=1; i<=num; i++)
 	{
+		
 		//如果存在该逆变器数据则删除该记录
 		delete_line("/home/data/clrgfdi","/home/data/clrgfdi.t",inverter_ids[i-1],12);
 		sprintf(str,"%s,1\n",inverter_ids[i-1]);
+		
 		//插入数据
 		if(-1 == insert_line("/home/data/clrgfdi",str))
 		{
 			err_count++;
-		}else
-		{
-			break;
 		}
 	}
-	printf("%d\n",err_count);
+	printdecmsg(ECU_DBG_CONTROL_CLIENT,"clear_all",err_count);
 	return err_count;
 }
 
@@ -93,7 +92,7 @@ int clear_inverter_gfdi(const char *recvbuffer, char *sendbuffer)
 				ack_flag = FORMAT_ERROR;
 			}
 			else{
-				printf("num:%d\n",num);
+				printdecmsg(ECU_DBG_CONTROL_CLIENT,"num",num);
 				if(clear_num(&recvbuffer[52], num) > 0)
 					ack_flag = DB_ERROR;
 			}

@@ -17,7 +17,7 @@ typedef enum THREADTYPE {
 //初始化线程
 #define THREAD_PRIORITY_INIT							10
 //LAN8720A检测复位线程
-#define THREAD_PRIORITY_LAN8720_RST				21
+#define THREAD_PRIORITY_LAN8720_RST				17
 //LED 闪烁线程
 //#define THREAD_PRIORITY_LED               20
 

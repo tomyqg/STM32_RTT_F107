@@ -22,7 +22,7 @@ int turn_onoff_all(int type)
 
 	//查询所有逆变器ID号
 	num = get_num_from_id(inverter_ids);
-	printf("%d\n",num);
+	printdecmsg(ECU_DBG_CONTROL_CLIENT,"turn_onoff_all",num);
 	for(i=1; i<=num; i++)
 	{
 	//如果存在该逆变器数据则删除该记录

@@ -6,7 +6,7 @@
 /* 【A108】EMA向ECU发送自定义命令 */
 int custom_command(const char *recvbuffer, char *sendbuffer)
 {
-	int res, ack_flag = SUCCESS;
+	int ack_flag = SUCCESS;
 	char command[256] = {'\0'};
 	char timestamp[15] = {'\0'};
 

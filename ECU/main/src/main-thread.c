@@ -18,6 +18,7 @@
 #include "remote_update.h"
 #include "version.h"
 #include "threadlist.h"
+#include "debug.h"
 
 inverter_info inverter[MAXINVERTERCOUNT];
 ecu_info ecu;
@@ -112,7 +113,7 @@ int init_inverter(inverter_info *inverter)
 		if (ecu.total > 0) {
 			break; //直到逆变器数量大于0时退出循环
 		} else {
-			printf("please Input Inverter ID---------->\n"); //提示用户输入逆变器ID
+			printmsg(ECU_DBG_MAIN,"please Input Inverter ID---------->"); //提示用户输入逆变器ID
 			rt_thread_delay(20*RT_TICK_PER_SECOND);
 		}
 	}
@@ -184,7 +185,9 @@ void main_thread_entry(void* parameter)
 	int cur_time_hour;														//当前的时间小时
 
 	rt_thread_delay(RT_TICK_PER_SECOND * START_TIME_MAIN);
-	rt_kprintf("\nmain.exe %s_%s_%s\n", ECU_M3_VERSION,MAJORVERSION,MINORVERSION);
+#if ECU_DEBUG_MAIN
+	printf("\n---********** main.exe %s_%s_%s **********---\n", ECU_M3_VERSION,MAJORVERSION,MINORVERSION);
+#endif
 	printmsg(ECU_DBG_MAIN,"Start-------------------------------------------------");
 	
 
@@ -203,7 +206,7 @@ void main_thread_entry(void* parameter)
 			print2msg(ECU_DBG_MAIN,"ecu.broadcast_time",ecu.broadcast_time);
 			
 			ecu.count = getalldata(inverter);			//获取所有逆变器数据,返回当前有数据的逆变器数量
-			//printf("ecu.count:%d\n",ecu.count);
+			//printdecmsg(ECU_DBG_MAIN,"ecu.count",ecu.count);
 			ecu.life_energy = ecu.life_energy + ecu.current_energy;				//计算系统历史发电量
 
 			update_life_energy(ecu.life_energy);								//设置系统历史发电量

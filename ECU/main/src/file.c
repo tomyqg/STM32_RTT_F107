@@ -49,7 +49,8 @@ int get_ecu_type()
 			ecu_type = 2;
 		else
 			ecu_type = 1;
-		//printf("ecu_type:%d  %s\n",ecu_type,version);
+		//printdecmsg(ECU_DBG_MAIN,"ecu_type",ecu_type);
+		//print2msg(ECU_DBG_MAIN,"version",version);
 		close(fd);
 	}
 	
@@ -66,7 +67,7 @@ void get_ecuid(char *ecuid)
 		if('\n' == ecuid[strlen(ecuid)-1])
 			ecuid[strlen(ecuid)-1] = '\0';
 		
-		//printf("get_ecuid:  %s\n",ecuid);
+		//print2msg(ECU_DBG_OTHER,"get_ecuid",ecuid);
 		close(fd);
 	}
 
@@ -331,12 +332,12 @@ int save_process_result(int item, char *result)
 	memcpy(file,&time[0],8);
 	file[8] = '\0';
 	sprintf(dir,"%s%s.dat",dir,file);
-	printf("%s\n",dir);
+	print2msg(ECU_DBG_MAIN,"save_process_result DIR",dir);
 	fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
 	if (fd >= 0)
 	{		
 		sprintf(result,"%s,%3d,1\n",result,item);
-		printf("%s",result);
+		print2msg(ECU_DBG_MAIN,"result",result);
 		write(fd,result,strlen(result));
 		close(fd);
 	}
@@ -354,12 +355,12 @@ int save_inverter_parameters_result(inverter_info *inverter, int item, char *inv
 	memcpy(file,&time[0],8);
 	file[8] = '\0';
 	sprintf(dir,"%s%s.dat",dir,file);
-	printf("%s\n",dir);
+	print2msg(ECU_DBG_MAIN,"save_inverter_parameters_result dir",dir);
 	fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
 	if (fd >= 0)
 	{		
 		sprintf(inverter_result,"%s,%s %3d,1\n",inverter_result,inverter->id,item);
-		printf("%s",inverter_result);
+		print2msg(ECU_DBG_MAIN,"inverter_result",inverter_result);
 		write(fd,inverter_result,strlen(inverter_result));
 		close(fd);
 	}
@@ -377,12 +378,12 @@ int save_inverter_parameters_result2(char *id, int item, char *inverter_result)
 	memcpy(file,&time[0],8);
 	file[8] = '\0';
 	sprintf(dir,"%s%s.dat",dir,file);
-	printf("%s\n",dir);
+	print2msg(ECU_DBG_MAIN,"save_inverter_parameters_result2 DIR",dir);
 	fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
 	if (fd >= 0)
 	{		
 		sprintf(inverter_result,"%s,%s %3d,1\n",inverter_result,id,item);
-		printf("%s",inverter_result);
+		print2msg(ECU_DBG_MAIN,"inverter_result",inverter_result);
 		write(fd,inverter_result,strlen(inverter_result));
 		close(fd);
 	}
@@ -399,7 +400,7 @@ void save_record(char sendbuff[], char *date_time)
 	memcpy(file,&date_time[0],8);
 	file[8] = '\0';
 	sprintf(dir,"%s%s.dat",dir,file);
-	printf("%s\n",dir);
+	print2msg(ECU_DBG_MAIN,"save_record DIR",dir);
 	result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	if(result == RT_EOK)
 	{
@@ -407,7 +408,7 @@ void save_record(char sendbuff[], char *date_time)
 		if (fd >= 0)
 		{		
 			sprintf(sendbuff,"%s,%s,1\n",sendbuff,date_time);
-			//printf("%s",sendbuff);
+			//print2msg(ECU_DBG_MAIN,"save_record",sendbuff);
 			write(fd,sendbuff,strlen(sendbuff));
 			close(fd);
 		}
@@ -424,12 +425,12 @@ int save_status(char *result, char *date_time)
 	memcpy(file,&date_time[0],8);
 	file[8] = '\0';
 	sprintf(dir,"%s%s.dat",dir,file);
-	printf("%s\n",dir);
+	print2msg(ECU_DBG_MAIN,"save_status DIR",dir);
 	fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
 	if (fd >= 0)
 	{		
 		sprintf(result,"%s,%s,1\n",result,date_time);
-		printf("%s",result);
+		print2msg(ECU_DBG_MAIN,"result",result);
 		write(fd,result,strlen(result));
 		close(fd);
 	}
@@ -443,20 +444,20 @@ void echo(const char* filename,const char* string)
 	int length;
 	if((filename == NULL) ||(string == NULL))
 	{
-		printf("para error\n");
+		printmsg(ECU_DBG_OTHER,"para error");
 		return ;
 	}
 
 	fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0);
 	if (fd < 0)
 	{
-		rt_kprintf("open file for write failed\n");
+		printmsg(ECU_DBG_OTHER,"open file for write failed");
 		return;
 	}
 	length = write(fd, string, strlen(string));
 	if (length != strlen(string))
 	{
-		rt_kprintf("check: read file failed\n");
+		printmsg(ECU_DBG_OTHER,"check: read file failed");
 		close(fd);
 		return;
 	}
@@ -554,11 +555,11 @@ int getTimeZone()
 		return timeZone;
 	}
 	fgets(s, 10, fp);
-	//printf("getTimeZone:%s  \n",s);
+	//print2msg(ECU_DBG_NTP,"getTimeZone",s);
 	//s[strlen(s) - 1] = '\0';
 	fclose(fp);
 	
-	timeZone = atoi(s);
+	timeZone = atoi(&s[7]);
 	if(timeZone >= 12 || timeZone <= -12)
 	{
 		return 8;
@@ -582,13 +583,13 @@ void splitSt(char * str)
 	num = splitString(str,list);
 	for(i = 0;i<num;i++)
 	{
-		printf("%s ",list[i]);
+		printmsg(ECU_DBG_OTHER,list[i]);
 		if(strlen(list[i]) == 0)
 		{
-			printf("NULL ");
+			printmsg(ECU_DBG_OTHER,"NULL");
 		}
 	}
-	printf("num:%d\n",num);
+	printdecmsg(ECU_DBG_OTHER,"num",num);
    
 }
 FINSH_FUNCTION_EXPORT(splitSt, eg:splitSt());
@@ -609,7 +610,7 @@ void rm_dir(char* dir)
 	
 	if(dirp == RT_NULL)
 	{
-		rt_kprintf("open directory error!\n");
+		printmsg(ECU_DBG_OTHER,"open directory error!");
 	}
 	else
 	{
@@ -617,7 +618,7 @@ void rm_dir(char* dir)
 		while ((d = readdir(dirp)) != RT_NULL)
 		{
 			char buff[100];
-			rt_kprintf("delete %s\n", d->d_name);
+			print2msg(ECU_DBG_OTHER,"delete", d->d_name);
 			sprintf(buff,"%s/%s",dir,d->d_name);
 			unlink(buff);
 		}
@@ -660,15 +661,37 @@ int initsystem(char *ecuid,char *mac)
 }
 FINSH_FUNCTION_EXPORT(initsystem, eg:initsystem("123456789012","80:97:1B:00:72:1C"));
 
-void changecontrol(char * IP)
+void changecontrol(char * IP,char *Domain,int nReport_Interval,int port1,int port2)
 {
 	char str[300]={'\0'};
 	
-	sprintf(str,"Timeout=10\nReport_Interval=15\nDomain=eee.apsema.com\nIP=%s\nPort1=8997\nPort2=8997\n",IP);
+	sprintf(str,"Timeout=10\nReport_Interval=%d\nDomain=%s\nIP=%s\nPort1=%d\nPort2=%d\n",nReport_Interval,Domain,IP,port1,port2);
 	
 	echo("/yuneng/control.con",str);
 }	
-FINSH_FUNCTION_EXPORT(changecontrol, eg:changecontrol("192.168.1.104"));
+FINSH_FUNCTION_EXPORT(changecontrol, eg:changecontrol("60.190.131.190","eee.apsema.com",15,8997,8997));
+
+void changFTPadd(char * IP,int Port,char *user,char *password)
+{
+	char str[300]={'\0'};
+	
+	sprintf(str,"IP=%s\nPort=%d\nuser=%s\npassword=%d\n",IP,Port,user,password);
+	
+	echo("/yuneng/FTPadd.con",str);
+}	
+FINSH_FUNCTION_EXPORT(changFTPadd, eg:changFTPadd("60.190.131.190",9219,"zhyf",yuneng));
+
+void changdatacent(char * IP,char *Domain,int port1,int port2)
+{
+	char str[300]={'\0'};
+	
+	sprintf(str,"Domain=%s\nIP=%s\nPort1=%d\nPort2=%d\n",Domain,IP,port1,port2);
+	
+	echo("/yuneng/datacent.con",str);
+}	
+FINSH_FUNCTION_EXPORT(changdatacent, eg:changdatacent("139.168.200.158","111.apsema.com",8093,8093));
+
+
 
 
 FINSH_FUNCTION_EXPORT(addInverter, eg:addInverter("201703150001"));
