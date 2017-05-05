@@ -1196,6 +1196,11 @@
               <FileType>1</FileType>
               <FilePath>..\ECU\control_client\src\custom_command.c</FilePath>
             </File>
+            <File>
+              <FileName>mycommand.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ECU\control_client\src\mycommand.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -64,7 +64,7 @@ struct rt_thread client_thread;
 
 #ifdef THREAD_PRIORITY_CONTROL_CLIENT
 ALIGN(RT_ALIGN_SIZE)
-rt_uint8_t control_client_stack[ 8192 ];
+rt_uint8_t control_client_stack[ 16384 ];
 struct rt_thread control_client_thread;
 #endif
 

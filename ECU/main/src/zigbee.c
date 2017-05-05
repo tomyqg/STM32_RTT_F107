@@ -1028,7 +1028,7 @@ int zb_query_protect_parameter(inverter_info *inverter, char *protect_data_DD_re
 	sendbuff[i++] = 0xFE;
 	sendbuff[i++] = 0xFE;
 	
-	print2msg(ECU_DBG_MAIN,inverter->id, "Query protect parameter");
+	print2msg(ECU_DBG_MAIN,inverter->id, "zb_query_protect_parameter");
 	zb_send_cmd(inverter, sendbuff, i);
 	ret = zb_get_reply(protect_data_DD_reply,inverter);
 	if((33 == ret) && (0xDD == protect_data_DD_reply[3]) && (0xFB == protect_data_DD_reply[0]) && (0xFB == protect_data_DD_reply[1]) && (0xFE == protect_data_DD_reply[31]) && (0xFE == protect_data_DD_reply[32]))
@@ -1111,7 +1111,7 @@ int zb_boot_single(inverter_info *inverter)		//开机指令单播,OK
 	sendbuff[i++] = 0x00;
 	sendbuff[i++] = 0xFE;
 	sendbuff[i++] = 0xFE;
-	
+	printmsg(ECU_DBG_MAIN,"zb_boot_single");
 	zb_send_cmd(inverter, sendbuff, i);
 	ret = zb_get_reply(data,inverter);
 	if((13 == ret) && (0xDE == data[3]) && (0xFB == data[0]) && (0xFB == data[1]) && (0xFE == data[11]) && (0xFE == data[12]))
@@ -1162,7 +1162,7 @@ int zb_shutdown_single(inverter_info *inverter)		//关机指令单播,OK
 	sendbuff[i++] = 0x00;
 	sendbuff[i++] = 0xFE;
 	sendbuff[i++] = 0xFE;
-	
+	printmsg(ECU_DBG_MAIN,"zb_shutdown_single");
 	zb_send_cmd(inverter, sendbuff, i);
 	ret = zb_get_reply(data,inverter);
 	if((13 == ret) && (0xDE == data[3]) && (0xFB == data[0]) && (0xFB == data[1]) && (0xFE == data[11]) && (0xFE == data[12]))
@@ -1804,16 +1804,16 @@ int process_ipp(inverter_info *firstinverter)
 
 int process_all(inverter_info *firstinverter)
 {
-	processpower(firstinverter);			//设置功率预设值,ZK,3.10有改动	OK
+	processpower(firstinverter);			//设置功率预设值,ZK,3.10有改动	     OK
 //	process_gfdi(firstinverter);			//清GFDI标志
 //	process_protect_data(firstinverter);	//设置预设值
 	process_turn_on_off(firstinverter);		//开关机
 	process_quick_boot(firstinverter);		//快速启动
 	process_ipp(firstinverter);				//IPP设定
-	process_ird_all(firstinverter);
+	process_ird_all(firstinverter);		//0K
 	process_ird(firstinverter);
-	turn_on_off(firstinverter);								//开关机,ZK,3.10所加	OK
-	clear_gfdi(firstinverter);								//清GFDI标志,ZK,3.10所加
+	turn_on_off(firstinverter);								//开关机,ZK,3.10所加	   OK
+	clear_gfdi(firstinverter);								//清GFDI标志,ZK,3.10所加 OK
 	set_protection_parameters(firstinverter);				//设置预设值广播,ZK,3.10所加
 	set_protection_parameters_inverter_one(firstinverter);  //设置预设值单点,ZK,3.10所加
 	return 0;

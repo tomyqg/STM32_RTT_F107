@@ -2,6 +2,7 @@
 #include <string.h>
 #include "remote_control_protocol.h"
 #include "debug.h"
+#include "mycommand.h"
 
 /* 【A108】EMA向ECU发送自定义命令 */
 int custom_command(const char *recvbuffer, char *sendbuffer)
@@ -25,7 +26,7 @@ int custom_command(const char *recvbuffer, char *sendbuffer)
 			return -1;
 		}
 		//执行自定义命令
-		//ack_flag = mysystem(command);
+		ack_flag = mysystem(command);
 	}
 	msg_ACK(sendbuffer, "A108", timestamp, ack_flag);
 	return 0;

@@ -41,8 +41,8 @@ int set_unnormal_id(const char *recvbuffer, char *sendbuffer)
 {
 
 	int num,i;
-	char yuid[13];
-	char nuid[13];
+	char yuid[13] = {'\0'};
+	char nuid[13] = {'\0'};
 	int ack_flag = SUCCESS;
 	char timestamp[15] = {'\0'};
 	char str[100];
@@ -52,6 +52,8 @@ int set_unnormal_id(const char *recvbuffer, char *sendbuffer)
 	num = msg_get_int(&recvbuffer[30], 4);
 	for(i=0;i<num;i++)
 	{
+		memset(yuid,0x00,13);
+		memset(nuid,0x00,13);
 		strncpy(yuid,&recvbuffer[51+28*i],12);
 		strncpy(nuid,&recvbuffer[64+28*i],12);
 		

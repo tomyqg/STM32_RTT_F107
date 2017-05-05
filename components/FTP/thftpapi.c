@@ -712,35 +712,37 @@ int ftpputfile(char *host, int port, char *user, char *pwd,char *remotefile,char
 	return ret;
 }
 
+int getfile(char *remoteFile, char *localFile)
+{
+	char FTPIP[50];
+	int port=0;
+	char user[20]={'\0'};
+	char password[20]={'\0'};
+	getFTPConf(FTPIP,&port,user,password);
+
+	printf("FTPIP:%s\nport:%d\nuser:%s\npassword:%s\n ",FTPIP,port,user,password);
+
+	return ftpgetfile(FTPIP,port, user, password,remoteFile,localFile);
+}
+
+int putfile(char *remoteFile, char *localFile)
+{
+	char FTPIP[50];
+	int port=0;
+	char user[20]={'\0'};
+	char password[20]={'\0'};
+	getFTPConf(FTPIP,&port,user,password);
+
+	printf("FTPIP:%s\nport:%d\nuser:%s\npassword:%s\n ",FTPIP,port,user,password);
+
+	return ftpputfile(FTPIP,port, user, password,remoteFile,localFile);
+}
+
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 
-void getfile(char *remoteFile, char *localFile)
-{
-	char FTPIP[50];
-	int port=0;
-	char user[20]={'\0'};
-	char password[20]={'\0'};
-	getFTPConf(FTPIP,&port,user,password);
-
-	printf("FTPIP:%s\nport:%d\nuser:%s\npassword:%s\n ",FTPIP,port,user,password);
-
-	ftpgetfile(FTPIP,port, user, password,remoteFile,localFile);
-}
 FINSH_FUNCTION_EXPORT(getfile,get file from ftp.)
 
-void putfile(char *remoteFile, char *localFile)
-{
-	char FTPIP[50];
-	int port=0;
-	char user[20]={'\0'};
-	char password[20]={'\0'};
-	getFTPConf(FTPIP,&port,user,password);
-
-	printf("FTPIP:%s\nport:%d\nuser:%s\npassword:%s\n ",FTPIP,port,user,password);
-
-	ftpputfile(FTPIP,port, user, password,remoteFile,localFile);
-}
 FINSH_FUNCTION_EXPORT(putfile,put file from ftp.)
 
 void sockettest()

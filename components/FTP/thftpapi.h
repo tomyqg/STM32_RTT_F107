@@ -42,5 +42,7 @@ int ftpgetfile(char *host, int port, char *user, char *pwd,char *remotefile,char
 //上传文件
 int ftpputfile(char *host, int port, char *user, char *pwd,char *remotefile,char *localfile);
 
+int putfile(char *remoteFile, char *localFile);
+int getfile(char *remoteFile, char *localFile);
 
 #endif /*__THFTPAPI_H__*/

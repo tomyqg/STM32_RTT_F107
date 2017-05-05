@@ -180,7 +180,7 @@ int get_ird_single(int shortaddr,char* id)		//从逆变器读取实际IRD
 	sendbuff[11] = 0xFE;
 	sendbuff[12] = 0xFE;
 
-	print2msg(ECU_DBG_MAIN,id, "Query protect parameter");
+	print2msg(ECU_DBG_MAIN,id, "get_ird_single");
 	zb_shortaddr_cmd(shortaddr, (char *)sendbuff, 13);
 
 	res = zb_shortaddr_reply((char *)readbuff,shortaddr,id);

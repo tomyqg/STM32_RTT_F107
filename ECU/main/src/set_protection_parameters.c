@@ -264,7 +264,7 @@ int get_recovery_time_from_inverter(inverter_info *inverter)
 	sendbuff[i++] = 0xFE;
 	sendbuff[i++] = 0xFE;
 
-	print2msg(ECU_DBG_MAIN,inverter->id, "Query protect parameter");
+	print2msg(ECU_DBG_MAIN,inverter->id, "get_recovery_time_from_inverter");
 	zb_send_cmd(inverter, (char *)sendbuff, i);
 	ret = zb_get_reply((char *)readbuff,inverter);
 	if((33 == ret) && (0xDD == readbuff[3]) && (0xFB == readbuff[0]) && (0xFB == readbuff[1]) && (0xFE == readbuff[31]) && (0xFE == readbuff[32]))
