@@ -191,7 +191,7 @@ int detection_statusflag(char flag)		//ºÏ≤‚/home/record/inverstaƒø¬ºœ¬ «∑Ò¥Ê‘⁄fl
 				memset(path,0,100);
 				memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
 				sprintf(path,"%s/%s",dir,d->d_name);
-				//print2msg(ECU_DBG_CLIENT,"detection_statusflag",path);
+				//print2msg(ECU_DBG_CONTROL_CLIENT,"detection_statusflag",path);
 				//¥Úø™Œƒº˛“ª––––≈–∂œ «∑Ò”–flag=2µƒ  »Áπ˚¥Ê‘⁄÷±Ω”πÿ±’Œƒº˛≤¢∑µªÿ1
 				fp = fopen(path, "r");
 				if(fp)
@@ -282,6 +282,7 @@ void delete_statusflag0()		//«Âø’ ˝æ›flag±Í÷æ»´≤øŒ™0µƒƒø¬º
 	char path[100];
 	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
 	FILE *fp;
+	int flag = 0;
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	if(result == RT_EOK)
 	{
@@ -290,7 +291,7 @@ void delete_statusflag0()		//«Âø’ ˝æ›flag±Í÷æ»´≤øŒ™0µƒƒø¬º
 		
 		if(dirp == RT_NULL)
 		{
-			printmsg(ECU_DBG_CONTROL_CLIENT,"delete_statusflag0 open directory error");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"delete_file_resendflag0 open directory error");
 		}
 		else
 		{
@@ -300,24 +301,37 @@ void delete_statusflag0()		//«Âø’ ˝æ›flag±Í÷æ»´≤øŒ™0µƒƒø¬º
 				memset(path,0,100);
 				memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
 				sprintf(path,"%s/%s",dir,d->d_name);
+				flag = 0;
+				//print2msg(ECU_DBG_CONTROL_CLIENT,"delete_file_resendflag0 ",path);
 				//¥Úø™Œƒº˛“ª––––≈–∂œ «∑Ò”–flag!=0µƒ  »Áπ˚¥Ê‘⁄÷±Ω”πÿ±’Œƒº˛≤¢∑µªÿ,»Áπ˚≤ª¥Ê‘⁄£¨…æ≥˝Œƒº˛
 				fp = fopen(path, "r");
 				if(fp)
 				{
 					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
 					{
-						if(buff[strlen(buff)-2] != '0')			//ºÏ≤‚ «∑Ò¥Ê‘⁄resendflag != 0µƒº«¬º   »Ù¥Ê‘⁄‘Ú÷±Ω”ÕÀ≥ˆ∫Ø ˝
+						if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
 						{
-							fclose(fp);
-							closedir(dirp);
-							rt_mutex_release(record_data_lock);
-							return;
-						}		
+							if(buff[strlen(buff)-2] != '0')			//ºÏ≤‚ «∑Ò¥Ê‘⁄resendflag != 0µƒº«¬º   »Ù¥Ê‘⁄‘Ú÷±Ω”ÕÀ≥ˆ∫Ø ˝
+							{
+								flag = 1;
+								break;
+								//fclose(fp);
+								//closedir(dirp);
+								//rt_mutex_release(record_data_lock);
+								//return;
+							}
+						}
+						
 					}
 					fclose(fp);
-					//±È¿˙ÕÍŒƒº˛∂º√ª∑¢œ÷flag != 0µƒº«¬º÷±Ω”…æ≥˝Œƒº˛
-					unlink(path);
-				}			
+					if(flag == 0)
+					{
+						print2msg(ECU_DBG_CONTROL_CLIENT,"unlink:",path);
+						//±È¿˙ÕÍŒƒº˛∂º√ª∑¢œ÷flag != 0µƒº«¬º÷±Ω”…æ≥˝Œƒº˛
+						unlink(path);
+					}	
+				}
+				
 			}
 			/* πÿ±’ƒø¬º */
 			closedir(dirp);
@@ -325,6 +339,7 @@ void delete_statusflag0()		//«Âø’ ˝æ›flag±Í÷æ»´≤øŒ™0µƒƒø¬º
 	}
 	rt_mutex_release(record_data_lock);
 	return;
+
 }
 
 //∏˘æ› ±º‰µ„–ﬁ∏ƒ±Í÷æ
@@ -345,7 +360,7 @@ int change_statusflag(char *time,char flag)  //∏ƒ±‰≥…π¶∑µªÿ1£¨Œ¥’“µΩ∏√ ±º‰µ„∑µªÿ
 		
 		if(dirp == RT_NULL)
 		{
-			printmsg(ECU_DBG_CONTROL_CLIENT,"change_statusflag open directory error");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"change_resendflag open directory error");
 		}
 		else
 		{
@@ -361,20 +376,22 @@ int change_statusflag(char *time,char flag)  //∏ƒ±‰≥…π¶∑µªÿ1£¨Œ¥’“µΩ∏√ ±º‰µ„∑µªÿ
 				{
 					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
 					{
-						memset(filetime,0,15);
-						memcpy(filetime,&buff[strlen(buff)-17],14);				//ªÒ»°√øÃıº«¬ºµƒ ±º‰
-						filetime[14] = '\0';
-						if(!memcmp(time,filetime,14))						//√øÃıº«¬ºµƒ ±º‰∫Õ¥´»Îµƒ ±º‰∂‘±»£¨»Ùœ‡Õ¨‘Ú±‰∏¸flag				
+						if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
 						{
-							fseek(fp,-2L,SEEK_CUR);
-							fputc(flag,fp);
-							//printmsg(ECU_DBG_CONTROL_CLIENT,"change_statusflag filetime",filetime);
-							fclose(fp);
-							closedir(dirp);
-							rt_mutex_release(record_data_lock);
-							return 1;
+							memset(filetime,0,15);
+							memcpy(filetime,&buff[strlen(buff)-17],14);				//ªÒ»°√øÃıº«¬ºµƒ ±º‰
+							filetime[14] = '\0';
+							if(!memcmp(time,filetime,14))						//√øÃıº«¬ºµƒ ±º‰∫Õ¥´»Îµƒ ±º‰∂‘±»£¨»Ùœ‡Õ¨‘Ú±‰∏¸flag				
+							{
+								fseek(fp,-2L,SEEK_CUR);
+								fputc(flag,fp);
+								//print2msg(ECU_DBG_CONTROL_CLIENT,"change_resendflag",filetime);
+								fclose(fp);
+								closedir(dirp);
+								rt_mutex_release(record_data_lock);
+								return 1;
+							}
 						}
-						
 					}
 					fclose(fp);
 				}
@@ -403,14 +420,16 @@ int search_statusflag(char *data,char * time, int *flag,char sendflag)
 	char path[100];
 	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
 	FILE *fp;
+	int nextfileflag = 0;	//0±Ì æµ±«∞Œƒº˛’“µΩ¡À ˝æ›£¨1±Ì æ–Ë“™¥”∫Û√ÊµƒŒƒº˛≤È’“ ˝æ›
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	*flag = 0;
 	if(result == RT_EOK)
 	{
 		/* ¥Úø™dirƒø¬º*/
 		dirp = opendir("/home/record/inversta");
 		if(dirp == RT_NULL)
 		{
-			printmsg(ECU_DBG_CONTROL_CLIENT,"search_statusflag open directory error");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"search_readflag open directory error");
 		}
 		else
 		{
@@ -423,17 +442,54 @@ int search_statusflag(char *data,char * time, int *flag,char sendflag)
 				fp = fopen(path, "r");
 				if(fp)
 				{
-					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))  //∂¡»°“ª–– ˝æ›
+					if(0 == nextfileflag)
 					{
-						if(buff[strlen(buff)-2] == sendflag)			//ºÏ≤‚◊Ó∫Û“ª∏ˆ◊÷Ω⁄µƒresendflag «∑ÒŒ™1
+						while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))  //∂¡»°“ª–– ˝æ›
 						{
-							memcpy(time,&buff[strlen(buff)-17],14);				//ªÒ»°√øÃıº«¬ºµƒ ±º‰
-							memcpy(data,buff,(strlen(buff)-18));
-							data[strlen(buff)-18] = '\n';
-							//print2msg(ECU_DBG_CONTROL_CLIENT,"time",time);
-							//print2msg(ECU_DBG_CONTROL_CLIENT,"data",data);
-							rt_thread_delay(RT_TICK_PER_SECOND*1);
-							while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	//‘ŸÕ˘œ¬∂¡ ˝æ›£¨—∞’“ «∑Òªπ”–“™∑¢ÀÕµƒ ˝æ›
+							
+							if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
+							{
+								if(buff[strlen(buff)-2] == sendflag)			//ºÏ≤‚◊Ó∫Û“ª∏ˆ◊÷Ω⁄µƒresendflag «∑ÒŒ™1
+								{
+									memcpy(time,&buff[strlen(buff)-17],14);				//ªÒ»°√øÃıº«¬ºµƒ ±º‰
+									memcpy(data,buff,(strlen(buff)-18));
+									data[strlen(buff)-18] = '\n';
+									//print2msg(ECU_DBG_CONTROL_CLIENT,"search_readflag time",time);
+									//print2msg(ECU_DBG_CONTROL_CLIENT,"search_readflag data",data);
+									rt_thread_delay(RT_TICK_PER_SECOND*1);
+									while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	//‘ŸÕ˘œ¬∂¡ ˝æ›£¨—∞’“ «∑Òªπ”–“™∑¢ÀÕµƒ ˝æ›
+									{
+										if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
+										{
+											if(buff[strlen(buff)-2] == sendflag)
+											{
+												*flag = 1;
+												fclose(fp);
+												closedir(dirp);
+												rt_mutex_release(record_data_lock);
+												return 1;
+											}
+										}			
+									}
+
+									nextfileflag = 1;
+									break;
+									/*
+									*flag = 0;
+									fclose(fp);
+									closedir(dirp);
+									rt_mutex_release(record_data_lock);
+									return 1;
+									*/
+								}
+							}
+								
+						}
+					}else
+					{
+						while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))  //∂¡»°“ª–– ˝æ›
+						{
+							if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
 							{
 								if(buff[strlen(buff)-2] == sendflag)
 								{
@@ -444,14 +500,9 @@ int search_statusflag(char *data,char * time, int *flag,char sendflag)
 									return 1;
 								}
 							}
-
-							*flag = 0;
-							fclose(fp);
-							closedir(dirp);
-							rt_mutex_release(record_data_lock);
-							return 1;
-						}		
+						}
 					}
+					
 					fclose(fp);
 				}
 			}
@@ -460,7 +511,9 @@ int search_statusflag(char *data,char * time, int *flag,char sendflag)
 		}
 	}
 	rt_mutex_release(record_data_lock);
-	return 0;
+
+	return nextfileflag;
+
 }
 
 
@@ -472,6 +525,7 @@ void delete_pro_result_flag0()		//«Âø’ ˝æ›flag±Í÷æ»´≤øŒ™0µƒƒø¬º
 	char path[100];
 	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
 	FILE *fp;
+	int flag = 0;
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	if(result == RT_EOK)
 	{
@@ -480,7 +534,7 @@ void delete_pro_result_flag0()		//«Âø’ ˝æ›flag±Í÷æ»´≤øŒ™0µƒƒø¬º
 		
 		if(dirp == RT_NULL)
 		{
-			printmsg(ECU_DBG_CONTROL_CLIENT,"search_statusflag open directory error");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"delete_pro_result_flag0 open directory error");
 		}
 		else
 		{
@@ -490,24 +544,37 @@ void delete_pro_result_flag0()		//«Âø’ ˝æ›flag±Í÷æ»´≤øŒ™0µƒƒø¬º
 				memset(path,0,100);
 				memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
 				sprintf(path,"%s/%s",dir,d->d_name);
+				flag = 0;
+				//print2msg(ECU_DBG_CONTROL_CLIENT,"delete_file_resendflag0 ",path);
 				//¥Úø™Œƒº˛“ª––––≈–∂œ «∑Ò”–flag!=0µƒ  »Áπ˚¥Ê‘⁄÷±Ω”πÿ±’Œƒº˛≤¢∑µªÿ,»Áπ˚≤ª¥Ê‘⁄£¨…æ≥˝Œƒº˛
 				fp = fopen(path, "r");
 				if(fp)
 				{
 					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
 					{
-						if(buff[strlen(buff)-2] != '0')			//ºÏ≤‚ «∑Ò¥Ê‘⁄resendflag != 0µƒº«¬º   »Ù¥Ê‘⁄‘Ú÷±Ω”ÕÀ≥ˆ∫Ø ˝
+						if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') )
 						{
-							fclose(fp);
-							closedir(dirp);
-							rt_mutex_release(record_data_lock);
-							return;
-						}		
+							if(buff[strlen(buff)-2] != '0')			//ºÏ≤‚ «∑Ò¥Ê‘⁄resendflag != 0µƒº«¬º   »Ù¥Ê‘⁄‘Ú÷±Ω”ÕÀ≥ˆ∫Ø ˝
+							{
+								flag = 1;
+								break;
+								//fclose(fp);
+								//closedir(dirp);
+								//rt_mutex_release(record_data_lock);
+								//return;
+							}
+						}
+						
 					}
 					fclose(fp);
-					//±È¿˙ÕÍŒƒº˛∂º√ª∑¢œ÷flag != 0µƒº«¬º÷±Ω”…æ≥˝Œƒº˛
-					unlink(path);
-				}			
+					if(flag == 0)
+					{
+						print2msg(ECU_DBG_CONTROL_CLIENT,"unlink:",path);
+						//±È¿˙ÕÍŒƒº˛∂º√ª∑¢œ÷flag != 0µƒº«¬º÷±Ω”…æ≥˝Œƒº˛
+						unlink(path);
+					}	
+				}
+				
 			}
 			/* πÿ±’ƒø¬º */
 			closedir(dirp);
@@ -515,6 +582,7 @@ void delete_pro_result_flag0()		//«Âø’ ˝æ›flag±Í÷æ»´≤øŒ™0µƒƒø¬º
 	}
 	rt_mutex_release(record_data_lock);
 	return;
+
 }
 
 void delete_inv_pro_result_flag0()		//«Âø’ ˝æ›flag±Í÷æ»´≤øŒ™0µƒƒø¬º
@@ -525,6 +593,7 @@ void delete_inv_pro_result_flag0()		//«Âø’ ˝æ›flag±Í÷æ»´≤øŒ™0µƒƒø¬º
 	char path[100];
 	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
 	FILE *fp;
+	int flag = 0;
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	if(result == RT_EOK)
 	{
@@ -543,24 +612,37 @@ void delete_inv_pro_result_flag0()		//«Âø’ ˝æ›flag±Í÷æ»´≤øŒ™0µƒƒø¬º
 				memset(path,0,100);
 				memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
 				sprintf(path,"%s/%s",dir,d->d_name);
+				flag = 0;
+				//print2msg(ECU_DBG_CONTROL_CLIENT,"delete_file_resendflag0 ",path);
 				//¥Úø™Œƒº˛“ª––––≈–∂œ «∑Ò”–flag!=0µƒ  »Áπ˚¥Ê‘⁄÷±Ω”πÿ±’Œƒº˛≤¢∑µªÿ,»Áπ˚≤ª¥Ê‘⁄£¨…æ≥˝Œƒº˛
 				fp = fopen(path, "r");
 				if(fp)
 				{
 					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
 					{
-						if(buff[strlen(buff)-2] != '0')			//ºÏ≤‚ «∑Ò¥Ê‘⁄resendflag != 0µƒº«¬º   »Ù¥Ê‘⁄‘Ú÷±Ω”ÕÀ≥ˆ∫Ø ˝
+						if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') && (buff[strlen(buff)-20] == ','))
 						{
-							fclose(fp);
-							closedir(dirp);
-							rt_mutex_release(record_data_lock);
-							return;
-						}		
+							if(buff[strlen(buff)-2] != '0')			//ºÏ≤‚ «∑Ò¥Ê‘⁄resendflag != 0µƒº«¬º   »Ù¥Ê‘⁄‘Ú÷±Ω”ÕÀ≥ˆ∫Ø ˝
+							{
+								flag = 1;
+								break;
+								//fclose(fp);
+								//closedir(dirp);
+								//rt_mutex_release(record_data_lock);
+								//return;
+							}
+						}
+						
 					}
 					fclose(fp);
-					//±È¿˙ÕÍŒƒº˛∂º√ª∑¢œ÷flag != 0µƒº«¬º÷±Ω”…æ≥˝Œƒº˛
-					unlink(path);
-				}			
+					if(flag == 0)
+					{
+						print2msg(ECU_DBG_CONTROL_CLIENT,"unlink:",path);
+						//±È¿˙ÕÍŒƒº˛∂º√ª∑¢œ÷flag != 0µƒº«¬º÷±Ω”…æ≥˝Œƒº˛
+						unlink(path);
+					}	
+				}
+				
 			}
 			/* πÿ±’ƒø¬º */
 			closedir(dirp);
@@ -568,6 +650,7 @@ void delete_inv_pro_result_flag0()		//«Âø’ ˝æ›flag±Í÷æ»´≤øŒ™0µƒƒø¬º
 	}
 	rt_mutex_release(record_data_lock);
 	return;
+
 }
 
 //∏˘æ› ±º‰µ„–ﬁ∏ƒ±Í÷æ
@@ -611,7 +694,7 @@ int change_pro_result_flag(char *item,char flag)  //∏ƒ±‰≥…π¶∑µªÿ1£¨Œ¥’“µΩ∏√ ±º‰µ
 						{
 							fseek(fp,-2L,SEEK_CUR);
 							fputc(flag,fp);
-							//print2msg(ECU_DBG_CLIENT,"filetime",filetime);
+							//print2msg(ECU_DBG_CONTROL_CLIENT,"filetime",filetime);
 							fclose(fp);
 							closedir(dirp);
 							rt_mutex_release(record_data_lock);
@@ -631,6 +714,69 @@ int change_pro_result_flag(char *item,char flag)  //∏ƒ±‰≥…π¶∑µªÿ1£¨Œ¥’“µΩ∏√ ±º‰µ
 	return 0;
 	
 }
+
+int change_inv_pro_result_flag(char *item,char flag)  //∏ƒ±‰≥…π¶∑µªÿ1£¨Œ¥’“µΩ∏√ ±º‰µ„∑µªÿ0
+{
+	DIR *dirp;
+	char dir[30] = "/home/data/iprocres";
+	struct dirent *d;
+	char path[100];
+	char fileitem[4] = {'\0'};
+	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	FILE *fp;
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
+	{
+		/* ¥Úø™dirƒø¬º*/
+		dirp = opendir("/home/data/iprocres");
+		
+		if(dirp == RT_NULL)
+		{
+			printmsg(ECU_DBG_CONTROL_CLIENT,"change_inv_pro_result_flag open directory error");
+		}
+		else
+		{
+			/* ∂¡»°dirƒø¬º*/
+			while ((d = readdir(dirp)) != RT_NULL)
+			{
+				memset(path,0,100);
+				memset(buff,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18));
+				sprintf(path,"%s/%s",dir,d->d_name);
+				//¥Úø™Œƒº˛“ª––––≈–∂œ «∑Ò”–flag=2µƒ  »Áπ˚¥Ê‘⁄÷±Ω”πÿ±’Œƒº˛≤¢∑µªÿ1
+				fp = fopen(path, "r+");
+				if(fp)
+				{
+					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
+					{
+						memset(fileitem,0,4);
+						memcpy(fileitem,&buff[strlen(buff)-6],3);				//ªÒ»°√øÃıº«¬ºµƒ ±º‰
+						fileitem[3] = '\0';
+						if(!memcmp(item,fileitem,4))						//√øÃıº«¬ºµƒ ±º‰∫Õ¥´»Îµƒ ±º‰∂‘±»£¨»Ùœ‡Õ¨‘Ú±‰∏¸flag				
+						{
+							fseek(fp,-2L,SEEK_CUR);
+							fputc(flag,fp);
+							//print2msg(ECU_DBG_CONTROL_CLIENT,"filetime",filetime);
+							fclose(fp);
+							closedir(dirp);
+							rt_mutex_release(record_data_lock);
+							return 1;
+						}
+						
+					}
+					fclose(fp);
+				}
+				
+			}
+			/* πÿ±’ƒø¬º */
+			closedir(dirp);
+		}
+	}
+	rt_mutex_release(record_data_lock);
+	return 0;
+	
+}
+
+
 //≤È—Ø“ªÃıflagŒ™1µƒ ˝æ›   ≤È—ØµΩ¡À∑µªÿ1  »Áπ˚√ª≤È—ØµΩ∑µªÿ0
 /*
 data:±Ì æªÒ»°µΩµƒ ˝æ›
@@ -645,18 +791,18 @@ int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)
 	char path[100];
 	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
 	FILE *fp;
+	int nextfileflag = 0;	
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	*flag = 0;
 	if(result == RT_EOK)
 	{
-		/* ¥Úø™dirƒø¬º*/
 		dirp = opendir("/home/data/proc_res");
 		if(dirp == RT_NULL)
 		{
-			printmsg(ECU_DBG_CONTROL_CLIENT,"search_pro_result_flag open directory error");
+			printmsg(ECU_DBG_CLIENT,"search_pro_result_flag open directory error");
 		}
 		else
 		{
-			/* ∂¡»°dirƒø¬º*/
 			while ((d = readdir(dirp)) != RT_NULL)
 			{
 				memset(path,0,100);
@@ -665,17 +811,47 @@ int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)
 				fp = fopen(path, "r");
 				if(fp)
 				{
-					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))  //∂¡»°“ª–– ˝æ›
+					if(0 == nextfileflag)
 					{
-						if(buff[strlen(buff)-2] == sendflag)			//ºÏ≤‚◊Ó∫Û“ª∏ˆ◊÷Ω⁄µƒresendflag «∑ÒŒ™1
+						while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
 						{
-							memcpy(item,&buff[strlen(buff)-6],3);				//ªÒ»°√øÃıº«¬ºµƒitem
-							memcpy(data,buff,(strlen(buff)-7));
-							data[strlen(buff)-7] = '\n';
-							//print2msg(ECU_DBG_CONTROL_CLIENT,"time",time);
-							//print2msg(ECU_DBG_CONTROL_CLIENT,"data",data);
-							rt_thread_delay(RT_TICK_PER_SECOND*1);
-							while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	//‘ŸÕ˘œ¬∂¡ ˝æ›£¨—∞’“ «∑Òªπ”–“™∑¢ÀÕµƒ ˝æ›
+							
+							if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') )
+							{
+								if(buff[strlen(buff)-2] == sendflag)			
+								{
+									memcpy(item,&buff[strlen(buff)-6],3);				//ªÒ»°√øÃıº«¬ºµƒitem
+									memcpy(data,buff,(strlen(buff)-7));
+									data[strlen(buff)-7] = '\n';
+									//print2msg(ECU_DBG_CLIENT,"search_readflag time",time);
+									//print2msg(ECU_DBG_CLIENT,"search_readflag data",data);
+									rt_thread_delay(RT_TICK_PER_SECOND*1);
+									while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	
+									{
+										if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') )
+										{
+											if(buff[strlen(buff)-2] == sendflag)
+											{
+												*flag = 1;
+												fclose(fp);
+												closedir(dirp);
+												rt_mutex_release(record_data_lock);
+												return 1;
+											}
+										}			
+									}
+
+									nextfileflag = 1;
+									break;
+								}
+							}
+								
+						}
+					}else
+					{
+						while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp)) 
+						{
+							if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
 							{
 								if(buff[strlen(buff)-2] == sendflag)
 								{
@@ -686,23 +862,19 @@ int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)
 									return 1;
 								}
 							}
-
-							*flag = 0;
-							fclose(fp);
-							closedir(dirp);
-							rt_mutex_release(record_data_lock);
-							return 1;
-						}		
+						}
 					}
+					
 					fclose(fp);
 				}
 			}
-			/* πÿ±’ƒø¬º */
 			closedir(dirp);
 		}
 	}
 	rt_mutex_release(record_data_lock);
-	return 0;
+
+	return nextfileflag;
+
 }
 
 
@@ -720,18 +892,19 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 	char path[100];
 	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
 	FILE *fp;
+	int nextfileflag = 0;	
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	*flag = 0;
 	if(result == RT_EOK)
 	{
-		/* ¥Úø™dirƒø¬º*/
 		dirp = opendir("/home/data/iprocres");
 		if(dirp == RT_NULL)
 		{
-			printmsg(ECU_DBG_CONTROL_CLIENT,"search_inv_pro_result_flag open directory error");
+			printmsg(ECU_DBG_CLIENT,"search_readflag open directory error");
 		}
 		else
 		{
-			/* ∂¡»°dirƒø¬º*/
+			/* ?®¢®®?dir????*/
 			while ((d = readdir(dirp)) != RT_NULL)
 			{
 				memset(path,0,100);
@@ -740,18 +913,49 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 				fp = fopen(path, "r");
 				if(fp)
 				{
-					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))  //∂¡»°“ª–– ˝æ›
+					if(0 == nextfileflag)
 					{
-						if(buff[strlen(buff)-2] == sendflag)			//ºÏ≤‚◊Ó∫Û“ª∏ˆ◊÷Ω⁄µƒresendflag «∑ÒŒ™1
+						while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))  
 						{
-							memcpy(item,&buff[strlen(buff)-6],3);				//ªÒ»°√øÃıº«¬ºµƒitem
-							memcpy(inverterid,&buff[strlen(buff)-18],12);
-							memcpy(data,buff,(strlen(buff)-19));
-							data[strlen(buff)-7] = '\n';
-							//print2msg(ECU_DBG_CONTROL_CLIENT,"time",time);
-							//print2msg(ECU_DBG_CONTROL_CLIENT,"data",data);
-							rt_thread_delay(RT_TICK_PER_SECOND*1);
-							while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	//‘ŸÕ˘œ¬∂¡ ˝æ›£¨—∞’“ «∑Òªπ”–“™∑¢ÀÕµƒ ˝æ›
+							
+							if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
+							{
+								if(buff[strlen(buff)-2] == sendflag)			
+								{
+									memcpy(item,&buff[strlen(buff)-6],3);				//ªÒ»°√øÃıº«¬ºµƒitem
+									memcpy(inverterid,&buff[strlen(buff)-19],12);
+									memcpy(data,buff,(strlen(buff)-20));
+									data[strlen(buff)-20] = '\n';
+									//print2msg(ECU_DBG_CLIENT,"search_readflag time",time);
+									//print2msg(ECU_DBG_CLIENT,"search_readflag data",data);
+									rt_thread_delay(RT_TICK_PER_SECOND*1);
+									while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
+									{
+										if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
+										{
+											if(buff[strlen(buff)-2] == sendflag)
+											{
+												*flag = 1;
+												fclose(fp);
+												closedir(dirp);
+												rt_mutex_release(record_data_lock);
+												return 1;
+											}
+										}			
+									}
+
+									nextfileflag = 1;
+									break;
+
+								}
+							}
+								
+						}
+					}else
+					{
+						while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))  //?®¢®®?®∞?DD®∫y?Y
+						{
+							if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
 							{
 								if(buff[strlen(buff)-2] == sendflag)
 								{
@@ -762,23 +966,19 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 									return 1;
 								}
 							}
-
-							*flag = 0;
-							fclose(fp);
-							closedir(dirp);
-							rt_mutex_release(record_data_lock);
-							return 1;
-						}		
+						}
 					}
+					
 					fclose(fp);
 				}
 			}
-			/* πÿ±’ƒø¬º */
 			closedir(dirp);
 		}
 	}
 	rt_mutex_release(record_data_lock);
-	return 0;
+
+	return nextfileflag;
+
 }
 
 
@@ -871,7 +1071,7 @@ int exist_inverter_abnormal_status()
 int response_inverter_abnormal_status()
 {
 	int result = 0;
-	int  j, sockfd, flag, num, cmd_id, next_cmd_id,havaflag;
+	int  j, sockfd, flag, num = 0, cmd_id, next_cmd_id,havaflag;
 	char datetime[15] = {'\0'};
 	//char recv_buffer[4096] = {'\0'};
 	//char command[4096] = {'\0'};
@@ -880,10 +1080,10 @@ int response_inverter_abnormal_status()
 	char *recv_buffer = NULL;
 	char *command = NULL;
 	char *send_buffer = NULL;
-
+	char da_time[20]={'\0'};
 	char data[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};//≤È—ØµΩµƒ ˝æ›
 	char time[15] = {'\0'};
-	FILE *fp;	
+	FILE *fp = NULL;	
 	printmsg(ECU_DBG_CONTROL_CLIENT,">>Start Response Abnormal Status");
 	recv_buffer = (char *)rt_malloc(2048);
 	command = (char *)rt_malloc(2048);
@@ -929,20 +1129,26 @@ int response_inverter_abnormal_status()
 				change_statusflag(datetime,'0');
 			}
 		}
+		
+		printf("5------------>%d num %d\n",strlen(recv_buffer),num);
 		//≈–∂œ”¶¥÷° «∑Ò∏Ω¥¯√¸¡Ó
 		if(strlen(recv_buffer) > (24 + 14*num)){
+			printf("6------------>\n");
 			memset(command, 0, sizeof(command));
 			strncpy(command, &recv_buffer[24 + 14*num], sizeof(command));
+			printf("7------------>\n");
 			print2msg(ECU_DBG_CONTROL_CLIENT,"Command", command);
 			//–£—È√¸¡Ó
 			if(msg_format_check(command) < 0)
 				continue;
 			//Ω‚Œˆ√¸¡Ó∫≈
 			cmd_id = msg_cmd_id(command);
+			printf("8------------>\n");
 
 			if(cmd_id==118)
 			{
-				char da_time[20]={'\0'};
+			printf("9------------>\n");
+				
 				strncpy(da_time, &recv_buffer[72],14);
 				
 				fp=fopen("/yuneng/A118.con","w");
@@ -981,9 +1187,13 @@ int response_inverter_abnormal_status()
 				}
 			}
 		}
+		printf("9.5------------>\n");
+		
 	}
+	printf("10------------>\n");
 	//«Âø’inverstaµƒflag±Í÷æŒªŒ™0µƒ±Í÷æ
 	delete_statusflag0();
+	printf("11------------>\n");
 	closesocket(sockfd);
 	rt_free(recv_buffer);
 	rt_free(command);
@@ -1141,6 +1351,7 @@ int response_process_result()
 				closesocket(sockfd);
 				continue;
 			}
+			change_inv_pro_result_flag(item,'0');
 			closesocket(sockfd);
 		}
 		delete_inv_pro_result_flag0();
@@ -1193,7 +1404,9 @@ void control_client_thread_entry(void* parameter)
 		if(exist_inverter_abnormal_status() && ecu_flag){
 			ecu_time =  acquire_time();
 			result = response_inverter_abnormal_status();
+			printf("response_inverter_abnormal_status end\n");
 			response_process_result();
+			printf("response_process_result end\n");
 		}
 		else if(compareTime(acquire_time() ,ecu_time,60*sockcfg.report_interval)){
 			ecu_time = acquire_time();

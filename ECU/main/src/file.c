@@ -324,7 +324,7 @@ int get_id_from_file(inverter_info *firstinverter)
 
 int save_process_result(int item, char *result)
 {
-	char dir[50] = "/home/data/proc_res";
+	char dir[50] = "/home/data/proc_res/";
 	char file[9];
 	int fd;
 	char time[20];
@@ -347,7 +347,7 @@ int save_process_result(int item, char *result)
 
 int save_inverter_parameters_result(inverter_info *inverter, int item, char *inverter_result)
 {
-	char dir[50] = "/home/data/iprocres";
+	char dir[50] = "/home/data/iprocres/";
 	char file[9];
 	int fd;
 	char time[20];
@@ -359,7 +359,7 @@ int save_inverter_parameters_result(inverter_info *inverter, int item, char *inv
 	fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
 	if (fd >= 0)
 	{		
-		sprintf(inverter_result,"%s,%s %3d,1\n",inverter_result,inverter->id,item);
+		sprintf(inverter_result,"%s,%s,%3d,1\n",inverter_result,inverter->id,item);
 		print2msg(ECU_DBG_MAIN,"inverter_result",inverter_result);
 		write(fd,inverter_result,strlen(inverter_result));
 		close(fd);
@@ -370,7 +370,7 @@ int save_inverter_parameters_result(inverter_info *inverter, int item, char *inv
 
 int save_inverter_parameters_result2(char *id, int item, char *inverter_result)
 {
-	char dir[50] = "/home/data/iprocres";
+	char dir[50] = "/home/data/iprocres/";
 	char file[9];
 	int fd;
 	char time[20];
@@ -654,8 +654,8 @@ int initsystem(char *ecuid,char *mac)
 	echo("/yuneng/ftpadd.con", "IP=60.190.131.190\nPort=9219\nuser=zhyf\npassword=yuneng\n");
 	echo("/yuneng/datacent.con","Domain=111.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
 	echo("/home/data/power","");
+	echo("/yuneng/timezone.con","Etc/GMT+8\n");
 	mkdir("/ftp",0x777);
-	
 	
 	return 0;
 }

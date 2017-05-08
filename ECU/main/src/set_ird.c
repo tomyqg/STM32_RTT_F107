@@ -111,6 +111,26 @@ int resolve_ird(char *id, char *readbuff)		//解析并保存IRD设置结果
 		}
 		sprintf(inverter_result, "%s%01dEND", id, mode);				//这里先注释掉
 		save_inverter_parameters_result2(id, 126, inverter_result);		//把结果保存到数据库，通过远程控制程序上传给EMA
+	}else
+	{
+		memset(data,0x00,200);
+		sprintf(data,"%s,%d,,0\n",id,mode);
+
+		//删除id所在行
+		delete_line("/home/data/ird","/home/data/ird.t",id,12);
+		//更新所在行
+		for(i=0; i<3; i++)
+		{
+			if(1 == insert_line("/home/data/ird",data))
+			{
+				print2msg(ECU_DBG_MAIN,id, "Update resolve ird successfully");
+				break;
+			}
+			else
+				print2msg(ECU_DBG_MAIN,id, "Failed to resolve ird power");
+		}
+		sprintf(inverter_result, "%s%01dEND", id, mode);				//这里先注释掉
+		save_inverter_parameters_result2(id, 126, inverter_result);		//把结果保存到数据库，通过远程控制程序上传给EMA
 	}
 
 
@@ -130,6 +150,28 @@ int resolve_ird_DD(char *id, char *readbuff)		//解析并保存IRD设置结果
 	{
 		//将所在行分裂
 		splitString(data,splitdata);
+		memset(data,0x00,200);
+		sprintf(data,"%s,%d,,0\n",id,mode);
+
+		//删除id所在行
+		delete_line("/home/data/ird","/home/data/ird.t",id,12);
+		//更新所在行
+		for(i=0; i<3; i++)
+		{
+			if(1 == insert_line("/home/data/ird",data))
+			{
+				print2msg(ECU_DBG_MAIN,id, "Update resolve ird DD successfully");
+				break;
+			}
+			else
+				print2msg(ECU_DBG_MAIN,id, "Failed to resolve ird DD power");
+		}
+
+		sprintf(inverter_result, "%s%01dEND", id, mode);				//这里先注释掉
+		save_inverter_parameters_result2(id, 126, inverter_result);		//把结果保存到数据库，通过远程控制程序上传给EMA
+	}
+	else
+	{
 		memset(data,0x00,200);
 		sprintf(data,"%s,%d,,0\n",id,mode);
 
@@ -193,6 +235,7 @@ int get_ird_single(int shortaddr,char* id)		//从逆变器读取实际IRD
 			(0xFE == readbuff[56]) &&
 			(0xFE == readbuff[57]))
 	{
+	printf("resolve_ird\n");
 		resolve_ird(id, (char *)readbuff);		//解析和保存IRD
 		return 0;
 	}
@@ -202,6 +245,7 @@ int get_ird_single(int shortaddr,char* id)		//从逆变器读取实际IRD
 				(0xDD == readbuff[3]) &&
 				(0xFE == readbuff[31]) &&
 				(0xFE == readbuff[32])) {
+				printf("resolve_ird_DD\n");
 		resolve_ird_DD(id, (char *)readbuff);		//解析和保存IRD
 		return 0;
 	}

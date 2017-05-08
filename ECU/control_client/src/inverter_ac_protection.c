@@ -157,10 +157,10 @@ int save_ac_protection_num(const char *msg, int num)
 		{
 			if(pro_flag[j] == 1){
 				//如果存在该逆变器数据则删除该记录
-				delete_line("/home/data/setpropa","/home/data/setpropa.t",(char *)pro_name[j],strlen(pro_name[j]));
+				delete_line("/home/data/setpropi","/home/data/setpropi.t",(char *)pro_name[j],strlen(pro_name[j]));
 				sprintf(str,"'%s', '%s', %f, 1\n",inverter_id, pro_name[j], pro_value[j]);
 				//插入数据
-				if(-1 == insert_line("/home/data/setpropa",str))
+				if(-1 == insert_line("/home/data/setpropi",str))
 				{
 					err_count++;
 				}

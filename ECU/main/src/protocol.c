@@ -522,7 +522,7 @@ int protocol_status(struct inverter_info_t *firstinverter, char *datetime)
 		sprintf(length, "%05d", strlen(sendbuff));
 		for(i=5; i<10; i++)
 			sendbuff[i] = length[i-5];
-		strcat(sendbuff, "\n");
+		//strcat(sendbuff, "\n");
 
 		print2msg(ECU_DBG_MAIN,"status", sendbuff);
 

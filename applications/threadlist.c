@@ -52,7 +52,7 @@ static struct rt_thread led_thread;
 
 #ifdef THREAD_PRIORITY_MAIN
 ALIGN(RT_ALIGN_SIZE)
-rt_uint8_t main_stack[ 4096 ];
+rt_uint8_t main_stack[ 8192 ];
 struct rt_thread main_thread;
 #endif
 

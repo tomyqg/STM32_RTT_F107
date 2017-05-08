@@ -27,6 +27,7 @@ proparas表格字段：
 #include "file.h"
 #include "set_protection_parameters.h"
 #include "rtthread.h"
+#include "rthw.h"
 
 extern rt_mutex_t record_data_lock;
 /*yc600*/
@@ -83,10 +84,9 @@ int set_protection_yc600(int order,int data,int num)
 /*读取设置的参数值和标志位*/
 int get_value_flag(char *para_name, char *value)
 {
-	int flag1=0;
 	FILE *fp;
-	char data[200];
-	char splitdata[3][32];
+	char data[200] = {'\0'};
+	char splitdata[3][32] = {'\0'};
 	fp = fopen("/home/data/setpropa", "r");
 	if(fp)
 	{
@@ -100,8 +100,8 @@ int get_value_flag(char *para_name, char *value)
 			{
 				strcpy(para_name, splitdata[0]);
 				strcpy(value, splitdata[1]);
-				flag1 = 1;
-				break;
+				fclose(fp);
+				return 1;
 			}
 			memset(data,0x00,200);
 		}
@@ -110,7 +110,7 @@ int get_value_flag(char *para_name, char *value)
 	{
 		return -1;
 	}
-	return flag1;
+	return 0;
 
 }
 
@@ -996,7 +996,7 @@ int set_start_time_yc1000(char *value)				//直流启动时间
 /*设置完后，清除设置标志*/
 int clear_flag(char *para_name)					//设置后清除数据库中参数的设置标志
 {
-	char data[200];
+	char data[200] = {'\0'};
 	char splitdata[3][32];
 	int i;
 
@@ -1013,7 +1013,7 @@ int clear_flag(char *para_name)					//设置后清除数据库中参数的设置标志
 		//更新所在行
 		for(i=0; i<3; i++)
 		{
-			if(1 == insert_line("/home/data/ird",data))
+			if(1 == insert_line("/home/data/setpropa",data))
 			{
 				break;
 			}
@@ -1029,15 +1029,15 @@ int clear_flag(char *para_name)					//设置后清除数据库中参数的设置标志
 /*给逆变器设置保护参数，并且读取逆变器设置后的保护参数*/
 int set_protection_paras(inverter_info *firstinverter)
 {
-	char para_name[64];
-	char value[16];
-	int count = 0;
+	char para_name[64] = {'\0'};
+	char value[16] = {'\0'};
+	int count_sum = 0;
 	int data = 0;
 
 	while(1 == get_value_flag(para_name, value))
 	{
 		data=0;
-		count++;
+		count_sum++;
 		if(!strcmp("under_voltage_fast", para_name))
 		{
 			data = (int)(atof(value) * 1.3277);
@@ -1188,7 +1188,7 @@ int set_protection_paras(inverter_info *firstinverter)
 		}
 	}
 
-	return count;
+	return count_sum;
 }
 
 /*解析参数，并保存到数据库中*/
@@ -1472,7 +1472,10 @@ int set_protection_parameters(inverter_info *firstinverter)
 	int flag;
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	if(set_protection_paras(firstinverter) > 0)
+	{
 		read_protection_parameters(firstinverter);
+	}
+		
 
 	fp = fopen("/tmp/presdata.con", "r");
 	if(fp)
