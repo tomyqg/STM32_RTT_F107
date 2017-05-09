@@ -116,18 +116,19 @@ int send_socket(int sockfd, char *sendbuffer, int size)
 /* 接收数据 */
 int recv_socket(int sockfd, char *recvbuffer, int size, int timeout_s)
 {
-	fd_set fds;
+	fd_set rd;
 	struct timeval timeout = {10,0};
-	int recv_each = 0, recv_count = 0;
-	char recv_buffer[4096];
+	int recv_each = 0, recv_count = 0,res = 0;
+	char recv_buffer[4096] = {'\0'};
 
 	memset(recvbuffer, '\0', size);
 	while(1)
 	{
-		FD_ZERO(&fds);
-		FD_SET(sockfd, &fds);
+		FD_ZERO(&rd);
+		FD_SET(sockfd, &rd);
 		timeout.tv_sec = timeout_s;
-		switch(select(sockfd+1, &fds, NULL, NULL, &timeout)){
+		res = select(sockfd+1, &rd, NULL, NULL, &timeout);
+		switch(res){
 			case -1:
 				printmsg(ECU_DBG_CONTROL_CLIENT,"select");
 			case 0:
@@ -136,11 +137,12 @@ int recv_socket(int sockfd, char *recvbuffer, int size, int timeout_s)
 				printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
 				return -1;
 			default:
-				if(FD_ISSET(sockfd, &fds)){
+				if(FD_ISSET(sockfd, &rd)){
 					memset(recv_buffer, '\0', sizeof(recv_buffer));
 					recv_each = recv(sockfd, recv_buffer, sizeof(recv_buffer), 0);
 					strcat(recvbuffer, recv_buffer);
 					if(recv_each <= 0){
+						
 						printdecmsg(ECU_DBG_CONTROL_CLIENT,"Communication over", recv_each);
 						return -1;
 					}

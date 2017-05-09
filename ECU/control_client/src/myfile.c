@@ -111,6 +111,7 @@ int clear_file(char *filename)
 	return 0;
 }
 
+
 //删除文件以行
 int delete_line(char* filename,char* temfilename,char* compareData,int len)
 {

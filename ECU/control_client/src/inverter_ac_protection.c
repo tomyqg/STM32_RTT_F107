@@ -121,12 +121,13 @@ int save_ac_protection_all()
 	int i, err_count = 0;
 	char str[100];
 
+	unlink("/home/data/setpropa");
 	for(i=0; i<NUM; i++)
 	{
 		if(pro_flag[i] == 1){
 		
 			//如果存在该逆变器数据则删除该记录
-			delete_line("/home/data/setpropa","/home/data/setpropa.t",(char *)pro_name[i],strlen(pro_name[i]));
+			//delete_line("/home/data/setpropa","/home/data/setpropa.t",(char *)pro_name[i],strlen(pro_name[i]));
 			sprintf(str,"%s,%.2f,1\n",pro_name[i], pro_value[i]);
 			//插入数据
 			if(-1 == insert_line("/home/data/setpropa",str))
@@ -147,7 +148,8 @@ int save_ac_protection_num(const char *msg, int num)
 	int i, j, err_count = 0;
 	char inverter_id[13] = {'\0'};
 	char str[100];
-
+	
+	unlink("/home/data/setpropi");
 	for(i=0; i<num; i++)
 	{
 		//获取一台逆变器的ID号
@@ -157,7 +159,7 @@ int save_ac_protection_num(const char *msg, int num)
 		{
 			if(pro_flag[j] == 1){
 				//如果存在该逆变器数据则删除该记录
-				delete_line("/home/data/setpropi","/home/data/setpropi.t",(char *)pro_name[j],strlen(pro_name[j]));
+				//delete_line("/home/data/setpropi","/home/data/setpropi.t",(char *)pro_name[j],strlen(pro_name[j]));
 				sprintf(str,"'%s', '%s', %f, 1\n",inverter_id, pro_name[j], pro_value[j]);
 				//插入数据
 				if(-1 == insert_line("/home/data/setpropi",str))

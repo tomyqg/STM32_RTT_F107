@@ -45,7 +45,7 @@ typedef enum THREADTYPE {
 #define START_TIME_IDWRITE								5
 #define START_TIME_MAIN										20
 #define START_TIME_CONTROL_CLIENT					60
-#define START_TIME_CLIENT									60
+#define START_TIME_CLIENT									120
 void tasks_new(void);//创建系统需要的线程
 
 void restartThread(threadType type);

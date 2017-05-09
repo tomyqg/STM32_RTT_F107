@@ -124,7 +124,7 @@
  * setting in the lwip opts.h 
  */
 /* MEMP_NUM_NETBUF: the number of struct netbufs. */
- #define MEMP_NUM_NETBUF             5
+ #define MEMP_NUM_NETBUF             8
 /* MEMP_NUM_NETCONN: the number of struct netconns. */
  #define MEMP_NUM_NETCONN            15
 
