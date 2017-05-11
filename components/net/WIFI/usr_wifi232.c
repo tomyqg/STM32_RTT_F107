@@ -7,12 +7,15 @@
 #include <stm32f10x.h>
 #include "usr_wifi232.h"
 #include "debug.h"
+#include "string.h"
+#include "stdio.h"
+#include "stdlib.h"
 
-extern struct rt_device serial1;		//´®¿Ú1ÎªWIFIÊÕ·¢´®¿Ú
+extern struct rt_device serial4;		//´®¿Ú1ÎªWIFIÊÕ·¢´®¿Ú
 #define RD_DELAY 	(RT_TICK_PER_SECOND/2) //¶ÁÈ¡Êý¾ÝÑÓÊ±
 #define WR_DELAY	(RT_TICK_PER_SECOND) //Ð´Êý¾ÝÑÓÊ±
-#define WIFI_SERIAL (serial1)
-
+#define WIFI_SERIAL (serial4)
+rt_mutex_t WIFI_lock = RT_NULL;
 extern int WiFiReadFlag;
 static int WiFireadtimeoutflag = 0;
 //¶¨Ê±Æ÷³¬Ê±º¯Êý
@@ -50,6 +53,15 @@ int selectWiFi(int timeout)			//Wifi´®¿ÚÊý¾Ý¼ì²â ·µ»Ø0 ±íÊ¾´®¿ÚÃ»ÓÐÊý¾Ý  ·µ»Ø1±í
 	}
 }
 
+void clear_WIFI(void)		//Çå¿Õ´®¿Ú»º³åÇøµÄÊý¾Ý
+{
+	char data[256];
+	//Çå¿Õ»º³åÆ÷´úÂë	Í¨¹ý½«½ÓÊÕ»º³åÇøµÄËùÓÐÊý¾Ý¶¼¶ÁÈ¡³öÀ´£¬´Ó¶øÇå¿ÕÊý¾Ý
+	WIFI_SERIAL.read(&WIFI_SERIAL,0, data, 255);
+	rt_thread_delay(RT_TICK_PER_SECOND/10);
+}
+
+
 //WIFI´®¿Ú´ò¿ªº¯Êý
 int WiFi_Open(void)
 {
@@ -68,30 +80,715 @@ int WiFi_Open(void)
 	GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_8;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);	
 	
-	new = rt_device_find("uart1");		//Ñ°ÕÒWIFI´®¿Ú²¢ÅäÖÃÄ£Ê½
+	new = rt_device_find("uart4");		//Ñ°ÕÒWIFI´®¿Ú²¢ÅäÖÃÄ£Ê½
 	if (new != RT_NULL)
 	{
 		result = rt_device_open(new, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_INT_RX);
 		
 		if(result && WIFI_STATUS)
 		{
-			rt_kprintf("open WIFI failed : %d %d\r\n",result,WIFI_STATUS);
-		}else
-		{
-			rt_kprintf("open WIFI success\r\n");
+			printdecmsg(ECU_DBG_WIFI,"open WIFI failed ",result);
 		}
 	}
+	//Ö±µ½WIFIÁ¬½ÓÉÏÖ®ºó   Ëã³É¹¦´ò¿ª
+	while(!GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_8));
+	WIFI_lock = rt_mutex_create("wifi_lock", RT_IPC_FLAG_FIFO);
+	if (WIFI_lock != RT_NULL)
+	{
+		printmsg(ECU_DBG_WIFI,"open WIFI success");
+	}
+
 	return result;
 }
 
-int WiFi_SendData(tcp_address_t address ,char *data ,int length)   //ÔÚ´®¿ÚÖ¸ÁîÄ£Ê½ÏÂ·¢ËÍÊý¾Ý    ·¢ËÍTCP±¨ÎÄ
+//½øÈëATÄ£Ê½ ½øÈëATÄ£Ê½		OK
+int AT(void)
+{
+	char AT[255] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	//clear_WIFI();
+	//ÏÈÏòÄ£¿éÐ´Èë"+++"È»ºóÔÙÐ´Èë"a" Ð´Èë+++·µ»Ø"a" Ð´Èë"a"·µ»Ø+ok
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,"+++", 3);
+	//»ñÈ¡µ½a
+	if(selectWiFi(1) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		//printf("%d %s\n",length,AT);
+		if(memcmp(AT,"a",1))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	//·¢ËÍÊý¾Ýa
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,"a", 1);
+	if(selectWiFi(1) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT WIFI Get reply time out 2");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		memset(AT,0x00,255);
+	  WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		//printf("%d %s\n",length,AT);
+		if(memcmp(AT,"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"Into AT Mode");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+
+//ÇÐ»»»ØÔ­À´µÄ¹¤×÷Ä£Ê½    OK
+int AT_ENTM(void)
+{
+	char AT[255] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	//clear_WIFI();
+	//ÏòÄ£¿éÐ´Èë"AT+ENTM\n",·µ»Ø+ok
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,"AT+ENTM\n", 8);
+	//»ñÈ¡µ½a
+	if(selectWiFi(1) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_ENTM WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		if(memcmp(&AT[9],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"Into AT_ENTM Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+
+//AT Ä£Ê½ÏÂËùÐèÒªµÄÏà¹ØÃüÁî
+
+//USRµÄ°æ±¾ÐÅÏ¢			OK
+int AT_VER(void)
+{
+	char AT[255] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	//clear_WIFI();
+	//ÏòÄ£¿éÐ´Èë"AT+ENTM\n",·µ»Ø+ok
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,"AT+VER\n", 7);
+	//»ñÈ¡µ½a
+	if(selectWiFi(1) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_VER WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		if(memcmp(&AT[8],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	print2msg(ECU_DBG_WIFI,"Version",AT);
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+//¸´Î»Ä£¿é			OK
+int AT_Z(void)
+{
+	char AT[255] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	//clear_WIFI();
+	//ÏòÄ£¿éÐ´Èë"AT+AT_Z\n",·µ»Ø+ok
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,"AT+Z\n", 5);
+
+	if(selectWiFi(1) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_Z WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		if(memcmp(&AT[6],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	while(!GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_8));
+	printmsg(ECU_DBG_WIFI,"AT_Z Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+
+//»Ö¸´³ö³§ÉèÖÃ
+int AT_RELD(void)
+{
+	char AT[255] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	//clear_WIFI();
+	//ÏòÄ£¿éÐ´Èë"AT+AT_Z\n",·µ»Ø+ok
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,"AT+RELD\n", 8);
+	rt_thread_delay(RT_TICK_PER_SECOND*3);
+	if(selectWiFi(2) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_RELD WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		//printf("%s\n",AT);
+		if(memcmp(&AT[9],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"AT_RELD Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+
+//ÅäÖÃSOCKET A ·þÎñÆ÷µØÖ·
+int AT_NETP(char *IP,int port)
+{
+	char send[50] = {'\0'};
+	char AT[255] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	//clear_WIFI();
+	
+	sprintf(send,"AT+NETP=TCP,Server,%d,%s\n",port,IP);
+	//ÏòÄ£¿éÐ´Èë"AT_NETP\n",·µ»Ø+ok
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
+	rt_thread_delay(RT_TICK_PER_SECOND);
+	if(selectWiFi(2) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_NETP WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		//printf("%s\n",AT);
+		if(memcmp(&AT[strlen(send)+1],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"AT_NETP Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+
+//ÅäÖÃSOCKET B ¿ªÆô
+int AT_TCPB_ON(void)
+{
+	char send[50] = {'\0'};
+	char AT[255] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	//clear_WIFI();
+	
+	sprintf(send,"AT+TCPB=on\n");
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
+	rt_thread_delay(RT_TICK_PER_SECOND);
+	if(selectWiFi(2) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_TCPB_ON WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		//printf("%d %s\n",strlen(send),AT);
+		if(memcmp(&AT[strlen(send)+1],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"AT_TCPB_ON Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+
+
+//ÅäÖÃSOCKET B IPµØÖ·
+int AT_TCPADDB(char *IP)
+{
+	char send[50] = {'\0'};
+	char AT[255] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	//clear_WIFI();
+	
+	sprintf(send,"AT+TCPADDB=%s\n",IP);
+	//ÏòÄ£¿éÐ´Èë"AT_TCPADDB\n",·µ»Ø+ok
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
+	rt_thread_delay(RT_TICK_PER_SECOND);
+	if(selectWiFi(2) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_TCPADDB WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		//printf("%s\n",AT);
+		if(memcmp(&AT[strlen(send)+1],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"AT_TCPADDB Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+
+
+//ÅäÖÃSOCKET B IP¶Ë¿Ú
+int AT_TCPPTB(int port)
+{
+	char send[50] = {'\0'};
+	char AT[255] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	//clear_WIFI();
+	
+	sprintf(send,"AT+TCPPTB=%d\n",port);
+	//ÏòÄ£¿éÐ´Èë"AT_NETP\n",·µ»Ø+ok
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
+	rt_thread_delay(RT_TICK_PER_SECOND);
+	if(selectWiFi(2) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_TCPPTB WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		//printf("%s\n",AT);
+		if(memcmp(&AT[strlen(send)+1],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"AT_TCPPTB Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+
+//ÅäÖÃSOCKET B ¿ªÆô
+int AT_TCPC_ON(void)
+{
+	char send[50] = {'\0'};
+	char AT[255] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	//clear_WIFI();
+	
+	sprintf(send,"AT+TCPC=on\n");
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
+	rt_thread_delay(RT_TICK_PER_SECOND);
+	if(selectWiFi(2) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_TCPC_ON WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		//printf("%s\n",AT);
+		if(memcmp(&AT[strlen(send)+1],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"AT_TCPC_ON Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+
+//ÅäÖÃSOCKET C IPµØÖ·
+int AT_TCPADDC(char *IP)
+{
+	char send[50] = {'\0'};
+	char AT[255] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	//clear_WIFI();
+	
+	sprintf(send,"AT+TCPADDC=%s\n",IP);
+	//ÏòÄ£¿éÐ´Èë"AT_NETP\n",·µ»Ø+ok
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
+	rt_thread_delay(RT_TICK_PER_SECOND);
+	if(selectWiFi(2) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_TCPADDC WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		//printf("%s\n",AT);
+		if(memcmp(&AT[strlen(send)+1],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"AT_TCPADDC Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+
+//ÅäÖÃSOCKET C IP¶Ë¿Ú
+int AT_TCPPTC(int port)
+{
+	char send[50] = {'\0'};
+	char AT[255] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	//clear_WIFI();
+	
+	sprintf(send,"AT+TCPPTC=%d\n",port);
+	//ÏòÄ£¿éÐ´Èë"AT_NETP\n",·µ»Ø+ok
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
+	rt_thread_delay(RT_TICK_PER_SECOND);
+	if(selectWiFi(2) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_TCPPTC WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		//printf("%s\n",AT);
+		if(memcmp(&AT[strlen(send)+1],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"AT_TCPPTC Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+
+//¿ªÆôAP+STA¹¦ÄÜÄ£Ê½
+int AT_FAPSTA_ON(void)
+{
+	char send[50] = {'\0'};
+	char AT[255] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	//clear_WIFI();
+	
+	sprintf(send,"AT+FAPSTA=on\n");
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
+	rt_thread_delay(RT_TICK_PER_SECOND*2);
+	if(selectWiFi(2) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_FAPSTA_ON WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		//printf("%s\n",AT);
+		if(memcmp(&AT[strlen(send)+1],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"AT_FAPSTA_ON Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+//ÉèÖÃWIFI¹¤×÷Ä£Ê½  STA or AP
+int AT_WMODE(char *WMode)
+{
+	char send[50] = {'\0'};
+	char AT[255] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	//clear_WIFI();
+	
+	sprintf(send,"AT+WMODE=%s\n",WMode);
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
+	rt_thread_delay(RT_TICK_PER_SECOND);
+	if(selectWiFi(2) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_WMODE WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		//printf("%s\n",AT);
+		if(memcmp(&AT[strlen(send)+1],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"AT_WMODE Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+//ÉèÖÃÁ¬½ÓÂ·ÓÉÆ÷SSID
+int AT_WSSSID(char *SSSID)
+{
+	char send[50] = {'\0'};
+	char AT[255] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	//clear_WIFI();
+	
+	sprintf(send,"AT+WSSSID=%s\n",SSSID);
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
+	rt_thread_delay(RT_TICK_PER_SECOND);
+	if(selectWiFi(2) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_WSSSID WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		//printf("%s\n",AT);
+		if(memcmp(&AT[strlen(send)+1],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"AT_WSSSID Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+//ÉèÖÃÁ¬½ÓÂ·ÓÉÆ÷KEY
+int AT_WSKEY(char *SKEY)
+{
+	char send[50] = {'\0'};
+	char AT[255] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	//clear_WIFI();
+	
+	sprintf(send,"AT+WSKEY=WPA2PSK,AES,%s\n",SKEY);
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
+	rt_thread_delay(RT_TICK_PER_SECOND);
+	if(selectWiFi(2) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_WSKEY WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		//printf("%s\n",AT);
+		if(memcmp(&AT[strlen(send)+1],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"AT_WSKEY Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+
+
+
+//ÔÚ´®¿ÚÖ¸ÁîÄ£Ê½ÏÂ½ÓÊÕÊý¾Ý
+static int WiFi_RecvData(int timeout,char *data)
+{
+	int length = 0;
+	if(data == RT_NULL)
+	{
+			return -1;
+	}
+	if(selectWiFi(timeout) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"WIFI Get reply time out");
+		return -1;
+	}
+	else
+	{
+		length = WIFI_SERIAL.read(&WIFI_SERIAL,0, data, 255);
+		printf("length : %d  %s\n",length,&data[9]);
+		return length;
+	}
+}
+
+typedef enum 
+{
+	SOCKET_A = 1,
+	SOCKET_B = 2,
+	SOCKET_C = 3,
+}SocketType;
+
+char socketdata[2048] = {'\0'};
+char dataA[2048] = {'\0'};	//»º´æ´ÓSOCKET A¶Áµ½µÄÊý¾Ý  ×îºóÒ»´ÎÊÕµ½µÄµÄ
+int lengthA = 0;						//»º´æSOCKET A¶Áµ½µÄÊý¾Ý³¤¶È
+char dataB[2048] = {'\0'};	//»º´æ´ÓSOCKET B¶Áµ½µÄÊý¾Ý	×îºóÒ»´ÎÊÕµ½µÄµÄ
+int lengthB = 0;						//»º´æSOCKET B¶Áµ½µÄÊý¾Ý³¤¶È 
+char dataC[2048] = {'\0'};	//»º´æ´ÓSOCKET C¶Áµ½µÄÊý¾Ý	×îºóÒ»´ÎÊÕµ½µÄµÄ
+int lengthC = 0;						//»º´æSOCKET C¶Áµ½µÄÊý¾Ý³¤¶È 
+
+int RecvSocketData(SocketType Type,char *data,int timeout)
+{
+	int i=0;
+	int length = 0;
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	if(data == RT_NULL)
+	{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+	}
+	for(i = 0;i<3;i++)
+	{
+		//Ê×ÏÈ²é¿´3Â·ÊÇ·ñÓÐÊý¾Ý
+		switch(Type)
+		{
+			case SOCKET_A:
+				if(lengthA != 0)
+				{
+					memcpy(data,dataA,lengthA);
+					length = lengthA;
+					lengthA = 0;
+					rt_mutex_release(WIFI_lock);
+					return length;
+				}
+				break;
+			case SOCKET_B:
+				if(lengthB != 0)
+				{
+					memcpy(data,dataB,lengthB);
+					length = lengthB;
+					lengthB = 0;
+					rt_mutex_release(WIFI_lock);
+					return length;
+				}
+				break;
+			case SOCKET_C:
+				if(lengthC != 0)
+				{
+					memcpy(data,dataC,lengthC);
+					length = lengthC;
+					lengthC = 0;
+					rt_mutex_release(WIFI_lock);
+					return length;
+				}
+				break;
+		}
+		
+		//3Â·¶¼²»´æÔÚÊý¾ÝµÄÇé¿öÏÂ£¬¶ÁÈ¡Ò»ÌõÊý¾Ý
+		memset(socketdata,0x00,2048);
+		if((length = WiFi_RecvData(timeout,socketdata)) > 0)
+		{
+			switch(socketdata[0])
+			{
+				case 'a':
+					memset(dataA,0x00,2048);
+					memcpy(dataA,socketdata,length);
+					lengthA = length;
+					printf("a %d\n",lengthA);
+					break;
+				case 'b':
+					memset(dataB,0x00,2048);
+					memcpy(dataB,socketdata,length);
+					lengthB = length;
+					printf("b %d\n",lengthB);
+					break;
+				case 'c':
+					memset(dataC,0x00,2048);
+					memcpy(dataC,socketdata,length);
+					lengthC = length;
+					printf("c %d\n",lengthC);
+					break;
+			}
+		}else
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	rt_mutex_release(WIFI_lock);
+	return -1;
+	
+}
+
+int SendToSocketB(char *data ,int length)
+{
+	char *sendbuff = NULL;
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	sendbuff = malloc(4096);
+	sprintf(sendbuff,"b00000000%s",data);
+	//clear_WIFI();
+	lengthB = 0;
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,sendbuff, (length+9));
+
+	free(sendbuff);
+	sendbuff = NULL;
+	return 0;
+}
+
+int SendToSocketC(char *data ,int length)
+{
+	char *sendbuff = NULL;
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	sendbuff = malloc(4096);
+	sprintf(sendbuff,"c00000000%s",data);
+	//clear_WIFI();
+	lengthC = 0;
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,sendbuff, (length+9));
+
+	free(sendbuff);
+	sendbuff = NULL;
+	return 0;
+}
+
+
+
+//´®¿ÚÖ¸ÁîÄ£Ê½ÏÂÊÕ·¢Êý¾Ý
+//ÔÚ´®¿ÚÖ¸ÁîÄ£Ê½ÏÂ·¢ËÍÊý¾Ý    ·¢ËÍTCP±¨ÎÄ
+int WiFi_SendData(tcp_address_t address ,char *data ,int length)   
 {
 	int domain_length = 0,msg_length = 0,index = 0;
 	unsigned char check_sum = 0;
 	char tcp_msg[256];
 	if ((data == RT_NULL) || (length <= 0))
 	{
-		rt_kprintf("WIFI_SendData failed ...\n");
+		printmsg(ECU_DBG_WIFI,"WIFI_SendData failed ...");
 		return -1;
 	}
 	
@@ -123,7 +820,7 @@ int WiFi_SendData(tcp_address_t address ,char *data ,int length)   //ÔÚ´®¿ÚÖ¸ÁîÄ
 		rt_memcpy(&tcp_msg[9+domain_length],data,length);
 	}else
 	{
-		rt_kprintf("WIFI_SendData failed ...\n");
+		printmsg(ECU_DBG_WIFI,"WIFI_SendData failed ...");
 		return -2;
 	}
 	
@@ -144,50 +841,71 @@ int WiFi_SendData(tcp_address_t address ,char *data ,int length)   //ÔÚ´®¿ÚÖ¸ÁîÄ
 	return 	(msg_length+5);
 }
 
-int WiFi_RecvData(int timeout,char *data)
+
+//³õÊ¼»¯WIFIÄ£¿éÎª¹¤×÷Ä£Ê½  //¹¤×÷Ä£Ê½ socketB ºÍsocketCÎª clientºÍControl_Client·þÎñÆ÷ÅäÖÃÐÅÏ¢
+int initWorkMode(char *clientIP,int clientPort,char *controlIP,int controlPort)
 {
-	int length = 0;
-	if(data == RT_NULL)
+	int i = 0;
+	//½øÈëATÄ£Ê½
+	rt_thread_delay(RT_TICK_PER_SECOND*10);
+	for(i = 0;i<3;i++)
 	{
-			return -1;
+		if(0 == AT())
+		{
+			break;
+		}else
+		{
+			AT_ENTM();
+		}
 	}
-	if(selectWiFi(timeout) <= 0)
-	{
-		printmsg(ECU_DBG_OTHER,"WIFI Get reply time out");
-		return -1;
-	}
-	else
-	{
-		length = WIFI_SERIAL.read(&WIFI_SERIAL,0, data, 255);
-		return length;
-	}
+	//Ö»ÓÐÔÚ½øÈëATÄ£Ê½Ö®ºó²ÅÄÜ½øÐÐºóÐøµÄ²Ù×÷
+	
+		
+	
+	
+	return 0;
 }
 
-
+int initUpdateMode(char *FTP1IP,int FTP1Port,char *DataIP,int DataPort)
+{
+	
+	return 0;
+}
 #ifdef RT_USING_FINSH
 #include <finsh.h>
-void testWIFISend(int ip1,int ip2,int ip3,int ip4,int port)	//ÎÞÏß·¢ËÍ²âÊÔ
-{
-	tcp_address_t address ;
-	char data[11] = "YuNeng APS";
-	int length = 10;
-	WiFi_Open();
-	address.address_type = TYPE_IP;
-	address.address.ip[0] = ip1;
-	address.address.ip[1] = ip2;
-	address.address.ip[2] = ip3;
-	address.address.ip[3] = ip4;
-	address.port = port;
-	WiFi_SendData(address ,data ,length);
-}
-FINSH_FUNCTION_EXPORT(testWIFISend , WIFI Send Test[ip1 ip2 ip3 ip4 port].)
 
-void testWIFIRecv()	//ÎÞÏß½ÓÊÕ²âÊÔ
+void testWIFIRecv(SocketType Type,int timeout)	//ÎÞÏß½ÓÊÕ²âÊÔ
 {
-	char data[256] = {0};
+	char data[2048] = {0};
 	int length = 0;
-	length = WiFi_RecvData(5,data);
-	rt_kprintf("WiFi_RecvData:%d   %s\n",length,data);
+	length = RecvSocketData(Type,data,timeout);
+	rt_kprintf("WiFi_RecvData:%d   %s\n",length,&data[9]);
 }
 FINSH_FUNCTION_EXPORT(testWIFIRecv , WIFI Recv Test.)
+
+FINSH_FUNCTION_EXPORT(AT , Into AT Mode.)
+FINSH_FUNCTION_EXPORT(WiFi_Open , Open WIFI Modle.)
+FINSH_FUNCTION_EXPORT(AT_ENTM , Into Last Mode.)
+FINSH_FUNCTION_EXPORT(AT_VER , Get WIFI SoftWare Version.)
+FINSH_FUNCTION_EXPORT(AT_Z , Reset WIFI Modle.)
+FINSH_FUNCTION_EXPORT(AT_RELD , Reload the default setting and reboot.)
+FINSH_FUNCTION_EXPORT(AT_NETP , Set SOCKET A Configure.)
+
+FINSH_FUNCTION_EXPORT(AT_TCPB_ON , TCPB ON.)
+FINSH_FUNCTION_EXPORT(AT_TCPADDB , Set SOCKET B IP.)
+FINSH_FUNCTION_EXPORT(AT_TCPPTB , Set SOCKET B PORT.)
+
+FINSH_FUNCTION_EXPORT(AT_TCPC_ON , TCPC ON.)
+FINSH_FUNCTION_EXPORT(AT_TCPADDC , Set SOCKET C IP.)
+FINSH_FUNCTION_EXPORT(AT_TCPPTC , Set SOCKET C PORT.)
+
+FINSH_FUNCTION_EXPORT(AT_FAPSTA_ON , Set AP+STA Mode.)
+FINSH_FUNCTION_EXPORT(AT_WMODE , Set Modle Mode.)
+FINSH_FUNCTION_EXPORT(AT_WSSSID , Set STA SSID.)
+FINSH_FUNCTION_EXPORT(AT_WSKEY , Set STA Key.)
+
+FINSH_FUNCTION_EXPORT(SendToSocketB , Send SOCKET B.)
+FINSH_FUNCTION_EXPORT(SendToSocketC , Send SOCKET C.)
+
+
 #endif

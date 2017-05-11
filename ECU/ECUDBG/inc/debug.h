@@ -10,6 +10,7 @@ typedef enum DEBUG {
   ECU_DBG_CONTROL_CLIENT = 4,
 	ECU_DBG_NTP = 5,
 	ECU_DBG_OTHER = 6,
+	ECU_DBG_WIFI = 7,
 	
 }DebugType;
 
@@ -30,7 +31,7 @@ typedef enum DEBUG {
 #define ECU_DEBUG_CONTROL_CLIENT	ECU_DBG_ON
 #define ECU_DEBUG_NTP							ECU_DBG_ON
 #define ECU_DEBUG_OTHER						ECU_DBG_ON
-
+#define ECU_DEBUG_WIFI						ECU_DBG_ON
 
 extern void printmsg(DebugType type,char *msg);		//´òÓ¡×Ö·û´®
 extern void print2msg(DebugType type,char *msg1, char *msg2);		//´òÓ¡×Ö·û´®

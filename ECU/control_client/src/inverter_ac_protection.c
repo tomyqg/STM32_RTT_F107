@@ -5,7 +5,7 @@
 #include "debug.h"
 #include "myfile.h"
 #include "rtthread.h"
-
+#include "dfs_posix.h"
 /*********************************************************************
 setpropa表格字段：
 parameter_name,parameter_value,set_flag             primary key(parameter_name)

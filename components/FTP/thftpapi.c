@@ -306,6 +306,7 @@ int ftp_pasv_connect( int c_sock )
     //Á¬½ÓPASV¶Ë¿Ú
     memset(buf,0x00, sizeof(buf));
     sprintf( buf, "%d.%d.%d.%d",addr[0],addr[1],addr[2],addr[3]);
+	printf("%s %d\n",buf,(addr[4]*256+addr[5]));
     r_sock = socket_connect(buf,addr[4]*256+addr[5]);
      
     return r_sock;

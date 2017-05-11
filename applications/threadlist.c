@@ -222,32 +222,30 @@ static void lan8720_rst_thread_entry(void* parameter)
 #endif
 
 #ifdef THREAD_PRIORITY_WIFI_TEST
+#include "datetime.h"
 static void wifi_test_thread_entry(void* parameter)
 {
-	tcp_address_t address ;
-	char data[13] = "WIFI_TEST  ";
-	int length = 12;
+	char time[15] = {'\0'};
+	char data[28] = "               WIFI_TEST  ";
+	int length = 27;
 	char ch12 = 'A';
-	
+	rt_thread_delay(RT_TICK_PER_SECOND*15);	
 	WiFi_Open();
-	rt_thread_delay(RT_TICK_PER_SECOND*5);	
-	address.address_type = TYPE_IP;
-	address.address.ip[0] = 192;
-	address.address.ip[1] = 168;
-	address.address.ip[2] = 1;
-	address.address.ip[3] = 100;
-	address.port = 65500;
-	data[12] = '\0';
+	
+	data[26] = '\0';
 	while(1)
 	{
+		getcurrenttime(time);
+		memcpy(data,time,14);
 		if(ch12 >= 'Z')
 		{
-			ch12 = 'A' - 1;
+			ch12 = 'A';
 		}
-		data[11] = ch12;
+		data[26] = ch12;
 		rt_hw_us_delay(1);
-		//printf("%d:%s\n",length,data);
-		WiFi_SendData(address ,data ,length);	
+		printf("%d:%s\n",length,data);
+		SendToSocketB(data ,length);
+		SendToSocketC(data ,length);
 		rt_thread_delay(RT_TICK_PER_SECOND*5);
 		ch12++;
 	}
@@ -297,10 +295,12 @@ static void ntp_thread_entry(void* parameter)
 #endif
 
 #ifdef THREAD_PRIORITY_NET_TEST
+#include "datetime.h"
 static void net_test_thread_entry(void* parameter)
 {
-	char send_data[13] = "NET_TEST   ";
-	int length = 12;
+	char time[15] = {'\0'};
+	char send_data[28] = "               NET_TEST   ";
+	int length = 27;
 	char ch12 = 'A'; 
 	struct hostent *host;
 	int sock;
@@ -309,7 +309,7 @@ static void net_test_thread_entry(void* parameter)
 	
 	
 	/* 通过函数入口参数url获得host地址（如果是域名，会做域名解析） */
-	host = gethostbyname("192.168.1.100");
+	host = gethostbyname("192.168.1.103");
 
 	/* 创建一个socket，类型是SOCKET_STREAM，TCP类型 */
 	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -334,13 +334,16 @@ static void net_test_thread_entry(void* parameter)
 	}
 	while (1)
 	{
+		getcurrenttime(time);
+		memcpy(send_data,time,14);
 		if(ch12 >= 'Z')
 		{
-			ch12 = 'A' - 1;
+			ch12 = 'A';
 		}
-		send_data[11] = ch12;
+		send_data[26] = ch12;
 		send(sock, send_data, length, 0);
-		rt_thread_delay(RT_TICK_PER_SECOND);
+		printf("%d:%s\n",length,send_data);
+		rt_thread_delay(RT_TICK_PER_SECOND*10);
 		ch12++;
 	}
 

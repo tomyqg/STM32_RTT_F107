@@ -4,14 +4,15 @@
 #include <stdio.h>
 #include "debug.h"
 
-char funname[7][20] = {
+char funname[8][20] = {
 		"update",
 		"idwrite",
 		"main",
 		"client",
 		"control",
 		"ntp",
-		"other"
+		"other",
+		"wifi"
 };
 
 void printmsg(DebugType type,char *msg)		//打印字符串
@@ -51,6 +52,11 @@ void printmsg(DebugType type,char *msg)		//打印字符串
 			break;
 		case ECU_DBG_OTHER:
 			#if ECU_DEBUG_OTHER
+				printf("%s==>%s!\n",funname[type], msg);
+			#endif
+			break;
+		case ECU_DBG_WIFI:
+			#if ECU_DEBUG_WIFI
 				printf("%s==>%s!\n",funname[type], msg);
 			#endif
 			break;
@@ -99,6 +105,11 @@ void print2msg(DebugType type,char *msg1, char *msg2)		//打印字符串
 				printf("%s==>%s: %s!\n",funname[type], msg1, msg2);
 			#endif
 			break;
+		case ECU_DBG_WIFI:
+			#if ECU_DEBUG_WIFI
+				printf("%s==>%s: %s!\n",funname[type], msg1, msg2);
+			#endif
+			break;
 	}
 	
 #endif
@@ -141,6 +152,11 @@ void printdecmsg(DebugType type,char *msg, int data)		//打印整形数据
 			break;
 		case ECU_DBG_OTHER:
 			#if ECU_DEBUG_OTHER
+				printf("%s==>%s: %d!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_WIFI:
+			#if ECU_DEBUG_WIFI
 				printf("%s==>%s: %d!\n",funname[type], msg, data);
 			#endif
 			break;
@@ -188,6 +204,11 @@ void printhexdatamsg(DebugType type,char *msg, int data)		//打印16进制数据,ZK
 				printf("%s==>%s: %X!\n",funname[type], msg, data);
 			#endif
 			break;
+		case ECU_DBG_WIFI:
+			#if ECU_DEBUG_WIFI
+				printf("%s==>%s: %X!\n",funname[type], msg, data);
+			#endif
+			break;
 	}
 #endif
 }
@@ -229,6 +250,11 @@ void printfloatmsg(DebugType type,char *msg, float data)		//打印实数
 			break;
 		case ECU_DBG_OTHER:
 			#if ECU_DEBUG_OTHER
+				printf("%s==>%s: %f!\n",funname[type], msg, data);
+			#endif
+			break;
+		case ECU_DBG_WIFI:
+			#if ECU_DEBUG_WIFI
 				printf("%s==>%s: %f!\n",funname[type], msg, data);
 			#endif
 			break;
@@ -293,6 +319,14 @@ void printhexmsg(DebugType type,char *msg, char *data, int size)		//打印十六进制
 			break;
 		case ECU_DBG_OTHER:
 			#if ECU_DEBUG_OTHER
+				printf("%s==>%s: ",funname[type], msg);
+				for(i=0; i<size; i++)
+					printf("%02X, ", data[i]);
+				printf("\n");
+			#endif
+			break;
+		case ECU_DBG_WIFI:
+			#if ECU_DEBUG_WIFI
 				printf("%s==>%s: ",funname[type], msg);
 				for(i=0; i<size; i++)
 					printf("%02X, ", data[i]);
