@@ -37,7 +37,7 @@ typedef enum THREADTYPE {
 //远程控制线程
 //#define THREAD_PRIORITY_CONTROL_CLIENT		26
 //数据上传线程
-//#define THREAD_PRIORITY_CLIENT						27
+#define THREAD_PRIORITY_CLIENT						27
 
 //每个线程在开机后的启动时间,单位S
 #define START_TIME_UPDATE									0

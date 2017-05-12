@@ -20,7 +20,7 @@
 #include <lwip/sockets.h> /* 使用BSD socket，需要包含sockets.h头文件 */
 #include <zigbee.h>
 #include "debug.h"
-
+#include "usr_wifi232.h"
 
 #ifdef RT_USING_DFS
 #include <dfs_fs.h>
@@ -176,6 +176,8 @@ void rt_init_thread_entry(void* parameter)
 	{
 		rt_kprintf("Initialize record_data_lock successful!\n");
 	}
+	WiFi_Open();
+	initWorkIP("139.168.200.158",8093,"60.190.131.190",8997);
 }
 
 #ifdef THREAD_PRIORITY_LED

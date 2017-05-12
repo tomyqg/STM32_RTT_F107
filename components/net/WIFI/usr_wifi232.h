@@ -21,6 +21,12 @@ typedef struct
 	unsigned short port;	//端口号
 }tcp_address_t;
 
+typedef enum 
+{
+	SOCKET_A = 1,
+	SOCKET_B = 2,
+	SOCKET_C = 3,
+}SocketType;
 
 //打开WIFI串口 在使用WIFI的时候必须打开串口
 int WiFi_Open(void);		
@@ -66,10 +72,19 @@ int AT_WMODE(char *WMode);
 int AT_WSSSID(char *SSSID);
 //设置连接路由器KEY
 int AT_WSKEY(char *SKEY);
+//初始化WIFI模块为工作模式  //工作模式 socketB 和socketC为 client和Control_Client服务器配置信息
+int initWorkIP(char *clientIP,int clientPort,char *controlIP,int controlPort);
 
 /***********************************************************************/
 
+int WIFI_Create(SocketType Type);
+int WIFI_Close(SocketType Type);
+int WIFI_QueryStatus(SocketType Type);
+
+int SendToSocketA(char *data ,int length,char ID[8]);
 int SendToSocketB(char *data ,int length);
 int SendToSocketC(char *data ,int length);
+
+int RecvSocketData(SocketType Type,char *data,int timeout);
 
 #endif /*__USR_WIFI232_H__ */

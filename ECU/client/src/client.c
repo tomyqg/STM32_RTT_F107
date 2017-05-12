@@ -21,6 +21,7 @@
 #include <lwip/netdb.h> 
 #include <lwip/sockets.h> 
 #include "threadlist.h"
+#include "usr_wifi232.h"
 
 extern rt_mutex_t record_data_lock;
 
@@ -580,6 +581,24 @@ int send_record(int fd_sock, char *sendbuff, char *send_date_time)			//·¢ËÍÊı¾İµ
 }
 
 
+int wifi_send_record(char *sendbuff, char *send_date_time)		//Í¨¹ıWIFI·¢ËÍÊı¾İµ½EMA  ×¢ÒâÔÚ´æ´¢µÄÊ±ºò½áÎ²Î´Ìí¼Ó'\n'  ÔÚ·¢ËÍÊ±µÄÊ±ºò¼ÇµÃÌí¼Ó
+{
+	char readbuff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};
+	SendToSocketB(sendbuff, strlen(sendbuff));
+
+	if(-1 == RecvSocketData(SOCKET_B, readbuff,10))
+		return -1;
+	else
+	{
+		if('1' == readbuff[9])
+			update_send_flag(send_date_time);
+		clear_send_flag(&readbuff[9]);
+		return 0;
+	}
+
+}
+
+
 int preprocess()			//·¢ËÍÍ·ĞÅÏ¢µ½EMA,¶ÁÈ¡ÒÑ¾­´æÔÚEMAµÄ¼ÇÂ¼Ê±¼ä
 {
 	int sendbytes=0;
@@ -619,6 +638,22 @@ int preprocess()			//·¢ËÍÍ·ĞÅÏ¢µ½EMA,¶ÁÈ¡ÒÑ¾­´æÔÚEMAµÄ¼ÇÂ¼Ê±¼ä
 			else
 				break;
 		}
+	}else
+	{	//Á¬½Ó·şÎñÆ÷Ê§°Ü,Ê¹ÓÃWIFI´«ÊäÊı¾İ
+		if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
+		{
+			//´´½¨³É¹¦
+			while(1)
+			{
+				memset(readbuff, '\0', sizeof(readbuff));
+				SendToSocketB(sendbuff, strlen(sendbuff));
+				if(RecvSocketData(SOCKET_B,readbuff,5)> 9)
+					clear_send_flag(&readbuff[9]);
+				else
+					break;
+			}
+		}
+		WIFI_Close(SOCKET_B);
 	}
 
 	close_socket(fd_sock);
@@ -641,13 +676,30 @@ int resend_record()
 	{
 		while(search_readflag(data,time,&flag,'2'))		//	»ñÈ¡Ò»ÌõresendflagÎª1µÄÊı¾İ
 		{
-				if(1 == flag)		// »¹´æÔÚĞèÒªÉÏ´«µÄÊı¾İ
+			if(1 == flag)		// »¹´æÔÚĞèÒªÉÏ´«µÄÊı¾İ
 					data[78] = '1';
 			printmsg(ECU_DBG_CLIENT,data);
 			res = send_record(fd_sock, data, time);
 			if(-1 == res)
 				break;
 		}
+	}else
+	{
+		//Á¬½Ó·şÎñÆ÷Ê§°Ü,Ê¹ÓÃWIFI´«ÊäÊı¾İ
+		if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
+		{
+			//´´½¨³É¹¦
+			while(search_readflag(data,time,&flag,'2'))
+			{
+				if(1 == flag)		// »¹´æÔÚĞèÒªÉÏ´«µÄÊı¾İ
+					data[78] = '1';
+				printmsg(ECU_DBG_CLIENT,data);
+				res = wifi_send_record(data, time);
+				if(-1 == res)
+					break;
+			}
+		}
+		WIFI_Close(SOCKET_B);
 	}
 	close_socket(fd_sock);
 	free(data);
@@ -701,6 +753,29 @@ void client_thread_entry(void* parameter)
 				memset(data,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL));
 				memset(time,0,15);
 			}
+		}else
+		{
+			if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
+			{
+				while(search_readflag(data,time,&flag,'1'))		//	»ñÈ¡Ò»ÌõresendflagÎª1µÄÊı¾İ
+				{
+					if(compareTime(thistime ,lasttime,300))
+					{
+						break;
+					}
+					if(1 == flag)		// »¹´æÔÚĞèÒªÉÏ´«µÄÊı¾İ
+							data[78] = '1';
+					printmsg(ECU_DBG_CLIENT,data);
+					res = wifi_send_record(data, time);
+					if(-1 == res)
+						break;
+					thistime = acquire_time();
+					memset(data,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL));
+					memset(time,0,15);
+				}
+			}
+			WIFI_Close(SOCKET_B);
+			
 		}
 		close_socket(fd_sock);
 		delete_file_resendflag0();		//Çå¿ÕÊı¾İresend±êÖ¾È«²¿Îª0µÄÄ¿Â¼
