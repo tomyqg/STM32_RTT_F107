@@ -176,8 +176,11 @@ void rt_init_thread_entry(void* parameter)
 	{
 		rt_kprintf("Initialize record_data_lock successful!\n");
 	}
+#ifdef WIFI_USE
 	WiFi_Open();
-	initWorkIP("139.168.200.158",8093,"60.190.131.190",8997);
+	//initWorkIP("192.168.1.102",65500,"192.168.1.102",65501);
+	//initWorkIP("139.168.200.158",8093,"60.190.131.190",8997);
+#endif
 }
 
 #ifdef THREAD_PRIORITY_LED
@@ -468,7 +471,7 @@ void restartThread(threadType type)
 	{
 #ifdef THREAD_PRIORITY_LED
 		case TYPE_LED:
-			rt_thread_detach(&idwrite_thread);
+			rt_thread_detach(&led_thread);
 			/* init led thread */
 			result = rt_thread_init(&led_thread,"led",led_thread_entry,RT_NULL,(rt_uint8_t*)&led_stack[0],sizeof(led_stack),THREAD_PRIORITY_LED,5);
 			if (result == RT_EOK)

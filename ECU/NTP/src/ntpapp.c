@@ -38,6 +38,7 @@ int get_time_from_NTP()
   if(-1==ret)
   {
     printmsg(ECU_DBG_NTP,"Connect server error!");
+	closesocket(sockfd);
     return -1;
   }
   else{

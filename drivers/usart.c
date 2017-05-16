@@ -640,6 +640,8 @@ void rt_hw_usart_init(void)
 
     serial1.ops    = &stm32_uart_ops;
     serial1.config = config;
+	//buff¥Û–°
+	//serial1.config.bufsz = 2048;
 
     NVIC_Configuration(uart);
 

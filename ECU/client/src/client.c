@@ -638,6 +638,7 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 			else
 				break;
 		}
+#ifdef WIFI_USE		
 	}else
 	{	//连接服务器失败,使用WIFI传输数据
 		if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
@@ -654,6 +655,7 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 			}
 		}
 		WIFI_Close(SOCKET_B);
+#endif
 	}
 
 	close_socket(fd_sock);
@@ -683,6 +685,7 @@ int resend_record()
 			if(-1 == res)
 				break;
 		}
+#ifdef WIFI_USE 
 	}else
 	{
 		//连接服务器失败,使用WIFI传输数据
@@ -700,6 +703,7 @@ int resend_record()
 			}
 		}
 		WIFI_Close(SOCKET_B);
+#endif
 	}
 	close_socket(fd_sock);
 	free(data);
@@ -753,6 +757,7 @@ void client_thread_entry(void* parameter)
 				memset(data,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL));
 				memset(time,0,15);
 			}
+#ifdef WIFI_USE			
 		}else
 		{
 			if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
@@ -775,7 +780,7 @@ void client_thread_entry(void* parameter)
 				}
 			}
 			WIFI_Close(SOCKET_B);
-			
+#endif	
 		}
 		close_socket(fd_sock);
 		delete_file_resendflag0();		//清空数据resend标志全部为0的目录

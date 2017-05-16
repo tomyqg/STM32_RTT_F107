@@ -55,9 +55,12 @@ int selectWiFi(int timeout)			//Wifi串口数据检测 返回0 表示串口没有数据  返回1表
 
 void clear_WIFI(void)		//清空串口缓冲区的数据
 {
-	char data[256];
+	char *data = NULL;
+	data = malloc(2048);
+	
 	//清空缓冲器代码	通过将接收缓冲区的所有数据都读取出来，从而清空数据
-	WIFI_SERIAL.read(&WIFI_SERIAL,0, data, 256);
+	WIFI_SERIAL.read(&WIFI_SERIAL,0, data, 2048);
+	free(data);
 	rt_thread_delay(RT_TICK_PER_SECOND/10);
 }
 
@@ -649,8 +652,8 @@ static int WiFi_RecvData(int timeout,char *data)
 	}
 	else
 	{
-		length = WIFI_SERIAL.read(&WIFI_SERIAL,0, data, 255);
-		printf("length : %d  %s\n",length,&data[9]);
+		length = WIFI_SERIAL.read(&WIFI_SERIAL,0, data, 2048);
+		//printf("length : %d  %s\n",length,&data[9]);
 		return length;
 	}
 }
@@ -682,6 +685,7 @@ int RecvSocketData(SocketType Type,char *data,int timeout)
 				if(lengthA != 0)
 				{
 					memcpy(data,dataA,lengthA);
+					data[lengthA] = '\0';
 					length = lengthA;
 					lengthA = 0;
 					rt_mutex_release(WIFI_lock);
@@ -692,6 +696,7 @@ int RecvSocketData(SocketType Type,char *data,int timeout)
 				if(lengthB != 0)
 				{
 					memcpy(data,dataB,lengthB);
+					data[lengthB] = '\0';
 					length = lengthB;
 					lengthB = 0;
 					rt_mutex_release(WIFI_lock);
@@ -702,6 +707,7 @@ int RecvSocketData(SocketType Type,char *data,int timeout)
 				if(lengthC != 0)
 				{
 					memcpy(data,dataC,lengthC);
+					data[lengthC] = '\0';
 					length = lengthC;
 					lengthC = 0;
 					rt_mutex_release(WIFI_lock);
@@ -1151,6 +1157,32 @@ void testWIFIRecv(SocketType Type,int timeout)	//无线接收测试
 	rt_kprintf("WiFi_RecvData:%d   %s\n",length,&data[9]);
 }
 FINSH_FUNCTION_EXPORT(testWIFIRecv , WIFI Recv Test.)
+
+
+void WIFIRecvTest(SocketType Type)
+{
+	char *data = NULL;
+	int length = 0;
+	data = malloc(2048);
+
+	while(1)
+	{
+		memset(data,0x00,2048);
+		length = RecvSocketData(Type,data,5);
+		if(!memcmp(data,"quit",4))
+		{
+			free(data);
+			return;
+		}
+		printf("WIFIRecvTest: %d\n",length);
+		printf("%s\n",&data[9]);
+		
+	}
+	free(data);
+}
+FINSH_FUNCTION_EXPORT(WIFIRecvTest , WIFI Recv Test.)
+
+
 
 FINSH_FUNCTION_EXPORT(AT , Into AT Mode.)
 FINSH_FUNCTION_EXPORT(WiFi_Open , Open WIFI Modle.)

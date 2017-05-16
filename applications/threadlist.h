@@ -3,6 +3,10 @@
 
 #include <rtthread.h>
 
+
+
+#define WIFI_USE 
+
 typedef enum THREADTYPE {
 	TYPE_LED = 1,
 	TYPE_LANRST = 2,
@@ -19,7 +23,7 @@ typedef enum THREADTYPE {
 //LAN8720A检测复位线程
 #define THREAD_PRIORITY_LAN8720_RST				17
 //LED 闪烁线程
-//#define THREAD_PRIORITY_LED               20
+#define THREAD_PRIORITY_LED               20
 
 //测试相关线程
 //#define THREAD_PRIORITY_WIFI_TEST					21
@@ -37,7 +41,7 @@ typedef enum THREADTYPE {
 //远程控制线程
 //#define THREAD_PRIORITY_CONTROL_CLIENT		26
 //数据上传线程
-#define THREAD_PRIORITY_CLIENT						27
+//#define THREAD_PRIORITY_CLIENT						27
 
 //每个线程在开机后的启动时间,单位S
 #define START_TIME_UPDATE									0
