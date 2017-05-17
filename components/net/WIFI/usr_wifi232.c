@@ -653,7 +653,7 @@ static int WiFi_RecvData(int timeout,char *data)
 	else
 	{
 		length = WIFI_SERIAL.read(&WIFI_SERIAL,0, data, 2048);
-		//printf("length : %d  %s\n",length,&data[9]);
+		printf("length : %d  %s\n",length,&data[9]);
 		return length;
 	}
 }
@@ -765,6 +765,7 @@ int SendToSocketA(char *data ,int length,char ID[8])
 
 	free(sendbuff);
 	sendbuff = NULL;
+	rt_thread_delay(RT_TICK_PER_SECOND/4);
 	return 0;
 }
 
@@ -781,6 +782,7 @@ int SendToSocketB(char *data ,int length)
 
 	free(sendbuff);
 	sendbuff = NULL;
+	rt_thread_delay(RT_TICK_PER_SECOND/4);
 	return 0;
 }
 
@@ -789,6 +791,7 @@ int SendToSocketC(char *data ,int length)
 	char *sendbuff = NULL;
 	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
 	sendbuff = malloc(4096);
+	print2msg(ECU_DBG_WIFI,"SendToSocketC",data);
 	sprintf(sendbuff,"c00000000%s",data);
 	clear_WIFI();
 	lengthC = 0;
@@ -796,6 +799,7 @@ int SendToSocketC(char *data ,int length)
 
 	free(sendbuff);
 	sendbuff = NULL;
+	rt_thread_delay(RT_TICK_PER_SECOND/4);
 	return 0;
 }
 
@@ -1010,6 +1014,7 @@ int WIFI_Create(SocketType Type)
 			//创建连接成功
 			printmsg(ECU_DBG_WIFI,"WIFI_CreateSocket Successful");
 			rt_mutex_release(WIFI_lock);
+			rt_thread_delay(RT_TICK_PER_SECOND);
 			return 0;
 		}else
 		{

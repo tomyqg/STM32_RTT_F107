@@ -1021,7 +1021,7 @@ int check_inverter_abnormal_status_sent(int hour)
 	{
 #ifdef WIFI_USE	
 		//有线连接失败，使用wifi传输 
-		if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
+		if((1 == WIFI_QueryStatus(SOCKET_C)) || (0 == WIFI_Create(SOCKET_C)))
 		{
 			strcpy(send_buffer, "APS13AAA51A123AAA0");
 			strcat(send_buffer, ecuid);
@@ -1030,32 +1030,34 @@ int check_inverter_abnormal_status_sent(int hour)
 			
 			//接收EMA应答
 			if(RecvSocketData(SOCKET_C, recv_buffer,sockcfg.timeout) <= 0){
-				closesocket(sockfd);
+				WIFI_Close(SOCKET_C);
 				rt_free(recv_buffer);
 				rt_free(send_buffer);
 				return -1;
 			}
+			//去掉usr WIFI报文的头部
+			memcpy(recv_buffer,&recv_buffer[9],strlen(&recv_buffer[9]));
 			//校验命令
-			if(msg_format_check(&recv_buffer[9]) < 0){
-				closesocket(sockfd);
+			if(msg_format_check(recv_buffer) < 0){
+				WIFI_Close(SOCKET_C);
 				rt_free(recv_buffer);
 				rt_free(send_buffer);
 				return 0;
 			}
 			//解析收到的时间戳,并删除EMA已存的数据(将其改为0)
-			flag = msg_get_int(&recv_buffer[27], 1);
+			flag = msg_get_int(&recv_buffer[18], 1);
 			num = 0;
 			if(flag){
-				num = msg_get_int(&recv_buffer[28], 2);
+				num = msg_get_int(&recv_buffer[19], 2);
 				for(i=0; i<num; i++){
-					strncpy(datetime, &recv_buffer[30 + i*14], 14);
+					strncpy(datetime, &recv_buffer[21 + i*14], 14);
 					change_statusflag(datetime,'0');
 				}
 			}
 
 			//将flag=2的数据改为flag=1
 			change_statusflag1();
-			closesocket(sockfd);
+			WIFI_Close(SOCKET_C);
 			
 			//如果所有标志为0，则清空数据
 			delete_statusflag0();
@@ -1071,12 +1073,7 @@ int check_inverter_abnormal_status_sent(int hour)
 			return -1;
 #ifdef WIFI_USE	
 		}
-		WIFI_Close(SOCKET_B);
-#endif
-
-		
-	
-		
+#endif		
 	}else
 	{
 		strcpy(send_buffer, "APS13AAA51A123AAA0");
@@ -1160,46 +1157,47 @@ int response_inverter_abnormal_status()
 	{
 #ifdef WIFI_USE	
 		//有线连接失败，使用wifi传输 
-		if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
+		if((1 == WIFI_QueryStatus(SOCKET_C)) || (0 == WIFI_Create(SOCKET_C)))
 		{
 			//创建SOCKET成功
 			//逐条发送逆变器异常状态
 			while(search_statusflag(data,time,&havaflag,'1'))		//	获取一条resendflag为1的数据
 			{	
 				//发送一条逆变器异常状态信息
-				
 				if(SendToSocketC(data, strlen(data)) < 0){
 					continue;
 				}
 				//接收EMA应答
 				if(RecvSocketData(SOCKET_C, recv_buffer,sockcfg.timeout) <= 0){
-					closesocket(sockfd);
+					WIFI_Close(SOCKET_C);
 					rt_free(recv_buffer);
 					rt_free(command);
 					rt_free(send_buffer);
 					return -1;
 				}
+				//去掉usr WIFI报文的头部
+				memcpy(recv_buffer,&recv_buffer[9],strlen(&recv_buffer[9]));
 				//校验命令
-				if(msg_format_check(&recv_buffer[9]) < 0){
+				if(msg_format_check(recv_buffer) < 0){
 					continue;
 				}
 				//将发送和接受都成功的那一条状态的标志置2
 				change_statusflag(time,'2');
 				//解析收到的时间戳,并删除EMA已存数据
-				flag = msg_get_int(&recv_buffer[27], 1);
+				flag = msg_get_int(&recv_buffer[18], 1);
 				num = 0;
 				if(flag){
-					num = msg_get_int(&recv_buffer[28], 2);
+					num = msg_get_int(&recv_buffer[19], 2);
 					for(j=0; j<num; j++){
-						strncpy(datetime, &recv_buffer[30 + j*14], 14);
+						strncpy(datetime, &recv_buffer[21 + j*14], 14);
 						change_statusflag(datetime,'0');
 					}
 				}
 				
 				//判断应答帧是否附带命令
-				if(strlen(&recv_buffer[9]) > (24 + 14*num)){
+				if(strlen(recv_buffer) > (24 + 14*num)){
 					memset(command, 0, sizeof(command));
-					strncpy(command, &recv_buffer[34 + 14*num], sizeof(command));
+					strncpy(command, &recv_buffer[24 + 14*num], sizeof(command));
 					print2msg(ECU_DBG_CONTROL_CLIENT,"Command", command);
 					//校验命令
 					if(msg_format_check(command) < 0)
@@ -1209,7 +1207,7 @@ int response_inverter_abnormal_status()
 
 					if(cmd_id==118)
 					{
-						strncpy(da_time, &recv_buffer[81],14);
+						strncpy(da_time, &recv_buffer[72],14);
 						
 						fp=fopen("/yuneng/A118.con","w");
 						if(fp==NULL)
@@ -1226,7 +1224,7 @@ int response_inverter_abnormal_status()
 								
 								memset(send_buffer,0x00,1024);
 								msg_ACK(send_buffer, "A118", da_time, 0);
-								send_socket(sockfd, send_buffer, strlen(send_buffer));
+								SendToSocketC(send_buffer, strlen(send_buffer));
 								printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
 								printdecmsg(ECU_DBG_CONTROL_CLIENT,"socked",sockfd);
 								result=1;break;
@@ -1251,7 +1249,7 @@ int response_inverter_abnormal_status()
 			}
 			//清空inversta的flag标志位为0的标志
 			delete_statusflag0();
-			closesocket(sockfd);
+			WIFI_Close(SOCKET_C);
 			rt_free(recv_buffer);
 			rt_free(command);
 			rt_free(send_buffer);
@@ -1269,7 +1267,6 @@ int response_inverter_abnormal_status()
 
 #ifdef WIFI_USE	
 		}
-		WIFI_Close(SOCKET_B);
 #endif
 	}
 	else
@@ -1391,81 +1388,170 @@ int communication_with_EMA(int next_cmd_id)
 		sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);
 		if(sockfd < 0) 
 		{
-			rt_free(recv_buffer);
-			rt_free(send_buffer);
-			return -1;
-		}
-		if(next_cmd_id <= 0)
-		{
-			//ECU向EMA发送请求命令指令
-			msg_REQ(send_buffer);
-			send_socket(sockfd, send_buffer, strlen(send_buffer));
-			memset(send_buffer, '\0', sizeof(send_buffer));
+#ifdef WIFI_USE	
+			//有线连接失败，使用wifi传输 
+			if((1 == WIFI_QueryStatus(SOCKET_C)) || (0 == WIFI_Create(SOCKET_C)))
+			{
+				if(next_cmd_id <= 0)
+				{
+					//ECU向EMA发送请求命令指令
+					msg_REQ(send_buffer);
+					SendToSocketC(send_buffer, strlen(send_buffer));
+					memset(send_buffer, '\0', sizeof(send_buffer));
 
-			//接收EMA发来的命令
-			if(recv_socket(sockfd, recv_buffer, sizeof(recv_buffer), sockcfg.timeout) < 0){
+					//接收EMA发来的命令
+					if(RecvSocketData(SOCKET_C, recv_buffer,sockcfg.timeout) < 0){
+						WIFI_Close(SOCKET_C);
+						rt_free(recv_buffer);
+						rt_free(send_buffer);
+						return -1;
+					}
+					//去掉usr WIFI报文的头部
+					memcpy(recv_buffer,&recv_buffer[9],strlen(&recv_buffer[9]));
+					//校验命令
+					if(msg_format_check(recv_buffer) < 0){
+						closesocket(sockfd);
+						continue;
+					}
+					//解析命令号
+					cmd_id = msg_cmd_id(recv_buffer);
+				}
+				else{
+					//生成下一条命令(用于设置命令结束后,上报设置后的ECU状态)
+					cmd_id = next_cmd_id;
+					next_cmd_id = 0;
+					memset(recv_buffer, 0, sizeof(recv_buffer));
+					snprintf(recv_buffer, 51+1, "APS13AAA51A101AAA0%.12sA%3d%.14sEND",
+							ecuid, cmd_id, timestamp);
+				}
+
+				//ECU注册后初次和EMA通讯
+				if(cmd_id == 118){
+					if(one_a118==0){
+						one_a118=1;
+						//system("rm /etc/yuneng/fill_up_data.conf");
+						//system("echo '1'>>/etc/yuneng/fill_up_data.conf");
+						//system("killall main.exe");
+					}
+					strncpy(timestamp, &recv_buffer[34], 14);
+					next_cmd_id = first_time_info(recv_buffer, send_buffer);
+					if(next_cmd_id == 0){
+						strncpy(timestamp, "00000000000000", 14);
+					}
+				}
+				//根据命令号调用函数
+				else if(pfun[cmd_id%100]){
+					//若设置函数调用完毕后需要执行上报,则会返回上报函数的命令号,否则返回0
+					next_cmd_id = (*pfun[cmd_id%100])(recv_buffer, send_buffer);
+				}
+				//EMA命令发送完毕
+				else if(cmd_id == 100){
+					WIFI_Close(SOCKET_C);
+					break;
+				}
+				else{
+					//若命令号不存在,则发送设置失败应答(每条设置协议的时间戳位置不统一,返回时间戳是个问题...)
+					memset(send_buffer, 0, sizeof(send_buffer));
+					snprintf(send_buffer, 52+1, "APS13AAA52A100AAA0%sA%3d000000000000002END",
+							ecuid, cmd_id);
+				}
+				//将消息发送给EMA(自动计算长度,补上回车)
+				SendToSocketC(send_buffer, strlen(send_buffer));
+				printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
+				WIFI_Close(SOCKET_C);
+
+				//如果功能函数返回值小于0,则返回-1,程序会自动退出
+				if(next_cmd_id < 0){
+					rt_free(recv_buffer);
+					rt_free(send_buffer);
+					return -1;
+				}				
+			}
+			else
+			{
+#endif
+				rt_free(recv_buffer);
+				rt_free(send_buffer);
+				return -1;
+#ifdef WIFI_USE	
+			}
+			
+#endif
+		}
+		else
+		{
+			if(next_cmd_id <= 0)
+			{
+				//ECU向EMA发送请求命令指令
+				msg_REQ(send_buffer);
+				send_socket(sockfd, send_buffer, strlen(send_buffer));
+				memset(send_buffer, '\0', sizeof(send_buffer));
+
+				//接收EMA发来的命令
+				if(recv_socket(sockfd, recv_buffer, sizeof(recv_buffer), sockcfg.timeout) < 0){
+					closesocket(sockfd);
+					rt_free(recv_buffer);
+					rt_free(send_buffer);
+					return -1;
+				}
+				//校验命令
+				if(msg_format_check(recv_buffer) < 0){
+					closesocket(sockfd);
+					continue;
+				}
+				//解析命令号
+				cmd_id = msg_cmd_id(recv_buffer);
+			}
+			else{
+				//生成下一条命令(用于设置命令结束后,上报设置后的ECU状态)
+				cmd_id = next_cmd_id;
+				next_cmd_id = 0;
+				memset(recv_buffer, 0, sizeof(recv_buffer));
+				snprintf(recv_buffer, 51+1, "APS13AAA51A101AAA0%.12sA%3d%.14sEND",
+						ecuid, cmd_id, timestamp);
+			}
+
+			//ECU注册后初次和EMA通讯
+			if(cmd_id == 118){
+				if(one_a118==0){
+					one_a118=1;
+					//system("rm /etc/yuneng/fill_up_data.conf");
+					//system("echo '1'>>/etc/yuneng/fill_up_data.conf");
+					//system("killall main.exe");
+				}
+				strncpy(timestamp, &recv_buffer[34], 14);
+				next_cmd_id = first_time_info(recv_buffer, send_buffer);
+				if(next_cmd_id == 0){
+					strncpy(timestamp, "00000000000000", 14);
+				}
+			}
+			//根据命令号调用函数
+			else if(pfun[cmd_id%100]){
+				//若设置函数调用完毕后需要执行上报,则会返回上报函数的命令号,否则返回0
+				next_cmd_id = (*pfun[cmd_id%100])(recv_buffer, send_buffer);
+			}
+			//EMA命令发送完毕
+			else if(cmd_id == 100){
 				closesocket(sockfd);
+				break;
+			}
+			else{
+				//若命令号不存在,则发送设置失败应答(每条设置协议的时间戳位置不统一,返回时间戳是个问题...)
+				memset(send_buffer, 0, sizeof(send_buffer));
+				snprintf(send_buffer, 52+1, "APS13AAA52A100AAA0%sA%3d000000000000002END",
+						ecuid, cmd_id);
+			}
+			//将消息发送给EMA(自动计算长度,补上回车)
+			send_socket(sockfd, send_buffer, strlen(send_buffer));
+			printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
+			closesocket(sockfd);
+
+			//如果功能函数返回值小于0,则返回-1,程序会自动退出
+			if(next_cmd_id < 0){
 				rt_free(recv_buffer);
 				rt_free(send_buffer);
 				return -1;
 			}
-			//校验命令
-			if(msg_format_check(recv_buffer) < 0){
-				closesocket(sockfd);
-				continue;
-			}
-			//解析命令号
-			cmd_id = msg_cmd_id(recv_buffer);
-		}
-		else{
-			//生成下一条命令(用于设置命令结束后,上报设置后的ECU状态)
-			cmd_id = next_cmd_id;
-			next_cmd_id = 0;
-			memset(recv_buffer, 0, sizeof(recv_buffer));
-			snprintf(recv_buffer, 51+1, "APS13AAA51A101AAA0%.12sA%3d%.14sEND",
-					ecuid, cmd_id, timestamp);
-		}
-
-		//ECU注册后初次和EMA通讯
-		if(cmd_id == 118){
-			if(one_a118==0){
-				one_a118=1;
-				//system("rm /etc/yuneng/fill_up_data.conf");
-				//system("echo '1'>>/etc/yuneng/fill_up_data.conf");
-				//system("killall main.exe");
-			}
-			strncpy(timestamp, &recv_buffer[34], 14);
-			next_cmd_id = first_time_info(recv_buffer, send_buffer);
-			if(next_cmd_id == 0){
-				strncpy(timestamp, "00000000000000", 14);
-			}
-		}
-		//根据命令号调用函数
-		else if(pfun[cmd_id%100]){
-			//若设置函数调用完毕后需要执行上报,则会返回上报函数的命令号,否则返回0
-			next_cmd_id = (*pfun[cmd_id%100])(recv_buffer, send_buffer);
-		}
-		//EMA命令发送完毕
-		else if(cmd_id == 100){
-			closesocket(sockfd);
-			break;
-		}
-		else{
-			//若命令号不存在,则发送设置失败应答(每条设置协议的时间戳位置不统一,返回时间戳是个问题...)
-			memset(send_buffer, 0, sizeof(send_buffer));
-			snprintf(send_buffer, 52+1, "APS13AAA52A100AAA0%sA%3d000000000000002END",
-					ecuid, cmd_id);
-		}
-		//将消息发送给EMA(自动计算长度,补上回车)
-		send_socket(sockfd, send_buffer, strlen(send_buffer));
-		printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
-		closesocket(sockfd);
-
-		//如果功能函数返回值小于0,则返回-1,程序会自动退出
-		if(next_cmd_id < 0){
-			rt_free(recv_buffer);
-			rt_free(send_buffer);
-			return -1;
 		}
 	}
 	printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
@@ -1492,16 +1578,41 @@ int response_process_result()
 		{
 			printmsg(ECU_DBG_CONTROL_CLIENT,">>Start Response ECU Process Result");
 			sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);
-			if(sockfd < 0) return -1;
-			//发送一条记录
-			if(send_socket(sockfd, data, strlen(data)) < 0){
+			if(sockfd < 0) 
+			{
+#ifdef WIFI_USE	
+				//有线连接失败，使用wifi传输 
+				if((1 == WIFI_QueryStatus(SOCKET_C)) || (0 == WIFI_Create(SOCKET_C)))
+				{
+					//发送一条记录
+					if(SendToSocketC(data, strlen(data)) < 0){
+						WIFI_Close(SOCKET_C);
+						continue;
+					}
+					//发送成功则将标志位置0
+					change_pro_result_flag(item,'0');
+					WIFI_Close(SOCKET_C);
+					printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
+				
+				}else
+				{
+#endif
+					return -1;
+#ifdef WIFI_USE				
+				}
+#endif				
+			}else
+			{
+				//发送一条记录
+				if(send_socket(sockfd, data, strlen(data)) < 0){
+					closesocket(sockfd);
+					continue;
+				}
+				//发送成功则将标志位置0
+				change_pro_result_flag(item,'0');
 				closesocket(sockfd);
-				continue;
+				printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
 			}
-			//发送成功则将标志位置0
-			change_pro_result_flag(item,'0');
-			closesocket(sockfd);
-			printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
 		}				
 		delete_pro_result_flag0();
 		
@@ -1514,13 +1625,36 @@ int response_process_result()
 			//发送数据
 			printmsg(ECU_DBG_CONTROL_CLIENT,">>Start Response Inverter Process Result");
 			sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);
-			if(sockfd < 0) return -1;
-			if(send_socket(sockfd, sendbuffer, strlen(sendbuffer)) < 0){
+			if(sockfd < 0)
+			{
+#ifdef WIFI_USE	
+				//有线连接失败，使用wifi传输 
+				if((1 == WIFI_QueryStatus(SOCKET_C)) || (0 == WIFI_Create(SOCKET_C)))
+				{
+					if(SendToSocketC(sendbuffer, strlen(sendbuffer)) < 0){
+					WIFI_Close(SOCKET_C);
+					continue;
+					}
+					change_inv_pro_result_flag(item,'0');
+					WIFI_Close(SOCKET_C);			
+									
+				}else
+				{
+#endif
+					return -1;
+#ifdef WIFI_USE				
+				}
+#endif		
+			}else
+			{
+				if(send_socket(sockfd, sendbuffer, strlen(sendbuffer)) < 0){
 				closesocket(sockfd);
 				continue;
+				}
+				change_inv_pro_result_flag(item,'0');
+				closesocket(sockfd);
 			}
-			change_inv_pro_result_flag(item,'0');
-			closesocket(sockfd);
+
 		}
 		delete_inv_pro_result_flag0();
 
@@ -1555,6 +1689,7 @@ void control_client_thread_entry(void* parameter)
 	/* ECU轮训主循环 */
 	while(1)
 	{
+		printf("1---------------------->\n");
 		//每天一点时向EMA确认逆变器异常状态是否被存储
 		check_inverter_abnormal_status_sent(1);
  
@@ -1568,7 +1703,7 @@ void control_client_thread_entry(void* parameter)
 			fclose(fp);
 			unlink("/yuneng/A118.con");
 		}
-
+		printf("2---------------------->\n");
 		if(exist_inverter_abnormal_status() && ecu_flag){
 			ecu_time =  acquire_time();
 			result = response_inverter_abnormal_status();
@@ -1580,7 +1715,9 @@ void control_client_thread_entry(void* parameter)
 			if(ecu_flag){ //如果ecu_flag = 0 则不上报处理结果
 				response_process_result();
 			}
+			printf("3---------------------->\n");
 			result = communication_with_EMA(0);
+			printf("4---------------------->\n");
 		}
 		//程序自行跳过本次循环
 		if(result < 0){

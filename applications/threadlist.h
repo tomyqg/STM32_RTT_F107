@@ -39,7 +39,7 @@ typedef enum THREADTYPE {
 //数据采集主线程
 //#define THREAD_PRIORITY_MAIN	            24
 //远程控制线程
-//#define THREAD_PRIORITY_CONTROL_CLIENT		26
+#define THREAD_PRIORITY_CONTROL_CLIENT		26
 //数据上传线程
 //#define THREAD_PRIORITY_CLIENT						27
 
@@ -48,7 +48,7 @@ typedef enum THREADTYPE {
 #define START_TIME_NTP										10
 #define START_TIME_IDWRITE								5
 #define START_TIME_MAIN										20
-#define START_TIME_CONTROL_CLIENT					60
+#define START_TIME_CONTROL_CLIENT					30
 #define START_TIME_CLIENT									120
 void tasks_new(void);//创建系统需要的线程
 
