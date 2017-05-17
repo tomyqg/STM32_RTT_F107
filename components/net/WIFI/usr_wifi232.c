@@ -653,7 +653,7 @@ static int WiFi_RecvData(int timeout,char *data)
 	else
 	{
 		length = WIFI_SERIAL.read(&WIFI_SERIAL,0, data, 2048);
-		printf("length : %d  %s\n",length,&data[9]);
+		//printf("length : %d  %s\n",length,&data[9]);
 		return length;
 	}
 }
@@ -726,19 +726,22 @@ int RecvSocketData(SocketType Type,char *data,int timeout)
 					memset(dataA,0x00,2048);
 					memcpy(dataA,socketdata,length);
 					lengthA = length;
-					printf("a %d\n",lengthA);
+					printdecmsg(ECU_DBG_WIFI,"a ",lengthA);
+					print2msg(ECU_DBG_WIFI,"a ",&dataA[9]);
 					break;
 				case 'b':
 					memset(dataB,0x00,2048);
 					memcpy(dataB,socketdata,length);
 					lengthB = length;
-					printf("b %d\n",lengthB);
+					printdecmsg(ECU_DBG_WIFI,"b ",lengthB);
+					print2msg(ECU_DBG_WIFI,"b ",&dataB[9]);
 					break;
 				case 'c':
 					memset(dataC,0x00,2048);
 					memcpy(dataC,socketdata,length);
 					lengthC = length;
-					printf("c %d\n",lengthC);
+					printdecmsg(ECU_DBG_WIFI,"c ",lengthC);
+					print2msg(ECU_DBG_WIFI,"c ",&dataC[9]);
 					break;
 			}
 		}else
@@ -773,34 +776,54 @@ int SendToSocketA(char *data ,int length,char ID[8])
 int SendToSocketB(char *data ,int length)
 {
 	char *sendbuff = NULL;
-	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
-	sendbuff = malloc(4096);
-	sprintf(sendbuff,"b00000000%s",data);
-	clear_WIFI();
-	lengthB = 0;
-	WIFI_SERIAL.write(&WIFI_SERIAL, 0,sendbuff, (length+9));
+	if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
+	{
+		rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+		sendbuff = malloc(4096);
+		sprintf(sendbuff,"b00000000%s",data);
+		clear_WIFI();
+		lengthB = 0;
+		WIFI_SERIAL.write(&WIFI_SERIAL, 0,sendbuff, (length+9));
 
-	free(sendbuff);
-	sendbuff = NULL;
-	rt_thread_delay(RT_TICK_PER_SECOND/4);
-	return 0;
+		free(sendbuff);
+		sendbuff = NULL;
+		rt_thread_delay(RT_TICK_PER_SECOND/4);
+		return 0;
+	}
+	return -1;
 }
 
 int SendToSocketC(char *data ,int length)
 {
 	char *sendbuff = NULL;
-	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
-	sendbuff = malloc(4096);
-	print2msg(ECU_DBG_WIFI,"SendToSocketC",data);
-	sprintf(sendbuff,"c00000000%s",data);
-	clear_WIFI();
-	lengthC = 0;
-	WIFI_SERIAL.write(&WIFI_SERIAL, 0,sendbuff, (length+9));
+	char msg_length[6] = {'\0'};
+	if((1 == WIFI_QueryStatus(SOCKET_C)) || (0 == WIFI_Create(SOCKET_C)))
+	{
+		rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+		sendbuff = malloc(4096);
 
-	free(sendbuff);
-	sendbuff = NULL;
-	rt_thread_delay(RT_TICK_PER_SECOND/4);
-	return 0;
+		if(data[strlen(data)-1] == '\n'){
+			sprintf(msg_length, "%05d", strlen(data)-1);
+		}
+		else{
+			sprintf(msg_length, "%05d", strlen(data));
+			strcat(data, "\n");
+		}
+		strncpy(&data[5], msg_length, 5);
+
+		
+		print2msg(ECU_DBG_WIFI,"SendToSocketC",data);
+		sprintf(sendbuff,"c00000000%s",data);
+		clear_WIFI();
+		lengthC = 0;
+		WIFI_SERIAL.write(&WIFI_SERIAL, 0,sendbuff, (length+10));
+
+		free(sendbuff);
+		sendbuff = NULL;
+		rt_thread_delay(RT_TICK_PER_SECOND/4);
+		return 0;
+	}
+	return -1;
 }
 
 
@@ -976,9 +999,10 @@ int WIFI_Create(SocketType Type)
 {
 	char send[50] = {'\0'};
 	char recv[255] = { '\0' };
+	int i = 0;
 	int length = 0;
 	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
-	clear_WIFI();
+	
 	send[0]= 0x65;
 	if(Type == SOCKET_B)
 		send[1]= 0x62;
@@ -991,39 +1015,42 @@ int WIFI_Create(SocketType Type)
 	send[3]= 0x01;
 	send[4]= 0x00;
 	send[5]= 0x02;
-	
-	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, 6);
-	printhexmsg(ECU_DBG_WIFI,"WIFI_CreateSocket send", send, 6);
-	
-	if(selectWiFi(10) <= 0)
+	for(i = 0;i<3;i++)
 	{
-		printmsg(ECU_DBG_WIFI,"WIFI_CreateSocket WIFI Get reply time out 1");
-		rt_mutex_release(WIFI_lock);
-		return -1;
-	}
-	else
-	{
-		length = WIFI_SERIAL.read(&WIFI_SERIAL,0, recv, 255);
-		printhexmsg(ECU_DBG_WIFI,"WIFI_CreateSocket", recv, length);
-		if( (recv[0] == 0x65)&&
-				(recv[1] == send[1])&&
-				(recv[2] == 0x06)&&
-				(recv[4] == 0x01)
-			)
+		clear_WIFI();
+		WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, 6);
+		printhexmsg(ECU_DBG_WIFI,"WIFI_CreateSocket send", send, 6);
+		
+		if(selectWiFi(5) <= 0)
 		{
-			//创建连接成功
-			printmsg(ECU_DBG_WIFI,"WIFI_CreateSocket Successful");
-			rt_mutex_release(WIFI_lock);
-			rt_thread_delay(RT_TICK_PER_SECOND);
-			return 0;
-		}else
+			printmsg(ECU_DBG_WIFI,"WIFI_CreateSocket WIFI Get reply time out 1");
+		}
+		else
 		{
-			//创建连接失败
-			printmsg(ECU_DBG_WIFI,"WIFI_CreateSocket Failed");
-			rt_mutex_release(WIFI_lock);
-			return -1;
+			length = WIFI_SERIAL.read(&WIFI_SERIAL,0, recv, 255);
+			printhexmsg(ECU_DBG_WIFI,"WIFI_CreateSocket", recv, length);
+			if( (recv[0] == 0x65)&&
+					(recv[1] == send[1])&&
+					(recv[2] == 0x06)&&
+					(recv[4] == 0x01)
+				)
+			{
+				//创建连接成功
+				printmsg(ECU_DBG_WIFI,"WIFI_CreateSocket Successful");
+				rt_mutex_release(WIFI_lock);
+				rt_thread_delay(RT_TICK_PER_SECOND);
+				return 0;
+			}else
+			{
+				//创建连接失败
+				printmsg(ECU_DBG_WIFI,"WIFI_CreateSocket Failed");
+				rt_mutex_release(WIFI_lock);
+				return -1;
+			}
 		}
 	}
+	rt_mutex_release(WIFI_lock);
+	return -1;
 }
 
 //关闭Socket连接
@@ -1032,9 +1059,13 @@ int WIFI_Close(SocketType Type)
 {
 	char send[50] = {'\0'};
 	char recv[255] = { '\0' };
-	int length = 0;
+	int length = 0, i = 0;
+	if(1 != WIFI_QueryStatus(Type))
+		return -1;
+
+	
 	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
-	clear_WIFI();
+	
 	send[0]= 0x65;
 	if(Type == SOCKET_B)
 		send[1]= 0x62;
@@ -1047,38 +1078,45 @@ int WIFI_Close(SocketType Type)
 	send[3]= 0x02;
 	send[4]= 0x00;
 	send[5]= 0x03;
-	
-	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, 6);
-	printhexmsg(ECU_DBG_WIFI,"WIFI_CloseSocket send", send, 6);
-	
-	if(selectWiFi(10) <= 0)
+
+	for(i = 0;i<3;i++)
 	{
-		printmsg(ECU_DBG_WIFI,"WIFI_CloseSocket WIFI Get reply time out 1");
-		rt_mutex_release(WIFI_lock);
-		return -1;
-	}
-	else
-	{
-		length = WIFI_SERIAL.read(&WIFI_SERIAL,0, recv, 255);
-		printhexmsg(ECU_DBG_WIFI,"WIFI_CloseSocket", recv, length);
-		if( (recv[0] == 0x65)&&
-				(recv[1] == send[1])&&
-				(recv[2] == 0x06)&&
-				(recv[4] == 0x01)
-			)
+		clear_WIFI();
+		WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, 6);
+		printhexmsg(ECU_DBG_WIFI,"WIFI_CloseSocket send", send, 6);
+		
+		if(selectWiFi(5) <= 0)
 		{
-			//关闭连接成功
-			printmsg(ECU_DBG_WIFI,"WIFI_CloseSocket Successful");
-			rt_mutex_release(WIFI_lock);
-			return 0;
-		}else
-		{
-			//关闭连接失败
-			printmsg(ECU_DBG_WIFI,"WIFI_CloseSocket Failed");
-			rt_mutex_release(WIFI_lock);
-			return -1;
+			printmsg(ECU_DBG_WIFI,"WIFI_CloseSocket WIFI Get reply time out 1");
+
 		}
+		else
+		{
+			length = WIFI_SERIAL.read(&WIFI_SERIAL,0, recv, 255);
+			printhexmsg(ECU_DBG_WIFI,"WIFI_CloseSocket", recv, length);
+			if( (recv[0] == 0x65)&&
+					(recv[1] == send[1])&&
+					(recv[2] == 0x06)&&
+					(recv[4] == 0x01)
+				)
+			{
+				//关闭连接成功
+				printmsg(ECU_DBG_WIFI,"WIFI_CloseSocket Successful");
+				rt_mutex_release(WIFI_lock);
+				return 0;
+			}else
+			{
+				//关闭连接失败
+				printmsg(ECU_DBG_WIFI,"WIFI_CloseSocket Failed");
+				rt_mutex_release(WIFI_lock);
+				return -1;
+			}
+		}
+
 	}
+	rt_mutex_release(WIFI_lock);
+	return -1;
+
 }
 
 //查询连接状态
@@ -1087,9 +1125,9 @@ int WIFI_QueryStatus(SocketType Type)
 {
 	char send[50] = {'\0'};
 	char recv[255] = { '\0' };
-	int length = 0;
+	int length = 0, i = 0;
 	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
-	clear_WIFI();
+	
 	send[0]= 0x65;
 	if(Type == SOCKET_B)
 		send[1]= 0x62;
@@ -1102,36 +1140,45 @@ int WIFI_QueryStatus(SocketType Type)
 	send[3]= 0x03;
 	send[4]= 0x00;
 	send[5]= 0x04;
-	
-	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, 6);
-	printhexmsg(ECU_DBG_WIFI,"WIFI_QuerySocketStatus send", send, 6);
-	
-	if(selectWiFi(10) <= 0)
+
+	for(i = 0;i<3;i++)
 	{
-		printmsg(ECU_DBG_WIFI,"WIFI_QuerySocketStatus WIFI Get reply time out 1");
-		rt_mutex_release(WIFI_lock);
-		return -1;
-	}
-	else
-	{
-		length = WIFI_SERIAL.read(&WIFI_SERIAL,0, recv, 255);
-		printhexmsg(ECU_DBG_WIFI,"WIFI_QuerySocketStatus", recv, length);
-		if( (recv[0] == 0x65)&&
-				(recv[1] == send[1])&&
-				(recv[2] == 0x06)
-			)
+		clear_WIFI();
+		WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, 6);
+		printhexmsg(ECU_DBG_WIFI,"WIFI_QuerySocketStatus send", send, 6);
+		
+		if(selectWiFi(5) <= 0)
 		{
-			
-			if(recv[4] == 0x01)
+			printmsg(ECU_DBG_WIFI,"WIFI_QuerySocketStatus WIFI Get reply time out 1");
+		}
+		else
+		{
+			length = WIFI_SERIAL.read(&WIFI_SERIAL,0, recv, 255);
+			printhexmsg(ECU_DBG_WIFI,"WIFI_QuerySocketStatus", recv, length);
+			if( (recv[0] == 0x65)&&
+					(recv[1] == send[1])&&
+					(recv[2] == 0x06)
+				)
 			{
-				printmsg(ECU_DBG_WIFI,"WIFI_QuerySocketStatus Connect");
-				rt_mutex_release(WIFI_lock);
-				return 1;
-			}else if(recv[4] == 0x00)
-			{
-				printmsg(ECU_DBG_WIFI,"WIFI_QuerySocketStatus Disconnect");
-				rt_mutex_release(WIFI_lock);
-				return 0;
+				
+				if(recv[4] == 0x01)
+				{
+					printmsg(ECU_DBG_WIFI,"WIFI_QuerySocketStatus Connect");
+					rt_mutex_release(WIFI_lock);
+					return 1;
+				}else if(recv[4] == 0x00)
+				{
+					printmsg(ECU_DBG_WIFI,"WIFI_QuerySocketStatus Disconnect");
+					rt_mutex_release(WIFI_lock);
+					return 0;
+				}else
+				{
+					//查询连接失败
+					printmsg(ECU_DBG_WIFI,"WIFI_QuerySocketStatus Failed");
+					rt_mutex_release(WIFI_lock);
+					return -1;
+				}
+				
 			}else
 			{
 				//查询连接失败
@@ -1139,15 +1186,10 @@ int WIFI_QueryStatus(SocketType Type)
 				rt_mutex_release(WIFI_lock);
 				return -1;
 			}
-			
-		}else
-		{
-			//查询连接失败
-			printmsg(ECU_DBG_WIFI,"WIFI_QuerySocketStatus Failed");
-			rt_mutex_release(WIFI_lock);
-			return -1;
 		}
 	}
+	rt_mutex_release(WIFI_lock);
+	return -1;
 }
 
 
@@ -1170,7 +1212,7 @@ void WIFIRecvTest(SocketType Type)
 	int length = 0;
 	data = malloc(2048);
 
-	while(1)
+	//while(1)
 	{
 		memset(data,0x00,2048);
 		length = RecvSocketData(Type,data,5);

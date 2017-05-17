@@ -580,7 +580,7 @@ int send_record(int fd_sock, char *sendbuff, char *send_date_time)			//·¢ËÍÊı¾İµ
 	}
 }
 
-
+#ifdef WIFI_USE		
 int wifi_send_record(char *sendbuff, char *send_date_time)		//Í¨¹ıWIFI·¢ËÍÊı¾İµ½EMA  ×¢ÒâÔÚ´æ´¢µÄÊ±ºò½áÎ²Î´Ìí¼Ó'\n'  ÔÚ·¢ËÍÊ±µÄÊ±ºò¼ÇµÃÌí¼Ó
 {
 	char readbuff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};
@@ -597,7 +597,7 @@ int wifi_send_record(char *sendbuff, char *send_date_time)		//Í¨¹ıWIFI·¢ËÍÊı¾İµ½
 	}
 
 }
-
+#endif
 
 int preprocess()			//·¢ËÍÍ·ĞÅÏ¢µ½EMA,¶ÁÈ¡ÒÑ¾­´æÔÚEMAµÄ¼ÇÂ¼Ê±¼ä
 {

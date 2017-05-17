@@ -993,6 +993,7 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 int check_inverter_abnormal_status_sent(int hour)
 {
 	int sockfd;
+	int length = 0;
 	int i, flag, num = 0;
 	char datetime[15] = {'\0'};
 	//char recv_buffer[4096] = {'\0'};
@@ -1029,7 +1030,7 @@ int check_inverter_abnormal_status_sent(int hour)
 			SendToSocketC(send_buffer, strlen(send_buffer));
 			
 			//接收EMA应答
-			if(RecvSocketData(SOCKET_C, recv_buffer,sockcfg.timeout) <= 0){
+			if((length = RecvSocketData(SOCKET_C, recv_buffer,sockcfg.timeout)) <= 0){
 				WIFI_Close(SOCKET_C);
 				rt_free(recv_buffer);
 				rt_free(send_buffer);
@@ -1037,6 +1038,7 @@ int check_inverter_abnormal_status_sent(int hour)
 			}
 			//去掉usr WIFI报文的头部
 			memcpy(recv_buffer,&recv_buffer[9],strlen(&recv_buffer[9]));
+			recv_buffer[length - 9] = '\0';
 			//校验命令
 			if(msg_format_check(recv_buffer) < 0){
 				WIFI_Close(SOCKET_C);
@@ -1133,6 +1135,7 @@ int exist_inverter_abnormal_status()
 int response_inverter_abnormal_status()
 {
 	int result = 0;
+	int length = 0;
 	int  j, sockfd, flag, num = 0, cmd_id, next_cmd_id,havaflag;
 	char datetime[15] = {'\0'};
 	//char recv_buffer[4096] = {'\0'};
@@ -1168,7 +1171,7 @@ int response_inverter_abnormal_status()
 					continue;
 				}
 				//接收EMA应答
-				if(RecvSocketData(SOCKET_C, recv_buffer,sockcfg.timeout) <= 0){
+				if((length = RecvSocketData(SOCKET_C, recv_buffer,sockcfg.timeout)) <= 0){
 					WIFI_Close(SOCKET_C);
 					rt_free(recv_buffer);
 					rt_free(command);
@@ -1177,6 +1180,7 @@ int response_inverter_abnormal_status()
 				}
 				//去掉usr WIFI报文的头部
 				memcpy(recv_buffer,&recv_buffer[9],strlen(&recv_buffer[9]));
+				recv_buffer[length - 9] = '\0';
 				//校验命令
 				if(msg_format_check(recv_buffer) < 0){
 					continue;
@@ -1373,6 +1377,7 @@ int communication_with_EMA(int next_cmd_id)
 {
 	int sockfd;
 	int cmd_id;
+	int length = 0;
 	char timestamp[15] = "00000000000000";
 	//char recv_buffer[4096] = {'\0'};
 	//char send_buffer[MAXBUFFER] = {'\0'};
@@ -1400,7 +1405,7 @@ int communication_with_EMA(int next_cmd_id)
 					memset(send_buffer, '\0', sizeof(send_buffer));
 
 					//接收EMA发来的命令
-					if(RecvSocketData(SOCKET_C, recv_buffer,sockcfg.timeout) < 0){
+					if((length = RecvSocketData(SOCKET_C, recv_buffer,sockcfg.timeout)) < 0){
 						WIFI_Close(SOCKET_C);
 						rt_free(recv_buffer);
 						rt_free(send_buffer);
@@ -1408,6 +1413,8 @@ int communication_with_EMA(int next_cmd_id)
 					}
 					//去掉usr WIFI报文的头部
 					memcpy(recv_buffer,&recv_buffer[9],strlen(&recv_buffer[9]));
+					recv_buffer[length - 9] = '\0';
+					//printf("%s\n",recv_buffer);
 					//校验命令
 					if(msg_format_check(recv_buffer) < 0){
 						closesocket(sockfd);
@@ -1424,7 +1431,6 @@ int communication_with_EMA(int next_cmd_id)
 					snprintf(recv_buffer, 51+1, "APS13AAA51A101AAA0%.12sA%3d%.14sEND",
 							ecuid, cmd_id, timestamp);
 				}
-
 				//ECU注册后初次和EMA通讯
 				if(cmd_id == 118){
 					if(one_a118==0){
@@ -1689,7 +1695,6 @@ void control_client_thread_entry(void* parameter)
 	/* ECU轮训主循环 */
 	while(1)
 	{
-		printf("1---------------------->\n");
 		//每天一点时向EMA确认逆变器异常状态是否被存储
 		check_inverter_abnormal_status_sent(1);
  
@@ -1703,7 +1708,6 @@ void control_client_thread_entry(void* parameter)
 			fclose(fp);
 			unlink("/yuneng/A118.con");
 		}
-		printf("2---------------------->\n");
 		if(exist_inverter_abnormal_status() && ecu_flag){
 			ecu_time =  acquire_time();
 			result = response_inverter_abnormal_status();
@@ -1715,9 +1719,7 @@ void control_client_thread_entry(void* parameter)
 			if(ecu_flag){ //如果ecu_flag = 0 则不上报处理结果
 				response_process_result();
 			}
-			printf("3---------------------->\n");
 			result = communication_with_EMA(0);
-			printf("4---------------------->\n");
 		}
 		//程序自行跳过本次循环
 		if(result < 0){
