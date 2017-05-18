@@ -1,23 +1,17 @@
-#ifndef  __WATCHDOG_H__
-#define  __WATCHDOG_H__
+#ifndef __PHONESERVER_H__
+#define	__PHONESERVER_H__
 /*****************************************************************************/
-/* File      : watchdog.h                                                    */
+/* File      : phoneServer.h                                                 */
 /*****************************************************************************/
 /*  History:                                                                 */
 /*****************************************************************************/
 /*  Date       * Author          * Changes                                   */
 /*****************************************************************************/
-/*  2017-05-17 * Shengfeng Dong  * Creation of the file                      */
+/*  2017-05-18 * Shengfeng Dong  * Creation of the file                      */
 /*             *                 *                                           */
 /*****************************************************************************/
 
-/*****************************************************************************/
-/*  Function Declarations                                                    */
-/*****************************************************************************/
 
-void rt_hw_watchdog_init(void);
+void phone_server_thread_entry(void* parameter);
 
-void kickwatchdog(void);
-
-
-#endif /* __WATCHDOG_H__ */
+#endif /*__PHONESERVER_H__*/

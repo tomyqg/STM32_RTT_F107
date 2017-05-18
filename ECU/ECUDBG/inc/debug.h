@@ -1,7 +1,24 @@
 #ifndef __DEBUG_H__
 #define __DEBUG_H__
+/*****************************************************************************/
+/* File      : applocation.h                                                 */
+/*****************************************************************************/
+/*  History:                                                                 */
+/*****************************************************************************/
+/*  Date       * Author          * Changes                                   */
+/*****************************************************************************/
+/*  2017-04-20 * Shengfeng Dong  * Creation of the file                      */
+/*             *                 *                                           */
+/*****************************************************************************/
+
+/*****************************************************************************/
+/*  Include Files                                                            */
+/*****************************************************************************/
 #include "variation.h"
 
+/*****************************************************************************/
+/*  Definitions                                                              */
+/*****************************************************************************/
 typedef enum DEBUG {
   ECU_DBG_UPDATE = 0,
 	ECU_DBG_IDWRITE = 1,
@@ -11,7 +28,6 @@ typedef enum DEBUG {
 	ECU_DBG_NTP = 5,
 	ECU_DBG_OTHER = 6,
 	ECU_DBG_WIFI = 7,
-	
 }DebugType;
 
 #define ECU_DBG_OFF           		0x0
@@ -33,6 +49,9 @@ typedef enum DEBUG {
 #define ECU_DEBUG_OTHER						ECU_DBG_ON
 #define ECU_DEBUG_WIFI						ECU_DBG_ON
 
+/*****************************************************************************/
+/*  Function Declarations                                                    */
+/*****************************************************************************/
 extern void printmsg(DebugType type,char *msg);		//打印字符串
 extern void print2msg(DebugType type,char *msg1, char *msg2);		//打印字符串
 extern void printdecmsg(DebugType type,char *msg, int data);		//打印整形数据

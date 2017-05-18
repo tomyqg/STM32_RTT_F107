@@ -1414,7 +1414,7 @@ int communication_with_EMA(int next_cmd_id)
 					//去掉usr WIFI报文的头部
 					memcpy(recv_buffer,&recv_buffer[9],strlen(&recv_buffer[9]));
 					recv_buffer[length - 9] = '\0';
-					//printf("%s\n",recv_buffer);
+					print2msg(ECU_DBG_CONTROL_CLIENT,"communication_with_EMA recv",recv_buffer);
 					//校验命令
 					if(msg_format_check(recv_buffer) < 0){
 						closesocket(sockfd);

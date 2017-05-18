@@ -1,13 +1,18 @@
-//
-//  THFTPAPI.c
-//  MyFTP
-//
-//  Created by TanHao on 13-6-6.
-//  Copyright (c) 2013Äê http://www.tanhao.me. All rights reserved.
-//
+/*****************************************************************************/
+/* File      : thftpapi.c                                                    */
+/*****************************************************************************/
+/*  History:                                                                 */
+/*****************************************************************************/
+/*  Date       * Author          * Changes                                   */
+/*****************************************************************************/
+/*  2017-04-20 * Shengfeng Dong  * Creation of the file                      */
+/*             *                 *                                           */
+/*****************************************************************************/
  
+ /*****************************************************************************/
+/*  Include Files                                                            */
+/*****************************************************************************/
 #include "thftpapi.h"
- 
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -25,7 +30,9 @@
 #include "datetime.h"
 #include "debug.h"
 
-
+/*****************************************************************************/
+/*  Function Implementations                                                 */
+/*****************************************************************************/
 void getFTPConf(char *FTPIP,int *port,char* user,char *password)
 {
 	FILE *fp;
@@ -68,7 +75,6 @@ void getFTPConf(char *FTPIP,int *port,char* user,char *password)
 		strcpy(user,"zhyf");
 		strcpy(password,"yuneng");
 	}
-	
 	
 }
 

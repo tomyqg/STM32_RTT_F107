@@ -573,6 +573,7 @@ int send_record(int fd_sock, char *sendbuff, char *send_date_time)			//·¢ËÍÊı¾İµ
 		return -1;
 	else
 	{
+		printf("readbuff:%s\n",readbuff);
 		if('1' == readbuff[0])
 			update_send_flag(send_date_time);
 		clear_send_flag(readbuff);
@@ -581,15 +582,49 @@ int send_record(int fd_sock, char *sendbuff, char *send_date_time)			//·¢ËÍÊı¾İµ
 }
 
 #ifdef WIFI_USE		
+int wifi_socketb_format(char *data ,int length)
+{
+	char head[9] = {'\0'};
+	char *p = NULL;
+	int i = 0,retlength = 0;
+	head[0] = 0x62;
+	head[1] = 0x00;
+	head[2] = 0x00;
+	head[3] = 0x00;
+	head[4] = 0x00;
+	head[5] = 0x00;
+	head[6] = 0x00;
+	head[7] = 0x00;
+	head[8] = 0x00;
+	
+	for(p = &data[9],i = 0;p <= (data+length-9);p++,i++)
+	{
+		if(!memcmp(p,head,9))
+		{
+			memcpy(p,p+9,(length-18-i));
+			p[length - 9-i] = '\0';
+			retlength = length - 9;
+		}
+	}
+
+	return retlength;
+}
+
+
+
 int wifi_send_record(char *sendbuff, char *send_date_time)		//Í¨¹ıWIFI·¢ËÍÊı¾İµ½EMA  ×¢ÒâÔÚ´æ´¢µÄÊ±ºò½áÎ²Î´Ìí¼Ó'\n'  ÔÚ·¢ËÍÊ±µÄÊ±ºò¼ÇµÃÌí¼Ó
 {
+	int length = 0;
 	char readbuff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};
 	SendToSocketB(sendbuff, strlen(sendbuff));
 
-	if(-1 == RecvSocketData(SOCKET_B, readbuff,10))
+	if(-1 == (length = RecvSocketData(SOCKET_B, readbuff,10)))
 		return -1;
 	else
 	{
+		//¼ì²é¸ñÊ½£¬Èç¹ûÊÇ¶à¸ö°üÔÚÒ»ÆğÁË£¬½øĞĞºÏ²¢
+		wifi_socketb_format(readbuff ,length);
+		printf("readbuff:%s\n",&readbuff[9]);
 		if('1' == readbuff[9])
 			update_send_flag(send_date_time);
 		clear_send_flag(&readbuff[9]);
@@ -605,7 +640,7 @@ int preprocess()			//·¢ËÍÍ·ĞÅÏ¢µ½EMA,¶ÁÈ¡ÒÑ¾­´æÔÚEMAµÄ¼ÇÂ¼Ê±¼ä
 	char readbuff[1024] = {'\0'};
 	char sendbuff[256] = {'\0'};
 	FILE *fp;
-	int fd_sock;
+	int fd_sock,length;
 
 	if(0 == detection_resendflag2())		//	¼ì²âÊÇ·ñÓĞresendflag='2'µÄ¼ÇÂ¼
 		return 0;
@@ -648,8 +683,12 @@ int preprocess()			//·¢ËÍÍ·ĞÅÏ¢µ½EMA,¶ÁÈ¡ÒÑ¾­´æÔÚEMAµÄ¼ÇÂ¼Ê±¼ä
 			{
 				memset(readbuff, '\0', sizeof(readbuff));
 				SendToSocketB(sendbuff, strlen(sendbuff));
-				if(RecvSocketData(SOCKET_B,readbuff,5)> 9)
+				if((length = RecvSocketData(SOCKET_B,readbuff,5))> 9)
+				{
+					//¼ì²é¸ñÊ½£¬Èç¹ûÊÇ¶à¸ö°üÔÚÒ»ÆğÁË£¬½øĞĞºÏ²¢
+					wifi_socketb_format(readbuff ,length);
 					clear_send_flag(&readbuff[9]);
+				}	
 				else
 					break;
 			}
@@ -760,7 +799,8 @@ void client_thread_entry(void* parameter)
 #ifdef WIFI_USE			
 		}else
 		{
-			if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
+			//²»ĞèÒªÏÈ´ò¿ª£¬ÔÚÓĞÊı¾İĞèÒª·¢ËÍµÄÊ±ºò´ò¿ª ¾ÍĞĞ¡£
+			//if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
 			{
 				while(search_readflag(data,time,&flag,'1'))		//	»ñÈ¡Ò»ÌõresendflagÎª1µÄÊı¾İ
 				{
