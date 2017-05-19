@@ -1,22 +1,24 @@
-/*
- * File      : led.h
- * This file is part of RT-Thread RTOS
- * COPYRIGHT (C) 2009, RT-Thread Development Team
- *
- * The license and distribution terms for this file may be
- * found in the file LICENSE in this distribution or at
- * http://www.rt-thread.org/license/LICENSE
- *
- * Change Logs:
- * Date           Author       Notes
- * 2009-01-05     Bernard      the first version
- */
-
+/*****************************************************************************/
+/* File      : lan8720rst.h                                                  */
+/*****************************************************************************/
+/*  History:                                                                 */
+/*****************************************************************************/
+/*  Date       * Author          * Changes                                   */
+/*****************************************************************************/
+/*  2017-02-20 * Shengfeng Dong  * Creation of the file                      */
+/*             *                 *                                           */
+/*****************************************************************************/
 #ifndef __LAN_8720_RST_H__
 #define __LAN_8720_RST_H__
 
+/*****************************************************************************/
+/*  Include Files                                                            */
+/*****************************************************************************/
 #include <rtthread.h>
 
+/*****************************************************************************/
+/*  Function Declarations                                                    */
+/*****************************************************************************/
 void rt_hw_lan8720_init(void);	//lan8720≥ı ºªØ
 void rt_hw_lan8720_rst(void);	//lan8720∏¥Œª
 

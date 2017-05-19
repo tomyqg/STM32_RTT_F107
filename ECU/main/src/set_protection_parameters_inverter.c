@@ -7,6 +7,21 @@
 setpropi表格参数：
 id,parameter_name, parameter_value,set_flag         primary key(id, parameter_name)
 **********************************************************************/
+
+/*****************************************************************************/
+/*  File      : set_protection_parameters_inverter.c                         */
+/*****************************************************************************/
+/*  History:                                                                 */
+/*****************************************************************************/
+/*  Date       * Author          * Changes                                   */
+/*****************************************************************************/
+/*  2017-03-05 * Shengfeng Dong  * Creation of the file                      */
+/*             *                 *                                           */
+/*****************************************************************************/
+
+/*****************************************************************************/
+/*  Include Files                                                            */
+/*****************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include "variation.h"
@@ -19,10 +34,15 @@ id,parameter_name, parameter_value,set_flag         primary key(id, parameter_na
 #include "set_protection_parameters_inverter.h"
 #include "rtthread.h"
 
+/*****************************************************************************/
+/*  Variable Declarations                                                    */
+/*****************************************************************************/
 extern rt_mutex_t record_data_lock;
-
 extern inverter_info inverter[MAXINVERTERCOUNT];
 
+/*****************************************************************************/
+/*  Function Implementations                                                 */
+/*****************************************************************************/
 int set_protection_yc600_one(int shortaddr,int order,int data,int num)
 {
 

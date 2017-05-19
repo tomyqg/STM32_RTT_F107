@@ -68,7 +68,7 @@ int selectWiFi(int timeout)			//Wifi串口数据检测 返回0 表示串口没有数据  返回1表
 			if(WiFiReadFlag == 1)	//串口数据监测,如果有数据则返回1
 			{
 				rt_timer_delete(readtimer);
-				rt_thread_delay(RT_TICK_PER_SECOND/5);
+				rt_thread_delay(RT_TICK_PER_SECOND/2);
 				return 1;
 			}
 		}
@@ -436,6 +436,72 @@ int AT_TCPPTB(int port)
 	return 0;
 }
 
+//配置SOCKET B 超时时间
+int AT_TCPTOB(int timeout)
+{
+		char send[50] = {'\0'};
+	char AT[255] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	clear_WIFI();
+	
+	sprintf(send,"AT+TCPTOB=%d\n",timeout);
+	//向模块写入"AT_TCPTOB\n",返回+ok
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
+	rt_thread_delay(RT_TICK_PER_SECOND);
+	if(selectWiFi(2) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_TCPTOB WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		//printf("%s\n",AT);
+		if(memcmp(&AT[strlen(send)+1],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"AT_TCPTOB Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+
+//配置SOCKET C 超时时间
+int AT_TCPTOC(int timeout)
+{
+		char send[50] = {'\0'};
+	char AT[255] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	clear_WIFI();
+	
+	sprintf(send,"AT+TCPTOC=%d\n",timeout);
+	//向模块写入"AT_TCPTOB\n",返回+ok
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
+	rt_thread_delay(RT_TICK_PER_SECOND);
+	if(selectWiFi(2) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_TCPTOC WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		printf("%s\n",AT);
+		if(memcmp(&AT[strlen(send)+1],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"AT_TCPTOC Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+
 //配置SOCKET B 开启
 int AT_TCPC_ON(void)
 {
@@ -533,6 +599,8 @@ int AT_TCPPTC(int port)
 	rt_mutex_release(WIFI_lock);
 	return 0;
 }
+
+
 
 //开启AP+STA功能模式
 int AT_FAPSTA_ON(void)
@@ -671,7 +739,7 @@ static int WiFi_RecvData(int timeout,char *data)
 	}
 	if(selectWiFi(timeout) <= 0)
 	{
-		printmsg(ECU_DBG_WIFI,"WIFI Get reply time out");
+		//printmsg(ECU_DBG_WIFI,"WIFI Get reply time out");
 		return -1;
 	}
 	else
@@ -854,8 +922,6 @@ int SendToSocketC(char *data ,int length)
 	return -1;
 }
 
-
-
 //串口指令模式下收发数据
 //在串口指令模式下发送数据    发送TCP报文
 int WiFi_SendData(tcp_address_t address ,char *data ,int length)   
@@ -1004,6 +1070,30 @@ int initWorkIP(char *clientIP,int clientPort,char *controlIP,int controlPort)
 	for(i = 0;i<3;i++)
 	{
 		if(0 == AT_TCPPTC(controlPort))
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;
+	
+	//配置SOCKET C的服务器超时时间
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_TCPTOB(600))
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;
+	
+	//配置SOCKET C的服务器超时时间
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_TCPTOC(600))
 		{
 			res = 0;
 			break;
@@ -1274,6 +1364,9 @@ FINSH_FUNCTION_EXPORT(AT_TCPC_ON , TCPC ON.)
 FINSH_FUNCTION_EXPORT(AT_TCPADDC , Set SOCKET C IP.)
 FINSH_FUNCTION_EXPORT(AT_TCPPTC , Set SOCKET C PORT.)
 
+FINSH_FUNCTION_EXPORT(AT_TCPTOB , Set SOCKET B TIMEOUT.)
+FINSH_FUNCTION_EXPORT(AT_TCPTOC , Set SOCKET C TIMEOUT.)
+
 FINSH_FUNCTION_EXPORT(AT_FAPSTA_ON , Set AP+STA Mode.)
 FINSH_FUNCTION_EXPORT(AT_WMODE , Set Modle Mode.)
 FINSH_FUNCTION_EXPORT(AT_WSSSID , Set STA SSID.)
@@ -1287,4 +1380,6 @@ FINSH_FUNCTION_EXPORT(initWorkIP , init Work Mode.)
 FINSH_FUNCTION_EXPORT(WIFI_Create , Wifi Create Socket.)
 FINSH_FUNCTION_EXPORT(WIFI_Close , Wifi Close Socket.)
 FINSH_FUNCTION_EXPORT(WIFI_QueryStatus , Wifi Query Socket Status.)
+
+
 #endif

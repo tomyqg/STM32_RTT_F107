@@ -1,23 +1,30 @@
-/*
- * File      : led.c
- * This file is part of RT-Thread RTOS
- * COPYRIGHT (C) 2009, RT-Thread Development Team
- *
- * The license and distribution terms for this file may be
- * found in the file LICENSE in this distribution or at
- * http://www.rt-thread.org/license/LICENSE
- *
- * Change Logs:
- * Date           Author       Notes
- * 2009-01-05     Bernard      the first version
- */
+/*****************************************************************************/
+/* File      : lan8720rst.c                                                  */
+/*****************************************************************************/
+/*  History:                                                                 */
+/*****************************************************************************/
+/*  Date       * Author          * Changes                                   */
+/*****************************************************************************/
+/*  2017-04-20 * Shengfeng Dong  * Creation of the file                      */
+/*             *                 *                                           */
+/*****************************************************************************/
+
+/*****************************************************************************/
+/*  Include Files                                                            */
+/*****************************************************************************/
 #include <rtthread.h>
 #include <stm32f10x.h>
 
+/*****************************************************************************/
+/*  Definitions                                                              */
+/*****************************************************************************/
 #define LAN8720_RCC                  	RCC_APB2Periph_GPIOB
 #define LAN8720_GPIO              		GPIOB
 #define LAN8720_PIN                  	(GPIO_Pin_14)
 
+/*****************************************************************************/
+/*  Function Implementations                                                 */
+/*****************************************************************************/
 void rt_hw_lan8720_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;

@@ -1,31 +1,38 @@
-/*
- * File      : ds1302z_rtc.c
- * This file is part of RT-Thread RTOS
- * COPYRIGHT (C) 2009, RT-Thread Development Team
- *
- * The license and distribution terms for this file may be
- * found in the file LICENSE in this distribution or at
- * http://www.rt-thread.org/license/LICENSE
- *
- * Change Logs:
- * Date           Author       Notes
- * 2009-01-05     Bernard      the first version.
- * 2011-11-26     aozima       implementation time.
- * 2015-07-16     FlyM         rename rtc to stm32f1_rtc. remove finsh export function
- * 2017-02-08	  DSF		   rename rtc to ds1302z_rtc. adapt rtc ds1302z
- */
+/*****************************************************************************/
+/* File      : ds1302z_rtc.c                                                 */
+/*****************************************************************************/
+/*  History:                                                                 */
+/*****************************************************************************/
+/*  Date       * Author          * Changes                                   */
+/*****************************************************************************/
+/*  2017-02-20 * Shengfeng Dong  * Creation of the file                      */
+/*             *                 *                                           */
+/*****************************************************************************/
 
+/*****************************************************************************/
+/*  Include Files                                                            */
+/*****************************************************************************/
 #include <rtthread.h>
 #include <string.h>
 #include <rthw.h>
 #include <stm32f10x.h>
 
+/*****************************************************************************/
+/*  Definitions                                                              */
+/*****************************************************************************/
 #define DS1302CLK GPIO_Pin_0   //与时钟线相连的芯片的管脚
 #define DS1302DAT GPIO_Pin_8   //与数据线相连的芯片的管脚
 #define DS1302RST GPIO_Pin_2   //与复位端相连的芯片的管脚
 
+/*****************************************************************************/
+/*  Variable Declarations                                                    */
+/*****************************************************************************/
 static rt_mutex_t RTC_lock = RT_NULL;
 static struct rt_device rtc;
+
+/*****************************************************************************/
+/*  Function Implementations                                                 */
+/*****************************************************************************/
 
 void ds1302_writebyte(unsigned char dat)
 {
@@ -256,7 +263,6 @@ void rt_hw_rtc_init(void)
         return ;
     }
 
-
     /* register rtc device */
     rtc.init 	= RT_NULL;
     rtc.open 	= rt_rtc_open;
@@ -278,5 +284,3 @@ void rt_hw_rtc_init(void)
 
     return;
 }
-
-
