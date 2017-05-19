@@ -347,6 +347,7 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
 		{
 			free(buf);
 			printmsg(ECU_DBG_UPDATE,"ftp_retrfile FILE open failed");
+			unlink(d);
 			return -1;
 		}
     //设置传输模式
@@ -359,6 +360,7 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
 			printmsg(ECU_DBG_UPDATE,"ftp_pasv_connect failed");
       fileclose(handle);
 			free(buf);
+			unlink(d);
        return -1;
     }
      
@@ -371,6 +373,7 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
 			printmsg(ECU_DBG_UPDATE,"RETR response error");
       fileclose(handle);
 			free(buf);
+			unlink(d);
       return result;
     }
      
@@ -388,6 +391,7 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
 				closesocket( d_sock );
 				fileclose( handle );
 				free(buf);
+				unlink(d);
 				return -1;
 			}else
 			{
@@ -404,6 +408,7 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
 							closesocket( d_sock );
 							fileclose( handle );
 							free(buf);
+							unlink(d);
 							return -1;
 					}
 					 
@@ -435,6 +440,7 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
     sscanf( buf, "%d", &result );
     if ( result >= 300 ) {
 		free(buf);
+		unlink(d);
         return result;
     }
 	free(buf);
