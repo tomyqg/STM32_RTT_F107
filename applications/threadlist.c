@@ -55,7 +55,7 @@ extern int lwip_system_init(void);
 #ifdef THREAD_PRIORITY_LED
 #include "led.h"
 ALIGN(RT_ALIGN_SIZE)
-static rt_uint8_t led_stack[200];
+static rt_uint8_t led_stack[500];
 static struct rt_thread led_thread;
 #endif
 
@@ -146,7 +146,8 @@ rt_mutex_t record_data_lock = RT_NULL;
 /*****************************************************************************/
 /*  Function Implementations                                                 */
 /*****************************************************************************/
-
+extern void cpu_usage_init(void);
+extern void cpu_usage_get(rt_uint8_t *major, rt_uint8_t *minor);
 
 /*****************************************************************************/
 /* Function Description:                                                     */
@@ -232,6 +233,7 @@ void rt_init_thread_entry(void* parameter)
 	//initWorkIP("192.168.1.102",65500,"192.168.1.102",65501);
 	//initWorkIP("139.168.200.158",8093,"60.190.131.190",8997);
 #endif
+	cpu_usage_init();
 }
 
 /*****************************************************************************/
@@ -309,7 +311,8 @@ static void watchdog_monitor_thread_entry(void* parameter)
 #ifdef THREAD_PRIORITY_LED
 static void led_thread_entry(void* parameter)
 {
-    unsigned int count=0;
+    unsigned int count=0;	
+		rt_uint8_t major,minor;
 		/* Initialize led */
     rt_hw_led_init();
 
@@ -324,6 +327,8 @@ static void led_thread_entry(void* parameter)
         rt_hw_led_off();
 				//rt_kprintf("rt_hw_led_off:%d\n",count);
         rt_thread_delay( RT_TICK_PER_SECOND/2 );
+				cpu_usage_get(&major, &minor);
+				//printf("CPU : %d.%d%\n", major, minor);
     }
 }
 #endif
