@@ -25,5 +25,5 @@ del *.htm /s
 del *.sct /s
 del *.map /s
 del *.uvopt /s
-del *.uvgui.yn /s
+del *.uvgui.* /s
 exit
