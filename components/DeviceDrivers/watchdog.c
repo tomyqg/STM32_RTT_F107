@@ -24,8 +24,8 @@
 void rt_hw_watchdog_init(void)
 {
 	IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable); //使能对
-	IWDG_SetPrescaler(IWDG_Prescaler_128); //设置IWDG预分频值
-	IWDG_SetReload(1600); //设置IWDG重装载值
+	IWDG_SetPrescaler(IWDG_Prescaler_256); //设置IWDG预分频值
+	IWDG_SetReload(3125); //设置IWDG重装载值
 	IWDG_ReloadCounter(); //按照IWDG重装载寄存器的值 重装载IWDG计数器
 	IWDG_Enable(); //使能IWDG
 }
