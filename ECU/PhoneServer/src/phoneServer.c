@@ -18,6 +18,7 @@
 #include "string.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "debug.h"
 
 /*****************************************************************************/
 /*  Function Implementations                                                 */
@@ -51,7 +52,7 @@ void phone_server_thread_entry(void* parameter)
 		{
 			memcpy(ID,&data[2],8);
 			ID[8] = '\0';
-			printf("phone_server:%s\n",&data[9]);
+			print2msg(ECU_DBG_WIFI,"phone_server",&data[9]);
 			
 			//function part
 		

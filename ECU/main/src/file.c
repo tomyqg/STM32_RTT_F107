@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "datetime.h"
+#include "SEGGER_RTT.h"
 
 /*****************************************************************************/
 /*  Variable Declarations                                                    */
@@ -510,7 +511,7 @@ void get_mac(rt_uint8_t  dev_addr[6])
 			dev_addr[3]=strtohex(&macstr[9]);
 			dev_addr[4]=strtohex(&macstr[12]);
 			dev_addr[5]=strtohex(&macstr[15]);
-			//printf("%x %x %x %x %x %x\n",dev_addr[0],dev_addr[1],dev_addr[2],dev_addr[3],dev_addr[4],dev_addr[5]);
+			SEGGER_RTT_printf(0,"ECU MAC: %x %x %x %x %x %x\n",dev_addr[0],dev_addr[1],dev_addr[2],dev_addr[3],dev_addr[4],dev_addr[5]);
 			fclose(fp);
 			return;
 		}
@@ -542,25 +543,47 @@ void addInverter(char *inverter_id)
 void initPath(void)
 {
 	mkdir("/home",0x777);
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	mkdir("/tmp",0x777);
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	mkdir("/yuneng",0x777);
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	mkdir("/home/data",0x777);
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	mkdir("/home/record",0x777);
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	mkdir("/home/data/proc_res",0x777);
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	mkdir("/home/data/iprocres",0x777);
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	echo("/home/data/ltpower","0.000000");
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	mkdir("/home/record/data",0x777);
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	mkdir("/home/record/inversta",0x777);
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	echo("/yuneng/area.con","SAA");
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	echo("/yuneng/channel.con","0x10");
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	echo("/yuneng/limiteid.con","1");
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	echo("/yuneng/control.con","Timeout=10\nReport_Interval=15\nDomain=eee.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
+	//echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.100\nPort1=8997\nPort2=8997\n");
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	echo("/yuneng/vernum.con","2\n");
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	echo("/yuneng/ftpadd.con", "IP=60.190.131.190\nPort=9219\nuser=zhyf\npassword=yuneng\n");
+	//echo("/yuneng/ftpadd.con", "IP=192.168.1.103\nPort=21\nuser=admin\npassword=admin\n");
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	echo("/yuneng/datacent.con","Domain=111.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	echo("/home/data/power","");
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	echo("/yuneng/timezone.con","Etc/GMT+8\n");
+	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	mkdir("/ftp",0x777);
-
 }
 
 int getTimeZone()
@@ -587,9 +610,6 @@ int getTimeZone()
 	return timeZone;
 	
 }
-
-
-
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
@@ -684,7 +704,8 @@ int initsystem(char *ecuid,char *mac)
 	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	echo("/yuneng/limiteid.con","1");
 	rt_thread_delay(RT_TICK_PER_SECOND/50);
-	echo("/yuneng/control.con","Timeout=10\nReport_Interval=15\nDomain=eee.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
+	//echo("/yuneng/control.con","Timeout=10\nReport_Interval=15\nDomain=eee.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
+	echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=111.apsema.com\nIP=139.168.200.158\nPort1=8997\nPort2=8997\n");
 	//echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.100\nPort1=8997\nPort2=8997\n");
 	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	echo("/yuneng/vernum.con","2\n");
@@ -692,7 +713,7 @@ int initsystem(char *ecuid,char *mac)
 	echo("/yuneng/ftpadd.con", "IP=60.190.131.190\nPort=9219\nuser=zhyf\npassword=yuneng\n");
 	//echo("/yuneng/ftpadd.con", "IP=192.168.1.103\nPort=21\nuser=admin\npassword=admin\n");
 	rt_thread_delay(RT_TICK_PER_SECOND/50);
-	echo("/yuneng/datacent.con","Domain=111.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
+	echo("/yuneng/datacent.con","Domain=eee.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
 	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	echo("/home/data/power","");
 	rt_thread_delay(RT_TICK_PER_SECOND/50);

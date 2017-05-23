@@ -1734,7 +1734,7 @@ void control_client_thread_entry(void* parameter)
 		if(exist_inverter_abnormal_status() && ecu_flag){
 			ecu_time =  acquire_time();
 			result = response_inverter_abnormal_status();
-			printf("result:%d\n",result);
+			printdecmsg(ECU_DBG_CLIENT,"result",result);
 			response_process_result();
 		}
 		else if(compareTime(acquire_time() ,ecu_time,60*sockcfg.report_interval)){
@@ -1748,6 +1748,7 @@ void control_client_thread_entry(void* parameter)
 		if(result < 0){
 			result = 0;
 			printmsg(ECU_DBG_CONTROL_CLIENT,"Quit control_client");
+			rt_thread_delay(5 * RT_TICK_PER_SECOND);
 			continue;
 		}
 		rt_thread_delay(RT_TICK_PER_SECOND*sockcfg.report_interval*60/3);

@@ -312,7 +312,8 @@ int ftp_pasv_connect( int c_sock )
     //Á¬½ÓPASV¶Ë¿Ú
     memset(buf,0x00, sizeof(buf));
     sprintf( buf, "%d.%d.%d.%d",addr[0],addr[1],addr[2],addr[3]);
-	printf("%s %d\n",buf,(addr[4]*256+addr[5]));
+		print2msg(ECU_DBG_UPDATE,"UPDATE IP",buf);
+		printdecmsg(ECU_DBG_UPDATE,"UPDATE PORT",(addr[4]*256+addr[5]));
     r_sock = socket_connect(buf,addr[4]*256+addr[5]);
      
     return r_sock;
@@ -395,12 +396,9 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
 				return -1;
 			}else
 			{
-				//getcurrenttime(time);
-				//printf("%03d :time:%s  :len1:%7d ",++i,time,len);
 				if((len = recv( d_sock, buf, 1460, MSG_DONTWAIT )) > 0 )
 				{
 					sum += len;
-					//printf("len2:%7d sum:%7d\n",len,sum);
 
 					write_len = fileWrite( handle, buf, len );
 					if (write_len != len || (stop != NULL && *stop))
@@ -597,8 +595,11 @@ int getfile(char *remoteFile, char *localFile)
 	char user[20]={'\0'};
 	char password[20]={'\0'};
 	getFTPConf(FTPIP,&port,user,password);
-
-	printf("FTPIP:%s\nport:%d\nuser:%s\npassword:%s\n ",FTPIP,port,user,password);
+	
+	print2msg(ECU_DBG_UPDATE,"FTPIP",FTPIP);
+	printdecmsg(ECU_DBG_UPDATE,"port",port);
+	print2msg(ECU_DBG_UPDATE,"user",user);
+	print2msg(ECU_DBG_UPDATE,"password",password);
 
 	return ftpgetfile(FTPIP,port, user, password,remoteFile,localFile);
 }
@@ -611,7 +612,10 @@ int putfile(char *remoteFile, char *localFile)
 	char password[20]={'\0'};
 	getFTPConf(FTPIP,&port,user,password);
 
-	printf("FTPIP:%s\nport:%d\nuser:%s\npassword:%s\n ",FTPIP,port,user,password);
+	print2msg(ECU_DBG_UPDATE,"FTPIP",FTPIP);
+	printdecmsg(ECU_DBG_UPDATE,"port",port);
+	print2msg(ECU_DBG_UPDATE,"user",user);
+	print2msg(ECU_DBG_UPDATE,"password",password);
 
 	return ftpputfile(FTPIP,port, user, password,remoteFile,localFile);
 }

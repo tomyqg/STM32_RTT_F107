@@ -26,6 +26,7 @@
 #include <lwip/sockets.h> /* 使用BSD socket，需要包含sockets.h头文件 */
 #include <zigbee.h>
 #include "debug.h"
+#include "SEGGER_RTT.h"
 
 #ifdef RT_USING_DFS
 #include <dfs_fs.h>
@@ -184,17 +185,21 @@ void rt_init_thread_entry(void* parameter)
     /* mount flash fat partition 1 as root directory */
     if (dfs_mount("flash", "/", "elm", 0, 0) == 0)
     {
+    	SEGGER_RTT_printf(0,"File System initialized!\n");
         rt_kprintf("File System initialized!\n");
     }
     else
     {
+    	SEGGER_RTT_printf(0,"File System initialzation failed!\n");
         rt_kprintf("File System initialzation failed!\n");
 				dfs_mkfs("elm","flash");
 				if (dfs_mount("flash", "/", "elm", 0, 0) == 0)
 				{
+					SEGGER_RTT_printf(0,"File System initialized!\n");
 					rt_kprintf("File System initialized!\n");
 				}
 				initPath();
+				SEGGER_RTT_printf(0,"PATH initialized!\n");
 				rt_kprintf("PATH initialized!\n");
     }
 #endif /* RT_USING_DFS && RT_USING_DFS_ELMFAT */
@@ -209,6 +214,7 @@ void rt_init_thread_entry(void* parameter)
 
 	/* initialize lwip system */
 	lwip_system_init();
+	SEGGER_RTT_printf(0,"TCP/IP initialized!\n");
 	rt_kprintf("TCP/IP initialized!\n");
 #endif
 
@@ -225,6 +231,7 @@ void rt_init_thread_entry(void* parameter)
 	record_data_lock = rt_mutex_create("record_data_lock", RT_IPC_FLAG_FIFO);
 	if (record_data_lock != RT_NULL)
 	{
+		SEGGER_RTT_printf(0,"Initialize record_data_lock successful!\n");
 		rt_kprintf("Initialize record_data_lock successful!\n");
 	}
 #ifdef WIFI_USE
@@ -357,7 +364,7 @@ static void lan8720_rst_thread_entry(void* parameter)
 			
 			if(0 == value)	//判断控制寄存器是否变为0  表示断开
 			{
-				printf("reg 0:%x\n",value);
+				//printf("reg 0:%x\n",value);
 				rt_hw_lan8720_rst();
 			}
       rt_thread_delay( RT_TICK_PER_SECOND*5 );
@@ -401,7 +408,7 @@ static void wifi_test_thread_entry(void* parameter)
 		}
 		data[26] = ch12;
 		rt_hw_us_delay(1);
-		printf("%d:%s\n",length,data);
+		//printf("%d:%s\n",length,data);
 		SendToSocketB(data ,length);
 		SendToSocketC(data ,length);
 		rt_thread_delay(RT_TICK_PER_SECOND*5);
@@ -536,7 +543,7 @@ static void net_test_thread_entry(void* parameter)
 		}
 		send_data[26] = ch12;
 		send(sock, send_data, length, 0);
-		printf("%d:%s\n",length,send_data);
+		//printf("%d:%s\n",length,send_data);
 		rt_thread_delay(RT_TICK_PER_SECOND*10);
 		ch12++;
 	}

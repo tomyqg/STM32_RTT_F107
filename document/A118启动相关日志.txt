@@ -1,0 +1,158 @@
+#############################################  A118 相关命令操作  ###############################################################
+######包括需要上报的命令########  A102 A104 A106 A113 A114 A117  #########################
+################################  A120 A121 A124 A126 A130 A131  #########################
+------------------------------------------------------------------------------------------------------
+# A118 + A102 上报逆变器ID
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522142110!
+control==>Sent: APS1300051A101AAA0213000000017A10100000000000000END!
+control==>Received each time: 51!
+control==>Received: APS13AAA51A101AAA0213000000017A11820170522133749END!
+control==>Sent: APS1300092A102AAA000000000A--218ECU_R_M3_1.0SAA--200120170522133749END2017021600010000000END!
+control==>>>End!
+# A104	上报ECU本地时区
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522142111!
+control==>Sent: APS1300070A104AAA02130000000172017052214211120170522133749Etc/GMT+8END!
+control==>>>End!
+# A106	上报ECU通讯配置参数
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522142112!
+control==>/yuneng/client.con!
+control==>Sent: APS1300116A106AAA0213000000017220170522133749END10809308093010051eee.apsema.comEND20899708997010011111.apsema.comEND!
+control==>>>End!
+# A113	上报交流保护参数   5项
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522142113!
+control==>Sent: APS1300100A113AAA021300000001720170522133749ENDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEND!
+control==>>>End!
+# A114	读取交流保护参数	5项
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522142113!
+control==>Sent: APS1300052A100AAA0213000000017A114201705221337490END!
+control==>>>End!
+# A117 	上报最大功率以及范围
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522142115!
+control==>Sent: APS1300052A100AAA0213000000017A117201705221337490END!
+control==>>>End!
+# A120	上报交流保护参数	13项 
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522142116!
+control==>Sent: APS1300124A120AAA021300000001720170522133749ENDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEND!
+control==>>>End!
+# A121	读取交流保护参数  	13项
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522142117!
+control==>Sent: APS1300052A100AAA0213000000017A121201705221337490END!
+control==>>>End!
+# A124	读电网环境
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522142118!
+control==>Sent: APS1300052A100AAA0213000000017A124201705221337490END!
+control==>>>End!
+# A126	设置电网环境
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522142120!
+control==>Sent: APS1300052A100AAA0213000000017A126201705221337490END!
+control==>>>End!
+# A130	上报交流保护参数	17项
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522142121!
+control==>Sent: APS1300153A130AAA021300000001720170522133749ENDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEND!
+control==>>>End!
+# A131	读取交流保护参数	17项
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522142122!
+control==>Sent: APS1300052A100AAA0213000000017A131201705221337490END!
+control==>>>End!
+
+------------------------------------------------------------------------------------------------------
+
+
+#################################################其他指令####################################################################################
+------------------------------------------------------------------------------------------------------
+# A105	设置ECU本地时区
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522142123!
+control==>Sent: APS1300051A101AAA0213000000017A10100000000000000END!
+control==>Received each time: 57!
+control==>Received: APS13AAA57A105AAA021300000001720170522135450Etc/GMT-14END!
+control==>zone: Etc/GMT-14!
+control==>Sent: APS1300052A100AAA0213000000017A105201705221354500END!
+control==>>>End!
+# A104	上报ECU本地时区
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522142125!
+control==>Sent: APS1300071A104AAA02130000000172017052214212500000000000000Etc/GMT-14END!
+control==>>>End!
+------------------------------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------------------------------
+# A103	清空逆变器ID
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522143427!
+control==>Sent: APS1300051A101AAA0213000000017A10100000000000000END!
+control==>Received each time: 51!
+control==>Received: APS13AAA51A103AAA0213000000017000020170522143250END!
+control==>Sent: APS1300052A100AAA0213000000017A103201705221432500END!
+control==>>>End!
+# A102 上报逆变器ID
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522143428!
+control==>Sent: APS1300070A102AAA000000000A--218ECU_R_M3_1.0SAA--200000000000000000END!
+control==>>>End!
+------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------
+# A103	添加逆变器ID
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522152429!
+control==>Sent: APS1300051A101AAA0213000000017A10100000000000000END!
+control==>Received each time: 81!
+control==>Received: APS13AAA81A103AAA0213000000017100220170522152235END201703150001END201703220001END!
+control==>Sent: APS1300052A100AAA0213000000017A103201705221522350END!
+control==>>>End!
+# A102 	上报逆变器ID
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522152433!
+control==>Sent: APS1300114A102AAA000000000A--218ECU_R_M3_1.0SAA--200200000000000000END2017031500010000000END2017032200010000000END!
+control==>>>End!
+------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------
+# A103	删除逆变器ID
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522152917!
+control==>Sent: APS1300051A101AAA0213000000017A10100000000000000END!
+control==>Received each time: 81!
+control==>Received: APS13AAA81A103AAA0213000000017200220170522152914END201703150001END201703220001END!
+control==>Sent: APS1300052A100AAA0213000000017A103201705221529140END!
+control==>>>End!
+# A102 	上报逆变器ID
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170522152922!
+control==>Sent: APS1300070A102AAA000000000A--218ECU_R_M3_1.0SAA--200000000000000000END!
+control==>>>End!
+------------------------------------------------------------------------------------------------------

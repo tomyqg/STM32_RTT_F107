@@ -585,7 +585,7 @@ int send_record(int fd_sock, char *sendbuff, char *send_date_time)			//·¢ËÍÊı¾İµ
 		return -1;
 	else
 	{
-		printf("readbuff:%s\n",readbuff);
+		print2msg(ECU_DBG_CLIENT,"readbuff",readbuff);
 		if('1' == readbuff[0])
 			update_send_flag(send_date_time);
 		clear_send_flag(readbuff);
@@ -637,7 +637,7 @@ int wifi_send_record(char *sendbuff, char *send_date_time)		//Í¨¹ıWIFI·¢ËÍÊı¾İµ½
 	{
 		//¼ì²é¸ñÊ½£¬Èç¹ûÊÇ¶à¸ö°üÔÚÒ»ÆğÁË£¬½øĞĞºÏ²¢
 		wifi_socketb_format(readbuff ,length);
-		printf("readbuff:%s\n",&readbuff[9]);
+		print2msg(ECU_DBG_CLIENT,"readbuff",&readbuff[9]);
 		if('1' == readbuff[9])
 			update_send_flag(send_date_time);
 		clear_send_flag(&readbuff[9]);

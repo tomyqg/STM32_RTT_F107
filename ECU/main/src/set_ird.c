@@ -256,7 +256,6 @@ int get_ird_single(int shortaddr,char* id)		//从逆变器读取实际IRD
 			(0xFE == readbuff[56]) &&
 			(0xFE == readbuff[57]))
 	{
-	printf("resolve_ird\n");
 		resolve_ird(id, (char *)readbuff);		//解析和保存IRD
 		return 0;
 	}
@@ -266,7 +265,6 @@ int get_ird_single(int shortaddr,char* id)		//从逆变器读取实际IRD
 				(0xDD == readbuff[3]) &&
 				(0xFE == readbuff[31]) &&
 				(0xFE == readbuff[32])) {
-				printf("resolve_ird_DD\n");
 		resolve_ird_DD(id, (char *)readbuff);		//解析和保存IRD
 		return 0;
 	}

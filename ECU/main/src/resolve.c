@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include "resolve.h"
 #include <string.h>
+#include "SEGGER_RTT.h"
 
 /*****************************************************************************/
 /*  Variable Declarations                                                    */
@@ -648,6 +649,7 @@ int resolvedata_600(char *data, struct inverter_info_t *inverter)
 	int i, seconds=0;
 	float factor1 = 0;
 	float factor2 = 0;
+	char *string = NULL;
 	if(data[37]==0x1F)
 	{
 		factor1 = 1;
@@ -737,11 +739,28 @@ int resolvedata_600(char *data, struct inverter_info_t *inverter)
 		inverter->op = (int)(inverter->dv*inverter->di);
 	if(inverter->opb>360)
 		inverter->opb = (int)(inverter->dvb*inverter->dib);
+
+	string = malloc(1024);
+	sprintf(string,"tm=%d dv=%f  di=%f  op=%d  gv=%d curaccgen=%f reactive_power=%f active_power=%f cur_output_energy=%f\n",inverter->curacctime,inverter->dv,inverter->di,inverter->op,inverter->gv,inverter->curaccgen,inverter->reactive_power,inverter->active_power,inverter->cur_output_energy);
+	SEGGER_RTT_printf(0,"%s",string);
+	memset(string,0x00,1024);
+	sprintf(string,"sm=%d dvb=%f dib=%f opb=%d gv=%d curaccgenb=%f reactive_power=%f active_power=%f cur_output_energy=%f\n",seconds,inverter->dvb,inverter->dib,inverter->opb,inverter->gv,inverter->curaccgenb,inverter->reactive_power,inverter->active_power,inverter->cur_output_energy);
+	SEGGER_RTT_printf(0,"%s",string);
+	memset(string,0x00,1024);
+	sprintf(string,"prtm=%d\n",inverter->preacctime);
+	SEGGER_RTT_printf(0,"%s",string);
+	memset(string,0x00,1024);
+	free(string);
+	string = NULL;
+
+#if ECU_DEBUG	
 #if ECU_DEBUG_MAIN
 	printf("tm=%d dv=%f  di=%f  op=%d  gv=%d curaccgen=%f reactive_power=%f active_power=%f cur_output_energy=%f\n",inverter->curacctime,inverter->dv,inverter->di,inverter->op,inverter->gv,inverter->curaccgen,inverter->reactive_power,inverter->active_power,inverter->cur_output_energy);
 	printf("sm=%d dvb=%f dib=%f opb=%d gv=%d curaccgenb=%f reactive_power=%f active_power=%f cur_output_energy=%f\n",seconds,inverter->dvb,inverter->dib,inverter->opb,inverter->gv,inverter->curaccgenb,inverter->reactive_power,inverter->active_power,inverter->cur_output_energy);
 	printf("prtm=%d\n",inverter->preacctime);
 #endif
+#endif
+
 	for(i=0;i<25;i++)
 		inverter->status_web[i] = 0x30;
 	inverter->status_web[0]=((data[25]>>6)&0x01)+0x30;		//AC Frequency exceeding Range 1bit"??????"

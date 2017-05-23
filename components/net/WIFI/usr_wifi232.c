@@ -490,7 +490,7 @@ int AT_TCPTOC(int timeout)
 	else
 	{
 		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
-		printf("%s\n",AT);
+		//printf("%s\n",AT);
 		if(memcmp(&AT[strlen(send)+1],"+ok",3))
 		{
 			rt_mutex_release(WIFI_lock);
@@ -996,12 +996,12 @@ int initWorkIP(char *clientIP,int clientPort,char *controlIP,int controlPort)
 	{
 		if(0 == AT())
 		{//进入AT模式成功
-			printf("AT Successful\n");
+			//printf("AT Successful\n");
 			res = 0;
 			break;
 		}else
 		{//进入AT模式失败，尝试先退出AT模式。
-			printf("AT Failed,AT_ENTM\n");
+			//printf("AT Failed,AT_ENTM\n");
 			res = -1;
 			AT_ENTM();
 		}
