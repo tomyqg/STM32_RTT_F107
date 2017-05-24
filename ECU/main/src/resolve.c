@@ -57,7 +57,7 @@ void yc600_status(struct inverter_info_t *inverter)
 			('1' == inverter->status_web[17]) || ('1' == inverter->status_web[18])|| ('1' == inverter->status_web[19]) ||
 			('1' == inverter->status_web[21]) || ('1' == inverter->status_web[22])){
 		strcat(inverter->status_ema, inverter->id);
-		strcat(inverter->status_ema, "04");
+		strcat(inverter->status_ema, "06");
 		if(('1' == inverter->status_web[0]) || ('1' == inverter->status_web[1]) ||  ('1' == inverter->status_web[19]) ||
 			('1' == inverter->status_web[21]) || ('1' == inverter->status_web[22]) || ('1' == inverter->status_web[23]) || ('1' == inverter->status_web[24]))
 			strcat(inverter->status_ema, "1");		//AC??
@@ -688,16 +688,17 @@ int resolvedata_600(char *data, struct inverter_info_t *inverter)
 	inverter->active_power = (factor1)*0.94*(inverter->dv*inverter->di+inverter->dvb*inverter->dib);
 	inverter->cur_output_energy = (inverter->curaccgen+inverter->curaccgenb)*0.94*data[37];
 
-
-//	if((inverter->cur_output_energy >= inverter->pre_output_energy)&&(inverter->curacctime >= inverter->preacctime))
-//	{
-//		inverter->output_energy=inverter->cur_output_energy-inverter->pre_output_energy;
-//	}
-//	else
-//	{
-//		inverter->output_energy=inverter->cur_output_energy;
-//	}
-//	inverter->pre_output_energy=inverter->cur_output_energy;
+#if 1
+	if((inverter->cur_output_energy >= inverter->pre_output_energy)&&(inverter->curacctime >= inverter->preacctime))
+	{
+		inverter->output_energy=inverter->cur_output_energy-inverter->pre_output_energy;
+	}
+	else
+	{
+		inverter->output_energy=inverter->cur_output_energy;
+	}
+	inverter->pre_output_energy=inverter->cur_output_energy;
+#endif
 
 	if((inverter->curaccgen >= inverter->preaccgen)&&(inverter->curaccgenb >= inverter->preaccgenb)&&(inverter->curacctime >= inverter->preacctime))
 	{	

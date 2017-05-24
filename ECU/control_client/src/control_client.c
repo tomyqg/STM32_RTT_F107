@@ -1223,8 +1223,9 @@ int response_inverter_abnormal_status()
 				
 				//≈–∂œ”¶¥÷° «∑Ò∏Ω¥¯√¸¡Ó
 				if(strlen(recv_buffer) > (24 + 14*num)){
-					memset(command, 0, sizeof(command));
-					strncpy(command, &recv_buffer[24 + 14*num], sizeof(command));
+					memset(command, '\0', sizeof(command));
+					strncpy(command, &recv_buffer[24 + 14*num], (strlen(recv_buffer) - (24+14*num)));
+					command[strlen(recv_buffer) - (24+14*num)] = '\0';
 					print2msg(ECU_DBG_CONTROL_CLIENT,"Command", command);
 					//–£—È√¸¡Ó
 					if(msg_format_check(command) < 0)
@@ -1332,9 +1333,11 @@ int response_inverter_abnormal_status()
 			
 			//≈–∂œ”¶¥÷° «∑Ò∏Ω¥¯√¸¡Ó
 			if(strlen(recv_buffer) > (24 + 14*num)){
-				memset(command, 0, sizeof(command));
-				strncpy(command, &recv_buffer[24 + 14*num], sizeof(command));
+				memset(command, '\0', sizeof(command));
+				strncpy(command, &recv_buffer[24 + 14*num], (strlen(recv_buffer) - (24+14*num)));
+				command[strlen(recv_buffer) - (24+14*num)] = '\0';
 				print2msg(ECU_DBG_CONTROL_CLIENT,"Command", command);
+
 				//–£—È√¸¡Ó
 				if(msg_format_check(command) < 0)
 					continue;

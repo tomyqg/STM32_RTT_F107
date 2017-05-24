@@ -217,7 +217,7 @@ int save_gfdi_changed_result(inverter_info *firstinverter)
 	if(strlen(gfdi_changed_result) > 0)
 		gfdi_changed_result[9] = strlen(gfdi_changed_result)%10 + 0x30;
 
-	strcat(gfdi_changed_result, "\n");
+	//strcat(gfdi_changed_result, "\n");
 
 	if(count >0)
 		save_process_result(115, gfdi_changed_result);
@@ -274,7 +274,7 @@ int save_turn_on_off_changed_result(inverter_info *firstinverter)
 	if(strlen(turn_on_off_changed_result) > 0)
 		turn_on_off_changed_result[9] = strlen(turn_on_off_changed_result)%10 + 0x30;
 
-	strcat(turn_on_off_changed_result, "\n");
+	//strcat(turn_on_off_changed_result, "\n");
 
 	if(count >0)
 		save_process_result(116, turn_on_off_changed_result);
@@ -347,7 +347,7 @@ int save_protect_result(inverter_info *firstinverter)
 	if(strlen(protect_result) > 0)
 		protect_result[9] = strlen(protect_result)%10 + 0x30;
 
-	strcat(protect_result, "\n");
+	//strcat(protect_result, "\n");
 
 	save_process_result(114,protect_result);
 

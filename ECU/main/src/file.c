@@ -614,11 +614,11 @@ int getTimeZone()
 
 //检查目录中时间最早的文件,存在返回1，不存在返回0
 //dir为目录的名称（传入参数）    oldfile为最早文件的文件名（传出参数）
-int checkOldFile(char *dir,char *oldFile)
+static int checkOldFile(char *dir,char *oldFile)
 {
 	DIR *dirp;
 	struct dirent *d;
-	char path[100];
+	char path[100] , fullpath[100] = {'\0'};
 	int fileDate = 0,temp = 0;
 	char tempDate[9] = {'\0'};
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
@@ -649,7 +649,8 @@ int checkOldFile(char *dir,char *oldFile)
 			}
 			if(fileDate != 0)
 			{
-				strcpy(oldFile,path);
+				sprintf(fullpath,"%s/%s",dir,path);
+				strcpy(oldFile,fullpath);
 				closedir(dirp);
 				return 1;
 			}
@@ -663,12 +664,12 @@ int checkOldFile(char *dir,char *oldFile)
 
 
 //检索整个文件系统，判断剩余空间存储量，如果剩余可存储空间过小，则检索相应的目录，并进行相应的删除操作
-int cutFileSystem(void)
+int optimizeFileSystem(void)
 {
   int result;
   long long cap;
   struct statfs buffer;
-	
+	char oldFile[100] = {'\0'};
 
   result = dfs_statfs("/", &buffer);
   if (result != 0)
@@ -677,19 +678,40 @@ int cutFileSystem(void)
       return -1;
   }
   cap = buffer.f_bsize * buffer.f_bfree / 1024;
-		
-  rt_kprintf("disk free: %d KB [ %d block, %d bytes per block ]\n",
-  (unsigned long)cap, buffer.f_bfree, buffer.f_bsize);
+	
 	//当flash芯片所剩下的容量小于40KB的时候进行一些必要的文件删除操作。
 	if (cap < 40) 
 	{
+		//删除最前面一天的ECU级别处理结果数据    如果该目录下存在文件的话
+		if(1 == checkOldFile("/home/data/proc_res",oldFile))
+		{
+			unlink(oldFile);
+		}
 		
-			
-		return 0;
-	}else
-	{
-		return 0;
+		//删除最前面一天的逆变器级别处理结果数据  如果该目录下存在文件的话
+		memset(oldFile,0x00,100);
+		if(1 == checkOldFile("/home/data/inprores",oldFile))
+		{
+			unlink(oldFile);
+		}
+		
+		//删除最前面一天的逆变器状态数据 如果该目录下存在文件的话
+		memset(oldFile,0x00,100);
+		if(1 == checkOldFile("/home/record/inversta",oldFile))
+		{
+			unlink(oldFile);
+		}
+		
+		//删除最前面一天的发电量数据   如果该目录下存在文件的话
+		memset(oldFile,0x00,100);
+		if(1 == checkOldFile("/home/record/data",oldFile))
+		{
+			unlink(oldFile);
+		}	
+		
 	}
+	
+	return 0;
 		
 }
 
@@ -787,7 +809,7 @@ int initsystem(char *ecuid,char *mac)
 	echo("/yuneng/limiteid.con","1");
 	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	//echo("/yuneng/control.con","Timeout=10\nReport_Interval=15\nDomain=eee.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
-	echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=111.apsema.com\nIP=139.168.200.158\nPort1=8997\nPort2=8997\n");
+	echo("/yuneng/control.con","Timeout=10\nReport_Interval=5\nDomain=111.apsema.com\nIP=139.168.200.158\nPort1=8997\nPort2=8997\n");
 	//echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.100\nPort1=8997\nPort2=8997\n");
 	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	echo("/yuneng/vernum.con","2\n");

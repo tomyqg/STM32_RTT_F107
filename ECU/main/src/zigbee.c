@@ -1945,7 +1945,7 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 			curenergy += curinverter->output_energy;
 			curenergy += curinverter->output_energyb;
 			curenergy += curinverter->output_energyc;
-			printf("curenergy:%f\n",curenergy);
+			//printf("curenergy:%f\n",curenergy);
 		}
 	}
 	ecu.current_energy = curenergy;

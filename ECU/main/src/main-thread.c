@@ -250,6 +250,7 @@ void main_thread_entry(void* parameter)
 			//display_on_lcd_and_web(); //Òº¾§ÆÁÏÔÊ¾ÐÅÏ¢
 			*/
 			
+			optimizeFileSystem();
 			if(ecu.count>0)
 			{
 				protocol_APS18(inverter, ecu.broadcast_time);

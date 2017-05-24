@@ -156,3 +156,79 @@ control==>Connecting EMA successfully: 20170522152922!
 control==>Sent: APS1300070A102AAA000000000A--218ECU_R_M3_1.0SAA--200000000000000000END!
 control==>>>End!
 ------------------------------------------------------------------------------------------------------
+
+
+
+------------------------------------------------------------------------------------------------------
+#A111 开机
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170524100523!
+control==>Sent: APS1300051A101AAA0213000000017A10100000000000000END!
+control==>Received each time: 52!
+control==>Received: APS13AAA52A111AAA02130000000170000020170524095139END!
+control==>turn_onoff_all: 1!
+control==>Sent: APS1300052A100AAA0213000000017A111201705240951390END!
+control==>>>End!
+------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------
+#A111 关机
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170524103412!
+control==>Sent: APS1300051A101AAA0213000000017A10100000000000000END!
+control==>Received each time: 52!
+control==>Received: APS13AAA52A111AAA02130000000171000020170524103011END!
+control==>turn_onoff_all: 1!
+control==>Sent: APS1300052A100AAA0213000000017A111201705241030110END!
+control==>>>End!
+
+------------------------------------------------------------------------------------------------------
+#A110 设置逆变器最大功率
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170524103415!
+control==>Sent: APS1300051A101AAA0213000000017A10100000000000000END!
+control==>Received each time: 58!
+control==>Received: APS13AAA58A110AAA02130000000170000020170524103040END100END!
+control==>Sent: APS1300052A100AAA0213000000017A110201705241030400END!
+control==>>>End!
+------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------
+#A112 清GFDI
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170524103419!
+control==>Sent: APS1300051A101AAA0213000000017A10100000000000000END!
+control==>Received each time: 52!
+control==>Received: APS13AAA52A112AAA02130000000170000020170524103046END!
+control==>clear_all: 0!
+control==>Sent: APS1300052A100AAA0213000000017A112201705241030460END!
+control==>>>End!
+
+------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------
+
+#A127 设置IRD
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170524110435!
+control==>Sent: APS1300051A101AAA0213000000017A10100000000000000END!
+control==>Received each time: 120!
+control==>Received: APS13AA120A127AAA02130000000171000120170524105805END4060000005201END
+control==>Sent: APS1300052A100AAA0213000000017A127201705241058051END!
+control==>>>End!
+
+------------------------------------------------------------------------------------------------------
+#A132 设置17项保护参数
+control==>Start Communication with EMA!
+control==>Get host failed, use default IP : : 139.168.200.158!
+control==>Connecting EMA successfully: 20170524111440!
+control==>Sent: APS1300051A101AAA0213000000017A10100000000000000END!
+control==>Received each time: 123!
+control==>Received: APS13AA123A132AAA021300000001720170524111101000END1822524805100006017926347052500010000010000010000010051518000010000010END!
+control==>Sent: APS1300052A100AAA0213000000017A132201705241111010END!
+control==>>>End!

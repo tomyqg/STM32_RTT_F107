@@ -63,9 +63,9 @@ typedef enum THREADTYPE {
 #define THREAD_PRIORITY_CLIENT						27
 
 //thread start time
-#define START_TIME_UPDATE									0
+#define START_TIME_UPDATE									15
 #define START_TIME_NTP										10
-#define START_TIME_IDWRITE								5
+#define START_TIME_IDWRITE								15
 #define START_TIME_MAIN										20
 #define START_TIME_CONTROL_CLIENT					60
 #define START_TIME_CLIENT									120
