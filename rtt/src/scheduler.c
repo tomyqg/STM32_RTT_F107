@@ -101,6 +101,7 @@ static void _rt_scheduler_stack_check(struct rt_thread *thread)
         {
             extern long list_thread(void);
             list_thread();
+			reboot();
         }
         #endif
         level = rt_hw_interrupt_disable();

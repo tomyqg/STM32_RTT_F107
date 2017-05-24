@@ -233,7 +233,7 @@ void main_thread_entry(void* parameter)
 			ecu.count = getalldata(inverter);			//获取所有逆变器数据,返回当前有数据的逆变器数量
 			//printdecmsg(ECU_DBG_MAIN,"ecu.count",ecu.count);
 			ecu.life_energy = ecu.life_energy + ecu.current_energy;				//计算系统历史发电量
-
+			printfloatmsg(ECU_DBG_MAIN,"ecu.life_energy",ecu.life_energy);
 			update_life_energy(ecu.life_energy);								//设置系统历史发电量
 
 			//update_today_energy(ecu.current_energy);							//设置系统当天发电量

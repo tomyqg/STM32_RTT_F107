@@ -21,6 +21,7 @@
 #include <string.h>
 #include "datetime.h"
 #include "SEGGER_RTT.h"
+#include "dfs_fs.h"
 
 /*****************************************************************************/
 /*  Variable Declarations                                                    */
@@ -611,6 +612,88 @@ int getTimeZone()
 	
 }
 
+//检查目录中时间最早的文件,存在返回1，不存在返回0
+//dir为目录的名称（传入参数）    oldfile为最早文件的文件名（传出参数）
+int checkOldFile(char *dir,char *oldFile)
+{
+	DIR *dirp;
+	struct dirent *d;
+	char path[100];
+	int fileDate = 0,temp = 0;
+	char tempDate[9] = {'\0'};
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
+	{
+		/* 打开dir目录*/
+		dirp = opendir(dir);
+		
+		if(dirp == RT_NULL)
+		{
+			printmsg(ECU_DBG_OTHER,"check Old File open directory error");
+		}
+		else
+		{
+			/* 读取dir目录*/
+			while ((d = readdir(dirp)) != RT_NULL)
+			{
+				
+				memcpy(tempDate,d->d_name,8);
+				tempDate[8] = '\0';
+				if(((temp = atoi(tempDate)) < fileDate) || (fileDate == 0))
+				{
+					fileDate = temp;
+					memset(path,0,100);
+					strcpy(path,d->d_name);
+				}
+				
+			}
+			if(fileDate != 0)
+			{
+				strcpy(oldFile,path);
+				closedir(dirp);
+				return 1;
+			}
+			/* 关闭目录 */
+			closedir(dirp);
+		}
+	}
+	rt_mutex_release(record_data_lock);
+	return 0;
+}
+
+
+//检索整个文件系统，判断剩余空间存储量，如果剩余可存储空间过小，则检索相应的目录，并进行相应的删除操作
+int cutFileSystem(void)
+{
+  int result;
+  long long cap;
+  struct statfs buffer;
+	
+
+  result = dfs_statfs("/", &buffer);
+  if (result != 0)
+  {
+      printmsg(ECU_DBG_OTHER,"dfs_statfs failed.\n");
+      return -1;
+  }
+  cap = buffer.f_bsize * buffer.f_bfree / 1024;
+		
+  rt_kprintf("disk free: %d KB [ %d block, %d bytes per block ]\n",
+  (unsigned long)cap, buffer.f_bfree, buffer.f_bsize);
+	//当flash芯片所剩下的容量小于40KB的时候进行一些必要的文件删除操作。
+	if (cap < 40) 
+	{
+		
+			
+		return 0;
+	}else
+	{
+		return 0;
+	}
+		
+}
+
+
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 
@@ -639,7 +722,6 @@ void testfile()
 	get_id_from_file(inverter);
 }
 FINSH_FUNCTION_EXPORT(testfile, eg:testfile());
-
 
 void rm_dir(char* dir)
 {
@@ -754,9 +836,6 @@ void changdatacent(char * IP,char *Domain,int port1,int port2)
 	echo("/yuneng/datacent.con",str);
 }	
 FINSH_FUNCTION_EXPORT(changdatacent, eg:changdatacent("139.168.200.158","111.apsema.com",8093,8093));
-
-
-
 
 FINSH_FUNCTION_EXPORT(addInverter, eg:addInverter("201703150001"));
 

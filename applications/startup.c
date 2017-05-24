@@ -67,7 +67,7 @@ void rtthread_startup(void)
 
     /* init tick */
     rt_system_tick_init();
-
+	
     /* init kernel object */
     rt_system_object_init();
 
