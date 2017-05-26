@@ -3,5 +3,5 @@
 
 #define ECU_M3_VERSION "ECU_R_M3"
 #define MAJORVERSION  "1"
-#define MINORVERSION	"0"
+#define MINORVERSION	"1"
 #endif /*__VERSION_H__*/

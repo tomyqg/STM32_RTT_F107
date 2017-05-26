@@ -30,8 +30,11 @@ typedef enum DEBUG {
 	ECU_DBG_WIFI = 7,
 }DebugType;
 
+
 #define ECU_DBG_OFF           		0x0
 #define ECU_DBG_ON           			0x1
+
+#define ECU_JLINK_DEBUG						ECU_DBG_ON
 
 #define ECU_DEBUG									ECU_DBG_ON
 

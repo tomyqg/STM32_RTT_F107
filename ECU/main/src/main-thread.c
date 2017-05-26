@@ -206,7 +206,11 @@ void main_thread_entry(void* parameter)
 	int cur_time_hour;														//当前的时间小时
 
 	rt_thread_delay(RT_TICK_PER_SECOND * START_TIME_MAIN);
+	
+#if ECU_JLINK_DEBUG
 	SEGGER_RTT_printf(0,"\n---********** main.exe %s_%s_%s **********---\n", ECU_M3_VERSION,MAJORVERSION,MINORVERSION);
+#endif
+
 #if ECU_DEBUG
 #if ECU_DEBUG_MAIN
 	printf("\n---********** main.exe %s_%s_%s **********---\n", ECU_M3_VERSION,MAJORVERSION,MINORVERSION);

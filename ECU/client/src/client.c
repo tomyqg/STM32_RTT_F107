@@ -653,8 +653,10 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 	char readbuff[1024] = {'\0'};
 	char sendbuff[256] = {'\0'};
 	FILE *fp;
-	int fd_sock,length;
-
+	int fd_sock;
+#ifdef WIFI_USE	
+	int length = 0;
+#endif	
 	if(0 == detection_resendflag2())		//	检测是否有resendflag='2'的记录
 		return 0;
 

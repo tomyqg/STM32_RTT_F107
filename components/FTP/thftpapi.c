@@ -334,7 +334,7 @@ int ftp_type( int c_sock, char mode )
 int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, int *stop)
 {
     int     d_sock = 0;
-    ssize_t     len,write_len,sum=0;
+    ssize_t len,write_len,sum=0;
     char    *buf;
     int     handle;
     int     result =0;
@@ -382,18 +382,14 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
     memset(buf,0x00, sizeof(buf));
 		FD_ZERO(&rd);
 		FD_SET(d_sock, &rd);
-		timeout.tv_sec = 10;
+		timeout.tv_sec = 5;
 		timeout.tv_usec = 0;
 
 		while (1) {
 			len = select(d_sock+1, &rd, NULL, NULL, &timeout);
 			if(len <= 0){
 				printmsg(ECU_DBG_UPDATE,"ftp_retrfile select out");
-				closesocket( d_sock );
-				fileclose( handle );
-				free(buf);
-				unlink(d);
-				return -1;
+				break;
 			}else
 			{
 				if((len = recv( d_sock, buf, 1460, MSG_DONTWAIT )) > 0 )
@@ -430,21 +426,32 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
 		closesocket( d_sock );
 		fileclose( handle );
 		
-		
+
+		timeout.tv_sec = 3;
+		timeout.tv_usec = 0;		
     //向服务器接收返回值
     memset(buf,0x00, sizeof(buf));
-    len = recv( c_sock, buf, 512, 0 );
-    buf[len] = 0;
-    sscanf( buf, "%d", &result );
-    if ( result >= 300 ) {
-		free(buf);
-		unlink(d);
+		len = recv( c_sock, buf, 512, 0 );
+		if(len <= 0)
+		{
+			free(buf);
+			unlink(d);
+			return -1;
+		}else
+		{
+			
+			buf[len] = 0;
+			sscanf( buf, "%d", &result );
+			if ( result >= 300 ) {
+				free(buf);
+				unlink(d);
         return result;
-    }
-	free(buf);
-    return 0;
+			}
+			free(buf);
+			return 0;
+		}
+		
 }
-
 
 //上传文件
 int ftp_storfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, int *stop)

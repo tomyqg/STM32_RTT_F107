@@ -42,7 +42,7 @@
 #if defined(RT_USING_UART4)
 extern int zigbeeReadFlag;
 #endif
-#if defined(RT_USING_UART4)
+#if defined(RT_USING_UART1)
 extern int WiFiReadFlag;
 #endif
 
@@ -584,8 +584,8 @@ static rt_size_t rt_serial_write(struct rt_device *dev,
 		zigbeeReadFlag = 0;
 	}
 #endif
-#if defined(RT_USING_UART4)
-		if(rt_strncmp("uart4",dev->parent.name,5))
+#if defined(RT_USING_UART1)
+		if(rt_strncmp("uart1",dev->parent.name,5))
 		{
 			WiFiReadFlag = 0;
 		}

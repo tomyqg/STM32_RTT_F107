@@ -41,11 +41,13 @@ char funname[8][20] = {
 
 void printmsg(DebugType type,char *msg)		//打印字符串
 {
+#if ECU_JLINK_DEBUG	
 	char *string = NULL;
 	string = malloc(1024);
 	sprintf(string,"%s==>%s!\n",funname[type], msg);
 	SEGGER_RTT_printf(0,"%s",string);
 	free(string);
+#endif
 	
 #if ECU_DEBUG
 	switch(type)
@@ -97,11 +99,14 @@ void printmsg(DebugType type,char *msg)		//打印字符串
 
 void print2msg(DebugType type,char *msg1, char *msg2)		//打印字符串
 {
+#if ECU_JLINK_DEBUG
 	char *string = NULL;
 	string = malloc(1024);
 	sprintf(string,"%s==>%s: %s!\n",funname[type], msg1, msg2);
 	SEGGER_RTT_printf(0,"%s",string);
 	free(string);
+#endif
+
 #if ECU_DEBUG
 	switch(type)
 	{
@@ -152,11 +157,14 @@ void print2msg(DebugType type,char *msg1, char *msg2)		//打印字符串
 
 void printdecmsg(DebugType type,char *msg, int data)		//打印整形数据
 {
+#if ECU_JLINK_DEBUG
 	char *string = NULL;
 	string = malloc(1024);
 	sprintf(string,"%s==>%s: %d!\n",funname[type], msg, data);
 	SEGGER_RTT_printf(0,"%s",string);
 	free(string);
+#endif
+
 #if ECU_DEBUG
 	switch(type)
 	{
@@ -206,11 +214,14 @@ void printdecmsg(DebugType type,char *msg, int data)		//打印整形数据
 
 void printhexdatamsg(DebugType type,char *msg, int data)		//打印16进制数据,ZK
 {
+#if ECU_JLINK_DEBUG
 	char *string = NULL;
 	string = malloc(1024);
 	sprintf(string,"%s==>%s: %X!\n",funname[type], msg, data);
 	SEGGER_RTT_printf(0,"%s",string);
 	free(string);
+#endif
+
 #if ECU_DEBUG
 	switch(type)
 	{
@@ -260,11 +271,14 @@ void printhexdatamsg(DebugType type,char *msg, int data)		//打印16进制数据,ZK
 
 void printfloatmsg(DebugType type,char *msg, float data)		//打印实数
 {
+#if ECU_JLINK_DEBUG
 	char *string = NULL;
 	string = malloc(1024);
 	sprintf(string,"%s==>%s: %f!\n",funname[type], msg, data);
 	SEGGER_RTT_printf(0,"%s",string);
 	free(string);
+#endif
+
 #if ECU_DEBUG
 	switch(type)
 	{
@@ -316,6 +330,7 @@ void printfloatmsg(DebugType type,char *msg, float data)		//打印实数
 void printhexmsg(DebugType type,char *msg, char *data, int size)		//打印十六进制数据
 {
 	int i;
+#if ECU_JLINK_DEBUG
 	char *string = NULL;
 	string = malloc(1024);
 	sprintf(string,"%s==>%s: ",funname[type], msg);
@@ -323,8 +338,8 @@ void printhexmsg(DebugType type,char *msg, char *data, int size)		//打印十六进制
 	for(i=0; i<size; i++)
 			SEGGER_RTT_printf(0,"%02X, ", data[i]);
 	SEGGER_RTT_printf(0,"\n");
-	
 	free(string);
+#endif	
 #if ECU_DEBUG
 	
 	switch(type)

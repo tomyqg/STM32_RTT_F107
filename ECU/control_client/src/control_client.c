@@ -1016,13 +1016,14 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 int check_inverter_abnormal_status_sent(int hour)
 {
 	int sockfd;
-	int length = 0;
 	int i, flag, num = 0;
 	char datetime[15] = {'\0'};
-	//char recv_buffer[4096] = {'\0'};
-	//char send_buffer[MAXBUFFER] = {'\0'};
 	char *recv_buffer = NULL;
 	char *send_buffer = NULL;
+#ifdef WIFI_USE
+	int length = 0;
+#endif	
+	
 	recv_buffer = rt_malloc(2048);
 	send_buffer = rt_malloc(MAXBUFFER);
 	if(get_hour() != hour)
@@ -1158,12 +1159,8 @@ int exist_inverter_abnormal_status()
 int response_inverter_abnormal_status()
 {
 	int result = 0;
-	int length = 0;
 	int  j, sockfd, flag, num = 0, cmd_id, next_cmd_id,havaflag;
 	char datetime[15] = {'\0'};
-	//char recv_buffer[4096] = {'\0'};
-	//char command[4096] = {'\0'};
-	//char send_buffer[1024]={'\0'};
 	char save_buffer[MAXBUFFER] = {'\0'};
 	char *recv_buffer = NULL;
 	char *command = NULL;
@@ -1172,6 +1169,9 @@ int response_inverter_abnormal_status()
 	char data[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};//查询到的数据
 	char time[15] = {'\0'};
 	FILE *fp = NULL;	
+#ifdef WIFI_USE	
+	int length = 0;
+#endif
 	printmsg(ECU_DBG_CONTROL_CLIENT,">>Start Response Abnormal Status");
 	recv_buffer = (char *)rt_malloc(2048);
 	command = (char *)rt_malloc(2048);
@@ -1403,13 +1403,13 @@ int communication_with_EMA(int next_cmd_id)
 {
 	int sockfd;
 	int cmd_id;
-	int length = 0;
 	char timestamp[15] = "00000000000000";
-	//char recv_buffer[4096] = {'\0'};
-	//char send_buffer[MAXBUFFER] = {'\0'};
 	int one_a118=0;
 	char *recv_buffer = NULL;
 	char *send_buffer = NULL;
+#ifdef WIFI_USE	
+	int length = 0;
+#endif
 	recv_buffer = rt_malloc(2048);
 	send_buffer = rt_malloc(MAXBUFFER);
 	

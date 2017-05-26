@@ -512,7 +512,9 @@ void get_mac(rt_uint8_t  dev_addr[6])
 			dev_addr[3]=strtohex(&macstr[9]);
 			dev_addr[4]=strtohex(&macstr[12]);
 			dev_addr[5]=strtohex(&macstr[15]);
+#if ECU_JLINK_DEBUG
 			SEGGER_RTT_printf(0,"ECU MAC: %x %x %x %x %x %x\n",dev_addr[0],dev_addr[1],dev_addr[2],dev_addr[3],dev_addr[4],dev_addr[5]);
+#endif
 			fclose(fp);
 			return;
 		}
@@ -690,7 +692,7 @@ int optimizeFileSystem(void)
 		
 		//删除最前面一天的逆变器级别处理结果数据  如果该目录下存在文件的话
 		memset(oldFile,0x00,100);
-		if(1 == checkOldFile("/home/data/inprores",oldFile))
+		if(1 == checkOldFile("/home/data/iprocres",oldFile))
 		{
 			unlink(oldFile);
 		}

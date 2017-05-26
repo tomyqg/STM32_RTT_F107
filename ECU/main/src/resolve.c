@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "resolve.h"
+#include "debug.h"
 #include <string.h>
 #include "SEGGER_RTT.h"
 
@@ -741,6 +742,7 @@ int resolvedata_600(char *data, struct inverter_info_t *inverter)
 	if(inverter->opb>360)
 		inverter->opb = (int)(inverter->dvb*inverter->dib);
 
+#if ECU_JLINK_DEBUG
 	string = malloc(1024);
 	sprintf(string,"tm=%d dv=%f  di=%f  op=%d  gv=%d curaccgen=%f reactive_power=%f active_power=%f cur_output_energy=%f\n",inverter->curacctime,inverter->dv,inverter->di,inverter->op,inverter->gv,inverter->curaccgen,inverter->reactive_power,inverter->active_power,inverter->cur_output_energy);
 	SEGGER_RTT_printf(0,"%s",string);
@@ -753,6 +755,7 @@ int resolvedata_600(char *data, struct inverter_info_t *inverter)
 	memset(string,0x00,1024);
 	free(string);
 	string = NULL;
+#endif
 
 #if ECU_DEBUG	
 #if ECU_DEBUG_MAIN

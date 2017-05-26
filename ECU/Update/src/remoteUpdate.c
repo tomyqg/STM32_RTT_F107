@@ -121,7 +121,7 @@ void remote_update_thread_entry(void* parameter)
 	rt_thread_delay(RT_TICK_PER_SECOND * START_TIME_UPDATE);
 	while(1)
 	{
-		for(i = 0;i<5;i++)
+		for(i = 0;i<3;i++)
 		{
 			if(-1 != updateECUByVersion())
 				break;

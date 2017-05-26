@@ -185,21 +185,29 @@ void rt_init_thread_entry(void* parameter)
     /* mount flash fat partition 1 as root directory */
     if (dfs_mount("flash", "/", "elm", 0, 0) == 0)
     {
+#if ECU_JLINK_DEBUG	
     	SEGGER_RTT_printf(0,"File System initialized!\n");
+#endif
         rt_kprintf("File System initialized!\n");
     }
     else
     {
+#if ECU_JLINK_DEBUG	
     	SEGGER_RTT_printf(0,"File System initialzation failed!\n");
+#endif
         rt_kprintf("File System initialzation failed!\n");
 				dfs_mkfs("elm","flash");
 				if (dfs_mount("flash", "/", "elm", 0, 0) == 0)
 				{
+#if ECU_JLINK_DEBUG	
 					SEGGER_RTT_printf(0,"File System initialized!\n");
+#endif
 					rt_kprintf("File System initialized!\n");
 				}
 				initPath();
+#if ECU_JLINK_DEBUG	
 				SEGGER_RTT_printf(0,"PATH initialized!\n");
+#endif
 				rt_kprintf("PATH initialized!\n");
     }
 #endif /* RT_USING_DFS && RT_USING_DFS_ELMFAT */
@@ -214,7 +222,10 @@ void rt_init_thread_entry(void* parameter)
 
 	/* initialize lwip system */
 	lwip_system_init();
+
+#if ECU_JLINK_DEBUG	
 	SEGGER_RTT_printf(0,"TCP/IP initialized!\n");
+#endif
 	rt_kprintf("TCP/IP initialized!\n");
 #endif
 
@@ -231,14 +242,16 @@ void rt_init_thread_entry(void* parameter)
 	record_data_lock = rt_mutex_create("record_data_lock", RT_IPC_FLAG_FIFO);
 	if (record_data_lock != RT_NULL)
 	{
+#if ECU_JLINK_DEBUG
 		SEGGER_RTT_printf(0,"Initialize record_data_lock successful!\n");
+#endif 
 		rt_kprintf("Initialize record_data_lock successful!\n");
 	}
 #ifdef WIFI_USE
 	/* WiFi Serial Initialize*/
 	WiFi_Open();
 	//initWorkIP("192.168.1.102",65500,"192.168.1.102",65501);
-	//initWorkIP("139.168.200.158",8093,"60.190.131.190",8997);
+	//initWorkIP("139.168.200.158",8093,"139.168.200.158",8997);
 #endif
 	cpu_usage_init();
 }
@@ -367,7 +380,7 @@ static void lan8720_rst_thread_entry(void* parameter)
 				//printf("reg 0:%x\n",value);
 				rt_hw_lan8720_rst();
 			}
-      rt_thread_delay( RT_TICK_PER_SECOND*5 );
+      rt_thread_delay( RT_TICK_PER_SECOND*60 );
     }
 
 }

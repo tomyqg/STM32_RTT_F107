@@ -19,7 +19,7 @@
 /*****************************************************************************/
 /*  Definitions                                                              */
 /*****************************************************************************/
-//#define WIFI_USE 
+#define WIFI_USE 
 //restartThread parameter
 typedef enum THREADTYPE {
 	TYPE_LED = 1,
@@ -50,7 +50,7 @@ typedef enum THREADTYPE {
 //#define THREAD_PRIORITY_PHONE_SERVER			21
 
 //Update thread priority
-#define THREAD_PRIORITY_UPDATE						22
+//#define THREAD_PRIORITY_UPDATE						22
 //NTP thread priority
 //#define THREAD_PRIORITY_NTP								21
 //ID Writethread priority

@@ -18,8 +18,6 @@
 #include "stm32f10x.h"
 #include "board.h"
 
-//#define USING_SPI1
-
 struct stm32_spi_bus
 {
     struct rt_spi_bus parent;

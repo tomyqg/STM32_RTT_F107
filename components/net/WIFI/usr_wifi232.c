@@ -28,10 +28,10 @@
 /*****************************************************************************/
 /*  Variable Declarations                                                    */
 /*****************************************************************************/
-extern struct rt_device serial4;		//串口1为WIFI收发串口
+extern struct rt_device serial1;		//串口1为WIFI收发串口
 #define RD_DELAY 	(RT_TICK_PER_SECOND/2) //读取数据延时
 #define WR_DELAY	(RT_TICK_PER_SECOND) //写数据延时
-#define WIFI_SERIAL (serial4)
+#define WIFI_SERIAL (serial1)
 rt_mutex_t WIFI_lock = RT_NULL;
 extern int WiFiReadFlag;
 static int WiFireadtimeoutflag = 0;
@@ -107,7 +107,7 @@ int WiFi_Open(void)
 	GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_8;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);	
 	
-	new = rt_device_find("uart4");		//寻找WIFI串口并配置模式
+	new = rt_device_find("uart1");		//寻找WIFI串口并配置模式
 	if (new != RT_NULL)
 	{
 		result = rt_device_open(new, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_INT_RX);
@@ -124,7 +124,7 @@ int WiFi_Open(void)
 	if (WIFI_lock != RT_NULL)
 	{
 		rt_thread_delay(RT_TICK_PER_SECOND*5);
-		printmsg(ECU_DBG_WIFI,"open WIFI success");
+		printmsg(ECU_DBG_WIFI,"open WIFI success!!!!!!!!!!!!");
 	}
 	rt_mutex_release(WIFI_lock);
 	return result;
@@ -1147,7 +1147,8 @@ int WIFI_Create(SocketType Type)
 		{
 			length = WIFI_SERIAL.read(&WIFI_SERIAL,0, recv, 255);
 			//printhexmsg(ECU_DBG_WIFI,"WIFI_CreateSocket", recv, length);
-			if( (recv[0] == 0x65)&&
+			if((length > 0) && 
+				  (recv[0] == 0x65)&&
 					(recv[1] == send[1])&&
 					(recv[2] == 0x06)&&
 					(recv[4] == 0x01)
@@ -1211,7 +1212,8 @@ int WIFI_Close(SocketType Type)
 		{
 			length = WIFI_SERIAL.read(&WIFI_SERIAL,0, recv, 255);
 			//printhexmsg(ECU_DBG_WIFI,"WIFI_CloseSocket", recv, length);
-			if( (recv[0] == 0x65)&&
+			if( (length > 0) && 
+				  (recv[0] == 0x65)&&
 					(recv[1] == send[1])&&
 					(recv[2] == 0x06)&&
 					(recv[4] == 0x01)
@@ -1272,7 +1274,8 @@ int WIFI_QueryStatus(SocketType Type)
 		{
 			length = WIFI_SERIAL.read(&WIFI_SERIAL,0, recv, 255);
 			//printhexmsg(ECU_DBG_WIFI,"WIFI_QuerySocketStatus", recv, length);
-			if( (recv[0] == 0x65)&&
+			if( (length > 0) && 
+				  (recv[0] == 0x65)&&
 					(recv[1] == send[1])&&
 					(recv[2] == 0x06)
 				)
