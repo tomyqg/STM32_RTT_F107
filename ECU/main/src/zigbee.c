@@ -78,7 +78,7 @@ int selectZigbee(int timeout)			//zigbee´®¿ÚÊı¾İ¼ì²â ·µ»Ø0 ±íÊ¾´®¿ÚÃ»ÓĞÊı¾İ  ·µ»
 			return 0;
 		}else 
 		{
-			rt_hw_us_delay(1);
+			rt_thread_delay(1);
 			if(zigbeeReadFlag == 1)	//´®¿ÚÊı¾İ¼à²â,Èç¹ûÓĞÊı¾İÔò·µ»Ø1
 			{
 				rt_timer_delete(readtimer);

@@ -64,7 +64,7 @@ int selectWiFi(int timeout)			//Wifi串口数据检测 返回0 表示串口没有数据  返回1表
 			return 0;
 		}else 
 		{
-			rt_hw_us_delay(1);
+			rt_thread_delay(1);
 			if(WiFiReadFlag == 1)	//串口数据监测,如果有数据则返回1
 			{
 				rt_timer_delete(readtimer);
@@ -854,7 +854,8 @@ int SendToSocketA(char *data ,int length,char ID[8])
 	char *sendbuff = NULL;
 	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
 	sendbuff = malloc(4096);
-	sprintf(sendbuff,"a%c%c%c%c%c%c%c%c%s",ID[0],ID[1],ID[2],ID[3],ID[4],ID[5],ID[6],ID[7],data);
+	sprintf(sendbuff,"a%c%c%c%c%c%c%c%c",ID[0],ID[1],ID[2],ID[3],ID[4],ID[5],ID[6],ID[7]);
+	memcpy(&sendbuff[9],data,length);
 	clear_WIFI();
 	lengthB = 0;
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,sendbuff, (length+9));
@@ -874,7 +875,9 @@ int SendToSocketB(char *data ,int length)
 	{
 		rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
 		sendbuff = malloc(4096);
-		sprintf(sendbuff,"b00000000%s",data);
+		sprintf(sendbuff,"b00000000");
+		memcpy(&sendbuff[9],data,length);
+		
 		clear_WIFI();
 		lengthB = 0;
 		WIFI_SERIAL.write(&WIFI_SERIAL, 0,sendbuff, (length+9));
@@ -908,7 +911,8 @@ int SendToSocketC(char *data ,int length)
 
 		
 		print2msg(ECU_DBG_WIFI,"SendToSocketC",data);
-		sprintf(sendbuff,"c00000000%s",data);
+		sprintf(sendbuff,"c00000000");
+		memcpy(&sendbuff[9],data,length);
 		clear_WIFI();
 		lengthC = 0;
 		WIFI_SERIAL.write(&WIFI_SERIAL, 0,sendbuff, (length+10));

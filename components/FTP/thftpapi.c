@@ -104,11 +104,17 @@ int socket_connect(char *host,int port)
      
     server = gethostbyname(host);
     if (!server)
-        return -1;
-
+    {
+    	closesocket(s);
+     	return -1;
+    }
+	
     memcpy(&address.sin_addr.s_addr, server->h_addr, server->h_length); 
     if (connect(s, (struct sockaddr*) &address, sizeof(address)) == -1)
-        return -1;
+    {
+    	closesocket(s);
+    	return -1;
+    }  
      
     return s;
 }

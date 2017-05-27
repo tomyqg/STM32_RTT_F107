@@ -41,6 +41,9 @@ void rt_hw_led_off(void)
     GPIO_SetBits(led1_gpio, led1_pin);
 }
 
+//发光二极管不同的闪烁方式
+
+
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 static rt_uint8_t led_inited = 0;

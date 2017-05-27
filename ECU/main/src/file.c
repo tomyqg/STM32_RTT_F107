@@ -681,6 +681,7 @@ int optimizeFileSystem(void)
   }
   cap = buffer.f_bsize * buffer.f_bfree / 1024;
 	
+	printdecmsg(ECU_DBG_MAIN,"disk free size",(unsigned long)cap);
 	//当flash芯片所剩下的容量小于40KB的时候进行一些必要的文件删除操作。
 	if (cap < 40) 
 	{

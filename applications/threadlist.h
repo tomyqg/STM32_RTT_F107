@@ -47,10 +47,10 @@ typedef enum THREADTYPE {
 //#define THREAD_PRIORITY_ZIGBEE_TEST				22
 
 //phone Server thread priority
-//#define THREAD_PRIORITY_PHONE_SERVER			21
+#define THREAD_PRIORITY_PHONE_SERVER			21
 
 //Update thread priority
-//#define THREAD_PRIORITY_UPDATE						22
+#define THREAD_PRIORITY_UPDATE						22
 //NTP thread priority
 //#define THREAD_PRIORITY_NTP								21
 //ID Writethread priority
@@ -61,6 +61,8 @@ typedef enum THREADTYPE {
 #define THREAD_PRIORITY_CONTROL_CLIENT		26
 //data uploading thread priority
 #define THREAD_PRIORITY_CLIENT						27
+
+
 
 //thread start time
 #define START_TIME_UPDATE									15

@@ -19,6 +19,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "debug.h"
+#include "threadlist.h"
 
 /*****************************************************************************/
 /*  Function Implementations                                                 */
@@ -46,6 +47,7 @@ void phone_server_thread_entry(void* parameter)
 	while(1)
 	{
 		memset(data,0x00,2048);
+#ifdef WIFI_USE 	
 		//Recv socket A data by serial,If the data is received, the phone is sent.
 		length = RecvSocketData(SOCKET_A,data,2);
 		if(length > 0)
@@ -57,7 +59,9 @@ void phone_server_thread_entry(void* parameter)
 			//function part
 		
 		}
+#endif		
 		rt_thread_delay(RT_TICK_PER_SECOND);
 	}
+	free(data);
 	
 }

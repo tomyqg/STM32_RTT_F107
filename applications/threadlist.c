@@ -403,29 +403,28 @@ static void lan8720_rst_thread_entry(void* parameter)
 #include "datetime.h"
 static void wifi_test_thread_entry(void* parameter)
 {
-	char time[15] = {'\0'};
-	char data[28] = "               WIFI_TEST  ";
-	int length = 27;
-	char ch12 = 'A';
-	rt_thread_delay(RT_TICK_PER_SECOND*15);	
-	WiFi_Open();
-	
-	data[26] = '\0';
+	char data[31];
+	data[0]='A';
+	data[1]='P';
+	data[2]='S';
+	  // 403000001238
+	data[3] = 0x40;
+	data[4] = 0x30;
+	data[5] = 0x00;
+	data[6] = 0x00;
+	data[7] = 0x12;
+	data[8] = 0x38;
+	data[9] = 0x30;  // 12345
+	data[10] = 0x39;
+	data[11] = 0xDB;  // 56231
+	data[12] = 0xA7;
+	data[13] = 0x01;
 	while(1)
 	{
-		getcurrenttime(time);
-		memcpy(data,time,14);
-		if(ch12 >= 'Z')
-		{
-			ch12 = 'A';
-		}
-		data[26] = ch12;
-		rt_hw_us_delay(1);
-		//printf("%d:%s\n",length,data);
-		SendToSocketB(data ,length);
-		SendToSocketC(data ,length);
-		rt_thread_delay(RT_TICK_PER_SECOND*5);
-		ch12++;
+	
+		SendToSocketB(data ,14);
+		rt_thread_delay(RT_TICK_PER_SECOND);
+
 	}
 }
 #endif
