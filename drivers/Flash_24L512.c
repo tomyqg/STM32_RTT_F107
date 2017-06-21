@@ -317,7 +317,7 @@ void EEPROM_Init(void)
 	}
 }
 
-
+#if 0
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 void EEPROMReadTest()
@@ -352,4 +352,5 @@ FINSH_FUNCTION_EXPORT(ReadE, read EEPROM ucRDAddress[U32] Counter[U8].)
 FINSH_FUNCTION_EXPORT(WriteE, write EEPROM ucRDAddress[U32] Counter[U8] Data_Ptr[U8 *].)
 
 
+#endif
 #endif

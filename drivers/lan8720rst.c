@@ -47,7 +47,7 @@ void rt_hw_lan8720_rst(void)
 }
 
 
-
+#if 0
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 void lanrst()
@@ -55,5 +55,6 @@ void lanrst()
 	rt_hw_lan8720_rst();
 }
 FINSH_FUNCTION_EXPORT(lanrst, lanrst.)
+#endif
 #endif
 

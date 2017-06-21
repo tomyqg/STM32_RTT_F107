@@ -93,6 +93,7 @@ uint32_t FLASH_If_Erase_APP2()
   return (0);
 }
 
+#if 0
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 int copytoapp2(char *filename)
@@ -104,3 +105,6 @@ int copytoapp2(char *filename)
 
 FINSH_FUNCTION_EXPORT(copytoapp2, eg:copytoapp2("/filename"));
 #endif
+#endif
+
+

@@ -1,0 +1,73 @@
+本文档主要记录ECU-R调试口相关命令大全，以下列举的都是常用的命令：
+
+1.ls 查看文件命令
+	例如:ls("/yuneng")
+
+2.cat 查看文件命令
+	例如：cat("/yuneng/ecuid.con")
+	
+3.echo 创建并写入文件操作
+	例如：echo("/test","0\n1\n2\n")
+	
+4.df 查看flash剩余空间
+	例如：df("/")
+	
+5.list 查看所有命令
+	例如：list()
+
+6.list_thread 查看线程运行状态
+	例如：list_thread()
+	
+7.reboot 重启整台机器命令
+	例如：reboot()
+	
+8.list_if 查看网络命令
+	例如：list_if()
+	
+9.mkfs 格式化文件系统
+	例如：mkfs("elm","flash") 
+	
+10.initsystem 系统文件初始化函数
+	例如：initsystem("213000000006","80:97:1B:06:72:1C")  第一个参数为ECUID 第二个参数为MAC地址
+	
+11.addInverter 添加逆变器ID命令
+	例如：addInverter("201703150001")
+	
+12.设置时间
+	例如：set_time("20170619092000")
+
+13.list_time 查看时间	
+	例如：list_time()
+	
+14.list_device 列举当前设备
+	例如：list_device()
+	
+15.phy_dump 查看phy芯片寄存器
+	例如：phy_dump(0x00)
+	
+16.rm 删除文件操作
+	例如：rm("/ftp/config.txt")
+	
+17.list_mutex 查看互斥量
+	例如：list_mutex()
+		
+18.getfile FTP下载文件命令 					//使用的账号密码为配置文件中的账号密码
+	例如：getfile("/ECU_R_M3/V1.0/ecu-r-m31.bin","/FTP/ecu.bin")
+
+19.putfile FTP上传文件命令
+	例如：putfile("/ECU-R-DATA/20170524.DAT","/home/record/inversta/20170524.DAT")
+
+20.version 显示版本信息
+	例如：version()
+	
+21.dhcpreset 重启DHCP服务
+	例如：dhcpreset()
+	
+22.mkdir 创建文件夹
+	例如：mkdir("/test")
+	
+23.restart 重启线程
+	例如：restart(1)		1:LED线程 2：LAN复位线程 3：更新线程 4：IDWrite线程 5：主线程 6：Client线程 7：远程控制线程 8：NTP线程（如果使用的话）
+
+24.list_tcps 查看当前TCP连接状态
+	例如：list_tcps()

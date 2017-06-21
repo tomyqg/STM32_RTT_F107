@@ -1316,7 +1316,7 @@ int WIFI_QueryStatus(SocketType Type)
 	return -1;
 }
 
-
+#if 0
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 
@@ -1390,3 +1390,5 @@ FINSH_FUNCTION_EXPORT(WIFI_QueryStatus , Wifi Query Socket Status.)
 
 
 #endif
+#endif
+

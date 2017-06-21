@@ -723,7 +723,7 @@ int optimizeFileSystem(void)
 #include <finsh.h>
 
 FINSH_FUNCTION_EXPORT(echo, eg:echo("/test","test"));
-
+#if 0
 void splitSt(char * str)
 {
 	int i = 0 , num;
@@ -774,6 +774,7 @@ void rm_dir(char* dir)
 	}
 }
 FINSH_FUNCTION_EXPORT(rm_dir, eg:rm_dir("/home/record/data"));
+#endif
 
 int initsystem(char *ecuid,char *mac)
 {

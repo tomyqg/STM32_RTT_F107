@@ -88,6 +88,7 @@ int get_time_from_NTP()
     return -1;
 }
 
+#if 0
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 void ntpget()
@@ -95,5 +96,6 @@ void ntpget()
 	get_time_from_NTP();
 }
 FINSH_FUNCTION_EXPORT(ntpget, eg:ntpget());
+#endif
 #endif
 

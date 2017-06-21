@@ -2260,7 +2260,7 @@ int zigbeeRecvMsg(char *data, int timeout_sec)
 	}
 }
 
-
+#if 0
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 FINSH_FUNCTION_EXPORT(zigbee_reset, reset zigbee module.)
@@ -2314,3 +2314,5 @@ void Zbgetdata(char *inverter_id)	//获取数据
 }
 FINSH_FUNCTION_EXPORT(Zbgetdata,zb_query_data inverter_id[char *12].)
 #endif
+#endif
+
