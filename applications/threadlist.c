@@ -143,6 +143,8 @@ static struct rt_thread phone_server_thread;
 
 
 rt_mutex_t record_data_lock = RT_NULL;
+rt_mutex_t usr_wifi_lock = RT_NULL;
+
 
 /*****************************************************************************/
 /*  Function Implementations                                                 */
@@ -249,6 +251,7 @@ void rt_init_thread_entry(void* parameter)
 	}
 #ifdef WIFI_USE
 	/* WiFi Serial Initialize*/
+	usr_wifi_lock = rt_mutex_create("usr_wifi_lock", RT_IPC_FLAG_FIFO);
 	WiFi_Open();
 	//initWorkIP("192.168.1.102",65500,"192.168.1.102",65501);
 	//initWorkIP("139.168.200.158",8093,"139.168.200.158",8997);

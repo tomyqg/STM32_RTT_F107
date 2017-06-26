@@ -94,6 +94,8 @@ void clear_zbmodem(void)		//清空串口缓冲区的数据
 	char data[256];
 	//清空缓冲器代码	通过将接收缓冲区的所有数据都读取出来，从而清空数据
 	ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data, 255);
+	ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data, 255);
+	ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data, 255);
 	rt_thread_delay(RT_TICK_PER_SECOND/10);
 }
 
@@ -1886,14 +1888,14 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 				{
 					//print2msg(ECU_DBG_MAIN,"querydata",curinverter->id);
 					zb_query_data(curinverter);
-					rt_hw_us_delay(200000);
+					//rt_hw_us_delay(200000);
 				}
 			}
 			curinverter++;
 		}
 	}
 	ecu.polling_total_times++;				//ECU总轮训加1 ,ZK
-	
+	printf("1----------------------------------------->\n");
 	fd = open("/TMP/DISCON.TXT", O_WRONLY | O_CREAT | O_TRUNC, 0);
 	if (fd >= 0) {
 		curinverter = firstinverter;
@@ -1994,12 +1996,11 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 		}
 		close(fd);
 	}
-	
 	write_gfdi_status(firstinverter);
 	write_turn_on_off_status(firstinverter);
 	save_turn_on_off_changed_result(firstinverter);
 	save_gfdi_changed_result(firstinverter);
-	
+
 	return ecu.count;
 }
 

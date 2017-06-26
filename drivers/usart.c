@@ -52,7 +52,7 @@
 #if defined(RT_USING_UART4)
 int zigbeeReadFlag = 0;
 #endif
-#if defined(RT_USING_UART1)
+#if defined(RT_USING_UART5)
 int WiFiReadFlag = 0;
 #endif
 
@@ -312,9 +312,6 @@ void USART1_IRQHandler(void)
 {
     /* enter interrupt */
     rt_interrupt_enter();
-
-	//新增  如果是WIFI串口uart1 则设置就收到数据标志
-	WiFiReadFlag = 1;
 	//------------------------------------
 
     uart_isr(&serial1);
@@ -333,80 +330,6 @@ void DMA1_Channel5_IRQHandler(void) {
     rt_interrupt_leave();
 }
 #endif /* RT_USING_UART1 */
-
-#if defined(RT_USING_UART2)
-/* UART2 device driver structure */
-struct stm32_uart uart2 =
-{
-    USART2,
-    USART2_IRQn,
-    {
-        DMA1_Channel6,
-        DMA1_FLAG_GL6,
-        DMA1_Channel6_IRQn,
-        0,
-    },
-};
-struct rt_serial_device serial2;
-
-void USART2_IRQHandler(void)
-{
-    /* enter interrupt */
-    rt_interrupt_enter();
-
-    uart_isr(&serial2);
-
-    /* leave interrupt */
-    rt_interrupt_leave();
-}
-
-void DMA1_Channel6_IRQHandler(void) {
-    /* enter interrupt */
-    rt_interrupt_enter();
-
-    dma_rx_done_isr(&serial2);
-
-    /* leave interrupt */
-    rt_interrupt_leave();
-}
-#endif /* RT_USING_UART2 */
-
-#if defined(RT_USING_UART3)
-/* UART3 device driver structure */
-struct stm32_uart uart3 =
-{
-    USART3,
-    USART3_IRQn,
-    {
-        DMA1_Channel3,
-        DMA1_FLAG_GL3,
-        DMA1_Channel3_IRQn,
-        0,
-    },
-};
-struct rt_serial_device serial3;
-
-void USART3_IRQHandler(void)
-{
-    /* enter interrupt */
-    rt_interrupt_enter();
-
-    uart_isr(&serial3);
-
-    /* leave interrupt */
-    rt_interrupt_leave();
-}
-
-void DMA1_Channel3_IRQHandler(void) {
-    /* enter interrupt */
-    rt_interrupt_enter();
-
-    dma_rx_done_isr(&serial3);
-
-    /* leave interrupt */
-    rt_interrupt_leave();
-}
-#endif /* RT_USING_UART3 */
 
 #if defined(RT_USING_UART4)
 /* UART4 device driver structure */
@@ -461,6 +384,8 @@ void UART5_IRQHandler(void)
 {
     /* enter interrupt */
     rt_interrupt_enter();
+	//新增  如果是WIFI串口uart1 则设置就收到数据标志
+	WiFiReadFlag = 1;
 
     uart_isr(&serial5);
 
@@ -481,19 +406,6 @@ static void RCC_Configuration(void)
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
 #endif /* RT_USING_UART1 */
 
-#if defined(RT_USING_UART2)
-    /* Enable UART GPIO clocks */
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO, ENABLE);
-    /* Enable UART clock */
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
-#endif /* RT_USING_UART2 */
-
-#if defined(RT_USING_UART3)
-    /* Enable UART GPIO clocks */
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE);
-    /* Enable UART clock */
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
-#endif /* RT_USING_UART3 */
 
 #if defined(RT_USING_UART4)
     /* Enable UART GPIO clocks */
@@ -527,28 +439,6 @@ static void GPIO_Configuration(void)
     GPIO_InitStructure.GPIO_Pin = UART1_GPIO_TX;
     GPIO_Init(UART1_GPIO, &GPIO_InitStructure);
 #endif /* RT_USING_UART1 */
-
-#if defined(RT_USING_UART2)
-    /* Configure USART Rx/tx PIN */
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_InitStructure.GPIO_Pin = UART2_GPIO_RX;
-    GPIO_Init(UART2_GPIO, &GPIO_InitStructure);
-
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_InitStructure.GPIO_Pin = UART2_GPIO_TX;
-    GPIO_Init(UART2_GPIO, &GPIO_InitStructure);
-#endif /* RT_USING_UART2 */
-
-#if defined(RT_USING_UART3)
-    /* Configure USART Rx/tx PIN */
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_InitStructure.GPIO_Pin = UART3_GPIO_RX;
-    GPIO_Init(UART3_GPIO, &GPIO_InitStructure);
-
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_InitStructure.GPIO_Pin = UART3_GPIO_TX;
-    GPIO_Init(UART3_GPIO, &GPIO_InitStructure);
-#endif /* RT_USING_UART3 */
 
 #if defined(RT_USING_UART4)
     /* Configure USART Rx/tx PIN */
@@ -640,9 +530,7 @@ void rt_hw_usart_init(void)
 
     serial1.ops    = &stm32_uart_ops;
     serial1.config = config;
-	//buff大小
-	//serial1.config.bufsz = 2048;
-
+	
     NVIC_Configuration(uart);
 
     /* register UART1 device */
@@ -651,39 +539,6 @@ void rt_hw_usart_init(void)
                           RT_DEVICE_FLAG_INT_TX |   RT_DEVICE_FLAG_DMA_RX,
                           uart);
 #endif /* RT_USING_UART1 */
-
-#if defined(RT_USING_UART2)
-    uart = &uart2;
-
-    config.baud_rate = BAUD_RATE_115200;
-    serial2.ops    = &stm32_uart_ops;
-    serial2.config = config;
-
-    NVIC_Configuration(uart);
-
-    /* register UART2 device */
-    rt_hw_serial_register(&serial2, "uart2",
-                          RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX |
-                          RT_DEVICE_FLAG_INT_TX |   RT_DEVICE_FLAG_DMA_RX,
-                          uart);
-#endif /* RT_USING_UART2 */
-
-#if defined(RT_USING_UART3)
-    uart = &uart3;
-
-    config.baud_rate = BAUD_RATE_115200;
-
-    serial3.ops    = &stm32_uart_ops;
-    serial3.config = config;
-
-    NVIC_Configuration(uart);
-
-    /* register UART3 device */
-    rt_hw_serial_register(&serial3, "uart3",
-                          RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX |
-                          RT_DEVICE_FLAG_INT_TX |   RT_DEVICE_FLAG_DMA_RX,
-                          uart);
-#endif /* RT_USING_UART3 */
 
 #if defined(RT_USING_UART4)
     uart = &uart4;
@@ -705,10 +560,12 @@ void rt_hw_usart_init(void)
 #if defined(RT_USING_UART5)
     uart = &uart5;
 
-    config.baud_rate = BAUD_RATE_115200;
+    config.baud_rate = BAUD_RATE_57600;
 
     serial5.ops    = &stm32_uart_ops;
     serial5.config = config;
+	//buff大小
+	serial1.config.bufsz = 2048;
 
     NVIC_Configuration(uart);
 

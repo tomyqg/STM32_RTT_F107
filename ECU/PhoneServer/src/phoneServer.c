@@ -21,6 +21,9 @@
 #include "debug.h"
 #include "threadlist.h"
 
+extern rt_mutex_t usr_wifi_lock;
+
+
 /*****************************************************************************/
 /*  Function Implementations                                                 */
 /*****************************************************************************/
@@ -48,8 +51,10 @@ void phone_server_thread_entry(void* parameter)
 	{
 		memset(data,0x00,2048);
 #ifdef WIFI_USE 	
+		rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 		//Recv socket A data by serial,If the data is received, the phone is sent.
 		length = RecvSocketData(SOCKET_A,data,2);
+		rt_mutex_release(usr_wifi_lock);
 		if(length > 0)
 		{
 			memcpy(ID,&data[2],8);

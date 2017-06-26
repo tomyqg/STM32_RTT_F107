@@ -62,6 +62,8 @@
 /*****************************************************************************/
 extern rt_mutex_t record_data_lock;
 char ecuid[13] = {'\0'};
+extern rt_mutex_t usr_wifi_lock;
+
 
 typedef struct socket_config
 {
@@ -1045,6 +1047,8 @@ int check_inverter_abnormal_status_sent(int hour)
 	if(sockfd < 0)
 	{
 #ifdef WIFI_USE	
+		rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+
 		//有线连接失败，使用wifi传输 
 		if((1 == WIFI_QueryStatus(SOCKET_C)) || (0 == WIFI_Create(SOCKET_C)))
 		{
@@ -1058,6 +1062,7 @@ int check_inverter_abnormal_status_sent(int hour)
 				WIFI_Close(SOCKET_C);
 				rt_free(recv_buffer);
 				rt_free(send_buffer);
+				rt_mutex_release(usr_wifi_lock);
 				return -1;
 			}
 			//去掉usr WIFI报文的头部
@@ -1068,6 +1073,7 @@ int check_inverter_abnormal_status_sent(int hour)
 				WIFI_Close(SOCKET_C);
 				rt_free(recv_buffer);
 				rt_free(send_buffer);
+				rt_mutex_release(usr_wifi_lock);
 				return 0;
 			}
 			//解析收到的时间戳,并删除EMA已存的数据(将其改为0)
@@ -1089,6 +1095,7 @@ int check_inverter_abnormal_status_sent(int hour)
 			delete_statusflag0();
 			rt_free(recv_buffer);
 			rt_free(send_buffer);
+			rt_mutex_release(usr_wifi_lock);
 			return 0;
 		}
 		else
@@ -1096,6 +1103,7 @@ int check_inverter_abnormal_status_sent(int hour)
 #endif
 			rt_free(recv_buffer);
 			rt_free(send_buffer);
+			rt_mutex_release(usr_wifi_lock);
 			return -1;
 #ifdef WIFI_USE	
 		}
@@ -1182,6 +1190,8 @@ int response_inverter_abnormal_status()
 	if(sockfd < 0)
 	{
 #ifdef WIFI_USE	
+		rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+
 		//有线连接失败，使用wifi传输 
 		if((1 == WIFI_QueryStatus(SOCKET_C)) || (0 == WIFI_Create(SOCKET_C)))
 		{
@@ -1199,6 +1209,7 @@ int response_inverter_abnormal_status()
 					rt_free(recv_buffer);
 					rt_free(command);
 					rt_free(send_buffer);
+					rt_mutex_release(usr_wifi_lock);
 					return -1;
 				}
 				//去掉usr WIFI报文的头部
@@ -1243,6 +1254,7 @@ int response_inverter_abnormal_status()
 							rt_free(recv_buffer);
 							rt_free(command);
 							rt_free(send_buffer);
+							rt_mutex_release(usr_wifi_lock);
 							return -1;
 						}
 						else
@@ -1281,6 +1293,7 @@ int response_inverter_abnormal_status()
 			rt_free(recv_buffer);
 			rt_free(command);
 			rt_free(send_buffer);
+			rt_mutex_release(usr_wifi_lock);
 
 			return result;
 				
@@ -1291,6 +1304,7 @@ int response_inverter_abnormal_status()
 			rt_free(recv_buffer);
 			rt_free(command);
 			rt_free(send_buffer);
+			rt_mutex_release(usr_wifi_lock);
 			return -1;
 
 #ifdef WIFI_USE	
@@ -1420,6 +1434,8 @@ int communication_with_EMA(int next_cmd_id)
 		if(sockfd < 0) 
 		{
 #ifdef WIFI_USE	
+			rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+
 			//有线连接失败，使用wifi传输 
 			if((1 == WIFI_QueryStatus(SOCKET_C)) || (0 == WIFI_Create(SOCKET_C)))
 			{
@@ -1435,6 +1451,7 @@ int communication_with_EMA(int next_cmd_id)
 						WIFI_Close(SOCKET_C);
 						rt_free(recv_buffer);
 						rt_free(send_buffer);
+						rt_mutex_release(usr_wifi_lock);
 						return -1;
 					}
 					//去掉usr WIFI报文的头部
@@ -1444,6 +1461,7 @@ int communication_with_EMA(int next_cmd_id)
 					//校验命令
 					if(msg_format_check(recv_buffer) < 0){
 						closesocket(sockfd);
+						rt_mutex_release(usr_wifi_lock);
 						continue;
 					}
 					//解析命令号
@@ -1479,23 +1497,25 @@ int communication_with_EMA(int next_cmd_id)
 				//EMA命令发送完毕
 				else if(cmd_id == 100){
 					WIFI_Close(SOCKET_C);
+					rt_mutex_release(usr_wifi_lock);
 					break;
 				}
 				else{
 					//若命令号不存在,则发送设置失败应答(每条设置协议的时间戳位置不统一,返回时间戳是个问题...)
 					memset(send_buffer, 0, sizeof(send_buffer));
-					snprintf(send_buffer, 52+1, "APS13AAA52A100AAA0%sA%3d000000000000002END",
+					snprintf(send_buffer, 52+1, "APS13AAA52A100AAA0%sA%3d000000000000002END\n",
 							ecuid, cmd_id);
 				}
 				//将消息发送给EMA(自动计算长度,补上回车)
 				SendToSocketC(send_buffer, strlen(send_buffer));
 				printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
 				WIFI_Close(SOCKET_C);
-
+				rt_mutex_release(usr_wifi_lock);
 				//如果功能函数返回值小于0,则返回-1,程序会自动退出
 				if(next_cmd_id < 0){
 					rt_free(recv_buffer);
 					rt_free(send_buffer);
+					rt_mutex_release(usr_wifi_lock);
 					return -1;
 				}				
 			}
@@ -1504,6 +1524,7 @@ int communication_with_EMA(int next_cmd_id)
 #endif
 				rt_free(recv_buffer);
 				rt_free(send_buffer);
+				rt_mutex_release(usr_wifi_lock);
 				return -1;
 #ifdef WIFI_USE	
 			}
@@ -1613,22 +1634,28 @@ int response_process_result()
 			if(sockfd < 0) 
 			{
 #ifdef WIFI_USE	
+				rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+
 				//有线连接失败，使用wifi传输 
 				if((1 == WIFI_QueryStatus(SOCKET_C)) || (0 == WIFI_Create(SOCKET_C)))
 				{
 					//发送一条记录
 					if(SendToSocketC(data, strlen(data)) < 0){
 						WIFI_Close(SOCKET_C);
+						rt_mutex_release(usr_wifi_lock);
 						continue;
 					}
 					//发送成功则将标志位置0
 					change_pro_result_flag(item,'0');
 					WIFI_Close(SOCKET_C);
+					rt_mutex_release(usr_wifi_lock);
 					printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
 				
 				}else
 				{
 #endif
+					rt_mutex_release(usr_wifi_lock);
+
 					return -1;
 #ifdef WIFI_USE				
 				}
@@ -1652,7 +1679,7 @@ int response_process_result()
 		{
 			//拼接数据
 			memset(sendbuffer, 0, sizeof(sendbuffer));
-			sprintf(sendbuffer, "APS1300000A%03dAAA0%.12s%04d00000000000000END", item, ecuid, 1);
+			sprintf(sendbuffer, "APS1300000A%03dAAA0%.12s%04d00000000000000END\n", item, ecuid, 1);
 			strcat(sendbuffer, data);
 			//发送数据
 			printmsg(ECU_DBG_CONTROL_CLIENT,">>Start Response Inverter Process Result");
@@ -1660,19 +1687,24 @@ int response_process_result()
 			if(sockfd < 0)
 			{
 #ifdef WIFI_USE	
+				rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+
 				//有线连接失败，使用wifi传输 
 				if((1 == WIFI_QueryStatus(SOCKET_C)) || (0 == WIFI_Create(SOCKET_C)))
 				{
 					if(SendToSocketC(sendbuffer, strlen(sendbuffer)) < 0){
 					WIFI_Close(SOCKET_C);
+					rt_mutex_release(usr_wifi_lock);
 					continue;
 					}
 					change_inv_pro_result_flag(item,'0');
-					WIFI_Close(SOCKET_C);			
+					WIFI_Close(SOCKET_C);
+					rt_mutex_release(usr_wifi_lock);
 									
 				}else
 				{
 #endif
+					rt_mutex_release(usr_wifi_lock);
 					return -1;
 #ifdef WIFI_USE				
 				}

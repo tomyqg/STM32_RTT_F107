@@ -33,7 +33,7 @@
 /*  Variable Declarations                                                    */
 /*****************************************************************************/
 extern rt_mutex_t record_data_lock;
-
+extern rt_mutex_t usr_wifi_lock;
 
 /*****************************************************************************/
 /*  Function Implementations                                                 */
@@ -691,6 +691,8 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 #ifdef WIFI_USE		
 	}else
 	{	//连接服务器失败,使用WIFI传输数据
+		//加锁
+		rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 		if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
 		{
 			//创建成功
@@ -709,6 +711,8 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 			}
 		}
 		WIFI_Close(SOCKET_B);
+		//解锁
+		rt_mutex_release(usr_wifi_lock);
 #endif
 	}
 
@@ -743,6 +747,7 @@ int resend_record()
 	}else
 	{
 		//连接服务器失败,使用WIFI传输数据
+		rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 		if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
 		{
 			//创建成功
@@ -757,6 +762,7 @@ int resend_record()
 			}
 		}
 		WIFI_Close(SOCKET_B);
+		rt_mutex_release(usr_wifi_lock);
 #endif
 	}
 	close_socket(fd_sock);
@@ -814,6 +820,7 @@ void client_thread_entry(void* parameter)
 #ifdef WIFI_USE			
 		}else
 		{
+			rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 			//不需要先打开，在有数据需要发送的时候打开 就行。
 			//if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
 			{
@@ -821,6 +828,7 @@ void client_thread_entry(void* parameter)
 				{
 					if(compareTime(thistime ,lasttime,300))
 					{
+						printf("11111111111111111111111111111\n");
 						break;
 					}
 					if(1 == flag)		// 还存在需要上传的数据
@@ -828,13 +836,18 @@ void client_thread_entry(void* parameter)
 					printmsg(ECU_DBG_CLIENT,data);
 					res = wifi_send_record(data, time);
 					if(-1 == res)
+					{
+						printf("2222222222222222222222222\n");
 						break;
+					}
+						
 					thistime = acquire_time();
 					memset(data,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL));
 					memset(time,0,15);
 				}
 			}
 			WIFI_Close(SOCKET_B);
+			rt_mutex_release(usr_wifi_lock);
 #endif	
 		}
 		close_socket(fd_sock);

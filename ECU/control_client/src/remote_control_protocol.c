@@ -50,7 +50,7 @@ int msg_REQ(char *sendbuffer)
 {
 	msg_Header(sendbuffer, "A101");
 	strcat(sendbuffer, ecuid);
-	strcat(sendbuffer, "A10100000000000000END");
+	strcat(sendbuffer, "A10100000000000000END\n");
 	return 0;
 }
 
@@ -70,7 +70,7 @@ int msg_ACK(char *sendbuffer,
 
 
 	msg_Header(sendbuffer, "A100");
-	sprintf(msg_body, "%.12s%.4s%.14s%1dEND", ecuid, cmd_id, timestamp, ack_flag);
+	sprintf(msg_body, "%.12s%.4s%.14s%1dEND\n", ecuid, cmd_id, timestamp, ack_flag);
 	strcat(sendbuffer, msg_body);
 	return 0;
 }

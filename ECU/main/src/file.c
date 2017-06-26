@@ -23,6 +23,7 @@
 #include "SEGGER_RTT.h"
 #include "dfs_fs.h"
 
+
 /*****************************************************************************/
 /*  Variable Declarations                                                    */
 /*****************************************************************************/
@@ -241,6 +242,7 @@ int get_id_from_file(inverter_info *firstinverter)
 	char data[200];
 	int num =0;
 	FILE *fp;
+	
 	fp = fopen("/home/data/id", "r");
 	if(fp)
 	{
@@ -341,6 +343,7 @@ int get_id_from_file(inverter_info *firstinverter)
 			printmsg(ECU_DBG_MAIN,inverter->id);
 		}
 	}
+	
 	return num;
 }
 
@@ -350,6 +353,7 @@ int save_process_result(int item, char *result)
 	char file[9];
 	int fd;
 	char time[20];
+	
 	getcurrenttime(time);
 	memcpy(file,&time[0],8);
 	file[8] = '\0';
@@ -363,6 +367,7 @@ int save_process_result(int item, char *result)
 		write(fd,result,strlen(result));
 		close(fd);
 	}
+	
 	return 0;
 
 }
@@ -373,6 +378,7 @@ int save_inverter_parameters_result(inverter_info *inverter, int item, char *inv
 	char file[9];
 	int fd;
 	char time[20];
+	
 	getcurrenttime(time);
 	memcpy(file,&time[0],8);
 	file[8] = '\0';
@@ -386,6 +392,7 @@ int save_inverter_parameters_result(inverter_info *inverter, int item, char *inv
 		write(fd,inverter_result,strlen(inverter_result));
 		close(fd);
 	}
+	
 	return 0;
 
 }
@@ -396,6 +403,7 @@ int save_inverter_parameters_result2(char *id, int item, char *inverter_result)
 	char file[9];
 	int fd;
 	char time[20];
+	
 	getcurrenttime(time);
 	memcpy(file,&time[0],8);
 	file[8] = '\0';
@@ -409,6 +417,7 @@ int save_inverter_parameters_result2(char *id, int item, char *inverter_result)
 		write(fd,inverter_result,strlen(inverter_result));
 		close(fd);
 	}
+	
 	return 0;
 
 }
@@ -419,6 +428,7 @@ void save_record(char sendbuff[], char *date_time)
 	char file[9];
 	rt_err_t result;
 	int fd;
+	
 	memcpy(file,&date_time[0],8);
 	file[8] = '\0';
 	sprintf(dir,"%s%s.dat",dir,file);
@@ -444,6 +454,7 @@ int save_status(char *result, char *date_time)
 	char dir[50] = "/home/record/inversta/";
 	char file[9];
 	int fd;
+	
 	memcpy(file,&date_time[0],8);
 	file[8] = '\0';
 	sprintf(dir,"%s%s.dat",dir,file);
@@ -456,6 +467,7 @@ int save_status(char *result, char *date_time)
 		write(fd,result,strlen(result));
 		close(fd);
 	}
+	
 	return 0;
 }
 
@@ -572,7 +584,7 @@ void initPath(void)
 	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	echo("/yuneng/limiteid.con","1");
 	rt_thread_delay(RT_TICK_PER_SECOND/50);
-	echo("/yuneng/control.con","Timeout=10\nReport_Interval=15\nDomain=eee.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
+	echo("/yuneng/control.con","Timeout=15\nReport_Interval=15\nDomain=eee.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
 	//echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.100\nPort1=8997\nPort2=8997\n");
 	rt_thread_delay(RT_TICK_PER_SECOND/50);
 	echo("/yuneng/vernum.con","2\n");
