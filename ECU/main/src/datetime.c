@@ -59,7 +59,7 @@ int acquire_time()
 	hour = ((datetime[8] - 0x30) *10) + (datetime[9] - 0x30);
 	minute = ((datetime[10] - 0x30) *10) + (datetime[11] - 0x30);
 	second = ((datetime[12] - 0x30) *10) + (datetime[13] - 0x30);
-	//rt_kprintf("%d %d %d ",hour,minute,second);
+	//rt_kprintf("-*******---   %d %d %d \n",hour,minute,second);
 	return (hour*60*60+minute*60+second);
 }
 

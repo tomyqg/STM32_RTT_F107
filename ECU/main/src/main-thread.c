@@ -225,7 +225,8 @@ void main_thread_entry(void* parameter)
 	while(1)
 	{
 		if(compareTime(durabletime ,thistime,reportinterval)){
-		//if(compareTime(durabletime ,thistime,60)){	
+		//if(compareTime(durabletime ,thistime,60)){
+			//printf("******1-----------main acquire_time:\n");
 			thistime = acquire_time();
 			rt_memset(ecu.broadcast_time, '\0', sizeof(ecu.broadcast_time));				//清空本次广播时间
 
@@ -289,9 +290,11 @@ void main_thread_entry(void* parameter)
 		}
 		
 		rt_thread_delay(RT_TICK_PER_SECOND);
-
+		//printf("******2-----------main acquire_time: \n");
 		durabletime = acquire_time();				//如果轮训一边的时间不到5分钟,那么一直等到5分钟再轮训下一遍,超过5分钟则等待10分钟。。。5分钟起跳
-		if((durabletime-thistime)<=300)
+
+		//printf("durabletime-thistime : %d\n",durabletime-thistime);
+		if((durabletime-thistime)<=305)
 			reportinterval = 300;
 		else if((durabletime-thistime)<=600)
 			reportinterval = 600;

@@ -893,6 +893,7 @@ int SendToSocketB(char *data ,int length)
 
 int SendToSocketC(char *data ,int length)
 {
+	int i = 0;
 	char *sendbuff = NULL;
 	char msg_length[6] = {'\0'};
 	if((1 == WIFI_QueryStatus(SOCKET_C)) || (0 == WIFI_Create(SOCKET_C)))
@@ -915,6 +916,11 @@ int SendToSocketC(char *data ,int length)
 		memcpy(&sendbuff[9],data,length);
 		clear_WIFI();
 		lengthC = 0;
+		for(i = 0;i<(length+9);i++)	
+		{
+			printf("%x ",sendbuff[i]);
+		}
+		printf("\n");
 		WIFI_SERIAL.write(&WIFI_SERIAL, 0,sendbuff, (length+9));
 
 		free(sendbuff);
