@@ -107,10 +107,10 @@ int check_yc500(struct inverter_info_t *inverter)		//在解析函数的最后调用
 		inverter->di = 0;
 	if(inverter->dib < 0)
 		inverter->dib = 0;
-	if(inverter->op > 999)
-		inverter->op = 999;
-	if(inverter->opb > 999)
-		inverter->opb = 999;
+	if(inverter->op > 500)
+		inverter->op = 500;
+	if(inverter->opb > 500)
+		inverter->opb = 500;
 	if(inverter->op < 0)
 		inverter->op = 0;
 	if(inverter->opb < 0)

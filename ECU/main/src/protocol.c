@@ -43,7 +43,7 @@ int transsyscurgen(char *buff, float curgen)		//增加系统当前一轮发电�
 	{
 		for(i=0; i<k; i++)
 		{
-			strcat(buff, "A");
+			strcat(buff, "0");
 		}
 		strcat(buff, curgentemp);
 	}
@@ -83,7 +83,7 @@ int transltgen(char *buff, float ltgen)		//增加历史发电量
 	{
 		for(i=0; i<k; i++)
 		{
-			strcat(buff, "A");
+			strcat(buff, "0");
 		}
 		strcat(buff, ltgentemp);
 	}
@@ -341,7 +341,7 @@ int transsyspower(char *buff, int syspower)			//增加系统功率
 	{
 		for(i=0; i<k; i++)
 		{
-			strcat(buff, "A");
+			strcat(buff, "0");
 		}
 		strcat(buff, syspowertemp);
 	}
@@ -358,6 +358,7 @@ int transsyspower(char *buff, int syspower)			//增加系统功率
 int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatetime)
 {
 	int i;
+	char wendu[4]={'\0'};
 	char temp[50] = {'\0'};
 	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL]={'\0'};
 	struct inverter_info_t *inverter = firstinverter;
@@ -370,7 +371,7 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 
 	sprintf(temp, "%d", ecu.count);
 	for(i=0; i<(3-strlen(temp)); i++)
-		strcat(buff, "A");
+		strcat(buff, "0");
 	strcat(buff, temp);
 
 	if(!ecu.zoneflag)
@@ -433,11 +434,12 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 			{
 				strcat(buff, inverter->id);
 				strcat(buff, "04");
-				transdv(buff, inverter->dv);
+				transdv(buff, inverter->dv*10.0);
 				transfrequency(buff, inverter->gf*10.0);
-				transtemperature(buff, inverter->it);
+				sprintf(wendu,"%03d",inverter->it+100);
+				strcat(buff,wendu);
 				strcat(buff, "1");
-				transdi(buff, inverter->di);
+				transdi(buff, inverter->di*10.0);
 				transgridvolt(buff, inverter->gv);
 				transreactivepower(buff, inverter->reactive_power);
 				transactivepower(buff, inverter->active_power);
@@ -447,7 +449,7 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 				transpower(buff, inverter->op);
 				//transstatus(buff, inverter->status);   //APS18开始不发，之前发，但ema不解析
 				strcat(buff, "2");
-				transdi(buff, inverter->dib);
+				transdi(buff, inverter->dib*10.0);
 				transgridvolt(buff, inverter->gvb);
 				transreactivepower(buff, inverter->reactive_powerb);
 				transactivepower(buff, inverter->active_powerb);
@@ -457,7 +459,7 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 				transpower(buff, inverter->opb);
 				//transstatus(buff, inverter->statusb);
 				strcat(buff, "3");
-				transdi(buff, inverter->dic);
+				transdi(buff, inverter->dic*10.0);
 				transgridvolt(buff, inverter->gvc);
 				transreactivepower(buff, inverter->reactive_powerc);
 				transactivepower(buff, inverter->active_powerc);
@@ -467,7 +469,7 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 				transpower(buff, inverter->opc);
 				//transstatus(buff, inverter->statusc);
 				strcat(buff, "4");
-				transdi(buff, inverter->did);
+				transdi(buff, inverter->did*10.0);
 				transcurgen(buff, inverter->curgenerationd*1000000.0);
 			//	transcurgen(buff, inverter->curaccgend*1000000.0);
 				transpower(buff, inverter->opd);
@@ -479,7 +481,8 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 				strcat(buff, "07");
 				transgridvolt(buff, inverter->gv);
 				transfrequency(buff, inverter->gf*10.0);
-				transtemperature(buff, inverter->it);
+				sprintf(wendu,"%03d",inverter->it+100);
+				strcat(buff,wendu);
 				transreactivepower(buff, inverter->reactive_power);
 				transactivepower(buff, inverter->active_power);
 				transsyscurgen(buff, inverter->output_energy);

@@ -945,6 +945,12 @@ int zb_query_data(inverter_info *inverter)		//请求逆变器实时数据
 			{;}
 		
 		return 1;
+	}else if((68 == ret)&&(0xFB == data[0])&&(0xFB == data[1])&&(0xFE == data[66])&&(0xFE == data[67]))
+	{
+		inverter->no_getdata_num = 0;	//一旦接收到数据就清0,ZK
+		inverter->dataflag = 1;	//接收到数据置为1
+		resolvedata_600_new(&data[4], inverter);
+		return 1;
 	}
 	else
 	{

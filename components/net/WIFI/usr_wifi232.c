@@ -921,6 +921,7 @@ int SendToSocketC(char *data ,int length)
 			printf("%x ",sendbuff[i]);
 		}
 		printf("\n");
+
 		WIFI_SERIAL.write(&WIFI_SERIAL, 0,sendbuff, (length+9));
 
 		free(sendbuff);

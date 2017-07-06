@@ -36,7 +36,7 @@ typedef enum THREADTYPE {
 //Init device thread priority
 #define THREAD_PRIORITY_INIT							10
 //WatchDog Monitor thread priority
-//#define THREAD_PRIORITY_WATCHDOG_MONITOR	17
+#define THREAD_PRIORITY_WATCHDOG_MONITOR	17
 //LAN8720A Monitor thread priority
 #define THREAD_PRIORITY_LAN8720_RST				11
 //LED thread priority

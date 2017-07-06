@@ -73,7 +73,7 @@ int clear_gfdi(inverter_info *firstinverter)
 	inverter_info *curinverter = firstinverter;
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 
-	for(j=0; j<3; j++)
+	for(j=0; j<MAXINVERTERCOUNT; j++)
 	{
 		curinverter = firstinverter;
 		memset(id, '\0', 256);

@@ -93,7 +93,7 @@ typedef struct inverter_info_t{
 	int preacctime;				//上一轮返回的累计时间（逆变器启动后时间不停累计，直到其重启）
 	int curacctime;				//本轮返回的累计时间（逆变器启动后时间不停累计，直到其重启）
 
-	char status_web[30];		//存入ECU本地数据库的状态，用于本地页面显示
+	char status_web[50];		//存入ECU本地数据库的状态，用于本地页面显示
 	char status[12];			//逆变器状态
 	char statusb[12];			//逆变器B路状态
 	char statusc[12];			//逆变器C路状态
@@ -111,7 +111,7 @@ typedef struct inverter_info_t{
 	char turn_on_off_changed_flag;
 	char last_gfdi_flag;
 	char gfdi_changed_flag;
-
+	int fill_up_data_flag;							//逆变器是否有补数据功能的标志位，1为有功能,2为没有功能，默认0为没有响应或者第一次
 	int updating;
 	int updating_time;
 	char flag;			//id中的flag标志
