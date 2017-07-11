@@ -237,6 +237,8 @@ void main_thread_entry(void* parameter)
 			print2msg(ECU_DBG_MAIN,"ecu.broadcast_time",ecu.broadcast_time);
 			
 			ecu.count = getalldata(inverter);			//获取所有逆变器数据,返回当前有数据的逆变器数量
+
+			
 			//保存最新一轮采集数据的时间
 			memcpy(ecu.had_data_broadcast_time,ecu.broadcast_time,16);
 			

@@ -102,37 +102,12 @@ static rt_uint8_t lan8720_rst_stack[400];
 static struct rt_thread lan8720_rst_thread;
 #endif 
 
-#ifdef THREAD_PRIORITY_WIFI_TEST
-ALIGN(RT_ALIGN_SIZE)
-static rt_uint8_t wifi_test_stack[1024];
-static struct rt_thread wifi_test_thread;
-#endif 
-
-#ifdef THREAD_PRIORITY_NET_TEST
-ALIGN(RT_ALIGN_SIZE)
-static rt_uint8_t net_test_stack[1024];
-static struct rt_thread net_test_thread;
-#endif 
-
-#ifdef THREAD_PRIORITY_ZIGBEE_TEST
-ALIGN(RT_ALIGN_SIZE)
-static rt_uint8_t zigbee_test_stack[1024];
-static struct rt_thread zigbee_test_thread;
-#endif 
-
 #ifdef THREAD_PRIORITY_NTP
 #include "ntpapp.h"
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t ntp_stack[1024];
 static struct rt_thread ntp_thread;
 #endif 
-
-#ifdef THREAD_PRIORITY_WATCHDOG_MONITOR
-#include "watchdog.h"
-ALIGN(RT_ALIGN_SIZE)
-static rt_uint8_t watchdog_monitor_stack[512];
-static struct rt_thread watchdog_monitor_thread;
-#endif
 
 #ifdef THREAD_PRIORITY_PHONE_SERVER
 #include "phoneServer.h"
@@ -262,65 +237,6 @@ void rt_init_thread_entry(void* parameter)
 /*****************************************************************************/
 /* Function Description:                                                     */
 /*****************************************************************************/
-/*   WatchDog Monitor program entry                                          */
-/*****************************************************************************/
-/* Parameters:                                                               */
-/*****************************************************************************/
-/*   parameter[in]   unused                                                  */
-/*****************************************************************************/
-/* Return Values:                                                            */
-/*****************************************************************************/
-/*   void                                                                    */
-/*****************************************************************************/
-#ifdef THREAD_PRIORITY_WATCHDOG_MONITOR
-static void watchdog_monitor_thread_entry(void* parameter)
-{
-	int abnormalNum = 0;
-	rt_thread_delay(RT_TICK_PER_SECOND*4);
-  while (1)
-  {
-		if(
-		#ifdef THREAD_PRIORITY_MAIN
-				(NULL!= rt_thread_find("main")) &&
-		#endif
-		#ifdef THREAD_PRIORITY_CONTROL_CLIENT		
-				(NULL!= rt_thread_find("control")) &&
-		#endif
-		#ifdef THREAD_PRIORITY_CLIENT
-				(NULL!= rt_thread_find("client")) &&
-		#endif
-		#ifdef THREAD_PRIORITY_IDWRITE
-				(NULL!= rt_thread_find("idwrite")) &&
-		#endif
-		#ifdef THREAD_PRIORITY_UPDATE
-				(NULL!= rt_thread_find("update")) &&
-		#endif
-		#ifdef THREAD_PRIORITY_PHONE
-				(NULL!= rt_thread_find("phone")) &&
-		#endif
-				1
-			)  
-		{
-			//解除异常状态
-			abnormalNum = 0;
-			kickwatchdog();
-		}else
-		{
-			//异常状态累加,当连续出现三次异常状态时不在踢狗
-			abnormalNum ++;
-			if(abnormalNum < 3)
-			{
-				kickwatchdog();
-			}
-		}	
-		rt_thread_delay(RT_TICK_PER_SECOND*4);
-	}
-}
-#endif
-
-/*****************************************************************************/
-/* Function Description:                                                     */
-/*****************************************************************************/
 /*   LED program entry                                                       */
 /*****************************************************************************/
 /* Parameters:                                                               */
@@ -392,77 +308,6 @@ static void lan8720_rst_thread_entry(void* parameter)
 /*****************************************************************************/
 /* Function Description:                                                     */
 /*****************************************************************************/
-/*   WiFi Test program entry                                                 */
-/*****************************************************************************/
-/* Parameters:                                                               */
-/*****************************************************************************/
-/*   parameter[in]   unused                                                  */
-/*****************************************************************************/
-/* Return Values:                                                            */
-/*****************************************************************************/
-/*   void                                                                    */
-/*****************************************************************************/
-#ifdef THREAD_PRIORITY_WIFI_TEST
-#include "datetime.h"
-static void wifi_test_thread_entry(void* parameter)
-{
-	char data[31];
-	data[0]='A';
-	data[1]='P';
-	data[2]='S';
-	  // 403000001238
-	data[3] = 0x40;
-	data[4] = 0x30;
-	data[5] = 0x00;
-	data[6] = 0x00;
-	data[7] = 0x12;
-	data[8] = 0x38;
-	data[9] = 0x30;  // 12345
-	data[10] = 0x39;
-	data[11] = 0xDB;  // 56231
-	data[12] = 0xA7;
-	data[13] = 0x01;
-	while(1)
-	{
-	
-		SendToSocketB(data ,14);
-		rt_thread_delay(RT_TICK_PER_SECOND);
-
-	}
-}
-#endif
-
-/*****************************************************************************/
-/* Function Description:                                                     */
-/*****************************************************************************/
-/*   Zigbee Test program entry                                               */
-/*****************************************************************************/
-/* Parameters:                                                               */
-/*****************************************************************************/
-/*   parameter[in]   unused                                                  */
-/*****************************************************************************/
-/* Return Values:                                                            */
-/*****************************************************************************/
-/*   void                                                                    */
-/*****************************************************************************/
-#ifdef THREAD_PRIORITY_ZIGBEE_TEST
-static void zigbee_test_thread_entry(void* parameter)
-{
-	rt_thread_delay(RT_TICK_PER_SECOND*10);
-	openzigbee();
-	init_ecu();
-	while(1)
-	{
-		zb_change_inverter_channel_one("201703150001", 0x10);
-		rt_thread_delay(RT_TICK_PER_SECOND);
-	}
-	
-}
-#endif
-
-/*****************************************************************************/
-/* Function Description:                                                     */
-/*****************************************************************************/
 /*   NTP program entry                                                       */
 /*****************************************************************************/
 /* Parameters:                                                               */
@@ -492,75 +337,6 @@ static void ntp_thread_entry(void* parameter)
 		//rt_thread_delay(RT_TICK_PER_SECOND * 60);
 		rt_thread_delay(RT_TICK_PER_SECOND * 86400);
 		
-	}
-
-}
-#endif
-
-/*****************************************************************************/
-/* Function Description:                                                     */
-/*****************************************************************************/
-/*   Net Test program entry                                                  */
-/*****************************************************************************/
-/* Parameters:                                                               */
-/*****************************************************************************/
-/*   parameter[in]   unused                                                  */
-/*****************************************************************************/
-/* Return Values:                                                            */
-/*****************************************************************************/
-/*   void                                                                    */
-/*****************************************************************************/
-#ifdef THREAD_PRIORITY_NET_TEST
-#include "datetime.h"
-static void net_test_thread_entry(void* parameter)
-{
-	char time[15] = {'\0'};
-	char send_data[28] = "               NET_TEST   ";
-	int length = 27;
-	char ch12 = 'A'; 
-	struct hostent *host;
-	int sock;
-	struct sockaddr_in server_addr;
-	rt_thread_delay(RT_TICK_PER_SECOND * 10);
-	
-	
-	/* 通过函数入口参数url获得host地址（如果是域名，会做域名解析） */
-	host = gethostbyname("192.168.1.103");
-
-	/* 创建一个socket，类型是SOCKET_STREAM，TCP类型 */
-	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-	{
-		/* 创建socket失败 */
-		rt_kprintf("Socket error\n");
-		return;
-	}
-	/* 初始化预连接的服务端地址 */
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(65500);
-	server_addr.sin_addr = *((struct in_addr *) host->h_addr);
-	rt_memset(&(server_addr.sin_zero), 0, sizeof(server_addr.sin_zero));
-	/* 连接到服务端 */
-	if (connect(sock, (struct sockaddr *) &server_addr,
-	sizeof(struct sockaddr)) == -1)
-	{
-		/* 连接失败 */
-		rt_kprintf("Connect error\n");
-		/*释放接收缓冲 */
-		return;
-	}
-	while (1)
-	{
-		getcurrenttime(time);
-		memcpy(send_data,time,14);
-		if(ch12 >= 'Z')
-		{
-			ch12 = 'A';
-		}
-		send_data[26] = ch12;
-		send(sock, send_data, length, 0);
-		//printf("%d:%s\n",length,send_data);
-		rt_thread_delay(RT_TICK_PER_SECOND*10);
-		ch12++;
 	}
 
 }
@@ -600,24 +376,6 @@ void tasks_new(void)
   if (result == RT_EOK)	rt_thread_startup(&lan8720_rst_thread);
 #endif
 	
-#ifdef THREAD_PRIORITY_WIFI_TEST
-  /* init wifi test thread */
-  result = rt_thread_init(&wifi_test_thread,"wifitst",wifi_test_thread_entry,RT_NULL,(rt_uint8_t*)&wifi_test_stack[0],sizeof(wifi_test_stack),THREAD_PRIORITY_WIFI_TEST,5);
-  if (result == RT_EOK)	rt_thread_startup(&wifi_test_thread);
-#endif	
-	
-#ifdef THREAD_PRIORITY_NET_TEST
-  /* init net test thread */
-  result = rt_thread_init(&net_test_thread,"nettst",net_test_thread_entry,RT_NULL,(rt_uint8_t*)&net_test_stack[0],sizeof(net_test_stack),THREAD_PRIORITY_NET_TEST,5);
-  if (result == RT_EOK) rt_thread_startup(&net_test_thread);
-#endif	
-
-#ifdef THREAD_PRIORITY_ZIGBEE_TEST
-  /* init zigbee test thread */
-  result = rt_thread_init(&zigbee_test_thread,"zgbtst",zigbee_test_thread_entry,RT_NULL,(rt_uint8_t*)&zigbee_test_stack[0],sizeof(zigbee_test_stack),THREAD_PRIORITY_ZIGBEE_TEST,5);
-  if (result == RT_EOK) rt_thread_startup(&zigbee_test_thread);
-#endif		
-	
 #ifdef THREAD_PRIORITY_NTP
   /* init ntp thread */
   result = rt_thread_init(&ntp_thread,"ntp",ntp_thread_entry,RT_NULL,(rt_uint8_t*)&ntp_stack[0],sizeof(ntp_stack),THREAD_PRIORITY_NTP,5);
@@ -651,13 +409,7 @@ void tasks_new(void)
 #ifdef THREAD_PRIORITY_CONTROL_CLIENT
 	result = rt_thread_init(&control_client_thread,"control",control_client_thread_entry,RT_NULL,(rt_uint8_t*)&control_client_stack[0],sizeof(control_client_stack),THREAD_PRIORITY_CONTROL_CLIENT,5);
   if (result == RT_EOK)	rt_thread_startup(&control_client_thread);
-#endif
-	
-#ifdef THREAD_PRIORITY_WATCHDOG_MONITOR
-	result = rt_thread_init(&watchdog_monitor_thread,"watchdog",watchdog_monitor_thread_entry,RT_NULL,(rt_uint8_t*)&watchdog_monitor_stack[0],sizeof(watchdog_monitor_stack),THREAD_PRIORITY_WATCHDOG_MONITOR,5);
-  if (result == RT_EOK)	rt_thread_startup(&watchdog_monitor_thread);
-#endif
-	
+#endif	
 	
 #ifdef THREAD_PRIORITY_PHONE_SERVER
 	result = rt_thread_init(&phone_server_thread,"phone",phone_server_thread_entry,RT_NULL,(rt_uint8_t*)&phone_server_stack[0],sizeof(phone_server_stack),THREAD_PRIORITY_PHONE_SERVER,5);

@@ -23,6 +23,7 @@
 #include <rtthread.h>
 #include "debug.h"
 #include "file.h"
+#include "rthw.h"
 
 /*****************************************************************************/
 /*  Definitions                                                              */
@@ -172,7 +173,7 @@ void send11order(char *inverterid,int count)
 	sendbuff[22]=(2*count)%256;
 	ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0,sendbuff, 21);
 	printhexmsg(ECU_DBG_MAIN,"Ready Change Inverter Panid (11order)", sendbuff, 23);
-	rt_thread_delay(RT_TICK_PER_SECOND);
+	rt_hw_s_delay(1);
 }
 
 void send22order()
@@ -191,7 +192,7 @@ void send22order()
 	for(i=0;i<3;i++){
 		ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0,sendbuff, 15);
 		printhexmsg(ECU_DBG_MAIN,"Change Panid Now (22order)", sendbuff, 15);
-		rt_thread_delay(RT_TICK_PER_SECOND);
+		rt_hw_s_delay(1);
 	}
 }
 
@@ -289,7 +290,7 @@ void bind_inverters()
 				if((curinverter->shortaddr == 0) && (curinverter->bindflag == 0))
 				{
 					zb_change_inverter_channel_one(curinverter->id,ecu.channel);//所有逆变器设置成0xFFFF
-					rt_thread_delay(RT_TICK_PER_SECOND*3);//zigbeeRecvMsg(recvbuff,5);
+					rt_hw_s_delay(3);//zigbeeRecvMsg(recvbuff,5);
 				}
 			}
 			
@@ -301,7 +302,7 @@ void bind_inverters()
 					for(k=0;k<3;k++){
 						if(1==getaddrOldOrNew(curinverter->id))
 							break;
-						rt_thread_delay(RT_TICK_PER_SECOND*2);
+						rt_hw_s_delay(2);
 					}
 				
 //					if(-1!=zigbeeRecvMsg(recvbuff,5))
@@ -350,11 +351,11 @@ void bind_inverters()
 		
 		ecu.panid=0xFFFF;
 		send22order();
-		rt_thread_delay(RT_TICK_PER_SECOND*10);
+		rt_hw_s_delay(10);
 		ecu.panid=temppanid;
 		zb_change_ecu_panid();
 	}
-	rt_thread_delay(RT_TICK_PER_SECOND*10);
+	rt_hw_s_delay(10);
 	//3.绑定获取到短地址的逆变器
 	curinverter = inverter;
 	for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训

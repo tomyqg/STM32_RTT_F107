@@ -482,7 +482,7 @@ int search_statusflag(char *data,char * time, int *flag,char sendflag)
 									data[strlen(buff)-18] = '\n';
 									//print2msg(ECU_DBG_CONTROL_CLIENT,"search_readflag time",time);
 									//print2msg(ECU_DBG_CONTROL_CLIENT,"search_readflag data",data);
-									rt_thread_delay(RT_TICK_PER_SECOND*1);
+									rt_hw_s_delay(1);
 									while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	//再往下读数据，寻找是否还有要发送的数据
 									{
 										if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
@@ -859,7 +859,7 @@ int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)
 									data[strlen(buff)-7] = '\n';
 									//print2msg(ECU_DBG_CLIENT,"search_readflag time",time);
 									//print2msg(ECU_DBG_CLIENT,"search_readflag data",data);
-									rt_thread_delay(RT_TICK_PER_SECOND*1);
+									rt_hw_s_delay(1);
 									while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	
 									{
 										if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') )
@@ -960,7 +960,7 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 									data[strlen(buff)-20] = '\n';
 									//print2msg(ECU_DBG_CLIENT,"search_readflag time",time);
 									//print2msg(ECU_DBG_CLIENT,"search_readflag data",data);
-									rt_thread_delay(RT_TICK_PER_SECOND*1);
+									rt_hw_s_delay(1);
 									while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
 									{
 										if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )

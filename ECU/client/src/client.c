@@ -212,7 +212,7 @@ int clear_send_flag(char *readbuff)
 					}
 					else
 						print2msg(ECU_DBG_CLIENT,"Clear send flag into database", "0");
-					rt_thread_delay(RT_TICK_PER_SECOND);
+					rt_hw_s_delay(1);
 				}
 			}
 		}
@@ -231,7 +231,7 @@ int update_send_flag(char *send_date_time)
 			print2msg(ECU_DBG_CLIENT,"Update send flag into database", "1");
 			break;
 		}
-		rt_thread_delay(RT_TICK_PER_SECOND * 5);
+		rt_hw_s_delay(5);
 	}
 
 	return 0;
@@ -444,7 +444,7 @@ int search_readflag(char *data,char * time, int *flag,char sendflag)
 									data[strlen(buff)-18] = '\n';
 									//print2msg(ECU_DBG_CLIENT,"search_readflag time",time);
 									//print2msg(ECU_DBG_CLIENT,"search_readflag data",data);
-									rt_thread_delay(RT_TICK_PER_SECOND*1);
+									rt_hw_s_delay(1);
 									while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	//再往下读数据，寻找是否还有要发送的数据
 									{
 										if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )

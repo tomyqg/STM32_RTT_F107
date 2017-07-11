@@ -14,6 +14,7 @@
 /*****************************************************************************/
 #include <rtthread.h>
 #include <stm32f10x.h>
+#include <rthw.h>
 
 /*****************************************************************************/
 /*  Definitions                                                              */
@@ -42,7 +43,7 @@ void rt_hw_lan8720_init(void)
 void rt_hw_lan8720_rst(void)
 {
   GPIO_ResetBits(LAN8720_GPIO, LAN8720_PIN);
-	rt_thread_delay(RT_TICK_PER_SECOND);
+	rt_hw_s_delay(1);
 	GPIO_SetBits(LAN8720_GPIO, LAN8720_PIN);
 }
 

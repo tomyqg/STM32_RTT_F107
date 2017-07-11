@@ -77,6 +77,6 @@ void phone_server_thread_entry(void* parameter)
 #endif		
 		rt_thread_delay(RT_TICK_PER_SECOND);
 	}
-	free(data);
+	//free(data);
 	
 }

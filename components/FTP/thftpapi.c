@@ -646,7 +646,7 @@ void sockettest()
 	struct hostent *host;
 	int sock;
 	struct sockaddr_in server_addr;
-	rt_thread_delay(RT_TICK_PER_SECOND * 10);
+	rt_hw_s_delay(10);
 	
 	
 	/* 通过函数入口参数url获得host地址（如果是域名，会做域名解析） */

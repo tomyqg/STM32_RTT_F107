@@ -35,32 +35,26 @@ typedef enum THREADTYPE {
 //Thread Priority
 //Init device thread priority
 #define THREAD_PRIORITY_INIT							10
-//WatchDog Monitor thread priority
-#define THREAD_PRIORITY_WATCHDOG_MONITOR	17
 //LAN8720A Monitor thread priority
 #define THREAD_PRIORITY_LAN8720_RST				11
 //LED thread priority
 #define THREAD_PRIORITY_LED               12
-//test thread priority
-//#define THREAD_PRIORITY_WIFI_TEST					21
-//#define THREAD_PRIORITY_NET_TEST					22
-//#define THREAD_PRIORITY_ZIGBEE_TEST				22
 
 //phone Server thread priority
 #define THREAD_PRIORITY_PHONE_SERVER			21
 
 //Update thread priority
-#define THREAD_PRIORITY_UPDATE						22
+//#define THREAD_PRIORITY_UPDATE						22
 //NTP thread priority
 //#define THREAD_PRIORITY_NTP								21
 //ID Writethread priority
-#define THREAD_PRIORITY_IDWRITE						23
+//#define THREAD_PRIORITY_IDWRITE						23
 //data collection thread priority
 #define THREAD_PRIORITY_MAIN	            24
 //control client thread priority
 #define THREAD_PRIORITY_CONTROL_CLIENT		26
 //data uploading thread priority
-#define THREAD_PRIORITY_CLIENT						26
+#define THREAD_PRIORITY_CLIENT						27
 
 
 

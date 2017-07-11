@@ -22,6 +22,7 @@
 #include "datetime.h"
 #include "SEGGER_RTT.h"
 #include "dfs_fs.h"
+#include "rthw.h"
 
 
 /*****************************************************************************/
@@ -558,46 +559,46 @@ void addInverter(char *inverter_id)
 void initPath(void)
 {
 	mkdir("/home",0x777);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	mkdir("/tmp",0x777);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	mkdir("/yuneng",0x777);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	mkdir("/home/data",0x777);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	mkdir("/home/record",0x777);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	mkdir("/home/data/proc_res",0x777);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	mkdir("/home/data/iprocres",0x777);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/home/data/ltpower","0.000000");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	mkdir("/home/record/data",0x777);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	mkdir("/home/record/inversta",0x777);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
+	rt_hw_ms_delay(20);
 	echo("/yuneng/area.con","SAA");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/yuneng/channel.con","0x10");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/yuneng/limiteid.con","1");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/yuneng/control.con","Timeout=15\nReport_Interval=15\nDomain=eee.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
 	//echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.100\nPort1=8997\nPort2=8997\n");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/yuneng/vernum.con","2\n");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/yuneng/ftpadd.con", "IP=60.190.131.190\nPort=9219\nuser=zhyf\npassword=yuneng\n");
 	//echo("/yuneng/ftpadd.con", "IP=192.168.1.103\nPort=21\nuser=admin\npassword=admin\n");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/yuneng/datacent.con","Domain=111.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/home/data/power","");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/yuneng/timezone.con","Etc/GMT+8\n");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	mkdir("/ftp",0x777);
 }
 
@@ -792,53 +793,53 @@ int initsystem(char *ecuid,char *mac)
 {
 	char fileecuid[13];	
 	mkdir("/home",0x777);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	mkdir("/tmp",0x777);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	mkdir("/yuneng",0x777);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	mkdir("/home/data",0x777);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	mkdir("/home/record",0x777);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	mkdir("/home/data/proc_res",0x777);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	mkdir("/home/data/iprocres",0x777);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/home/data/ltpower","0.000000");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	mkdir("/home/record/data",0x777);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	mkdir("/home/record/inversta",0x777);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	memcpy(fileecuid,ecuid,12);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	fileecuid[12] = '\n';
 	echo("/yuneng/ecuid.con",fileecuid);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/yuneng/area.con","SAA");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/yuneng/ecumac.con",mac);
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/yuneng/channel.con","0x10");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/yuneng/limiteid.con","1");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	//echo("/yuneng/control.con","Timeout=10\nReport_Interval=15\nDomain=eee.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
 	echo("/yuneng/control.con","Timeout=10\nReport_Interval=5\nDomain=111.apsema.com\nIP=139.168.200.158\nPort1=8997\nPort2=8997\n");
 	//echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.100\nPort1=8997\nPort2=8997\n");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/yuneng/vernum.con","2\n");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/yuneng/ftpadd.con", "IP=60.190.131.190\nPort=9219\nuser=zhyf\npassword=yuneng\n");
 	//echo("/yuneng/ftpadd.con", "IP=192.168.1.103\nPort=21\nuser=admin\npassword=admin\n");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/yuneng/datacent.con","Domain=eee.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/home/data/power","");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	echo("/yuneng/timezone.con","Etc/GMT+8\n");
-	rt_thread_delay(RT_TICK_PER_SECOND/50);
+	rt_hw_ms_delay(20);
 	mkdir("/ftp",0x777);
 	
 	return 0;

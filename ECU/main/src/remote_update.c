@@ -466,7 +466,7 @@ int remote_update(inverter_info *firstinverter)
 				{		
 					if(1 == insert_line("/home/data/upinv",data))
 						break;
-					rt_thread_delay(RT_TICK_PER_SECOND);
+					rt_hw_s_delay(1);
 				}
 				for(j=0;j<3;j++)
 				{
@@ -480,7 +480,7 @@ int remote_update(inverter_info *firstinverter)
 						{		
 							if(1 == insert_line("/home/data/upinv",data))
 								break;
-							rt_thread_delay(RT_TICK_PER_SECOND);
+							rt_hw_s_delay(1);
 						}
 						break;
 					}
