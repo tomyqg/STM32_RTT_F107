@@ -1,6 +1,8 @@
 #ifndef __WIFI_COMM_H__
 #define __WIFI_COMM_H__
 
+#include "variation.h"
+
 typedef enum
 { 
     COMMAND_BASEINFO         	= 1,		//获取基本信息请求
@@ -39,8 +41,25 @@ unsigned short packetlen(unsigned char *packet);
 
 int Resolve_RecvData(char *RecvData,int* Data_Len,int* Command_Id);
 
-
-
-
+//01	获取基本信息请求
+void APP_Response_BaseInfo(unsigned char *ID,stBaseInfo baseInfo);
+//02	逆变器发电数据请求
+void APP_Response_PowerGeneration(char mapping,unsigned char *ID,inverter_info *inverter,int VaildNum);
+//03	功率曲线请求
+void APP_Response_PowerCurve(char mapping,unsigned char *ID,char * date);
+//04	发电量曲线请求
+void APP_Response_GenerationCurve(char mapping,unsigned char *ID,char request_type);
+//05	逆变器ID注册请求
+void APP_Response_RegisterID(char mapping,unsigned char *ID);
+//06	时间设置请求
+void APP_Response_SetTime(char mapping,unsigned char *ID);
+//07	有线网络设置请求
+void APP_Response_SetWiredNetwork(char mapping,unsigned char *ID);
+//08	无线网络设置请求
+void APP_Response_SetWifi(char mapping,unsigned char *ID);
+//09	无线网络连接状态请求
+void APP_Response_SearchWifiStatus(char mapping,unsigned char *ID);
+//10	AP密码设置请求
+void APP_Response_SetWifiPasswd(char mapping,unsigned char *ID);
 
 #endif /*__WIFI_COMM_H__*/

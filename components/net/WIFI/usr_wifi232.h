@@ -103,6 +103,7 @@ int initWorkIP(char *clientIP,int clientPort,char *controlIP,int controlPort);
 int WIFI_Create(SocketType Type);
 int WIFI_Close(SocketType Type);
 int WIFI_QueryStatus(SocketType Type);
+int WIFI_QueryMac(void);
 int SendToSocketA(char *data ,int length,char ID[8]);
 int SendToSocketB(char *data ,int length);
 int SendToSocketC(char *data ,int length);

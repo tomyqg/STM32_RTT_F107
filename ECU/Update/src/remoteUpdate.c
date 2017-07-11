@@ -23,6 +23,7 @@
 #include "threadlist.h"
 #include "debug.h"
 #include "file.h"
+#include "datetime.h"
 
 /*****************************************************************************/
 /*  Definitions                                                              */
@@ -119,14 +120,15 @@ void remote_update_thread_entry(void* parameter)
 {
 	int i = 0;
 	rt_thread_delay(RT_TICK_PER_SECOND * START_TIME_UPDATE);
+	
 	while(1)
 	{
-		for(i = 0;i<3;i++)
+		for(i = 0;i<2;i++)
 		{
 			if(-1 != updateECUByVersion())
 				break;
 		}
-		for(i = 0;i<3;i++)
+		for(i = 0;i<2;i++)
 		{
 			if(-1 != updateECUByID())
 				break;

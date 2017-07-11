@@ -1322,6 +1322,57 @@ int WIFI_QueryStatus(SocketType Type)
 	return -1;
 }
 
+int WIFI_QueryMac(void)
+{
+	char send[50] = {'\0'};
+	char recv[255] = { '\0' };
+	int length = 0, i = 0,j=0;
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	
+	send[0]= 0x65;
+	send[1]= 0x65;
+	send[2]= 0x06;
+	send[3]= 0x05;
+	send[4]= 0x00;
+	send[5]= 0x06;
+
+	for(i = 0;i<2;i++)
+	{
+		clear_WIFI();
+		WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, 6);
+		//printhexmsg(ECU_DBG_WIFI,"WIFI_QuerySocketStatus send", send, 6);
+		
+		if(selectWiFi(5) <= 0)
+		{
+			printmsg(ECU_DBG_WIFI,"WIFI_QueryMacAddress WIFI Get reply time out 1");
+		}
+		else
+		{
+			length = WIFI_SERIAL.read(&WIFI_SERIAL,0, recv, 255);
+			//printhexmsg(ECU_DBG_WIFI,"WIFI_QuerySocketStatus", recv, length);
+			if( (length > 0) && 
+				  (recv[0] == 0x65)&&
+					(recv[1] == 0x65)&&
+					(recv[3] == 0x85)
+				)
+			{
+				for(j=0;j<length;i++)
+				{
+					printf("%x ",recv[j]);
+				}
+				printf("\n");
+			}else
+			{
+				//²éÑ¯Á¬½ÓÊ§°Ü
+				printmsg(ECU_DBG_WIFI,"WIFI_QueryMacAddress Failed");
+			}
+		}
+	}
+	rt_mutex_release(WIFI_lock);
+	return -1;
+}
+
+
 #if 1
 #ifdef RT_USING_FINSH
 #include <finsh.h>
@@ -1393,6 +1444,7 @@ FINSH_FUNCTION_EXPORT(initWorkIP , init Work Mode.)
 FINSH_FUNCTION_EXPORT(WIFI_Create , Wifi Create Socket.)
 FINSH_FUNCTION_EXPORT(WIFI_Close , Wifi Close Socket.)
 FINSH_FUNCTION_EXPORT(WIFI_QueryStatus , Wifi Query Socket Status.)
+FINSH_FUNCTION_EXPORT(WIFI_QueryMac , Wifi Query Mac Address.)
 
 
 #endif

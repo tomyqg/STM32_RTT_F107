@@ -31,7 +31,7 @@ int Resolve_RecvData(char *RecvData,int* Data_Len,int* Command_Id)
 }
 
 //01 COMMAND_BASEINFO 					//获取基本信息请求
-void APP_Response_BaseInfo(char *ID,stBaseInfo baseInfo)
+void APP_Response_BaseInfo(unsigned char *ID,stBaseInfo baseInfo)
 {
 	int packlength = 0;
 	memset(SendData,'\0',4096);	
@@ -71,11 +71,11 @@ void APP_Response_BaseInfo(char *ID,stBaseInfo baseInfo)
 	SendData[7] = ((packlength/10)%10) + '0';
 	SendData[8] = ((packlength)%10) + '0';
 	
-	SendToSocketA(SendData ,packlength,ID);
+	SendToSocketA(SendData ,packlength,(char *)ID);
 }
 
 //02 COMMAND_POWERGENERATION		//逆变器发电数据请求  mapping :: 0x00 匹配  0x01 不匹配
-void APP_Response_PowerGeneration(char mapping,char *ID,inverter_info *inverter,int VaildNum)
+void APP_Response_PowerGeneration(char mapping,unsigned char *ID,inverter_info *inverter,int VaildNum)
 {
 	int packlength = 0,index = 0;
 	inverter_info *curinverter = inverter;
@@ -86,7 +86,7 @@ void APP_Response_PowerGeneration(char mapping,char *ID,inverter_info *inverter,
 	{
 		sprintf(SendData,"APS1100130201\n");
 		packlength = 14;
-		SendToSocketA(SendData ,packlength,ID);
+		SendToSocketA(SendData ,packlength,(char *)ID);
 		return ;
 	}
 	
@@ -95,7 +95,7 @@ void APP_Response_PowerGeneration(char mapping,char *ID,inverter_info *inverter,
 	{
 		sprintf(SendData,"APS1100130202\n");
 		packlength = 14;
-		SendToSocketA(SendData ,packlength,ID);
+		SendToSocketA(SendData ,packlength,(char *)ID);
 		return ;
 	}
 	
@@ -153,11 +153,11 @@ void APP_Response_PowerGeneration(char mapping,char *ID,inverter_info *inverter,
 	SendData[7] = ((packlength/10)%10) + '0';
 	SendData[8] = ((packlength)%10) + '0';
 	
-	SendToSocketA(SendData ,packlength,ID);
+	SendToSocketA(SendData ,packlength,(char *)ID);
 }
 
 //03 COMMAND_POWERCURVE					//功率曲线请求   mapping :: 0x00 匹配  0x01 不匹配   data 表示日期
-void APP_Response_PowerCurve(char mapping,char *ID,char * date)
+void APP_Response_PowerCurve(char mapping,unsigned char *ID,char * date)
 {
 	int packlength = 0;
 	memset(SendData,'\0',4096);	
@@ -168,17 +168,17 @@ void APP_Response_PowerCurve(char mapping,char *ID,char * date)
 	{
 		sprintf(SendData,"APS1100130301\n");
 		packlength = 14;
-		SendToSocketA(SendData ,packlength,ID);
+		SendToSocketA(SendData ,packlength,(char *)ID);
 		return ;
 	}
 	
 	
 	
-	SendToSocketA(SendData ,packlength,ID);
+	SendToSocketA(SendData ,packlength,(char *)ID);
 }
 
 //04 COMMAND_GENERATIONCURVE		//发电量曲线请求    mapping :: 0x00 匹配  0x01 不匹配  
-void APP_Response_GenerationCurve(char mapping,char *ID,char request_type)
+void APP_Response_GenerationCurve(char mapping,unsigned char *ID,char request_type)
 {
 	int packlength = 0;
 	memset(SendData,'\0',4096);	
@@ -188,134 +188,91 @@ void APP_Response_GenerationCurve(char mapping,char *ID,char request_type)
 	{
 		sprintf(SendData,"APS1100130401\n");
 		packlength = 14;
-		SendToSocketA(SendData ,packlength,ID);
+		SendToSocketA(SendData ,packlength,(char *)ID);
 		return ;
 	}
 	
 	
 	//拼接需要发送的报文
 
-	SendToSocketA(SendData ,packlength,ID);
+	SendToSocketA(SendData ,packlength,(char *)ID);
 }
 
-//05 COMMAND_REGISTERID 				//逆变器ID注册请求
-void APP_Response_RegisterID(char mapping,char *ID)
+//05 COMMAND_REGISTERID 				//逆变器ID注册请求 		mapping :: 0x00 匹配  0x01 不匹配  
+void APP_Response_RegisterID(char mapping,unsigned char *ID)
 {
 	int packlength = 0;
 	memset(SendData,'\0',4096);	
 	
-	//匹配不成功
-	if(mapping == 0x01)
-	{
-		sprintf(SendData,"APS1100130401\n");
-		packlength = 14;
-		SendToSocketA(SendData ,packlength,ID);
-		return ;
-	}
-	
-	
 	//拼接需要发送的报文
-
-	SendToSocketA(SendData ,packlength,ID);
+	sprintf(SendData,"APS11001305%02d\n",mapping);
+	packlength = 14;
+	
+	SendToSocketA(SendData ,packlength,(char *)ID);
 }
 
-//06 COMMAND_SETTIME						//时间设置请求
-void APP_Response_SetTime(char mapping,char *ID)
+//06 COMMAND_SETTIME						//时间设置请求			mapping :: 0x00 匹配  0x01 不匹配  
+void APP_Response_SetTime(char mapping,unsigned char *ID)
 {
 	int packlength = 0;
 	memset(SendData,'\0',4096);	
 	
-	//匹配不成功
-	if(mapping == 0x01)
-	{
-		sprintf(SendData,"APS1100130401\n");
-		packlength = 14;
-		SendToSocketA(SendData ,packlength,ID);
-		return ;
-	}
-	
 	//拼接需要发送的报文
-
-	SendToSocketA(SendData ,packlength,ID);
+	sprintf(SendData,"APS11001306%02d\n",mapping);
+	packlength = 14;
+	
+	SendToSocketA(SendData ,packlength,(char *)ID);
 }
 
-//07 COMMAND_SETWIREDNETWORK		//有线网络设置请求
-void APP_Response_SetWiredNetwork(char mapping,char *ID)
+//07 COMMAND_SETWIREDNETWORK		//有线网络设置请求			mapping :: 0x00 匹配  0x01 不匹配  
+void APP_Response_SetWiredNetwork(char mapping,unsigned char *ID)
 {
 	int packlength = 0;
 	memset(SendData,'\0',4096);	
 	
-	//匹配不成功
-	if(mapping == 0x01)
-	{
-		sprintf(SendData,"APS1100130401\n");
-		packlength = 14;
-		SendToSocketA(SendData ,packlength,ID);
-		return ;
-	}
-	
 	//拼接需要发送的报文
-
-	SendToSocketA(SendData ,packlength,ID);
+	sprintf(SendData,"APS11001307%02d\n",mapping);
+	packlength = 14;
+	
+	SendToSocketA(SendData ,packlength,(char *)ID);
 }
 
-//08 COMMAND_SETWIFI 						//无线网络设置请求
-void APP_Response_SetWifi(char mapping,char *ID)
+//08 COMMAND_SETWIFI 						//无线网络设置请求			mapping :: 0x00 匹配  0x01 不匹配  
+void APP_Response_SetWifi(char mapping,unsigned char *ID)
 {
 	int packlength = 0;
 	memset(SendData,'\0',4096);	
 	
-	//匹配不成功
-	if(mapping == 0x01)
-	{
-		sprintf(SendData,"APS1100130401\n");
-		packlength = 14;
-		SendToSocketA(SendData ,packlength,ID);
-		return ;
-	}
-	
 	//拼接需要发送的报文
-
-	SendToSocketA(SendData ,packlength,ID);
+	sprintf(SendData,"APS11001308%02d\n",mapping);
+	packlength = 14;
+	
+	SendToSocketA(SendData ,packlength,(char *)ID);
 }
 
-//09 COMMAND_SEARCHWIFISTATUS		//无线网络连接状态请求
-void APP_Response_SearchWifiStatus(char mapping,char *ID)
+//09 COMMAND_SEARCHWIFISTATUS		//无线网络连接状态请求			mapping :: 0x00 匹配  0x01 不匹配  
+void APP_Response_SearchWifiStatus(char mapping,unsigned char *ID)
 {
 	int packlength = 0;
 	memset(SendData,'\0',4096);	
 	
-	//匹配不成功
-	if(mapping == 0x01)
-	{
-		sprintf(SendData,"APS1100130401\n");
-		packlength = 14;
-		SendToSocketA(SendData ,packlength,ID);
-		return ;
-	}
-	
 	//拼接需要发送的报文
-
-	SendToSocketA(SendData ,packlength,ID);
+	sprintf(SendData,"APS11001309%02d\n",mapping);
+	packlength = 14;
+	
+	SendToSocketA(SendData ,packlength,(char *)ID);
 }
 
-//10 COMMAND_SETWIFIPASSWD			//AP密码设置请求
-void APP_Response_SetWifiPasswd(char mapping,char *ID)
+//10 COMMAND_SETWIFIPASSWD			//AP密码设置请求			mapping :: 0x00 匹配  0x01 不匹配  
+void APP_Response_SetWifiPasswd(char mapping,unsigned char *ID)
 {
 	int packlength = 0;
 	memset(SendData,'\0',4096);	
 	
-	//匹配不成功
-	if(mapping == 0x01)
-	{
-		sprintf(SendData,"APS1100130401\n");
-		packlength = 14;
-		SendToSocketA(SendData ,packlength,ID);
-		return ;
-	}
-	
 	//拼接需要发送的报文
-
-	SendToSocketA(SendData ,packlength,ID);	
+	sprintf(SendData,"APS11001310%02d\n",mapping);
+	packlength = 14;
+	
+	SendToSocketA(SendData ,packlength,(char *)ID);
 }
 

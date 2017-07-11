@@ -44,11 +44,11 @@ typedef enum THREADTYPE {
 #define THREAD_PRIORITY_PHONE_SERVER			21
 
 //Update thread priority
-//#define THREAD_PRIORITY_UPDATE						22
+#define THREAD_PRIORITY_UPDATE						22
 //NTP thread priority
 //#define THREAD_PRIORITY_NTP								21
 //ID Writethread priority
-//#define THREAD_PRIORITY_IDWRITE						23
+#define THREAD_PRIORITY_IDWRITE						23
 //data collection thread priority
 #define THREAD_PRIORITY_MAIN	            24
 //control client thread priority
@@ -62,9 +62,9 @@ typedef enum THREADTYPE {
 #define START_TIME_UPDATE									15
 #define START_TIME_NTP										10
 #define START_TIME_IDWRITE								15
-#define START_TIME_MAIN										20
-#define START_TIME_CONTROL_CLIENT					60
-#define START_TIME_CLIENT									120
+#define START_TIME_MAIN										120
+#define START_TIME_CONTROL_CLIENT					180
+#define START_TIME_CLIENT									240
 #define START_TIME_PHONE_SERVER						20
 
 /*****************************************************************************/
