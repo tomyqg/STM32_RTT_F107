@@ -68,7 +68,7 @@ int selectWiFi(int timeout)			//Wifi串口数据检测 返回0 表示串口没有数据  返回1表
 			if(WiFiReadFlag == 1)	//串口数据监测,如果有数据则返回1
 			{
 				rt_timer_delete(readtimer);
-				rt_thread_delay(RT_TICK_PER_SECOND/2);
+				rt_hw_us_delay(50);
 				return 1;
 			}
 		}

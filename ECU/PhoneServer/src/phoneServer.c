@@ -64,12 +64,15 @@ void phone_server_thread_entry(void* parameter)
 			ID[8] = '\0';
 			print2msg(ECU_DBG_WIFI,"phone_server",&data[9]);
 			
+			//检查是哪个功能函数
 			//function part
 			if(!memcmp(&data[9],"APS11001401END",14))
 			{
 				//printf("------1111111111111111111111111111111\n");
 				SendToSocketA("APS11001402END" ,14,ID);
 			}
+			
+			
 		}
 #endif		
 		rt_thread_delay(RT_TICK_PER_SECOND);

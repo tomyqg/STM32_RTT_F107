@@ -136,6 +136,7 @@ typedef struct ecu_info_t{
 	int zoneflag;				//修改过时区的标志：1表示修改，0表示未修改
 
 	char broadcast_time[16];	//发送给EMA时的日期和时间，格式：年月日时分秒
+	char had_data_broadcast_time[16];	//发送给EMA时的日期和时间，格式：年月日时分秒
 //	char inverterid_noget_shortaddr[MAXINVERTERCOUNT][13];	//没有获取到短地址的逆变器ID
 
 	int no_assigned_shortaddr_count;	//没有获取到短地址的逆变器数量

@@ -46,7 +46,7 @@ int ecu_msg(char *sendbuffer, int num, const char *recvbuffer)
 	/* 处理数据 */
 	file_get_one(ecuid, sizeof(ecuid),
 			"/yuneng/ecuid.con");
-	sprintf(version,"%s_%s.%s",ECU_M3_VERSION,MAJORVERSION,MINORVERSION);
+	sprintf(version,"%s_%s.%s",ECU_VERSION,MAJORVERSION,MINORVERSION);
 	file_get_one(version_number, sizeof(version_number),
 			"/yuneng/vernum.con");
 	file_get_one(area, sizeof(area),

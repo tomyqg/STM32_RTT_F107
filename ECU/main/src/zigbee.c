@@ -78,11 +78,11 @@ int selectZigbee(int timeout)			//zigbee´®¿ÚÊı¾İ¼ì²â ·µ»Ø0 ±íÊ¾´®¿ÚÃ»ÓĞÊı¾İ  ·µ»
 			return 0;
 		}else 
 		{
-			rt_thread_delay(1);
+			rt_hw_ms_delay(1);
 			if(zigbeeReadFlag == 1)	//´®¿ÚÊı¾İ¼à²â,Èç¹ûÓĞÊı¾İÔò·µ»Ø1
 			{
 				rt_timer_delete(readtimer);
-				rt_thread_delay(RT_TICK_PER_SECOND/5);
+				rt_hw_ms_delay(20);
 				return 1;
 			}
 		}
@@ -898,7 +898,7 @@ int zb_query_inverter_info(inverter_info *inverter)		//ÇëÇóÄæ±äÆ÷µÄ»úĞÍÂë
 			&& (0xFE == recvbuff[14])
 			&& (0xFE == recvbuff[15])) {
 		inverter->model = recvbuff[4];
-		inverter->version = recvbuff[5]*256 + recvbuff[6];
+		inverter->version = (recvbuff[5]*256 + recvbuff[6])*1000+(recvbuff[8]*256+recvbuff[9]);
 		return 1;
 	}
 
@@ -945,10 +945,11 @@ int zb_query_data(inverter_info *inverter)		//ÇëÇóÄæ±äÆ÷ÊµÊ±Êı¾İ
 			{;}
 		
 		return 1;
-	}else if((68 == ret)&&(0xFB == data[0])&&(0xFB == data[1])&&(0xFE == data[66])&&(0xFE == data[67]))
+	}else if((68 == ret)&&(0xFB == data[0])&&(0xFB == data[1])&&(0xFE == data[86])&&(0xFE == data[87]))
 	{
-		inverter->no_getdata_num = 0;	//Ò»µ©½ÓÊÕµ½Êı¾İ¾ÍÇå0,ZK
-		inverter->dataflag = 1;	//½ÓÊÕµ½Êı¾İÖÃÎª1
+		inverter->no_getdata_num = 0;	//Ò»µ©½ÓÊÕµ½Êı¾İ¾ÍÇå0£¬ZK
+		inverter->dataflag = 1;	//½ÓÊÜµ½Êı¾İ¾ÍÖÃÎª1
+
 		resolvedata_600_new(&data[4], inverter);
 		return 1;
 	}

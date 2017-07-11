@@ -421,7 +421,7 @@ void idwrite_thread_entry(void* parameter)
 		//¶ÁÈ¡ECUÈí¼þ°æ±¾ºÅ
 		if(!strncmp(recvbuff, "get_version", 11)){
 			memset(version, 0, sizeof(version));
-			sprintf(version,"%s_%s_%s", ECU_M3_VERSION,MAJORVERSION,MINORVERSION);
+			sprintf(version,"%s_%s_%s", ECU_VERSION,MAJORVERSION,MINORVERSION);
 			memset(area, 0, sizeof(area));
 			fp = fopen("/yuneng/area.con", "r");
 			if(fp){

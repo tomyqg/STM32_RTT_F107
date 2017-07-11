@@ -1336,6 +1336,11 @@
               <FileType>1</FileType>
               <FilePath>..\ECU\PhoneServer\src\phoneServer.c</FilePath>
             </File>
+            <File>
+              <FileName>wifi_comm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ECU\PhoneServer\src\wifi_comm.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

@@ -40,6 +40,24 @@ void rt_hw_us_delay(rt_uint32_t us)
     } while( current_delay < us );
 }
 
+void rt_hw_ms_delay(rt_uint32_t ms)
+{
+	int index = 0;
+	for(index = 0; index < ms; index++)
+	{
+		rt_hw_us_delay(1000);
+	}
+}
+
+void rt_hw_s_delay(rt_uint32_t s)
+{
+	int index = 0;
+	for(index = 0; index < s; index++)
+	{
+		rt_hw_ms_delay(1000);
+	}
+}
+
 void reboot()
 {
 	__set_FAULTMASK(1);     // 关闭所有中断

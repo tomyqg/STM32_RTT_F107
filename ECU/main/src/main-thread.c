@@ -52,6 +52,7 @@ int init_ecu()
 	//获取ECU信道
 	ecu.channel = get_channel();
 	
+	memset(ecu.had_data_broadcast_time,'\0',16);
 	rt_memset(ecu.ip, '\0', sizeof(ecu.ip));
 	ecu.life_energy = get_lifetime_power();
 	ecu.current_energy = 0;
@@ -208,12 +209,12 @@ void main_thread_entry(void* parameter)
 	rt_thread_delay(RT_TICK_PER_SECOND * START_TIME_MAIN);
 	
 #if ECU_JLINK_DEBUG
-	SEGGER_RTT_printf(0,"\n---********** main.exe %s_%s_%s **********---\n", ECU_M3_VERSION,MAJORVERSION,MINORVERSION);
+	SEGGER_RTT_printf(0,"\n---********** main.exe %s_%s_%s **********---\n", ECU_VERSION,MAJORVERSION,MINORVERSION);
 #endif
 
 #if ECU_DEBUG
 #if ECU_DEBUG_MAIN
-	printf("\n---********** main.exe %s_%s_%s **********---\n", ECU_M3_VERSION,MAJORVERSION,MINORVERSION);
+	printf("\n---********** main.exe %s_%s_%s **********---\n", ECU_VERSION,MAJORVERSION,MINORVERSION);
 #endif
 #endif
 
@@ -236,6 +237,9 @@ void main_thread_entry(void* parameter)
 			print2msg(ECU_DBG_MAIN,"ecu.broadcast_time",ecu.broadcast_time);
 			
 			ecu.count = getalldata(inverter);			//获取所有逆变器数据,返回当前有数据的逆变器数量
+			//保存最新一轮采集数据的时间
+			memcpy(ecu.had_data_broadcast_time,ecu.broadcast_time,16);
+			
 			//printdecmsg(ECU_DBG_MAIN,"ecu.count",ecu.count);
 			ecu.life_energy = ecu.life_energy + ecu.current_energy;				//计算系统历史发电量
 			printfloatmsg(ECU_DBG_MAIN,"ecu.life_energy",ecu.life_energy);
