@@ -22,16 +22,46 @@
 #include "threadlist.h"
 #include "wifi_comm.h"
 #include "variation.h"
+#include "main-thread.h"
+#include "file.h"
+#include "rtc.h"
+#include "version.h"
 
 extern rt_mutex_t usr_wifi_lock;
 extern ecu_info ecu;
 extern inverter_info inverter[MAXINVERTERCOUNT];
+	
+	
+	
+int ResolveWifiPasswd(char *oldPasswd,int *oldLen,char *newPasswd,int *newLen,char *passwdstring)
+{
+	*oldLen = (passwdstring[0]-'0')*10+(passwdstring[1]-'0');
+	memcpy(oldPasswd,&passwdstring[2],*oldLen);
+	*newLen = (passwdstring[2+(*oldLen)]-'0')*10+(passwdstring[3+(*oldLen)]-'0');
+	memcpy(newPasswd,&passwdstring[4+*oldLen],*newLen);
+	
+	return 0;
+}	
+
+int ResolveWifiSSID(char *SSID,int *SSIDLen,char *PassWD,int *PassWDLen,char *string)
+{
+	*SSIDLen = (string[0]-'0')*100+(string[1]-'0')*10+(string[2]-'0');
+	memcpy(SSID,&string[3],*SSIDLen);
+	*PassWDLen = (string[3+(*SSIDLen)]-'0')*100+(string[4+(*SSIDLen)]-'0')*10+(string[5+(*SSIDLen)]-'0');
+	memcpy(PassWD,&string[6+*SSIDLen],*PassWDLen);
+	
+	return 0;
+}	
 	
 //WIFI事件处理
 void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 {
 	int ResolveFlag = 0,Data_Len = 0,Command_Id = 0;
 	stBaseInfo baseInfo;
+	char setTime[15];
+	char date[9];
+	
+	get_ecuid(ecu.id);
 	ResolveFlag =  Resolve_RecvData((char *)WIFI_RecvData,&Data_Len,&Command_Id);
 	if(ResolveFlag == 0)
 	{
@@ -39,19 +69,19 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 		{
 			case COMMAND_BASEINFO:						//获取基本信息请求
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_BASEINFO,WIFI_RecvData);
-//					memcpy(baseInfo.ECUID,ecu.id,13);											//ECU ID
-//	baseInfo.LifttimeEnergy = (int)(ecu.life_energy*10);				//ECU 历史发电量
-//	unsigned short LastSystemPower;			//ECU 当前系统功率
-//	unsigned short GenerationCurrentDay;//ECU 当天发电量
-//	char LastToEMA[8];									//ECU 最后一次连接EMA的时间
-//	unsigned short InvertersNum;				//ECU 逆变器总数
-//	unsigned short LastInvertersNum;		//ECU 当前连接的逆变器总数
-//	unsigned char Length;								//ECU 版本号长度
-//	char Version[20];										//ECU 版本
-//	unsigned char TimeZoneLength;				//ECU 时区长度
-//	char TimeZone[20];									//ECU 时区
-//	char MacAddress[7];									//ECU 有线Mac地址
-//	char WifiMac[7];										//ECU 无线Mac地址
+				memcpy(baseInfo.ECUID,ecu.id,13);											//ECU ID
+				baseInfo.LifttimeEnergy = (int)(ecu.life_energy*10);				//ECU 历史发电量
+				baseInfo.LastSystemPower = 0;			//ECU 当前系统功率
+				baseInfo.GenerationCurrentDay = 0;//ECU 当天发电量
+				memset(baseInfo.LastToEMA,'\0',8);									//ECU 最后一次连接EMA的时间
+				baseInfo.InvertersNum = 0;;				//ECU 逆变器总数
+				baseInfo.LastInvertersNum = 0;		//ECU 当前连接的逆变器总数
+				baseInfo.Length = ECU_VERSION_LENGTH;								//ECU 版本号长度
+				sprintf(baseInfo.Version,"%s_%s_%s",ECU_VERSION,MAJORVERSION,MINORVERSION);	//ECU 版本
+				baseInfo.TimeZoneLength = 9;				//ECU 时区长度
+				sprintf(baseInfo.TimeZone,"Etc/GMT+8");									//ECU 时区
+				memset(baseInfo.MacAddress,'\0',7);
+				get_mac((unsigned char*)baseInfo.MacAddress);			//ECU 有线Mac地址									
 				APP_Response_BaseInfo(ID,baseInfo);
 				break;	
 			
@@ -66,23 +96,26 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 				}else
 				{	
 					//不匹配，发送 匹配失败报文
-					printf("COMMAND_POWERGENERATION   Not Mapping");
+					printf("COMMAND_POWERGENERATION   Not Mapping\n");
 					APP_Response_PowerGeneration(0x01,ID,inverter,ecu.count);
 				}
 				break;
 					
 			case COMMAND_POWERCURVE:					//功率曲线请求
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_POWERCURVE,WIFI_RecvData);
+				memset(date,'\0',9);
 				//首先对比ECU ID是否匹配
 				if(!memcmp(&WIFI_RecvData[11],ecu.id,12))
 				{
 					//匹配成功进行相应操作
 					printf("COMMAND_POWERCURVE  Mapping\n");
+					memcpy(date,&WIFI_RecvData[26],8);
+					APP_Response_PowerCurve(0x01,ID,date);
 				}else
 				{	
 					//不匹配，发送 匹配失败报文
-					
-					printf("COMMAND_POWERCURVE   Not Mapping");
+					printf("COMMAND_POWERCURVE   Not Mapping\n");
+					APP_Response_PowerCurve(0x01,ID,date);
 				}
 				break;
 						
@@ -93,11 +126,13 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 				{
 					//匹配成功进行相应操作
 					printf("COMMAND_GENERATIONCURVE  Mapping\n");
+					APP_Response_GenerationCurve(0x00,ID,WIFI_RecvData[26]);
 				}else
 				{	
 					//不匹配，发送 匹配失败报文
 					
-					printf("COMMAND_GENERATIONCURVE   Not Mapping");
+					printf("COMMAND_GENERATIONCURVE   Not Mapping\n");
+					APP_Response_GenerationCurve(0x01,ID,WIFI_RecvData[26]);
 				}
 			
 				break;
@@ -109,26 +144,34 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 				{
 					//匹配成功进行相应操作
 					printf("COMMAND_REGISTERID  Mapping\n");
+					APP_Response_RegisterID(0x00,ID);
 				}else
 				{	
 					//不匹配，发送 匹配失败报文
 					
-					printf("COMMAND_REGISTERID   Not Mapping");
+					printf("COMMAND_REGISTERID   Not Mapping\n");
+					APP_Response_RegisterID(0x01,ID);
 				}
 				break;
 				
 			case COMMAND_SETTIME:							//时间设置请求
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_SETTIME,WIFI_RecvData);
+	
 				//首先对比ECU ID是否匹配
 				if(!memcmp(&WIFI_RecvData[11],ecu.id,12))
 				{
 					//匹配成功进行相应操作
+					memset(setTime,'\0',15);
+					memcpy(setTime,&WIFI_RecvData[26],14);
+					//设置时间
+					set_time(setTime);
 					printf("COMMAND_SETTIME  Mapping\n");
+					APP_Response_SetTime(0x00,ID);
 				}else
 				{	
 					//不匹配，发送 匹配失败报文
-					
-					printf("COMMAND_SETTIME   Not Mapping");
+					printf("COMMAND_SETTIME   Not Mapping\n");
+					APP_Response_SetTime(0x01,ID);
 				}
 				break;
 			
@@ -139,56 +182,80 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 				{
 					//匹配成功进行相应操作
 					printf("COMMAND_SETWIREDNETWORK  Mapping\n");
+					APP_Response_SetWiredNetwork(0x00,ID);
 				}else
 				{	
-					//不匹配，发送 匹配失败报文
-					
-					printf("COMMAND_SETWIREDNETWORK   Not Mapping");
+					//不匹配，发送 匹配失败报文		
+					printf("COMMAND_SETWIREDNETWORK   Not Mapping\n");
+					APP_Response_SetWiredNetwork(0x01,ID);
 				}
 				break;
 			
-			case COMMAND_SETWIFI:							//无线网络设置请求
+			case COMMAND_SETWIFI:							//无线网络设置请求	OK
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_SETWIFI,WIFI_RecvData);
 				//首先对比ECU ID是否匹配
 				if(!memcmp(&WIFI_RecvData[11],ecu.id,12))
 				{
+					char SSID[100] = {'\0'};
+					char Password[100] = {'\0'};
+					int SSIDLen,passWDLen;
 					//匹配成功进行相应操作
 					printf("COMMAND_SETWIFI  Mapping\n");
+					ResolveWifiSSID(SSID,&SSIDLen,Password,&passWDLen,(char *)&WIFI_RecvData[26]);
+					APP_Response_SetWifi(0x00,ID);
+					WIFI_ChangeSSID(SSID,Password);
+					
 				}else
 				{	
-					//不匹配，发送 匹配失败报文
-					
-					printf("COMMAND_SETWIFI   Not Mapping");
+					//不匹配，发送 匹配失败报文		
+					printf("COMMAND_SETWIFI   Not Mapping\n");
+					APP_Response_SetWifi(0x01,ID);
 				}
 				break;
 			
-			case COMMAND_SEARCHWIFISTATUS:		//无线网络连接状态请求
+			case COMMAND_SEARCHWIFISTATUS:		//无线网络连接状态请求	OK
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_SEARCHWIFISTATUS,WIFI_RecvData);
 				//首先对比ECU ID是否匹配
 				if(!memcmp(&WIFI_RecvData[11],ecu.id,12))
 				{
 					//匹配成功进行相应操作
 					printf("COMMAND_SEARCHWIFISTATUS  Mapping\n");
+					if(0 == WIFI_ConStatus())
+					{
+						APP_Response_SearchWifiStatus(0x00,ID);
+					}else
+					{
+						APP_Response_SearchWifiStatus(0x02,ID);
+					}
 				}else
 				{	
 					//不匹配，发送 匹配失败报文
-					
-					printf("COMMAND_SEARCHWIFISTATUS   Not Mapping");
+					printf("COMMAND_SEARCHWIFISTATUS   Not Mapping\n");
+					APP_Response_SearchWifiStatus(0x01,ID);
 				}
 				break;
 			
-			case COMMAND_SETWIFIPASSWD:				//AP密码设置请求
+			case COMMAND_SETWIFIPASSWD:				//AP密码设置请求     OK
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_SETWIFIPASSWD,WIFI_RecvData);
 				//首先对比ECU ID是否匹配
 				if(!memcmp(&WIFI_RecvData[11],ecu.id,12))
 				{
+					char OldPassword[100] = {'\0'};
+					char NewPassword[100] = {'\0'};
+					int oldLen,newLen;
+					
 					//匹配成功进行相应操作
 					printf("COMMAND_SETWIFIPASSWD  Mapping\n");
+					//获取密码
+					ResolveWifiPasswd(OldPassword,&oldLen,NewPassword,&newLen,(char *)&WIFI_RecvData[26]);
+					APP_Response_SetWifiPasswd(0x00,ID);
+					WIFI_ChangePasswd(NewPassword);
+					
 				}else
 				{	
 					//不匹配，发送 匹配失败报文
-					
-					printf("COMMAND_SETWIFIPASSWD   Not Mapping");
+					printf("COMMAND_SETWIFIPASSWD   Not Mapping\n");
+					APP_Response_SetWifiPasswd(0x01,ID);
 				}
 				break;
 		}

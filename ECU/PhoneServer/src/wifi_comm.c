@@ -38,39 +38,50 @@ void APP_Response_BaseInfo(unsigned char *ID,stBaseInfo baseInfo)
 	//拼接需要发送的报文
 	sprintf(SendData,"APS11000001%s",baseInfo.ECUID);
 	packlength = 23;
+
+	SendData[packlength++] = (baseInfo.LastSystemPower/16777216)%256;
+	SendData[packlength++] = (baseInfo.LastSystemPower/65536)%256;
+	SendData[packlength++] = (baseInfo.LastSystemPower/256)%256;
+	SendData[packlength++] =  baseInfo.LastSystemPower%256;
+	
 	SendData[packlength++] = baseInfo.LastSystemPower/256;
 	SendData[packlength++] = baseInfo.LastSystemPower%256;
+	
 	SendData[packlength++] = baseInfo.GenerationCurrentDay/256;
 	SendData[packlength++] = baseInfo.GenerationCurrentDay%256;
+	
 	memcpy(&SendData[packlength],baseInfo.LastToEMA,7);
 	packlength += 7;
+	
 	SendData[packlength++] = baseInfo.InvertersNum/256;
 	SendData[packlength++] = baseInfo.InvertersNum%256;
+	
 	SendData[packlength++] = baseInfo.LastInvertersNum/256;
 	SendData[packlength++] = baseInfo.LastInvertersNum%256;
+	
 	SendData[packlength++] = '0';
 	SendData[packlength++] = '0';
 	SendData[packlength++] = '9';
 	sprintf(&SendData[packlength],"%s_%s_%s",ECU_VERSION,MAJORVERSION,MINORVERSION);
 	packlength += 9;
+	
 	SendData[packlength++] = '0';
 	SendData[packlength++] = '0';
 	SendData[packlength++] = '9';
 	sprintf(&SendData[packlength],"Etc/GMT+8");
-	packlength += 9;		
+	packlength += 9;	
+	
 	memcpy(&SendData[packlength],baseInfo.MacAddress,6);
 	packlength += 6;
-	memcpy(&SendData[packlength],baseInfo.WifiMac,6);
-	packlength += 6;
+
 	SendData[packlength++] = 'E';
 	SendData[packlength++] = 'N';
 	SendData[packlength++] = 'D';
-	SendData[packlength++] = '\n';
 	SendData[5] = (packlength/1000) + '0';
 	SendData[6] = ((packlength/100)%10) + '0';
 	SendData[7] = ((packlength/10)%10) + '0';
 	SendData[8] = ((packlength)%10) + '0';
-	
+	SendData[packlength++] = '\n';
 	SendToSocketA(SendData ,packlength,(char *)ID);
 }
 
@@ -147,12 +158,12 @@ void APP_Response_PowerGeneration(char mapping,unsigned char *ID,inverter_info *
 	SendData[packlength++] = 'E';
 	SendData[packlength++] = 'N';
 	SendData[packlength++] = 'D';
-	SendData[packlength++] = '\n';
+	
 	SendData[5] = (packlength/1000) + '0';
 	SendData[6] = ((packlength/100)%10) + '0';
 	SendData[7] = ((packlength/10)%10) + '0';
 	SendData[8] = ((packlength)%10) + '0';
-	
+	SendData[packlength++] = '\n';
 	SendToSocketA(SendData ,packlength,(char *)ID);
 }
 

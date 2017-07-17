@@ -206,7 +206,7 @@ void main_thread_entry(void* parameter)
 	char broadcast_hour_minute[3]={'\0'};									//向逆变器发送广播命令时的时间
 	int cur_time_hour;														//当前的时间小时
 
-	rt_thread_delay(RT_TICK_PER_SECOND * START_TIME_MAIN);
+	
 	
 #if ECU_JLINK_DEBUG
 	SEGGER_RTT_printf(0,"\n---********** main.exe %s_%s_%s **********---\n", ECU_VERSION,MAJORVERSION,MINORVERSION);
@@ -217,11 +217,9 @@ void main_thread_entry(void* parameter)
 	printf("\n---********** main.exe %s_%s_%s **********---\n", ECU_VERSION,MAJORVERSION,MINORVERSION);
 #endif
 #endif
-
-	printmsg(ECU_DBG_MAIN,"Start-------------------------------------------------");
-	
-
 	init_all(inverter);   //初始化所有逆变器
+	rt_thread_delay(RT_TICK_PER_SECOND * START_TIME_MAIN);
+	printmsg(ECU_DBG_MAIN,"Start-------------------------------------------------");
 	
 	while(1)
 	{

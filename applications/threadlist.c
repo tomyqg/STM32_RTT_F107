@@ -112,7 +112,7 @@ static struct rt_thread ntp_thread;
 #ifdef THREAD_PRIORITY_PHONE_SERVER
 #include "phoneServer.h"
 ALIGN(RT_ALIGN_SIZE)
-static rt_uint8_t phone_server_stack[512];
+static rt_uint8_t phone_server_stack[4096];
 static struct rt_thread phone_server_thread;
 #endif
 

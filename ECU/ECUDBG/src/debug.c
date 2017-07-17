@@ -20,6 +20,7 @@
 #include "debug.h"
 #include "string.h"
 #include "SEGGER_RTT.h"
+#include "rtc.h"
 
 /*****************************************************************************/
 /*  Variable Declarations                                                    */
@@ -35,16 +36,21 @@ char funname[8][20] = {
 		"wifi"
 };
 
+char time[15];
+
 /*****************************************************************************/
 /*  Function Implementations                                                 */
 /*****************************************************************************/
 
 void printmsg(DebugType type,char *msg)		//打印字符串
 {
+	memset(time,'\0',15);
+	apstime(time);
+	
 #if ECU_JLINK_DEBUG	
 	char *string = NULL;
 	string = malloc(1024);
-	sprintf(string,"%s==>%s!\n",funname[type], msg);
+	sprintf(string,"%s:%s==>%s!\n",time,funname[type], msg);
 	SEGGER_RTT_printf(0,"%s",string);
 	free(string);
 #endif
@@ -54,42 +60,42 @@ void printmsg(DebugType type,char *msg)		//打印字符串
 	{
 		case ECU_DBG_UPDATE:
 			#if ECU_DEBUG_UPDATE
-				printf("%s==>%s!\n",funname[type], msg);
+				printf("%s:%s==>%s!\n",time,funname[type], msg);
 			#endif
 			break;
 		case ECU_DBG_IDWRITE:
 			#if ECU_DEBUG_IDWRITE
-				printf("%s==>%s!\n",funname[type], msg);
+				printf("%s:%s==>%s!\n",time,funname[type], msg);
 			#endif
 			break;
 		case ECU_DBG_MAIN:
 			#if ECU_DEBUG_MAIN
-				printf("%s==>%s!\n",funname[type], msg);
+				printf("%s:%s==>%s!\n",time,funname[type], msg);
 			#endif
 			break;
 		case ECU_DBG_CLIENT:
 			#if ECU_DEBUG_CLIENT
-				printf("%s==>%s!\n",funname[type], msg);
+				printf("%s:%s==>%s!\n",time,funname[type], msg);
 			#endif
 			break;
 		case ECU_DBG_CONTROL_CLIENT:
 			#if ECU_DEBUG_CONTROL_CLIENT
-				printf("%s==>%s!\n",funname[type], msg);
+				printf("%s:%s==>%s!\n",time,funname[type], msg);
 			#endif
 			break;
 		case ECU_DBG_NTP:
 			#if ECU_DEBUG_NTP
-				printf("%s==>%s!\n",funname[type], msg);
+				printf("%s:%s==>%s!\n",time,funname[type], msg);
 			#endif
 			break;
 		case ECU_DBG_OTHER:
 			#if ECU_DEBUG_OTHER
-				printf("%s==>%s!\n",funname[type], msg);
+				printf("%s:%s==>%s!\n",time,funname[type], msg);
 			#endif
 			break;
 		case ECU_DBG_WIFI:
 			#if ECU_DEBUG_WIFI
-				printf("%s==>%s!\n",funname[type], msg);
+				printf("%s:%s==>%s!\n",time,funname[type], msg);
 			#endif
 			break;
 	}
@@ -99,10 +105,13 @@ void printmsg(DebugType type,char *msg)		//打印字符串
 
 void print2msg(DebugType type,char *msg1, char *msg2)		//打印字符串
 {
+	memset(time,'\0',15);
+	apstime(time);
+	
 #if ECU_JLINK_DEBUG
 	char *string = NULL;
 	string = malloc(1024);
-	sprintf(string,"%s==>%s: %s!\n",funname[type], msg1, msg2);
+	sprintf(string,"%s:%s==>%s: %s!\n",time,funname[type], msg1, msg2);
 	SEGGER_RTT_printf(0,"%s",string);
 	free(string);
 #endif
@@ -112,42 +121,42 @@ void print2msg(DebugType type,char *msg1, char *msg2)		//打印字符串
 	{
 		case ECU_DBG_UPDATE:
 			#if ECU_DEBUG_UPDATE
-				printf("%s==>%s: %s!\n",funname[type], msg1, msg2);
+				printf("%s:%s==>%s: %s!\n",time,funname[type], msg1, msg2);
 			#endif
 			break;
 		case ECU_DBG_IDWRITE:
 			#if ECU_DEBUG_IDWRITE
-				printf("%s==>%s: %s!\n",funname[type], msg1, msg2);
+				printf("%s:%s==>%s: %s!\n",time,funname[type], msg1, msg2);
 			#endif
 			break;
 		case ECU_DBG_MAIN:
 			#if ECU_DEBUG_MAIN
-				printf("%s==>%s: %s!\n",funname[type], msg1, msg2);
+				printf("%s:%s==>%s: %s!\n",time,funname[type], msg1, msg2);
 			#endif
 			break;
 		case ECU_DBG_CLIENT:
 			#if ECU_DEBUG_CLIENT
-				printf("%s==>%s: %s!\n",funname[type], msg1, msg2);
+				printf("%s:%s==>%s: %s!\n",time,funname[type], msg1, msg2);
 			#endif
 			break;
 		case ECU_DBG_CONTROL_CLIENT:
 			#if ECU_DEBUG_CONTROL_CLIENT
-				printf("%s==>%s: %s!\n",funname[type], msg1, msg2);
+				printf("%s:%s==>%s: %s!\n",time,funname[type], msg1, msg2);
 			#endif
 			break;
 		case ECU_DBG_NTP:
 			#if ECU_DEBUG_NTP
-				printf("%s==>%s: %s!\n",funname[type], msg1, msg2);
+				printf("%s:%s==>%s: %s!\n",time,funname[type], msg1, msg2);
 			#endif
 			break;
 		case ECU_DBG_OTHER:
 			#if ECU_DEBUG_OTHER
-				printf("%s==>%s: %s!\n",funname[type], msg1, msg2);
+				printf("%s:%s==>%s: %s!\n",time,funname[type], msg1, msg2);
 			#endif
 			break;
 		case ECU_DBG_WIFI:
 			#if ECU_DEBUG_WIFI
-				printf("%s==>%s: %s!\n",funname[type], msg1, msg2);
+				printf("%s:%s==>%s: %s!\n",time,funname[type], msg1, msg2);
 			#endif
 			break;
 	}
@@ -157,10 +166,13 @@ void print2msg(DebugType type,char *msg1, char *msg2)		//打印字符串
 
 void printdecmsg(DebugType type,char *msg, int data)		//打印整形数据
 {
+	memset(time,'\0',15);
+	apstime(time);
+	
 #if ECU_JLINK_DEBUG
 	char *string = NULL;
 	string = malloc(1024);
-	sprintf(string,"%s==>%s: %d!\n",funname[type], msg, data);
+	sprintf(string,"%s:%s==>%s: %d!\n",time,funname[type], msg, data);
 	SEGGER_RTT_printf(0,"%s",string);
 	free(string);
 #endif
@@ -170,42 +182,42 @@ void printdecmsg(DebugType type,char *msg, int data)		//打印整形数据
 	{
 		case ECU_DBG_UPDATE:
 			#if ECU_DEBUG_UPDATE
-				printf("%s==>%s: %d!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %d!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_IDWRITE:
 			#if ECU_DEBUG_IDWRITE
-				printf("%s==>%s: %d!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %d!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_MAIN:
 			#if ECU_DEBUG_MAIN
-				printf("%s==>%s: %d!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %d!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_CLIENT:
 			#if ECU_DEBUG_CLIENT
-				printf("%s==>%s: %d!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %d!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_CONTROL_CLIENT:
 			#if ECU_DEBUG_CONTROL_CLIENT
-				printf("%s==>%s: %d!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %d!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_NTP:
 			#if ECU_DEBUG_NTP
-				printf("%s==>%s: %d!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %d!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_OTHER:
 			#if ECU_DEBUG_OTHER
-				printf("%s==>%s: %d!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %d!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_WIFI:
 			#if ECU_DEBUG_WIFI
-				printf("%s==>%s: %d!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %d!\n",time,funname[type], msg, data);
 			#endif
 			break;
 	}	
@@ -214,10 +226,13 @@ void printdecmsg(DebugType type,char *msg, int data)		//打印整形数据
 
 void printhexdatamsg(DebugType type,char *msg, int data)		//打印16进制数据,ZK
 {
+	memset(time,'\0',15);
+	apstime(time);
+	
 #if ECU_JLINK_DEBUG
 	char *string = NULL;
 	string = malloc(1024);
-	sprintf(string,"%s==>%s: %X!\n",funname[type], msg, data);
+	sprintf(string,"%s:%s==>%s: %X!\n",time,funname[type], msg, data);
 	SEGGER_RTT_printf(0,"%s",string);
 	free(string);
 #endif
@@ -227,42 +242,42 @@ void printhexdatamsg(DebugType type,char *msg, int data)		//打印16进制数据,ZK
 	{
 		case ECU_DBG_UPDATE:
 			#if ECU_DEBUG_UPDATE
-				printf("%s==>%s: %X!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %X!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_IDWRITE:
 			#if ECU_DEBUG_IDWRITE
-				printf("%s==>%s: %X!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %X!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_MAIN:
 			#if ECU_DEBUG_MAIN
-				printf("%s==>%s: %X!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %X!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_CLIENT:
 			#if ECU_DEBUG_CLIENT
-				printf("%s==>%s: %X!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %X!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_CONTROL_CLIENT:
 			#if ECU_DEBUG_CONTROL_CLIENT
-				printf("%s==>%s: %X!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %X!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_NTP:
 			#if ECU_DEBUG_NTP
-				printf("%s==>%s: %X!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %X!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_OTHER:
 			#if ECU_DEBUG_OTHER
-				printf("%s==>%s: %X!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %X!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_WIFI:
 			#if ECU_DEBUG_WIFI
-				printf("%s==>%s: %X!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %X!\n",time,funname[type], msg, data);
 			#endif
 			break;
 	}
@@ -271,10 +286,13 @@ void printhexdatamsg(DebugType type,char *msg, int data)		//打印16进制数据,ZK
 
 void printfloatmsg(DebugType type,char *msg, float data)		//打印实数
 {
+	memset(time,'\0',15);
+	apstime(time);
+	
 #if ECU_JLINK_DEBUG
 	char *string = NULL;
 	string = malloc(1024);
-	sprintf(string,"%s==>%s: %f!\n",funname[type], msg, data);
+	sprintf(string,"%s:%s==>%s: %f!\n",time,funname[type], msg, data);
 	SEGGER_RTT_printf(0,"%s",string);
 	free(string);
 #endif
@@ -284,42 +302,42 @@ void printfloatmsg(DebugType type,char *msg, float data)		//打印实数
 	{
 		case ECU_DBG_UPDATE:
 			#if ECU_DEBUG_UPDATE
-				printf("%s==>%s: %f!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %f!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_IDWRITE:
 			#if ECU_DEBUG_IDWRITE
-				printf("%s==>%s: %f!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %f!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_MAIN:
 			#if ECU_DEBUG_MAIN
-				printf("%s==>%s: %f!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %f!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_CLIENT:
 			#if ECU_DEBUG_CLIENT
-				printf("%s==>%s: %f!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %f!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_CONTROL_CLIENT:
 			#if ECU_DEBUG_CONTROL_CLIENT
-				printf("%s==>%s: %f!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %f!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_NTP:
 			#if ECU_DEBUG_NTP
-				printf("%s==>%s: %f!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %f!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_OTHER:
 			#if ECU_DEBUG_OTHER
-				printf("%s==>%s: %f!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %f!\n",time,funname[type], msg, data);
 			#endif
 			break;
 		case ECU_DBG_WIFI:
 			#if ECU_DEBUG_WIFI
-				printf("%s==>%s: %f!\n",funname[type], msg, data);
+				printf("%s:%s==>%s: %f!\n",time,funname[type], msg, data);
 			#endif
 			break;
 	}	
@@ -330,10 +348,13 @@ void printfloatmsg(DebugType type,char *msg, float data)		//打印实数
 void printhexmsg(DebugType type,char *msg, char *data, int size)		//打印十六进制数据
 {
 	int i;
+	memset(time,'\0',15);
+	apstime(time);
+	
 #if ECU_JLINK_DEBUG
 	char *string = NULL;
 	string = malloc(1024);
-	sprintf(string,"%s==>%s: ",funname[type], msg);
+	sprintf(string,"%s:%s==>%s: ",time,funname[type], msg);
 	SEGGER_RTT_printf(0,"%s",string);
 	for(i=0; i<size; i++)
 			SEGGER_RTT_printf(0,"%02X, ", data[i]);
@@ -346,7 +367,7 @@ void printhexmsg(DebugType type,char *msg, char *data, int size)		//打印十六进制
 	{
 		case ECU_DBG_UPDATE:
 			#if ECU_DEBUG_UPDATE
-				printf("%s==>%s: ",funname[type], msg);
+				printf("%s:%s==>%s: ",time,funname[type], msg);
 				for(i=0; i<size; i++)
 					printf("%02X, ", data[i]);
 				printf("\n");
@@ -354,7 +375,7 @@ void printhexmsg(DebugType type,char *msg, char *data, int size)		//打印十六进制
 			break;
 		case ECU_DBG_IDWRITE:
 			#if ECU_DEBUG_IDWRITE
-				printf("%s==>%s: ",funname[type], msg);
+				printf("%s:%s==>%s: ",time,funname[type], msg);
 				for(i=0; i<size; i++)
 					printf("%02X, ", data[i]);
 				printf("\n");
@@ -362,7 +383,7 @@ void printhexmsg(DebugType type,char *msg, char *data, int size)		//打印十六进制
 			break;
 		case ECU_DBG_MAIN:
 			#if ECU_DEBUG_MAIN
-				printf("%s==>%s: ",funname[type], msg);
+				printf("%s:%s==>%s: ",time,funname[type], msg);
 				for(i=0; i<size; i++)
 					printf("%02X, ", data[i]);
 				printf("\n");
@@ -370,7 +391,7 @@ void printhexmsg(DebugType type,char *msg, char *data, int size)		//打印十六进制
 			break;
 		case ECU_DBG_CLIENT:
 			#if ECU_DEBUG_CLIENT
-				printf("%s==>%s: ",funname[type], msg);
+				printf("%s:%s==>%s: ",time,funname[type], msg);
 				for(i=0; i<size; i++)
 					printf("%02X, ", data[i]);
 				printf("\n");
@@ -378,7 +399,7 @@ void printhexmsg(DebugType type,char *msg, char *data, int size)		//打印十六进制
 			break;
 		case ECU_DBG_CONTROL_CLIENT:
 			#if ECU_DEBUG_CONTROL_CLIENT
-				printf("%s==>%s: ",funname[type], msg);
+				printf("%s:%s==>%s: ",time,funname[type], msg);
 				for(i=0; i<size; i++)
 					printf("%02X, ", data[i]);
 				printf("\n");
@@ -386,7 +407,7 @@ void printhexmsg(DebugType type,char *msg, char *data, int size)		//打印十六进制
 			break;
 		case ECU_DBG_NTP:
 			#if ECU_DEBUG_NTP
-				printf("%s==>%s: ",funname[type], msg);
+				printf("%s:%s==>%s: ",time,funname[type], msg);
 				for(i=0; i<size; i++)
 					printf("%02X, ", data[i]);
 				printf("\n");
@@ -394,7 +415,7 @@ void printhexmsg(DebugType type,char *msg, char *data, int size)		//打印十六进制
 			break;
 		case ECU_DBG_OTHER:
 			#if ECU_DEBUG_OTHER
-				printf("%s==>%s: ",funname[type], msg);
+				printf("%s:%s==>%s: ",time,funname[type], msg);
 				for(i=0; i<size; i++)
 					printf("%02X, ", data[i]);
 				printf("\n");
@@ -402,7 +423,7 @@ void printhexmsg(DebugType type,char *msg, char *data, int size)		//打印十六进制
 			break;
 		case ECU_DBG_WIFI:
 			#if ECU_DEBUG_WIFI
-				printf("%s==>%s: ",funname[type], msg);
+				printf("%s:%s==>%s: ",time,funname[type], msg);
 				for(i=0; i<size; i++)
 					printf("%02X, ", data[i]);
 				printf("\n");

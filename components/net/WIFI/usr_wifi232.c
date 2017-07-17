@@ -25,6 +25,12 @@
 #include "stdio.h"
 #include "stdlib.h"
 
+
+#define WIFI_RCC                    RCC_APB2Periph_GPIOC
+#define WIFI_GPIO                   GPIOC
+#define WIFI_PIN                    (GPIO_Pin_6)
+
+
 /*****************************************************************************/
 /*  Variable Declarations                                                    */
 /*****************************************************************************/
@@ -82,6 +88,13 @@ void clear_WIFI(void)		//清空串口缓冲区的数据
 	
 	//清空缓冲器代码	通过将接收缓冲区的所有数据都读取出来，从而清空数据
 	WIFI_SERIAL.read(&WIFI_SERIAL,0, data, 2048);
+	rt_hw_ms_delay(20);
+	WIFI_SERIAL.read(&WIFI_SERIAL,0, data, 2048);
+	rt_hw_ms_delay(20);
+	WIFI_SERIAL.read(&WIFI_SERIAL,0, data, 2048);
+	rt_hw_ms_delay(20);
+
+	
 	free(data);
 }
 
@@ -95,12 +108,12 @@ int WiFi_Open(void)
 
 	WIFI_lock = rt_mutex_create("wifi_lock", RT_IPC_FLAG_FIFO);
 	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOA,ENABLE);
+	RCC_APB2PeriphClockCmd(WIFI_RCC | RCC_APB2Periph_GPIOA,ENABLE);
 	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_6;
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
-	GPIO_SetBits(GPIOC, GPIO_Pin_6);		//设置引脚为高电平输出，使能WIFI模块
+	GPIO_InitStructure.GPIO_Pin   = WIFI_PIN;
+	GPIO_Init(WIFI_GPIO, &GPIO_InitStructure);
+	GPIO_SetBits(WIFI_GPIO, WIFI_PIN);		//设置引脚为高电平输出，使能WIFI模块
 	
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_8;
@@ -116,13 +129,12 @@ int WiFi_Open(void)
 			printdecmsg(ECU_DBG_WIFI,"open WIFI failed ",result);
 		}
 	}
-	rt_hw_s_delay(1);
+	//rt_hw_s_delay(1);
 	//直到WIFI连接上之后   算成功打开
-	while(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_8));
+	//while(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_8));
 	
 	if (WIFI_lock != RT_NULL)
 	{
-		rt_hw_s_delay(5);
 		printmsg(ECU_DBG_WIFI,"open WIFI success!!!!!!!!!!!!");
 	}
 	rt_mutex_release(WIFI_lock);
@@ -219,7 +231,7 @@ int AT_VER(void)
 	//向模块写入"AT+ENTM\n",返回+ok
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,"AT+VER\n", 7);
 	//获取到a
-	if(selectWiFi(1) <= 0)
+	if(selectWiFi(3) <= 0)
 	{
 		printmsg(ECU_DBG_WIFI,"AT_VER WIFI Get reply time out 1");
 		rt_mutex_release(WIFI_lock);
@@ -247,7 +259,7 @@ int AT_Z(void)
 	//向模块写入"AT+AT_Z\n",返回+ok
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,"AT+Z\n", 5);
 
-	if(selectWiFi(1) <= 0)
+	if(selectWiFi(3) <= 0)
 	{
 		printmsg(ECU_DBG_WIFI,"AT_Z WIFI Get reply time out 1");
 		rt_mutex_release(WIFI_lock);
@@ -262,8 +274,8 @@ int AT_Z(void)
 			return -1;
 		}
 	}
-	rt_hw_s_delay(1);
-	while(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_8));
+	//rt_hw_s_delay(1);
+	//while(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_8));
 	
 	rt_mutex_release(WIFI_lock);
 	//rt_hw_s_delay(18);
@@ -279,8 +291,7 @@ int AT_RELD(void)
 	clear_WIFI();
 	//向模块写入"AT+AT_Z\n",返回+ok
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,"AT+RELD\n", 8);
-	rt_hw_s_delay(3);
-	if(selectWiFi(2) <= 0)
+	if(selectWiFi(5) <= 0)
 	{
 		printmsg(ECU_DBG_WIFI,"AT_RELD WIFI Get reply time out 1");
 		rt_mutex_release(WIFI_lock);
@@ -312,8 +323,7 @@ int AT_NETP(char *IP,int port)
 	sprintf(send,"AT+NETP=TCP,Server,%d,%s\n",port,IP);
 	//向模块写入"AT_NETP\n",返回+ok
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
-	rt_hw_s_delay(1);
-	if(selectWiFi(2) <= 0)
+	if(selectWiFi(5) <= 0)
 	{
 		printmsg(ECU_DBG_WIFI,"AT_NETP WIFI Get reply time out 1");
 		rt_mutex_release(WIFI_lock);
@@ -345,8 +355,8 @@ int AT_TCPB_ON(void)
 	
 	sprintf(send,"AT+TCPB=on\n");
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
-	rt_hw_s_delay(1);
-	if(selectWiFi(2) <= 0)
+
+	if(selectWiFi(5) <= 0)
 	{
 		printmsg(ECU_DBG_WIFI,"AT_TCPB_ON WIFI Get reply time out 1");
 		rt_mutex_release(WIFI_lock);
@@ -379,8 +389,8 @@ int AT_TCPADDB(char *IP)
 	sprintf(send,"AT+TCPADDB=%s\n",IP);
 	//向模块写入"AT_TCPADDB\n",返回+ok
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
-	rt_hw_s_delay(1);
-	if(selectWiFi(2) <= 0)
+
+	if(selectWiFi(5) <= 0)
 	{
 		printmsg(ECU_DBG_WIFI,"AT_TCPADDB WIFI Get reply time out 1");
 		rt_mutex_release(WIFI_lock);
@@ -413,8 +423,8 @@ int AT_TCPPTB(int port)
 	sprintf(send,"AT+TCPPTB=%d\n",port);
 	//向模块写入"AT_NETP\n",返回+ok
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
-	rt_hw_s_delay(1);
-	if(selectWiFi(2) <= 0)
+
+	if(selectWiFi(5) <= 0)
 	{
 		printmsg(ECU_DBG_WIFI,"AT_TCPPTB WIFI Get reply time out 1");
 		rt_mutex_release(WIFI_lock);
@@ -446,8 +456,8 @@ int AT_TCPTOB(int timeout)
 	sprintf(send,"AT+TCPTOB=%d\n",timeout);
 	//向模块写入"AT_TCPTOB\n",返回+ok
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
-	rt_hw_s_delay(1);
-	if(selectWiFi(2) <= 0)
+
+	if(selectWiFi(5) <= 0)
 	{
 		printmsg(ECU_DBG_WIFI,"AT_TCPTOB WIFI Get reply time out 1");
 		rt_mutex_release(WIFI_lock);
@@ -479,8 +489,8 @@ int AT_TCPTOC(int timeout)
 	sprintf(send,"AT+TCPTOC=%d\n",timeout);
 	//向模块写入"AT_TCPTOB\n",返回+ok
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
-	rt_hw_s_delay(1);
-	if(selectWiFi(2) <= 0)
+
+	if(selectWiFi(5) <= 0)
 	{
 		printmsg(ECU_DBG_WIFI,"AT_TCPTOC WIFI Get reply time out 1");
 		rt_mutex_release(WIFI_lock);
@@ -511,8 +521,8 @@ int AT_TCPC_ON(void)
 	
 	sprintf(send,"AT+TCPC=on\n");
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
-	rt_hw_s_delay(1);
-	if(selectWiFi(2) <= 0)
+
+	if(selectWiFi(5) <= 0)
 	{
 		printmsg(ECU_DBG_WIFI,"AT_TCPC_ON WIFI Get reply time out 1");
 		rt_mutex_release(WIFI_lock);
@@ -544,8 +554,8 @@ int AT_TCPADDC(char *IP)
 	sprintf(send,"AT+TCPADDC=%s\n",IP);
 	//向模块写入"AT_NETP\n",返回+ok
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
-	rt_hw_s_delay(1);
-	if(selectWiFi(2) <= 0)
+
+	if(selectWiFi(5) <= 0)
 	{
 		printmsg(ECU_DBG_WIFI,"AT_TCPADDC WIFI Get reply time out 1");
 		rt_mutex_release(WIFI_lock);
@@ -577,8 +587,8 @@ int AT_TCPPTC(int port)
 	sprintf(send,"AT+TCPPTC=%d\n",port);
 	//向模块写入"AT_NETP\n",返回+ok
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
-	rt_hw_s_delay(1);
-	if(selectWiFi(2) <= 0)
+
+	if(selectWiFi(5) <= 0)
 	{
 		printmsg(ECU_DBG_WIFI,"AT_TCPPTC WIFI Get reply time out 1");
 		rt_mutex_release(WIFI_lock);
@@ -611,8 +621,8 @@ int AT_FAPSTA_ON(void)
 	
 	sprintf(send,"AT+FAPSTA=on\n");
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
-	rt_hw_s_delay(1);
-	if(selectWiFi(2) <= 0)
+
+	if(selectWiFi(5) <= 0)
 	{
 		printmsg(ECU_DBG_WIFI,"AT_FAPSTA_ON WIFI Get reply time out 1");
 		rt_mutex_release(WIFI_lock);
@@ -642,8 +652,8 @@ int AT_WMODE(char *WMode)
 	
 	sprintf(send,"AT+WMODE=%s\n",WMode);
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
-	rt_hw_s_delay(1);
-	if(selectWiFi(2) <= 0)
+
+	if(selectWiFi(5) <= 0)
 	{
 		printmsg(ECU_DBG_WIFI,"AT_WMODE WIFI Get reply time out 1");
 		rt_mutex_release(WIFI_lock);
@@ -673,8 +683,8 @@ int AT_WSSSID(char *SSSID)
 	
 	sprintf(send,"AT+WSSSID=%s\n",SSSID);
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
-	rt_hw_s_delay(1);
-	if(selectWiFi(2) <= 0)
+
+	if(selectWiFi(5) <= 0)
 	{
 		printmsg(ECU_DBG_WIFI,"AT_WSSSID WIFI Get reply time out 1");
 		rt_mutex_release(WIFI_lock);
@@ -704,8 +714,7 @@ int AT_WSKEY(char *SKEY)
 	
 	sprintf(send,"AT+WSKEY=WPA2PSK,AES,%s\n",SKEY);
 	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
-	rt_hw_s_delay(1);
-	if(selectWiFi(2) <= 0)
+	if(selectWiFi(5) <= 0)
 	{
 		printmsg(ECU_DBG_WIFI,"AT_WSKEY WIFI Get reply time out 1");
 		rt_mutex_release(WIFI_lock);
@@ -714,6 +723,105 @@ int AT_WSKEY(char *SKEY)
 	else
 	{
 		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 255);
+		//printf("%s\n",AT);
+		if(memcmp(&AT[strlen(send)+1],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"AT_WSKEY Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+
+
+
+//设置WIFI SSID
+
+int AT_WAP(char *ECUID12)
+{
+	char send[100] = {'\0'};
+	char AT[100] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	clear_WIFI();
+	
+	sprintf(send,"AT+WAP=11BGN,ECU_R_%s,Auto\n",ECUID12);
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
+	
+	if(selectWiFi(5) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_WAP WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 100);
+		//printf("%s\n",AT);
+		if(memcmp(&AT[strlen(send)+1],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"AT_WSKEY Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+
+//设置WIFI密码
+int AT_WAKEY(char *NewPasswd)
+{
+	char send[100] = {'\0'};
+	char AT[100] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	clear_WIFI();
+	
+	sprintf(send,"AT+WAKEY=WPA2PSK,AES,%s\n",NewPasswd);
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
+	
+	if(selectWiFi(5) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_WAKEY WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 100);
+		//printf("%s\n",AT);
+		if(memcmp(&AT[strlen(send)+1],"+ok",3))
+		{
+			rt_mutex_release(WIFI_lock);
+			return -1;
+		}
+	}
+	printmsg(ECU_DBG_WIFI,"AT_WSKEY Successful");
+	rt_mutex_release(WIFI_lock);
+	return 0;
+}
+
+//设置WIFI为无密码
+int AT_WAKEY_Clear(void)
+{
+	char send[100] = {'\0'};
+	char AT[100] = { '\0' };
+	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
+	clear_WIFI();
+	
+	sprintf(send,"AT+WAKEY=OPEN,NONE\n");
+	WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, (strlen(send)));
+	
+	if(selectWiFi(5) <= 0)
+	{
+		printmsg(ECU_DBG_WIFI,"AT_WAP WIFI Get reply time out 1");
+		rt_mutex_release(WIFI_lock);
+		return -1;
+	}
+	else
+	{
+		WIFI_SERIAL.read(&WIFI_SERIAL,0, AT, 100);
 		//printf("%s\n",AT);
 		if(memcmp(&AT[strlen(send)+1],"+ok",3))
 		{
@@ -999,9 +1107,8 @@ int WiFi_SendData(tcp_address_t address ,char *data ,int length)
 int initWorkIP(char *clientIP,int clientPort,char *controlIP,int controlPort)
 {
 	int i = 0,res = 0;
-	
 	//进入AT模式
-	rt_hw_s_delay(3);
+	rt_hw_s_delay(5);
 	for(i = 0;i<3;i++)
 	{
 		if(0 == AT())
@@ -1086,30 +1193,9 @@ int initWorkIP(char *clientIP,int clientPort,char *controlIP,int controlPort)
 		}else
 			res = -1;
 	}
-	if(res == -1) return -1;
+
 	
-	//配置SOCKET C的服务器超时时间
-	for(i = 0;i<3;i++)
-	{
-		if(0 == AT_TCPTOB(600))
-		{
-			res = 0;
-			break;
-		}else
-			res = -1;
-	}
-	if(res == -1) return -1;
 	
-	//配置SOCKET C的服务器超时时间
-	for(i = 0;i<3;i++)
-	{
-		if(0 == AT_TCPTOC(600))
-		{
-			res = 0;
-			break;
-		}else
-			res = -1;
-	}
 	if(res == -1) return -1;
 	
 	for(i = 0;i<2;i++)
@@ -1120,6 +1206,12 @@ int initWorkIP(char *clientIP,int clientPort,char *controlIP,int controlPort)
 	printmsg(ECU_DBG_WIFI,"initWorkIP Over");
 	return 0;
 }
+
+
+
+
+
+
 
 //创建Socket连接
 //返回0 表示创建连接成功  -1表示失败
@@ -1322,54 +1414,146 @@ int WIFI_QueryStatus(SocketType Type)
 	return -1;
 }
 
-int WIFI_QueryMac(void)
+int WIFI_ChangePasswd(char *NewPasswd)
 {
-	char send[50] = {'\0'};
-	char recv[255] = { '\0' };
-	int length = 0, i = 0,j=0;
-	rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
-	
-	send[0]= 0x65;
-	send[1]= 0x65;
-	send[2]= 0x06;
-	send[3]= 0x05;
-	send[4]= 0x00;
-	send[5]= 0x06;
-
-	for(i = 0;i<2;i++)
+	int ret = 0,index;
+	for(index = 0;index<3;index++)
 	{
-		clear_WIFI();
-		WIFI_SERIAL.write(&WIFI_SERIAL, 0,send, 6);
-		//printhexmsg(ECU_DBG_WIFI,"WIFI_QuerySocketStatus send", send, 6);
-		
-		if(selectWiFi(5) <= 0)
-		{
-			printmsg(ECU_DBG_WIFI,"WIFI_QueryMacAddress WIFI Get reply time out 1");
-		}
-		else
-		{
-			length = WIFI_SERIAL.read(&WIFI_SERIAL,0, recv, 255);
-			//printhexmsg(ECU_DBG_WIFI,"WIFI_QuerySocketStatus", recv, length);
-			if( (length > 0) && 
-				  (recv[0] == 0x65)&&
-					(recv[1] == 0x65)&&
-					(recv[3] == 0x85)
-				)
-			{
-				for(j=0;j<length;i++)
-				{
-					printf("%x ",recv[j]);
-				}
-				printf("\n");
-			}else
-			{
-				//查询连接失败
-				printmsg(ECU_DBG_WIFI,"WIFI_QueryMacAddress Failed");
-			}
-		}
+		rt_hw_ms_delay(200);
+		ret =AT();
+		if(ret == 0) break;
 	}
-	rt_mutex_release(WIFI_lock);
-	return -1;
+	if(ret == -1) return -1;
+	
+	rt_hw_ms_delay(200);
+	
+	for(index = 0;index<3;index++)
+	{
+		rt_hw_ms_delay(200);
+		ret =AT_WAKEY(NewPasswd);
+		if(ret == 0) break;
+	}
+	if(ret == -1)
+	{
+		for(index = 0;index<3;index++)
+		{
+			rt_hw_ms_delay(200);
+			ret =AT_ENTM();;
+			if(ret == 0) break;
+		}
+	
+		return -1;
+	}		
+	
+	for(index = 0;index<3;index++)
+	{
+		rt_hw_ms_delay(200);
+		ret =AT_Z();
+		if(ret == 0) return 0;
+	}
+	
+	for(index = 0;index<3;index++)
+	{
+		rt_hw_ms_delay(200);
+		ret =AT_ENTM();;
+		if(ret == 0) break;
+	}
+	if(ret == -1) return -1;
+	
+	WIFI_Reset();	
+	return 0;
+}
+
+
+int WIFI_ChangeSSID(char *SSID,char *Passwd)
+{
+	int ret = 0,index;
+	for(index = 0;index<3;index++)
+	{
+		rt_hw_ms_delay(200);
+		ret =AT();
+		if(ret == 0) break;
+	}
+	if(ret == -1) return -1;
+	
+	rt_hw_ms_delay(200);
+	
+	for(index = 0;index<3;index++)
+	{
+		rt_hw_ms_delay(200);
+		ret =AT_WSSSID(SSID);
+		if(ret == 0) break;
+	}
+	if(ret == -1)
+	{
+		for(index = 0;index<3;index++)
+		{
+			rt_hw_ms_delay(200);
+			ret =AT_ENTM();;
+			if(ret == 0) break;
+		}
+	
+		return -1;
+	}	
+
+	for(index = 0;index<3;index++)
+	{
+		rt_hw_ms_delay(200);
+		ret =AT_WSKEY(Passwd);
+		if(ret == 0) break;
+	}
+	if(ret == -1)
+	{
+		for(index = 0;index<3;index++)
+		{
+			rt_hw_ms_delay(200);
+			ret =AT_ENTM();;
+			if(ret == 0) break;
+		}
+	
+		return -1;
+	}	
+
+
+	
+	for(index = 0;index<3;index++)
+	{
+		rt_hw_ms_delay(200);
+		ret =AT_Z();
+		if(ret == 0) return 0;
+	}
+	
+	for(index = 0;index<3;index++)
+	{
+		rt_hw_ms_delay(200);
+		ret =AT_ENTM();;
+		if(ret == 0) break;
+	}
+	if(ret == -1) return -1;
+	
+	WIFI_Reset();	
+	return 0;
+}
+
+
+
+int WIFI_Reset(void)
+{
+	GPIO_ResetBits(WIFI_GPIO, WIFI_PIN);
+	
+	rt_hw_ms_delay(1000);
+	GPIO_SetBits(WIFI_GPIO, WIFI_PIN);
+	return 0;
+}
+
+
+
+int WIFI_ConStatus(void)
+{
+	int status = 0;
+	status = GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_8); 
+	printf("status : %d\n",status);
+	return status;
 }
 
 
@@ -1436,6 +1620,11 @@ FINSH_FUNCTION_EXPORT(AT_WMODE , Set Modle Mode.)
 FINSH_FUNCTION_EXPORT(AT_WSSSID , Set STA SSID.)
 FINSH_FUNCTION_EXPORT(AT_WSKEY , Set STA Key.)
 
+FINSH_FUNCTION_EXPORT(AT_WAP , Set WAP.)
+FINSH_FUNCTION_EXPORT(AT_WAKEY , Set WAKEY.)
+FINSH_FUNCTION_EXPORT(AT_WAKEY_Clear , Clear WAKEY.)
+
+
 FINSH_FUNCTION_EXPORT(SendToSocketB , Send SOCKET B.)
 FINSH_FUNCTION_EXPORT(SendToSocketC , Send SOCKET C.)
 
@@ -1444,7 +1633,8 @@ FINSH_FUNCTION_EXPORT(initWorkIP , init Work Mode.)
 FINSH_FUNCTION_EXPORT(WIFI_Create , Wifi Create Socket.)
 FINSH_FUNCTION_EXPORT(WIFI_Close , Wifi Close Socket.)
 FINSH_FUNCTION_EXPORT(WIFI_QueryStatus , Wifi Query Socket Status.)
-FINSH_FUNCTION_EXPORT(WIFI_QueryMac , Wifi Query Mac Address.)
+FINSH_FUNCTION_EXPORT(WIFI_ConStatus ,Query Wifi Connect Status.)
+
 
 
 #endif

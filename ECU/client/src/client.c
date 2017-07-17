@@ -827,8 +827,7 @@ void client_thread_entry(void* parameter)
 				while(search_readflag(data,time,&flag,'1'))		//	获取一条resendflag为1的数据
 				{
 					if(compareTime(thistime ,lasttime,300))
-					{
-						printf("11111111111111111111111111111\n");
+					{	
 						break;
 					}
 					if(1 == flag)		// 还存在需要上传的数据
@@ -837,7 +836,6 @@ void client_thread_entry(void* parameter)
 					res = wifi_send_record(data, time);
 					if(-1 == res)
 					{
-						printf("2222222222222222222222222\n");
 						break;
 					}
 						

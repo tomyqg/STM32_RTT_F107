@@ -96,6 +96,14 @@ int AT_WSSSID(char *SSSID);
 int AT_WSKEY(char *SKEY);
 //初始化WIFI模块为工作模式  //工作模式 socketB 和socketC为 client和Control_Client服务器配置信息
 int initWorkIP(char *clientIP,int clientPort,char *controlIP,int controlPort);
+//修改WIFI密码
+int WIFI_ChangePasswd(char *NewPasswd);
+//修改SSID
+int WIFI_ChangeSSID(char *SSID,char *Passwd);
+//复位WIFI
+int WIFI_Reset(void);
+//查看WIFI连接状态
+int WIFI_ConStatus(void);
 
 /***********************************************************************/
 
@@ -103,7 +111,7 @@ int initWorkIP(char *clientIP,int clientPort,char *controlIP,int controlPort);
 int WIFI_Create(SocketType Type);
 int WIFI_Close(SocketType Type);
 int WIFI_QueryStatus(SocketType Type);
-int WIFI_QueryMac(void);
+
 int SendToSocketA(char *data ,int length,char ID[8]);
 int SendToSocketB(char *data ,int length);
 int SendToSocketC(char *data ,int length);

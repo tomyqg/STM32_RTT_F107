@@ -34,7 +34,7 @@ typedef enum DEBUG {
 #define ECU_DBG_OFF           		0x0
 #define ECU_DBG_ON           			0x1
 
-#define ECU_JLINK_DEBUG						ECU_DBG_ON
+#define ECU_JLINK_DEBUG						ECU_DBG_OFF
 
 #define ECU_DEBUG									ECU_DBG_ON
 

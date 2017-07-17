@@ -94,11 +94,11 @@ void clear_zbmodem(void)		//清空串口缓冲区的数据
 	char data[256];
 	//清空缓冲器代码	通过将接收缓冲区的所有数据都读取出来，从而清空数据
 	ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data, 255);
-	rt_hw_ms_delay(100);
+	rt_hw_ms_delay(20);
 	ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data, 255);
-	rt_hw_ms_delay(100);
+	rt_hw_ms_delay(20);
 	ZIGBEE_SERIAL.read(&ZIGBEE_SERIAL,0, data, 255);
-	rt_hw_ms_delay(100);
+	rt_hw_ms_delay(20);
 }
 
 int openzigbee(void)
