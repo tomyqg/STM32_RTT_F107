@@ -48,6 +48,15 @@
 
 typedef u32_t sys_prot_t;
 
+typedef struct 
+{
+	int IP1;
+	int IP2;
+	int IP3;
+	int IP4;
+}	IP_t;
+
+
 #define SYS_MBOX_SIZE 10
 #define SYS_LWIP_TIMER_NAME "timer"
 #define SYS_LWIP_MBOX_NAME "mbox"
@@ -60,5 +69,7 @@ typedef rt_mailbox_t  sys_mbox_t;
 typedef rt_thread_t sys_thread_t;
 
 void dhcp_reset(void);
+int StaticIP(IP_t IPAddr,IP_t MSKAddr,IP_t GWAddr,IP_t DNS1Addr,IP_t DNS2Addr);
+
 
 #endif /* __ARCH_SYS_ARCH_H__ */

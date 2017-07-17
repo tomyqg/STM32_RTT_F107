@@ -27,6 +27,7 @@
 #include <zigbee.h>
 #include "debug.h"
 #include "SEGGER_RTT.h"
+#include "myfile.h"
 
 #ifdef RT_USING_DFS
 #include <dfs_fs.h>
@@ -127,6 +128,59 @@ rt_mutex_t usr_wifi_lock = RT_NULL;
 extern void cpu_usage_init(void);
 extern void cpu_usage_get(rt_uint8_t *major, rt_uint8_t *minor);
 
+
+
+int getAddr(MyArray *array, int num,IPConfig_t *IPconfig)
+{
+	int i;
+	ip_addr_t addr;
+	for(i=0; i<num; i++){
+		memset(&addr,0x00,sizeof(addr));
+		if(!strlen(array[i].name))break;
+		//IP地址
+		if(!strcmp(array[i].name, "IPAddr")){
+			ipaddr_aton(array[i].value,&addr);
+			IPconfig->IPAddr.IP1 = (addr.addr&(0x000000ff))>>0;
+			IPconfig->IPAddr.IP2 = (addr.addr&(0x0000ff00))>>8;
+			IPconfig->IPAddr.IP3 = (addr.addr&(0x00ff0000))>>16;
+			IPconfig->IPAddr.IP4 = (addr.addr&(0xff000000))>>24;
+		}
+		//掩码地址
+		else if(!strcmp(array[i].name, "MSKAddr")){
+			ipaddr_aton(array[i].value,&addr);
+			IPconfig->MSKAddr.IP1 = (addr.addr&(0x000000ff))>>0;
+			IPconfig->MSKAddr.IP2 = (addr.addr&(0x0000ff00))>>8;
+			IPconfig->MSKAddr.IP3 = (addr.addr&(0x00ff0000))>>16;
+			IPconfig->MSKAddr.IP4 = (addr.addr&(0xff000000))>>24;
+		}
+		//网关地址
+		else if(!strcmp(array[i].name, "GWAddr")){
+			ipaddr_aton(array[i].value,&addr);
+			IPconfig->GWAddr.IP1 = (addr.addr&(0x000000ff))>>0;
+			IPconfig->GWAddr.IP2 = (addr.addr&(0x0000ff00))>>8;
+			IPconfig->GWAddr.IP3 = (addr.addr&(0x00ff0000))>>16;
+			IPconfig->GWAddr.IP4 = (addr.addr&(0xff000000))>>24;
+		}
+		//DNS1地址
+		else if(!strcmp(array[i].name, "DNS1Addr")){
+			ipaddr_aton(array[i].value,&addr);
+			IPconfig->DNS1Addr.IP1 = (addr.addr&(0x000000ff))>>0;
+			IPconfig->DNS1Addr.IP2 = (addr.addr&(0x0000ff00))>>8;
+			IPconfig->DNS1Addr.IP3 = (addr.addr&(0x00ff0000))>>16;
+			IPconfig->DNS1Addr.IP4 = (addr.addr&(0xff000000))>>24;
+		}
+		//DNS2地址
+		else if(!strcmp(array[i].name, "DNS2Addr")){
+			ipaddr_aton(array[i].value,&addr);
+			IPconfig->DNS2Addr.IP1 = (addr.addr&(0x000000ff))>>0;
+			IPconfig->DNS2Addr.IP2 = (addr.addr&(0x0000ff00))>>8;
+			IPconfig->DNS2Addr.IP3 = (addr.addr&(0x00ff0000))>>16;
+			IPconfig->DNS2Addr.IP4 = (addr.addr&(0xff000000))>>24;
+		}	
+	}
+	return 0;
+}
+
 /*****************************************************************************/
 /* Function Description:                                                     */
 /*****************************************************************************/
@@ -142,6 +196,9 @@ extern void cpu_usage_get(rt_uint8_t *major, rt_uint8_t *minor);
 /*****************************************************************************/
 void rt_init_thread_entry(void* parameter)
 {
+	MyArray array[5];
+	int fileflag = 0; 
+	IPConfig_t IPconfig;
     {
         extern void rt_platform_init(void);
         rt_platform_init();
@@ -200,6 +257,14 @@ void rt_init_thread_entry(void* parameter)
 	/* initialize lwip system */
 	lwip_system_init();
 
+	//初始化IP
+	fileflag = file_get_array(array, 5, "/yuneng/staticIP.con");
+	if(fileflag == 0)
+	{
+		getAddr(array, 5,&IPconfig);
+		StaticIP(IPconfig.IPAddr,IPconfig.MSKAddr,IPconfig.GWAddr,IPconfig.DNS1Addr,IPconfig.DNS2Addr);
+	}
+	
 #if ECU_JLINK_DEBUG	
 	SEGGER_RTT_printf(0,"TCP/IP initialized!\n");
 #endif
@@ -526,9 +591,43 @@ void restart(int type)
 FINSH_FUNCTION_EXPORT(restart, eg:restart());
 
 #include "arch/sys_arch.h"
-void dhcpreset()
+void dhcpreset(void)
 {
 	dhcp_reset();
 }
 FINSH_FUNCTION_EXPORT(dhcpreset, eg:dhcpreset());
+
+void teststaticIP(void)
+{
+	IP_t IPAddr,MSKAddr,GWAddr,DNS1Addr,DNS2Addr;
+	IPAddr.IP1 = 192;
+	IPAddr.IP2 = 168;
+	IPAddr.IP3 = 1;
+	IPAddr.IP4 = 192;
+
+	MSKAddr.IP1 = 255;
+	MSKAddr.IP2 = 255;
+	MSKAddr.IP3 = 255;
+	MSKAddr.IP4 = 0;
+
+	GWAddr.IP1 = 192;
+	GWAddr.IP2 = 168;
+	GWAddr.IP3 = 1;
+	GWAddr.IP4 = 1;
+	
+	DNS1Addr.IP1 = 0;
+	DNS1Addr.IP2 = 0;
+	DNS1Addr.IP3 = 0;
+	DNS1Addr.IP4 = 0;
+
+	DNS1Addr.IP1 = 0;
+	DNS1Addr.IP2 = 0;
+	DNS1Addr.IP3 = 0;
+	DNS1Addr.IP4 = 0;
+	
+	StaticIP(IPAddr,MSKAddr,GWAddr,DNS1Addr,DNS2Addr);	
+
+}
+FINSH_FUNCTION_EXPORT(teststaticIP, eg:teststaticIP());
+
 #endif

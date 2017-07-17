@@ -26,12 +26,11 @@
 #include "file.h"
 #include "rtc.h"
 #include "version.h"
+#include "arch/sys_arch.h"
 
 extern rt_mutex_t usr_wifi_lock;
 extern ecu_info ecu;
 extern inverter_info inverter[MAXINVERTERCOUNT];
-	
-	
 	
 int ResolveWifiPasswd(char *oldPasswd,int *oldLen,char *newPasswd,int *newLen,char *passwdstring)
 {
@@ -52,6 +51,42 @@ int ResolveWifiSSID(char *SSID,int *SSIDLen,char *PassWD,int *PassWDLen,char *st
 	
 	return 0;
 }	
+
+//返回0 表示动态IP  返回1 表示固定IP   返回-1表示失败
+int ResolveWired(char *string,IP_t *IPAddr,IP_t *MSKAddr,IP_t *GWAddr,IP_t *DNS1Addr,IP_t *DNS2Addr)
+{
+	if(string[0] == 0x00)	//动态IP
+	{
+		return 0;
+	}else if(string[0] == 0x01) //静态IP
+	{
+		IPAddr->IP1 = string[1];
+		IPAddr->IP2 = string[2];
+		IPAddr->IP3 = string[3];
+		IPAddr->IP4 = string[4];
+		MSKAddr->IP1 = string[5];
+		MSKAddr->IP2 = string[6];
+		MSKAddr->IP3 = string[7];
+		MSKAddr->IP4 = string[8];
+		GWAddr->IP1 = string[9];
+		GWAddr->IP2 = string[10];
+		GWAddr->IP3 = string[11];
+		GWAddr->IP4 = string[12];	
+		DNS1Addr->IP1 = string[13];	
+		DNS1Addr->IP2 = string[14];	
+		DNS1Addr->IP3 = string[15];	
+		DNS1Addr->IP4 = string[16];	
+		DNS2Addr->IP1 = string[17];	
+		DNS2Addr->IP2 = string[18];	
+		DNS2Addr->IP3 = string[19];	
+		DNS2Addr->IP4 = string[20];	
+		return 1;
+	}else
+	{
+		return -1;
+	}
+
+}
 	
 //WIFI事件处理
 void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
@@ -67,7 +102,7 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 	{
 		switch(Command_Id)
 		{
-			case COMMAND_BASEINFO:						//获取基本信息请求
+			case COMMAND_BASEINFO:						//获取基本信息请求	OK
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_BASEINFO,WIFI_RecvData);
 				memcpy(baseInfo.ECUID,ecu.id,13);											//ECU ID
 				baseInfo.LifttimeEnergy = (int)(ecu.life_energy*10);				//ECU 历史发电量
@@ -85,7 +120,7 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 				APP_Response_BaseInfo(ID,baseInfo);
 				break;	
 			
-			case COMMAND_POWERGENERATION:			//逆变器发电数据请求	
+			case COMMAND_POWERGENERATION:			//逆变器发电数据请求		OK
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_POWERGENERATION,WIFI_RecvData);
 				//首先对比ECU ID是否匹配
 				if(!memcmp(&WIFI_RecvData[11],ecu.id,12))
@@ -154,18 +189,18 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 				}
 				break;
 				
-			case COMMAND_SETTIME:							//时间设置请求
+			case COMMAND_SETTIME:							//时间设置请求	OK
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_SETTIME,WIFI_RecvData);
 	
 				//首先对比ECU ID是否匹配
 				if(!memcmp(&WIFI_RecvData[11],ecu.id,12))
 				{
 					//匹配成功进行相应操作
+					printf("COMMAND_SETTIME  Mapping\n");
 					memset(setTime,'\0',15);
 					memcpy(setTime,&WIFI_RecvData[26],14);
 					//设置时间
 					set_time(setTime);
-					printf("COMMAND_SETTIME  Mapping\n");
 					APP_Response_SetTime(0x00,ID);
 				}else
 				{	
@@ -175,13 +210,31 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 				}
 				break;
 			
-			case COMMAND_SETWIREDNETWORK:			//有线网络设置请求
+			case COMMAND_SETWIREDNETWORK:			//有线网络设置请求  OK
+				
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_SETWIREDNETWORK,WIFI_RecvData);	
 				//首先对比ECU ID是否匹配
 				if(!memcmp(&WIFI_RecvData[11],ecu.id,12))
 				{
+					int ModeFlag = 0;
+					char buff[200] = {'\0'};
+					IP_t IPAddr,MSKAddr,GWAddr,DNS1Addr,DNS2Addr;
 					//匹配成功进行相应操作
 					printf("COMMAND_SETWIREDNETWORK  Mapping\n");
+					//检查是DHCP  还是固定IP
+					ModeFlag = ResolveWired(&WIFI_RecvData[26],&IPAddr,&MSKAddr,&GWAddr,&DNS1Addr,&DNS2Addr);
+					if(ModeFlag == 0x00)		//DHCP
+					{
+						dhcp_reset();
+					}else if (ModeFlag == 0x01)		//固定IP		
+					{
+						//保存网络地址
+						sprintf(buff,"IPAddr=%d.%d.%d.%d\nMSKAddr=%d.%d.%d.%d\nGWAddr=%d.%d.%d.%d\nDNS1Addr=%d.%d.%d.%d\nDNS2Addr=%d.%d.%d.%d\n",IPAddr.IP1,IPAddr.IP2,IPAddr.IP3,IPAddr.IP4,
+										MSKAddr.IP1,MSKAddr.IP2,MSKAddr.IP3,MSKAddr.IP4,GWAddr.IP1,GWAddr.IP2,GWAddr.IP3,GWAddr.IP4,DNS1Addr.IP1,DNS1Addr.IP2,DNS1Addr.IP3,DNS1Addr.IP4,DNS2Addr.IP1,DNS2Addr.IP2,DNS2Addr.IP3,DNS2Addr.IP4);
+						//设置固定IP
+						StaticIP(IPAddr,MSKAddr,GWAddr,DNS1Addr,DNS2Addr);
+					}
+					
 					APP_Response_SetWiredNetwork(0x00,ID);
 				}else
 				{	

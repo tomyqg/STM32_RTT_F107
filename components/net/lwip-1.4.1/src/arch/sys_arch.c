@@ -26,7 +26,7 @@
 #include "netif/ethernetif.h"
 #include "lwip/sio.h"
 #include <lwip/init.h>
-
+#include "lwip/dns.h"
 #include <string.h>
 
 /*
@@ -209,6 +209,32 @@ void dhcp_reset(void)
 	rt_exit_critical();
 }
 
+int StaticIP(IP_t IPAddr,IP_t MSKAddr,IP_t GWAddr,IP_t DNS1Addr,IP_t DNS2Addr)
+{
+	struct ip_addr ipaddr, netmask, gw, dns1, dns2;
+	char DNS[100] = { '\0' };
+	IP4_ADDR(&ipaddr, IPAddr.IP1, IPAddr.IP2, IPAddr.IP3, IPAddr.IP4);
+	IP4_ADDR(&gw, GWAddr.IP1, GWAddr.IP2, GWAddr.IP3, GWAddr.IP4);
+	IP4_ADDR(&netmask, MSKAddr.IP1, MSKAddr.IP2, MSKAddr.IP3, MSKAddr.IP4);
+	
+	netifapi_netif_set_addr(netif_default, &ipaddr, &netmask, &gw);
+	memset(DNS,'\0',100);
+	sprintf(DNS,"%d,%d,%d,%d",DNS1Addr.IP1,DNS1Addr.IP2,DNS1Addr.IP3,DNS1Addr.IP4);
+	if(ipaddr_aton(DNS, &dns1))
+	{
+		dns_setserver(0, &dns1);
+	}
+	
+	memset(DNS,'\0',100);
+	sprintf(DNS,"%d,%d,%d,%d",DNS2Addr.IP1,DNS2Addr.IP2,DNS2Addr.IP3,DNS2Addr.IP4);
+	if(ipaddr_aton(DNS, &dns2))
+	{
+		dns_setserver(1, &dns2);
+	}
+
+	return 0;
+
+}
 
 /**
  * LwIP system initialization

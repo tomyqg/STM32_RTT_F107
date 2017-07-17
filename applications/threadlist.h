@@ -15,6 +15,7 @@
 /*  Include Files                                                            */
 /*****************************************************************************/
 #include <rtthread.h>
+#include "arch/sys_arch.h"
 
 /*****************************************************************************/
 /*  Definitions                                                              */
@@ -31,6 +32,17 @@ typedef enum THREADTYPE {
   TYPE_CONTROL_CLIENT = 7,
 	TYPE_NTP = 8
 }threadType;
+
+typedef struct IPConfig
+{
+	IP_t IPAddr;
+	IP_t MSKAddr;
+	IP_t GWAddr;
+	IP_t DNS1Addr;
+	IP_t DNS2Addr;
+		
+} IPConfig_t;
+
 
 //Thread Priority
 //Init device thread priority
