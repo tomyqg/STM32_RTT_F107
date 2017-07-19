@@ -104,13 +104,23 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 		{
 			case COMMAND_BASEINFO:						//获取基本信息请求	OK
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_BASEINFO,WIFI_RecvData);
-				memcpy(baseInfo.ECUID,ecu.id,13);											//ECU ID
-				baseInfo.LifttimeEnergy = (int)(ecu.life_energy*10);				//ECU 历史发电量
-				baseInfo.LastSystemPower = 0;			//ECU 当前系统功率
-				baseInfo.GenerationCurrentDay = 0;//ECU 当天发电量
-				memset(baseInfo.LastToEMA,'\0',8);									//ECU 最后一次连接EMA的时间
-				baseInfo.InvertersNum = 0;;				//ECU 逆变器总数
-				baseInfo.LastInvertersNum = 0;		//ECU 当前连接的逆变器总数
+				memcpy(baseInfo.ECUID,ecu.id,13);											//ECU ID		OK
+			
+				baseInfo.LifttimeEnergy = (int)(ecu.life_energy*10);				//ECU 历史发电量		OK
+				baseInfo.LastSystemPower = ecu.system_power;			//ECU 当前系统功率		OK
+				baseInfo.GenerationCurrentDay = ecu.today_energy;//ECU 当天发电量
+			
+				memset(baseInfo.LastToEMA,'\0',8);	//ECU 最后一次连接EMA的时间
+				baseInfo.LastToEMA[0] = (ecu.last_ema_time[0] - '0')*16+(ecu.last_ema_time[1] - '0');
+				baseInfo.LastToEMA[1] = (ecu.last_ema_time[2] - '0')*16+(ecu.last_ema_time[3] - '0');
+				baseInfo.LastToEMA[2] = (ecu.last_ema_time[4] - '0')*16+(ecu.last_ema_time[5] - '0');
+				baseInfo.LastToEMA[3] = (ecu.last_ema_time[6] - '0')*16+(ecu.last_ema_time[7] - '0');
+				baseInfo.LastToEMA[4] = (ecu.last_ema_time[8] - '0')*16+(ecu.last_ema_time[9] - '0');
+				baseInfo.LastToEMA[5] = (ecu.last_ema_time[10] - '0')*16+(ecu.last_ema_time[11] - '0');
+				baseInfo.LastToEMA[6] = (ecu.last_ema_time[12] - '0')*16+(ecu.last_ema_time[13] - '0');
+
+				baseInfo.InvertersNum = ecu.total;				//ECU 逆变器总数
+				baseInfo.LastInvertersNum = ecu.count;		//ECU 当前连接的逆变器总数
 				baseInfo.Length = ECU_VERSION_LENGTH;								//ECU 版本号长度
 				sprintf(baseInfo.Version,"%s_%s_%s",ECU_VERSION,MAJORVERSION,MINORVERSION);	//ECU 版本
 				baseInfo.TimeZoneLength = 9;				//ECU 时区长度
@@ -172,18 +182,24 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 			
 				break;
 						
-			case COMMAND_REGISTERID:					//逆变器ID注册请求	
+			case COMMAND_REGISTERID:					//逆变器ID注册请求	OK
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_REGISTERID,WIFI_RecvData);				
 				//首先对比ECU ID是否匹配
 				if(!memcmp(&WIFI_RecvData[11],ecu.id,12))
 				{
+					int AddNum = 0;
 					//匹配成功进行相应操作
 					printf("COMMAND_REGISTERID  Mapping\n");
+					//计算台数
+					AddNum = (Data_Len - 29)/6;
+					//添加ID到文件
+					phone_add_inverter(AddNum,&WIFI_RecvData[26]);
+					//重启main线程
+					restartThread(TYPE_MAIN);					
 					APP_Response_RegisterID(0x00,ID);
 				}else
 				{	
 					//不匹配，发送 匹配失败报文
-					
 					printf("COMMAND_REGISTERID   Not Mapping\n");
 					APP_Response_RegisterID(0x01,ID);
 				}

@@ -15,6 +15,8 @@
 /*  Function Declarations                                                    */
 /*****************************************************************************/
 
+int writeconnecttime(void);
+int readconnecttime(void);
 int createsocket(void);
 int connect_socket(int fd_sock);
 void close_socket(int fd_sock);

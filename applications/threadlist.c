@@ -196,9 +196,9 @@ int getAddr(MyArray *array, int num,IPConfig_t *IPconfig)
 /*****************************************************************************/
 void rt_init_thread_entry(void* parameter)
 {
-	MyArray array[5];
-	int fileflag = 0; 
-	IPConfig_t IPconfig;
+	//MyArray array[5];
+	//int fileflag = 0; 
+	//IPConfig_t IPconfig;
     {
         extern void rt_platform_init(void);
         rt_platform_init();
@@ -256,14 +256,6 @@ void rt_init_thread_entry(void* parameter)
 
 	/* initialize lwip system */
 	lwip_system_init();
-
-	//初始化IP
-	fileflag = file_get_array(array, 5, "/yuneng/staticIP.con");
-	if(fileflag == 0)
-	{
-		getAddr(array, 5,&IPconfig);
-		StaticIP(IPconfig.IPAddr,IPconfig.MSKAddr,IPconfig.GWAddr,IPconfig.DNS1Addr,IPconfig.DNS2Addr);
-	}
 	
 #if ECU_JLINK_DEBUG	
 	SEGGER_RTT_printf(0,"TCP/IP initialized!\n");
@@ -297,6 +289,14 @@ void rt_init_thread_entry(void* parameter)
 	//initWorkIP("139.168.200.158",8093,"139.168.200.158",8997);
 #endif
 	cpu_usage_init();
+	
+	//初始化IP
+	//fileflag = file_get_array(array, 5, "/yuneng/staticIP.con");
+	//if(fileflag == 0)
+	//{
+	//	getAddr(array, 5,&IPconfig);
+	//	StaticIP(IPconfig.IPAddr,IPconfig.MSKAddr,IPconfig.GWAddr,IPconfig.DNS1Addr,IPconfig.DNS2Addr);
+	//}
 }
 
 /*****************************************************************************/
@@ -426,7 +426,7 @@ void tasks_new(void)
 	rt_thread_t tid;
 	
 	/* init init thread */
-  tid = rt_thread_create("init",rt_init_thread_entry, RT_NULL,768, THREAD_PRIORITY_INIT, 20);
+  tid = rt_thread_create("init",rt_init_thread_entry, RT_NULL,1024, THREAD_PRIORITY_INIT, 20);
 	if (tid != RT_NULL) rt_thread_startup(tid);
 	
 #ifdef THREAD_PRIORITY_LED

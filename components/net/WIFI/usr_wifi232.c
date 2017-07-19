@@ -24,6 +24,7 @@
 #include "string.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "client.h"
 
 
 #define WIFI_RCC                    RCC_APB2Periph_GPIOC
@@ -980,6 +981,7 @@ int SendToSocketB(char *data ,int length)
 	char *sendbuff = NULL;
 	if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
 	{
+		writeconnecttime();
 		rt_mutex_take(WIFI_lock, RT_WAITING_FOREVER);
 		sendbuff = malloc(4096);
 		sprintf(sendbuff,"b00000000");

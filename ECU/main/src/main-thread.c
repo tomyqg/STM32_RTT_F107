@@ -34,6 +34,7 @@
 #include "threadlist.h"
 #include "debug.h"
 #include "SEGGER_RTT.h"
+#include "client.h"
 
 /*****************************************************************************/
 /*  Variable Declarations                                                    */
@@ -65,6 +66,7 @@ int init_ecu()
 	ecu.zoneflag = 0;				//时区
 	printecuinfo(&ecu);
 	zb_change_ecu_panid();
+	readconnecttime();
 	return 1;
 }
 
@@ -244,21 +246,18 @@ void main_thread_entry(void* parameter)
 			ecu.life_energy = ecu.life_energy + ecu.current_energy;				//计算系统历史发电量
 			printfloatmsg(ECU_DBG_MAIN,"ecu.life_energy",ecu.life_energy);
 			update_life_energy(ecu.life_energy);								//设置系统历史发电量
-
-			//update_today_energy(ecu.current_energy);							//设置系统当天发电量
 		
-			/*
+			
 			if(ecu.count>0)
 			{
-				save_system_power(ecu.system_power,ecu.broadcast_time);			//ZK
-				update_daily_energy(ecu.current_energy,ecu.broadcast_time);
-				update_monthly_energy(ecu.current_energy,ecu.broadcast_time);
-				update_yearly_energy(ecu.current_energy,ecu.broadcast_time);
-				update_lifetime_energy(ecu.life_energy);
+				ecu.system_power = 277;
+				ecu.current_energy = 0.23;
+				save_system_power(ecu.system_power,ecu.broadcast_time);			//保存系统功率
+				update_daily_energy(ecu.current_energy,ecu.broadcast_time);		//保存每日发电量
+				update_monthly_energy(ecu.current_energy,ecu.broadcast_time);	//保存每月的发电量
 			}
-			//display_on_lcd_and_web(); //液晶屏显示信息
-			*/
-			
+			printf("today energy:%f\n",ecu.today_energy);
+						
 			optimizeFileSystem();
 			if(ecu.count>0)
 			{

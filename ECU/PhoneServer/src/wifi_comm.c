@@ -4,9 +4,48 @@
 #include "usr_wifi232.h"
 #include "stdio.h"
 #include "version.h"
+#include "file.h"
 
 extern ecu_info ecu;
 static char SendData[4096] = {'\0'};
+
+
+
+int phone_add_inverter(int num,char *uidstring)
+{
+	int i = 0;
+	char inverter_id[13] = { '\0' };
+	char buff[25] = { '\0' };
+	char allbuff[500] = { '\0' };
+	for(i = 0; i < num; i++)
+	{
+		memset(inverter_id,'\0',13);
+		memset(buff,'\0',25);
+		inverter_id[0] =  (uidstring[0+i*6]/16) + '0';
+		inverter_id[1] =  (uidstring[0+i*6]%16) + '0';
+		inverter_id[2] =  (uidstring[1+i*6]/16) + '0';
+		inverter_id[3] =  (uidstring[1+i*6]%16) + '0';
+		inverter_id[4] =  (uidstring[2+i*6]/16) + '0';
+		inverter_id[5] =  (uidstring[2+i*6]%16) + '0';
+		inverter_id[6] =  (uidstring[3+i*6]/16) + '0';
+		inverter_id[7] =  (uidstring[3+i*6]%16) + '0';
+		inverter_id[8] =  (uidstring[4+i*6]/16) + '0';
+		inverter_id[9] =  (uidstring[4+i*6]%16) + '0';
+		inverter_id[10] = (uidstring[5+i*6]/16) + '0';
+		inverter_id[11] = (uidstring[5+i*6]%16) + '0';
+		sprintf(buff,"%s,,,,,,\n",inverter_id);
+		
+		memcpy(&allbuff[0+19*i],buff,19);
+	}
+	
+	
+	echo("/home/data/id",allbuff);
+	echo("/yuneng/limiteid.con","1");
+	return 0;
+}
+
+
+
 
 //解析报文长度
 unsigned short packetlen(unsigned char *packet)
@@ -172,7 +211,6 @@ void APP_Response_PowerCurve(char mapping,unsigned char *ID,char * date)
 {
 	int packlength = 0;
 	memset(SendData,'\0',4096);	
-	//拼接需要发送的报文
 	
 	//匹配不成功
 	if(mapping == 0x01)
@@ -182,6 +220,8 @@ void APP_Response_PowerCurve(char mapping,unsigned char *ID,char * date)
 		SendToSocketA(SendData ,packlength,(char *)ID);
 		return ;
 	}
+
+	//拼接需要发送的报文
 	
 	
 	

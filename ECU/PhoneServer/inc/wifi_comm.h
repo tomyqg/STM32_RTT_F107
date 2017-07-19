@@ -40,7 +40,7 @@ typedef struct
 unsigned short packetlen(unsigned char *packet);
 
 int Resolve_RecvData(char *RecvData,int* Data_Len,int* Command_Id);
-
+int phone_add_inverter(int num,char *uidstring);
 //01	获取基本信息请求
 void APP_Response_BaseInfo(unsigned char *ID,stBaseInfo baseInfo);
 //02	逆变器发电数据请求

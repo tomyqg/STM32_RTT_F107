@@ -122,11 +122,10 @@ typedef struct ecu_info_t{
 	//char ccuid[8];				//Zigbee/3501的ID
 	unsigned short panid;				//Zigbee的panid
 	char channel;				//Zigbee信道
-
 	char ip[20];
-
 	float life_energy;			//系统历史总电量
 	float current_energy;		//系统当前一轮电量
+	float today_energy;			//当天的发电量
 	int system_power;			//系统总功率
 	int count;					//系统当前一轮有数据的逆变器数
 	int total;					//系统逆变器总数
@@ -137,6 +136,7 @@ typedef struct ecu_info_t{
 
 	char broadcast_time[16];	//发送给EMA时的日期和时间，格式：年月日时分秒
 	char had_data_broadcast_time[16];	//发送给EMA时的日期和时间，格式：年月日时分秒
+	char last_ema_time[16];		//client 最后一次和client通信时间
 //	char inverterid_noget_shortaddr[MAXINVERTERCOUNT][13];	//没有获取到短地址的逆变器ID
 
 	int no_assigned_shortaddr_count;	//没有获取到短地址的逆变器数量

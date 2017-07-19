@@ -23,6 +23,8 @@
 #include "SEGGER_RTT.h"
 #include "dfs_fs.h"
 #include "rthw.h"
+#include "myfile.h"
+#include "variation.h"
 
 
 /*****************************************************************************/
@@ -30,8 +32,11 @@
 /*****************************************************************************/
 extern rt_mutex_t record_data_lock;
 extern inverter_info inverter[MAXINVERTERCOUNT];
+extern ecu_info ecu;
 
 int ecu_type;	//1:SAA; 2:NA; 3:MX
+
+#define EPSILON 0.000000001
 
 /*****************************************************************************/
 /*  Function Implementations                                                 */
@@ -421,6 +426,201 @@ int save_inverter_parameters_result2(char *id, int item, char *inverter_result)
 	
 	return 0;
 
+}
+
+void save_system_power(int system_power, char *date_time)
+{
+	char dir[50] = "/home/record/power/";
+	char file[9];
+	char sendbuff[50] = {'\0'};
+	char date_time_tmp[14] = {'\0'};
+	rt_err_t result;
+	int fd;
+	if(system_power == 0) return;
+	
+	memcpy(date_time_tmp,date_time,14);
+	memcpy(file,&date_time[0],6);
+	file[6] = '\0';
+	sprintf(dir,"%s%s.dat",dir,file);
+	date_time_tmp[12] = '\0';
+	print2msg(ECU_DBG_MAIN,"save_system_power DIR",dir);
+	result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
+	{
+		fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
+		if (fd >= 0)
+		{		
+			sprintf(sendbuff,"%s,%d\n",date_time_tmp,system_power);
+			//print2msg(ECU_DBG_MAIN,"save_system_power",sendbuff);
+			write(fd,sendbuff,strlen(sendbuff));
+			close(fd);
+		}
+	}
+	rt_mutex_release(record_data_lock);
+	
+}
+
+int search_daily_energy(char *date,float *daily_energy)	
+{
+	char dir[30] = "/home/record/energy";
+	char path[100];
+	char buff[100]={'\0'};
+	char date_tmp[9] = {'\0'};
+	FILE *fp;
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+
+	memset(path,0,100);
+	memset(buff,0,100);
+	memcpy(date_tmp,date,8);
+	date_tmp[6] = '\0';
+	sprintf(path,"%s/%s.dat",dir,date_tmp);
+	
+	fp = fopen(path, "r");
+	if(fp)
+	{
+		while(NULL != fgets(buff,100,fp))  //读取一行数据
+		{	//第8个字节为，  且时间相同
+			if((buff[8] == ',') && (!memcmp(buff,date,8)))
+			{
+				*daily_energy = (float)atof(&buff[9]);
+				fclose(fp);
+				rt_mutex_release(record_data_lock);
+				return 0;
+			}
+				
+		}
+	
+		fclose(fp);
+	}
+
+	rt_mutex_release(record_data_lock);
+
+	return -1;
+}
+
+
+void update_daily_energy(float current_energy, char *date_time)
+{
+	char dir[50] = "/home/record/energy/";
+	char file[9];
+	char sendbuff[50] = {'\0'};
+	char date_time_tmp[14] = {'\0'};
+	rt_err_t result;
+	float energy_tmp = 0;
+	int fd;
+	//当前一轮发电量为0 不更新发电量
+	if(current_energy <= EPSILON && current_energy >= -EPSILON) return;
+	
+	memcpy(date_time_tmp,date_time,14);
+	memcpy(file,&date_time[0],6);
+	file[6] = '\0';
+	sprintf(dir,"%s%s.dat",dir,file);
+	date_time_tmp[8] = '\0';	//存储时间为年月日 例如:20170718
+
+	//检测是否已经存在该时间点的数据
+	if (0 == search_daily_energy(date_time_tmp,&energy_tmp))
+	{
+		energy_tmp = current_energy + energy_tmp;
+		delete_line(dir,"/home/record/energy/1.tmp",date_time,8);
+	}
+	
+	print2msg(ECU_DBG_MAIN,"update_daily_energy DIR",dir);
+	result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
+	{
+		fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
+		if (fd >= 0)
+		{	
+			ecu.today_energy = energy_tmp;
+			sprintf(sendbuff,"%s,%f\n",date_time_tmp,energy_tmp);
+			//print2msg(ECU_DBG_MAIN,"update_daily_energy",sendbuff);
+			write(fd,sendbuff,strlen(sendbuff));
+			close(fd);
+		}
+	}
+	rt_mutex_release(record_data_lock);
+	
+}
+
+int search_monthly_energy(char *date,float *daily_energy)	
+{
+	char dir[30] = "/home/record/energy";
+	char path[100];
+	char buff[100]={'\0'};
+	char date_tmp[9] = {'\0'};
+	FILE *fp;
+	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+
+	memset(path,0,100);
+	memset(buff,0,100);
+	memcpy(date_tmp,date,6);
+	date_tmp[4] = '\0';
+	sprintf(path,"%s/%s.dat",dir,date_tmp);
+	
+	fp = fopen(path, "r");
+	if(fp)
+	{
+		while(NULL != fgets(buff,100,fp))  //读取一行数据
+		{	//第8个字节为，  且时间相同
+			if((buff[6] == ',') && (!memcmp(buff,date,6)))
+			{
+				*daily_energy = (float)atof(&buff[7]);
+				fclose(fp);
+				rt_mutex_release(record_data_lock);
+				return 0;
+			}
+				
+		}
+	
+		fclose(fp);
+	}
+
+	rt_mutex_release(record_data_lock);
+
+	return -1;
+}
+
+
+void update_monthly_energy(float current_energy, char *date_time)
+{
+	char dir[50] = "/home/record/energy/";
+	char file[9];
+	char sendbuff[50] = {'\0'};
+	char date_time_tmp[14] = {'\0'};
+	rt_err_t result;
+	float energy_tmp = 0;
+	int fd;
+	//当前一轮发电量为0 不更新发电量
+	if(current_energy <= EPSILON && current_energy >= -EPSILON) return;
+	
+	memcpy(date_time_tmp,date_time,14);
+	memcpy(file,&date_time[0],4);
+	file[4] = '\0';
+	sprintf(dir,"%s%s.dat",dir,file);
+	date_time_tmp[6] = '\0';	//存储时间为年月日 例如:20170718
+
+	//检测是否已经存在该时间点的数据
+	if (0 == search_monthly_energy(date_time_tmp,&energy_tmp))
+	{
+		energy_tmp = current_energy + energy_tmp;
+		delete_line(dir,"/home/record/energy/2.tmp",date_time,6);
+	}
+	
+	print2msg(ECU_DBG_MAIN,"update_monthly_energy DIR",dir);
+	result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	if(result == RT_EOK)
+	{
+		fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
+		if (fd >= 0)
+		{		
+			sprintf(sendbuff,"%s,%f\n",date_time_tmp,energy_tmp);
+			//print2msg(ECU_DBG_MAIN,"update_daily_energy",sendbuff);
+			write(fd,sendbuff,strlen(sendbuff));
+			close(fd);
+		}
+	}
+	rt_mutex_release(record_data_lock);
+	
 }
 
 void save_record(char sendbuff[], char *date_time)

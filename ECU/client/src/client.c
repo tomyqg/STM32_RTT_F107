@@ -28,12 +28,14 @@
 #include <lwip/sockets.h> 
 #include "threadlist.h"
 #include "usr_wifi232.h"
+#include "variation.h"
 
 /*****************************************************************************/
 /*  Variable Declarations                                                    */
 /*****************************************************************************/
 extern rt_mutex_t record_data_lock;
 extern rt_mutex_t usr_wifi_lock;
+extern ecu_info ecu;
 
 /*****************************************************************************/
 /*  Function Implementations                                                 */
@@ -48,8 +50,28 @@ int writeconnecttime(void)			//保存最后一次连接上服务器的时间
 	fprintf(fp,"%s",connecttime);
 	fclose(fp);
 
+	memcpy(ecu.last_ema_time,connecttime,15);
+	printf("ecu.last_ema_time:%s\n",ecu.last_ema_time);
 	return 0;
 }
+
+int readconnecttime(void)			//保存最后一次连接上服务器的时间
+{
+	char connecttime[20]={'\0'};
+	FILE *fp;
+	memset(ecu.last_ema_time,'0',15);
+	ecu.last_ema_time[14] = '\0';
+	fp=fopen("/yuneng/con_time.con","r");
+	if(fp != NULL)
+	{
+		fgets(connecttime,20,fp);
+		memcpy(ecu.last_ema_time,connecttime,15);
+		fclose(fp);
+	}
+	printf("ecu.last_ema_time:%s\n",ecu.last_ema_time);
+	return 0;
+}
+
 
 void showconnected(void)		//已连接EMA
 {
@@ -212,7 +234,7 @@ int clear_send_flag(char *readbuff)
 					}
 					else
 						print2msg(ECU_DBG_CLIENT,"Clear send flag into database", "0");
-					rt_hw_s_delay(1);
+					//rt_hw_s_delay(1);
 				}
 			}
 		}
@@ -695,6 +717,7 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 		rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 		if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
 		{
+			writeconnecttime();
 			//创建成功
 			while(1)
 			{
@@ -750,6 +773,7 @@ int resend_record()
 		rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 		if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
 		{
+			writeconnecttime();
 			//创建成功
 			while(search_readflag(data,time,&flag,'2'))
 			{
