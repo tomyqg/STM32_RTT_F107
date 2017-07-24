@@ -209,7 +209,7 @@ void APP_Response_PowerGeneration(char mapping,unsigned char *ID,inverter_info *
 //03 COMMAND_POWERCURVE					//功率曲线请求   mapping :: 0x00 匹配  0x01 不匹配   data 表示日期
 void APP_Response_PowerCurve(char mapping,unsigned char *ID,char * date)
 {
-	int packlength = 0;
+	int packlength = 0,length = 0;
 	memset(SendData,'\0',4096);	
 	
 	//匹配不成功
@@ -222,8 +222,21 @@ void APP_Response_PowerCurve(char mapping,unsigned char *ID,char * date)
 	}
 
 	//拼接需要发送的报文
+	sprintf(SendData,"APS1100130300");
+	packlength = 13;
 	
+	read_system_power(date,&SendData[13],&length);
+	packlength += length;
 	
+	SendData[packlength++] = 'E';
+	SendData[packlength++] = 'N';
+	SendData[packlength++] = 'D';
+	
+	SendData[5] = (packlength/1000) + '0';
+	SendData[6] = ((packlength/100)%10) + '0';
+	SendData[7] = ((packlength/10)%10) + '0';
+	SendData[8] = ((packlength)%10) + '0';
+	SendData[packlength++] = '\n';
 	
 	SendToSocketA(SendData ,packlength,(char *)ID);
 }
@@ -231,7 +244,7 @@ void APP_Response_PowerCurve(char mapping,unsigned char *ID,char * date)
 //04 COMMAND_GENERATIONCURVE		//发电量曲线请求    mapping :: 0x00 匹配  0x01 不匹配  
 void APP_Response_GenerationCurve(char mapping,unsigned char *ID,char request_type)
 {
-	int packlength = 0;
+	int packlength = 0,length = 0;
 	memset(SendData,'\0',4096);	
 	
 	//匹配不成功
@@ -242,10 +255,32 @@ void APP_Response_GenerationCurve(char mapping,unsigned char *ID,char request_ty
 		SendToSocketA(SendData ,packlength,(char *)ID);
 		return ;
 	}
-	
+
+	sprintf(SendData,"APS1100130400");
+	packlength = 13;
 	
 	//拼接需要发送的报文
+	if(request_type == 0x00)
+	{//最近一周
+		
+	}else if(request_type == 0x01)
+	{//最近一个月
+	
+	}else if(request_type == 0x02)
+	{//最近一年
+	
+	}
 
+	SendData[packlength++] = 'E';
+	SendData[packlength++] = 'N';
+	SendData[packlength++] = 'D';
+	
+	SendData[5] = (packlength/1000) + '0';
+	SendData[6] = ((packlength/100)%10) + '0';
+	SendData[7] = ((packlength/10)%10) + '0';
+	SendData[8] = ((packlength)%10) + '0';
+	SendData[packlength++] = '\n';
+	
 	SendToSocketA(SendData ,packlength,(char *)ID);
 }
 

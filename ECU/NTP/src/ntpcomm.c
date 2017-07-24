@@ -162,16 +162,7 @@ void gettimepacket(NTPPACKET *receivepacket, struct timeval * new_time)
 
 }
 
-//day_tab[0]   表示的是平年    day_tab[1]   表示的是闰年   
-static int day_tab[2][12]={{31,28,31,30,31,30,31,31,30,31,30,31},{31,29,31,30,31,30,31,31,30,31,30,31}}; 
-//判断是否是闰年
-int leap(int year) 
-{ 
-    if(year%4==0 && year%100!=0 || year%400==0) 
-        return 1; 
-    else 
-        return 0; 
-} 
+extern int day_tab[2][12];
 
 void transfer_time(struct tm *timenow,int timezone)
 {
