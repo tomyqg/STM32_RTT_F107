@@ -1851,6 +1851,7 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 	float curenergy=0;
 	char buff[50] = {'\0'};
 	int fd;
+	int out_flag = 0;	//跳出查询标志
 
 	for(i=0;i<3;i++)
 	{
@@ -1861,9 +1862,11 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 	}
 	for(j=0; j<5; j++)
 	{
+		out_flag = 0;
 		curinverter = firstinverter;
 		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++)			//每个逆变器最多要5次数据
 		{
+		
 			process_all(firstinverter);
 			if((0 == curinverter->dataflag) && (0 != curinverter->shortaddr))
 			{
@@ -1873,7 +1876,8 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 					{
 						curinverter->bindflag = 1;			//绑定逆变器标志位1
 						updateID();	
-					}
+					}else
+						out_flag = 1;
 					
 				}
 				
@@ -1881,6 +1885,8 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 				{
 					if(1 == zb_query_inverter_info(curinverter))
 						updateID();
+					else
+						out_flag = 1;
 					
 				}
 				
@@ -1889,15 +1895,17 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 				//if(1)
 				{
 					//print2msg(ECU_DBG_MAIN,"querydata",curinverter->id);
-					zb_query_data(curinverter);
-					//rt_hw_us_delay(200000);
+					if(-1 == zb_query_data(curinverter))
+						out_flag = 1;
+				//rt_hw_us_delay(200000);
 				}
 			}
 			curinverter++;
 		}
+		if(out_flag == 0) break;
 	}
 	ecu.polling_total_times++;				//ECU总轮训加1 ,ZK
-	printf("1----------------------------------------->\n");
+#if 0	
 	fd = open("/TMP/DISCON.TXT", O_WRONLY | O_CREAT | O_TRUNC, 0);
 	if (fd >= 0) {
 		curinverter = firstinverter;
@@ -1917,7 +1925,7 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 		}
 		close(fd);
 	}
-
+#endif 
 	curinverter = firstinverter;
 	for(i=0; i<MAXINVERTERCOUNT; i++, curinverter++)		//统计连续没有获取到数据的逆变器 ZK,一旦接收到数据，此变量清零
 	{
@@ -1954,7 +1962,7 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 	}
 	ecu.current_energy = curenergy;
 	//update_tmpdb(firstinverter);
-
+#if 0
 	fd = open("/TMP/IDNOBIND.TXT", O_WRONLY | O_CREAT | O_TRUNC, 0); 	//为了统计显示有短地址但是没有绑定的逆变器ID
 	if (fd >= 0) 
 	{						
@@ -1998,8 +2006,11 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 		}
 		close(fd);
 	}
+
 	write_gfdi_status(firstinverter);
 	write_turn_on_off_status(firstinverter);
+#endif
+
 	save_turn_on_off_changed_result(firstinverter);
 	save_gfdi_changed_result(firstinverter);
 

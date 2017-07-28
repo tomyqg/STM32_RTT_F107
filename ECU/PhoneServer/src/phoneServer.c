@@ -132,60 +132,33 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 			
 			case COMMAND_POWERGENERATION:			//逆变器发电数据请求		OK
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_POWERGENERATION,WIFI_RecvData);
-				//首先对比ECU ID是否匹配
-				if(!memcmp(&WIFI_RecvData[11],ecu.id,12))
-				{
-					//匹配成功进行相应操作
-					printf("COMMAND_POWERGENERATION  Mapping\n");
-					APP_Response_PowerGeneration(0x00,ID,inverter,ecu.count);
-				}else
-				{	
-					//不匹配，发送 匹配失败报文
-					printf("COMMAND_POWERGENERATION   Not Mapping\n");
-					APP_Response_PowerGeneration(0x01,ID,inverter,ecu.count);
-				}
+				//匹配成功进行相应操作
+				printf("COMMAND_POWERGENERATION  Mapping\n");
+				APP_Response_PowerGeneration(0x00,ID,inverter,ecu.count);
+
 				break;
 					
 			case COMMAND_POWERCURVE:					//功率曲线请求
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_POWERCURVE,WIFI_RecvData);
 				memset(date,'\0',9);
-				//首先对比ECU ID是否匹配
-				if(!memcmp(&WIFI_RecvData[11],ecu.id,12))
-				{
-					//匹配成功进行相应操作
-					printf("COMMAND_POWERCURVE  Mapping\n");
-					memcpy(date,&WIFI_RecvData[26],8);
-					APP_Response_PowerCurve(0x01,ID,date);
-				}else
-				{	
-					//不匹配，发送 匹配失败报文
-					printf("COMMAND_POWERCURVE   Not Mapping\n");
-					APP_Response_PowerCurve(0x01,ID,date);
-				}
+				//匹配成功进行相应操作
+				printf("COMMAND_POWERCURVE  Mapping\n");
+				memcpy(date,&WIFI_RecvData[28],8);
+				APP_Response_PowerCurve(0x01,ID,date);
+
 				break;
 						
 			case COMMAND_GENERATIONCURVE:			//发电量曲线请求	
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_GENERATIONCURVE,WIFI_RecvData);
-				//首先对比ECU ID是否匹配
-				if(!memcmp(&WIFI_RecvData[11],ecu.id,12))
-				{
-					//匹配成功进行相应操作
-					printf("COMMAND_GENERATIONCURVE  Mapping\n");
-					APP_Response_GenerationCurve(0x00,ID,WIFI_RecvData[26]);
-				}else
-				{	
-					//不匹配，发送 匹配失败报文
-					
-					printf("COMMAND_GENERATIONCURVE   Not Mapping\n");
-					APP_Response_GenerationCurve(0x01,ID,WIFI_RecvData[26]);
-				}
+				//匹配成功进行相应操作
+				printf("COMMAND_GENERATIONCURVE  Mapping\n");
+				APP_Response_GenerationCurve(0x00,ID,WIFI_RecvData[28]);
 			
 				break;
 						
 			case COMMAND_REGISTERID:					//逆变器ID注册请求	OK
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_REGISTERID,WIFI_RecvData);				
-				//首先对比ECU ID是否匹配
-				if(!memcmp(&WIFI_RecvData[11],ecu.id,12))
+
 				{
 					int AddNum = 0;
 					//匹配成功进行相应操作
@@ -193,44 +166,31 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 					//计算台数
 					AddNum = (Data_Len - 29)/6;
 					//添加ID到文件
-					phone_add_inverter(AddNum,&WIFI_RecvData[26]);
+					phone_add_inverter(AddNum,&WIFI_RecvData[28]);
 					//重启main线程
 					restartThread(TYPE_MAIN);					
 					APP_Response_RegisterID(0x00,ID);
-				}else
-				{	
-					//不匹配，发送 匹配失败报文
-					printf("COMMAND_REGISTERID   Not Mapping\n");
-					APP_Response_RegisterID(0x01,ID);
 				}
 				break;
 				
 			case COMMAND_SETTIME:							//时间设置请求	OK
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_SETTIME,WIFI_RecvData);
 	
-				//首先对比ECU ID是否匹配
-				if(!memcmp(&WIFI_RecvData[11],ecu.id,12))
-				{
-					//匹配成功进行相应操作
-					printf("COMMAND_SETTIME  Mapping\n");
-					memset(setTime,'\0',15);
-					memcpy(setTime,&WIFI_RecvData[26],14);
-					//设置时间
-					set_time(setTime);
-					APP_Response_SetTime(0x00,ID);
-				}else
-				{	
-					//不匹配，发送 匹配失败报文
-					printf("COMMAND_SETTIME   Not Mapping\n");
-					APP_Response_SetTime(0x01,ID);
-				}
+
+				//匹配成功进行相应操作
+				printf("COMMAND_SETTIME  Mapping\n");
+				memset(setTime,'\0',15);
+				memcpy(setTime,&WIFI_RecvData[28],14);
+				//设置时间
+				set_time(setTime);
+				APP_Response_SetTime(0x00,ID);
+
 				break;
 			
 			case COMMAND_SETWIREDNETWORK:			//有线网络设置请求  OK
 				
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_SETWIREDNETWORK,WIFI_RecvData);	
-				//首先对比ECU ID是否匹配
-				if(!memcmp(&WIFI_RecvData[11],ecu.id,12))
+
 				{
 					int ModeFlag = 0;
 					char buff[200] = {'\0'};
@@ -238,7 +198,7 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 					//匹配成功进行相应操作
 					printf("COMMAND_SETWIREDNETWORK  Mapping\n");
 					//检查是DHCP  还是固定IP
-					ModeFlag = ResolveWired(&WIFI_RecvData[26],&IPAddr,&MSKAddr,&GWAddr,&DNS1Addr,&DNS2Addr);
+					ModeFlag = ResolveWired(&WIFI_RecvData[28],&IPAddr,&MSKAddr,&GWAddr,&DNS1Addr,&DNS2Addr);
 					if(ModeFlag == 0x00)		//DHCP
 					{
 						dhcp_reset();
@@ -252,40 +212,26 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 					}
 					
 					APP_Response_SetWiredNetwork(0x00,ID);
-				}else
-				{	
-					//不匹配，发送 匹配失败报文		
-					printf("COMMAND_SETWIREDNETWORK   Not Mapping\n");
-					APP_Response_SetWiredNetwork(0x01,ID);
 				}
 				break;
 			
 			case COMMAND_SETWIFI:							//无线网络设置请求	OK
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_SETWIFI,WIFI_RecvData);
-				//首先对比ECU ID是否匹配
-				if(!memcmp(&WIFI_RecvData[11],ecu.id,12))
 				{
 					char SSID[100] = {'\0'};
 					char Password[100] = {'\0'};
 					int SSIDLen,passWDLen;
 					//匹配成功进行相应操作
 					printf("COMMAND_SETWIFI  Mapping\n");
-					ResolveWifiSSID(SSID,&SSIDLen,Password,&passWDLen,(char *)&WIFI_RecvData[26]);
+					ResolveWifiSSID(SSID,&SSIDLen,Password,&passWDLen,(char *)&WIFI_RecvData[28]);
 					APP_Response_SetWifi(0x00,ID);
 					WIFI_ChangeSSID(SSID,Password);
 					
-				}else
-				{	
-					//不匹配，发送 匹配失败报文		
-					printf("COMMAND_SETWIFI   Not Mapping\n");
-					APP_Response_SetWifi(0x01,ID);
 				}
 				break;
 			
 			case COMMAND_SEARCHWIFISTATUS:		//无线网络连接状态请求	OK
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_SEARCHWIFISTATUS,WIFI_RecvData);
-				//首先对比ECU ID是否匹配
-				if(!memcmp(&WIFI_RecvData[11],ecu.id,12))
 				{
 					//匹配成功进行相应操作
 					printf("COMMAND_SEARCHWIFISTATUS  Mapping\n");
@@ -296,18 +242,11 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 					{
 						APP_Response_SearchWifiStatus(0x02,ID);
 					}
-				}else
-				{	
-					//不匹配，发送 匹配失败报文
-					printf("COMMAND_SEARCHWIFISTATUS   Not Mapping\n");
-					APP_Response_SearchWifiStatus(0x01,ID);
 				}
 				break;
 			
 			case COMMAND_SETWIFIPASSWD:				//AP密码设置请求     OK
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_SETWIFIPASSWD,WIFI_RecvData);
-				//首先对比ECU ID是否匹配
-				if(!memcmp(&WIFI_RecvData[11],ecu.id,12))
 				{
 					char OldPassword[100] = {'\0'};
 					char NewPassword[100] = {'\0'};
@@ -316,15 +255,10 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 					//匹配成功进行相应操作
 					printf("COMMAND_SETWIFIPASSWD  Mapping\n");
 					//获取密码
-					ResolveWifiPasswd(OldPassword,&oldLen,NewPassword,&newLen,(char *)&WIFI_RecvData[26]);
+					ResolveWifiPasswd(OldPassword,&oldLen,NewPassword,&newLen,(char *)&WIFI_RecvData[28]);
 					APP_Response_SetWifiPasswd(0x00,ID);
 					WIFI_ChangePasswd(NewPassword);
 					
-				}else
-				{	
-					//不匹配，发送 匹配失败报文
-					printf("COMMAND_SETWIFIPASSWD   Not Mapping\n");
-					APP_Response_SetWifiPasswd(0x01,ID);
 				}
 				break;
 		}

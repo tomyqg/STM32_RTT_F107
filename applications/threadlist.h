@@ -53,14 +53,16 @@ typedef struct IPConfig
 #define THREAD_PRIORITY_LED               12
 
 //phone Server thread priority
-#define THREAD_PRIORITY_PHONE_SERVER			21
+#define THREAD_PRIORITY_PHONE_SERVER			19
 
 //Update thread priority
-#define THREAD_PRIORITY_UPDATE						22
+#define THREAD_PRIORITY_UPDATE						20
 //NTP thread priority
 //#define THREAD_PRIORITY_NTP								21
 //ID Writethread priority
-#define THREAD_PRIORITY_IDWRITE						23
+#define THREAD_PRIORITY_IDWRITE						22
+//DRM Connect thread priority
+#define THREAD_PRIORITY_DRM								23
 //data collection thread priority
 #define THREAD_PRIORITY_MAIN	            24
 //control client thread priority

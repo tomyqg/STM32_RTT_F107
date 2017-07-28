@@ -61,6 +61,13 @@ static rt_uint8_t led_stack[500];
 static struct rt_thread led_thread;
 #endif
 
+#ifdef THREAD_PRIORITY_DRM
+#include "DRMConnect.h"
+ALIGN(RT_ALIGN_SIZE)
+static rt_uint8_t DRM_stack[1024];
+static struct rt_thread DRM_thread;
+#endif
+
 #ifdef THREAD_PRIORITY_MAIN
 #include "main-thread.h"
 ALIGN(RT_ALIGN_SIZE)
@@ -433,6 +440,11 @@ void tasks_new(void)
   /* init led thread */
   result = rt_thread_init(&led_thread,"led",led_thread_entry,RT_NULL,(rt_uint8_t*)&led_stack[0],sizeof(led_stack),THREAD_PRIORITY_LED,5);
   if (result == RT_EOK)	rt_thread_startup(&led_thread);
+#endif
+	
+#ifdef	THREAD_PRIORITY_DRM
+  result = rt_thread_init(&DRM_thread,"DRM",DRM_Connect_thread_entry,RT_NULL,(rt_uint8_t*)&DRM_stack[0],sizeof(DRM_stack),THREAD_PRIORITY_DRM,5);
+  if (result == RT_EOK)	rt_thread_startup(&DRM_thread);
 #endif
 
 #ifdef THREAD_PRIORITY_LAN8720_RST

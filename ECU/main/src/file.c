@@ -104,6 +104,26 @@ void get_ecuid(char *ecuid)
 	}
 
 }
+//读取DRM开关函数   返回值为1：表示功能打开   返回值为-1表示功能关闭
+int DRMFunction(void)
+{
+	int fd;
+	char buff[2] = {'\0'};
+	
+	fd = open("/YUNENG/DRM.CON", O_RDONLY, 0);
+	if(fd >= 0)
+	{
+		memset(buff, '\0', sizeof(buff));
+		read(fd, buff, 1);
+		close(fd);
+		if(buff[0] == '1')
+		{
+			return 1;
+		}
+	}
+	
+	return -1;
+}
 
 unsigned short get_panid(void)
 {
@@ -473,7 +493,7 @@ int read_system_power(char *date_time, char *power_buff,int *length)
 	char date_tmp[9] = {'\0'};
 	int power = 0;
 	FILE *fp;
-	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	//rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 
 	memset(path,0,100);
 	memset(buff,0,100);
@@ -498,11 +518,11 @@ int read_system_power(char *date_time, char *power_buff,int *length)
 				
 		}
 		fclose(fp);
-		rt_mutex_release(record_data_lock);
+		//rt_mutex_release(record_data_lock);
 		return 0;
 	}
 
-	rt_mutex_release(record_data_lock);
+	//rt_mutex_release(record_data_lock);
 
 	return -1;
 
@@ -600,7 +620,7 @@ int leap(int year)
         return 0; 
 } 
 
-//计算最早一天的时间
+//计算一周中最早一天的时间		返回值：0表示最早一天在当月   1：表示最早一天在上个月
 int calculate_earliest_week(char *date,int *earliest_data)
 {
 	char year_s[5] = {'\0'};
@@ -622,7 +642,9 @@ int calculate_earliest_week(char *date,int *earliest_data)
 	
 	if(day > 7)
 	{
-		*earliest_data = (year * 1000 + month * 100 + day) - 6;
+		*earliest_data = (year * 10000 + month * 100 + day) - 6;
+		//printf("calculate_earliest_week:%d %d  %d  %d   %d \n",year,month,day,flag,*earliest_data);
+		return 0;
 	}else
 	{
 		count = 7 - day;
@@ -632,19 +654,17 @@ int calculate_earliest_week(char *date,int *earliest_data)
 		{
 			year = year - 1;
 			month = 12;
-		}
-		
+		}	
 		//计算是否是闰年
 		flag = leap(year);
 		day = day_tab[flag][month-1]+1-count;
-		*earliest_data = (year * 1000 + month * 100 + day);	
+		*earliest_data = (year * 10000 + month * 100 + day);	
+		//printf("calculate_earliest_week:%d %d  %d  %d   %d \n",year,month,day,flag,*earliest_data);
+		
+		return 1;
 	}
-	
-	printf("calculate_earliest_week:%d %d  %d  %d   %d \n",year,month,day,flag,*earliest_data);
-	
-	return 0;
-}
 
+}
 
 //读取最近一周的发电量    按每日计量
 int read_weekly_energy(char *date_time, char *power_buff,int *length)
@@ -653,132 +673,304 @@ int read_weekly_energy(char *date_time, char *power_buff,int *length)
 	char path[100];
 	char buff[100]={'\0'};
 	char date_tmp[9] = {'\0'};
-	int power = 0;
+	int earliest_date = 0,compare_time = 0,flag = 0;
+	char energy_tmp[20] = {'\0'};
+	int energy = 0;
 	FILE *fp;
-	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 
 	memset(path,0,100);
 	memset(buff,0,100);
-	memcpy(date_tmp,date_time,8);
-	date_tmp[6] = '\0';
-	//计算前七天中最早的一天
-	//calculate_earliest_week();
-	
-	sprintf(path,"%s/%s.dat",dir,date_tmp);
 
 	*length = 0;
+	//计算前七天中最早的一天   如果flag为0  表示最早一天在当月  如果为1表示在上个月
+	flag = calculate_earliest_week(date_time,&earliest_date);
+	
+	if(flag == 1)
+	{
+		sprintf(date_tmp,"%d",earliest_date);
+		date_tmp[6] = '\0';
+		//组件文件目录
+		sprintf(path,"%s/%s.dat",dir,date_tmp);
+		//打开文件
+		printf("path:%s\n",path);
+		fp = fopen(path, "r");
+		if(fp)
+		{
+			while(NULL != fgets(buff,100,fp))  //读取一行数据
+			{	
+				//将时间转换为int型   然后进行比较
+				memcpy(date_tmp,buff,8);
+				date_tmp[8] = '\0';
+				compare_time = atoi(date_tmp);
+				//printf("compare_time %d     earliest_date %d\n",compare_time,earliest_date);
+				if(compare_time >= earliest_date)
+				{
+					memcpy(energy_tmp,&buff[9],(strlen(buff)-9));
+					energy = (int)(atof(energy_tmp)*100);
+					//printf("buff:%s\n energy:%d\n",buff,energy);
+					power_buff[(*length)++] = (date_tmp[0]-'0')*16 + (date_tmp[1]-'0');
+					power_buff[(*length)++] = (date_tmp[2]-'0')*16 + (date_tmp[3]-'0');
+					power_buff[(*length)++] = (date_tmp[4]-'0')*16 + (date_tmp[5]-'0');
+					power_buff[(*length)++] = (date_tmp[6]-'0')*16 + (date_tmp[7]-'0');
+					power_buff[(*length)++] = energy/256;
+					power_buff[(*length)++] = energy%256;
+				}
+					
+			}
+			fclose(fp);
+		}
+	}
+	
+	
+	memcpy(date_tmp,date_time,8);
+	date_tmp[6] = '\0';
+	sprintf(path,"%s/%s.dat",dir,date_tmp);
+
+	printf("path:%s\n",path);
 	fp = fopen(path, "r");
 	if(fp)
 	{
 		while(NULL != fgets(buff,100,fp))  //读取一行数据
-		{	//第8个字节为，  且时间相同
-			if((buff[12] == ',') && (!memcmp(buff,date_time,8)))
+		{	
+			//将时间转换为int型   然后进行比较
+			memcpy(date_tmp,buff,8);
+			date_tmp[8] = '\0';
+			compare_time = atoi(date_tmp);
+			//printf("compare_time %d     earliest_date %d\n",compare_time,earliest_date);
+			if(compare_time >= earliest_date)
 			{
-				power = (int)atoi(&buff[13]);
-				power_buff[(*length)++] = (buff[8]-'0') * 16 + (buff[9]-'0');
-				power_buff[(*length)++] = (buff[10]-'0') * 16 + (buff[11]-'0');
-				power_buff[(*length)++] = power/256;
-				power_buff[(*length)++] = power%256;
+				memcpy(energy_tmp,&buff[9],(strlen(buff)-9));
+				energy = (int)(atof(energy_tmp)*100);
+				//printf("buff:%s\n energy:%d\n",buff,energy);
+				power_buff[(*length)++] = (date_tmp[0]-'0')*16 + (date_tmp[1]-'0');
+				power_buff[(*length)++] = (date_tmp[2]-'0')*16 + (date_tmp[3]-'0');
+				power_buff[(*length)++] = (date_tmp[4]-'0')*16 + (date_tmp[5]-'0');
+				power_buff[(*length)++] = (date_tmp[6]-'0')*16 + (date_tmp[7]-'0');
+				power_buff[(*length)++] = energy/256;
+				power_buff[(*length)++] = energy%256;
 			}
 				
 		}
 		fclose(fp);
-		rt_mutex_release(record_data_lock);
-		return 0;
 	}
+	return 0;
 
-	rt_mutex_release(record_data_lock);
+}
 
-	return -1;
+//计算一个月中最早一天的时间
+int calculate_earliest_month(char *date,int *earliest_data)
+{
+	char year_s[5] = {'\0'};
+	char month_s[3] = {'\0'};
+	char day_s[3] = {'\0'};
+	int year = 0,month = 0,day = 0;	//year为年份 month为月份 day为日期  flag 为瑞年判断标志 count表示上个月好需要补的天数 number_of_days:上个月的总天数
+	
+	memcpy(year_s,date,4);
+	year_s[4] = '\0';
+	year = atoi(year_s);
 
+	memcpy(month_s,&date[4],2);
+	month_s[2] = '\0';
+	month = atoi(month_s);
+	
+	memcpy(day_s,&date[6],2);
+	day_s[2] = '\0';
+	day = atoi(day_s);
+	
+	//判断是否大于28号  
+	if(day >= 28)
+	{
+		day = 1;
+		*earliest_data = (year * 10000 + month * 100 + day);
+		//printf("calculate_earliest_month:%d %d  %d    %d \n",year,month,day,*earliest_data);
+		return 0;
+	}else
+	{
+		//如果小于28号，取上个月的该天的后一天 
+		day = day + 1;
+		month = month - 1;
+		if(month == 0)
+		{
+			year = year - 1;
+			month = 12;
+		}
+		*earliest_data = (year * 10000 + month * 100 + day);	
+		//printf("calculate_earliest_month:%d %d  %d    %d \n",year,month,day,*earliest_data);
+		return 1;
+	}
+	
 }
 
 //读取最近一个月的发电量    按每日计量
 int read_monthly_energy(char *date_time, char *power_buff,int *length)
 {
-	char dir[30] = "/home/record/power";
+	char dir[30] = "/home/record/energy";
 	char path[100];
 	char buff[100]={'\0'};
 	char date_tmp[9] = {'\0'};
-	int power = 0;
+	int earliest_date = 0,compare_time = 0,flag = 0;
+	char energy_tmp[20] = {'\0'};
+	int energy = 0;
 	FILE *fp;
-	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 
 	memset(path,0,100);
 	memset(buff,0,100);
+
+	*length = 0;
+	//计算前七天中最早的一天   如果flag为0  表示最早一天在当月  如果为1表示在上个月
+	flag = calculate_earliest_month(date_time,&earliest_date);
+	
+	if(flag == 1)
+	{
+		sprintf(date_tmp,"%d",earliest_date);
+		date_tmp[6] = '\0';
+		//组件文件目录
+		sprintf(path,"%s/%s.dat",dir,date_tmp);
+		//打开文件
+		//printf("path:%s\n",path);
+		fp = fopen(path, "r");
+		if(fp)
+		{
+			while(NULL != fgets(buff,100,fp))  //读取一行数据
+			{	
+				//将时间转换为int型   然后进行比较
+				memcpy(date_tmp,buff,8);
+				date_tmp[8] = '\0';
+				compare_time = atoi(date_tmp);
+				//printf("compare_time %d     earliest_date %d\n",compare_time,earliest_date);
+				if(compare_time >= earliest_date)
+				{
+					memcpy(energy_tmp,&buff[9],(strlen(buff)-9));
+					energy = (int)(atof(energy_tmp)*100);
+					//printf("buff:%s\n energy:%d\n",buff,energy);
+					power_buff[(*length)++] = (date_tmp[0]-'0')*16 + (date_tmp[1]-'0');
+					power_buff[(*length)++] = (date_tmp[2]-'0')*16 + (date_tmp[3]-'0');
+					power_buff[(*length)++] = (date_tmp[4]-'0')*16 + (date_tmp[5]-'0');
+					power_buff[(*length)++] = (date_tmp[6]-'0')*16 + (date_tmp[7]-'0');
+					power_buff[(*length)++] = energy/256;
+					power_buff[(*length)++] = energy%256;
+				}
+					
+			}
+			fclose(fp);
+		}
+	}
+	
+	
 	memcpy(date_tmp,date_time,8);
 	date_tmp[6] = '\0';
 	sprintf(path,"%s/%s.dat",dir,date_tmp);
 
-	*length = 0;
+	//printf("path:%s\n",path);
 	fp = fopen(path, "r");
 	if(fp)
 	{
 		while(NULL != fgets(buff,100,fp))  //读取一行数据
-		{	//第8个字节为，  且时间相同
-			if((buff[12] == ',') && (!memcmp(buff,date_time,8)))
+		{	
+			//将时间转换为int型   然后进行比较
+			memcpy(date_tmp,buff,8);
+			date_tmp[8] = '\0';
+			compare_time = atoi(date_tmp);
+			//printf("compare_time %d     earliest_date %d\n",compare_time,earliest_date);
+			if(compare_time >= earliest_date)
 			{
-				power = (int)atoi(&buff[13]);
-				power_buff[(*length)++] = (buff[8]-'0') * 16 + (buff[9]-'0');
-				power_buff[(*length)++] = (buff[10]-'0') * 16 + (buff[11]-'0');
-				power_buff[(*length)++] = power/256;
-				power_buff[(*length)++] = power%256;
+				memcpy(energy_tmp,&buff[9],(strlen(buff)-9));
+				energy = (int)(atof(energy_tmp)*100);
+				//printf("buff:%s\n energy:%d\n",buff,energy);
+				power_buff[(*length)++] = (date_tmp[0]-'0')*16 + (date_tmp[1]-'0');
+				power_buff[(*length)++] = (date_tmp[2]-'0')*16 + (date_tmp[3]-'0');
+				power_buff[(*length)++] = (date_tmp[4]-'0')*16 + (date_tmp[5]-'0');
+				power_buff[(*length)++] = (date_tmp[6]-'0')*16 + (date_tmp[7]-'0');
+				power_buff[(*length)++] = energy/256;
+				power_buff[(*length)++] = energy%256;
 			}
 				
 		}
 		fclose(fp);
-		rt_mutex_release(record_data_lock);
-		return 0;
 	}
+	return 0;
+}
 
-	rt_mutex_release(record_data_lock);
+//计算一年中最早一个月的时间
+int calculate_earliest_year(char *date,int *earliest_data)
+{
+	char year_s[5] = {'\0'};
+	char month_s[3] = {'\0'};
+	int year = 0,month = 0;	//year为年份 month为月份 day为日期  flag 为瑞年判断标志 count表示上个月好需要补的天数 number_of_days:上个月的总天数
+	
+	memcpy(year_s,date,4);
+	year_s[4] = '\0';
+	year = atoi(year_s);
 
-	return -1;
-
+	memcpy(month_s,&date[4],2);
+	month_s[2] = '\0';
+	month = atoi(month_s);
+	
+	if(month == 12)
+	{
+		month = 1;
+		*earliest_data = (year * 100 + month);
+		//printf("calculate_earliest_month:%d %d    %d \n",year,month,*earliest_data);
+		return 0;
+	}else
+	{
+		month = month + 1;
+		year = year - 1;
+		*earliest_data = (year * 100 + month);
+		//printf("calculate_earliest_month:%d %d    %d \n",year,month,*earliest_data);
+		return 1;
+	}
+	
 }
 
 //读取最近一年的发电量    以每月计量
 int read_yearly_energy(char *date_time, char *power_buff,int *length)
 {
-	char dir[30] = "/home/record/power";
+	char dir[30] = "/home/record/energy";
 	char path[100];
 	char buff[100]={'\0'};
 	char date_tmp[9] = {'\0'};
-	int power = 0;
+	int earliest_date = 0,compare_time = 0;
+	char energy_tmp[20] = {'\0'};
+	int energy = 0;
 	FILE *fp;
-	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 
 	memset(path,0,100);
 	memset(buff,0,100);
-	memcpy(date_tmp,date_time,8);
-	date_tmp[6] = '\0';
-	sprintf(path,"%s/%s.dat",dir,date_tmp);
 
 	*length = 0;
+	//计算前七天中最早的一天   如果flag为0  表示最早一天在当月  如果为1表示在上个月
+	calculate_earliest_year(date_time,&earliest_date);
+	
+	sprintf(path,"%s/year.dat",dir);
+
 	fp = fopen(path, "r");
 	if(fp)
 	{
 		while(NULL != fgets(buff,100,fp))  //读取一行数据
-		{	//第8个字节为，  且时间相同
-			if((buff[12] == ',') && (!memcmp(buff,date_time,8)))
+		{	
+			//将时间转换为int型   然后进行比较
+			memcpy(date_tmp,buff,6);
+			date_tmp[6] = '\0';
+			compare_time = atoi(date_tmp);
+			printf("compare_time %d     earliest_date %d\n",compare_time,earliest_date);
+			if(compare_time >= earliest_date)
 			{
-				power = (int)atoi(&buff[13]);
-				power_buff[(*length)++] = (buff[8]-'0') * 16 + (buff[9]-'0');
-				power_buff[(*length)++] = (buff[10]-'0') * 16 + (buff[11]-'0');
-				power_buff[(*length)++] = power/256;
-				power_buff[(*length)++] = power%256;
+				memcpy(energy_tmp,&buff[7],(strlen(buff)-7));
+				energy = (int)(atof(energy_tmp)*100);
+				printf("buff:%s\n energy:%d\n",buff,energy);
+				power_buff[(*length)++] = (date_tmp[0]-'0')*16 + (date_tmp[1]-'0');
+				power_buff[(*length)++] = (date_tmp[2]-'0')*16 + (date_tmp[3]-'0');
+				power_buff[(*length)++] = (date_tmp[4]-'0')*16 + (date_tmp[5]-'0');
+				power_buff[(*length)++] = 0x01;
+				power_buff[(*length)++] = energy/256;
+				power_buff[(*length)++] = energy%256;
 			}
 				
 		}
 		fclose(fp);
-		rt_mutex_release(record_data_lock);
-		return 0;
 	}
-
-	rt_mutex_release(record_data_lock);
-
-	return -1;
-
+	return 0;
 }
 
 
@@ -1230,8 +1422,13 @@ FINSH_FUNCTION_EXPORT(rm_dir, eg:rm_dir("/home/record/data"));
 
 int cal(char * date)
 {
-	int earliest_data;
-	calculate_earliest_week(date,&earliest_data);
+	int length = 0;
+	char power_buff[1024] = { '\0' };
+	//calculate_earliest_week(date,&earliest_data);
+	read_yearly_energy(date, power_buff,&length);
+	printf("length:%d \n",length);
+	//calculate_earliest_month(date,&earliest_data);
+	//calculate_earliest_year(date,&earliest_data);
 	return 0;
 }
 FINSH_FUNCTION_EXPORT(cal, eg:cal("20170721"));

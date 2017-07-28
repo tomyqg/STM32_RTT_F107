@@ -67,10 +67,10 @@ void EXTI9_5_IRQHandler(void)
 	if(KEY_Reset==1)	 	 
 	{
 		//将配置文件恢复到出厂设置
-		initPath();
+		//initPath();
 		rt_kprintf("EXTI9_5_IRQHandler\n");  //添加恢复出厂设置的功能
-		reboot();
-		for(;;);
-	}
+		//reboot();
+		//for(;;);
+	}  
 	EXTI_ClearITPendingBit(EXTI_Line9); //清除LINE9上的中断标志位z  
 }

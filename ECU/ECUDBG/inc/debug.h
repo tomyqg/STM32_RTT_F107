@@ -49,7 +49,7 @@ typedef enum DEBUG {
 #define ECU_DEBUG_CLIENT					ECU_DBG_ON
 #define ECU_DEBUG_CONTROL_CLIENT	ECU_DBG_ON
 #define ECU_DEBUG_NTP							ECU_DBG_OFF
-#define ECU_DEBUG_OTHER						ECU_DBG_OFF
+#define ECU_DEBUG_OTHER						ECU_DBG_ON
 #define ECU_DEBUG_WIFI						ECU_DBG_ON
 
 /*****************************************************************************/
