@@ -42,7 +42,6 @@
 
 #define RT_USING_UART1
 #define RT_USING_UART4
-#define RT_USING_UART5
 
 
 //#define RT_USING_SPI1

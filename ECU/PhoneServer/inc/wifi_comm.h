@@ -36,7 +36,7 @@ typedef struct
 	//char WifiMac[7];										//ECU 无线Mac地址
 } stBaseInfo;
 
-
+#ifdef WIFI_USE
 unsigned short packetlen(unsigned char *packet);
 
 int Resolve_RecvData(char *RecvData,int* Data_Len,int* Command_Id);
@@ -62,4 +62,5 @@ void APP_Response_SearchWifiStatus(char mapping,unsigned char *ID);
 //10	AP密码设置请求
 void APP_Response_SetWifiPasswd(char mapping,unsigned char *ID);
 
+#endif 
 #endif /*__WIFI_COMM_H__*/

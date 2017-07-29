@@ -27,7 +27,6 @@
 #include <lwip/netdb.h> 
 #include <lwip/sockets.h> 
 #include "threadlist.h"
-#include "usr_wifi232.h"
 #include "variation.h"
 
 /*****************************************************************************/

@@ -30,7 +30,6 @@
 #include "mysocket.h"
 #include "remote_control_protocol.h"
 #include "threadlist.h"
-#include "usr_wifi232.h"
 
 #include "inverter_id.h"
 #include "comm_config.h"

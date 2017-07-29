@@ -14,7 +14,6 @@
 /*****************************************************************************/
 #include "phoneServer.h"
 #include "rtthread.h"
-#include "usr_wifi232.h"
 #include "string.h"
 #include "stdio.h"
 #include "stdlib.h"
@@ -27,6 +26,7 @@
 #include "rtc.h"
 #include "version.h"
 #include "arch/sys_arch.h"
+#include "usart5.h"
 
 extern rt_mutex_t usr_wifi_lock;
 extern ecu_info ecu;
@@ -91,6 +91,7 @@ int ResolveWired(char *string,IP_t *IPAddr,IP_t *MSKAddr,IP_t *GWAddr,IP_t *DNS1
 //WIFI事件处理
 void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 {
+#ifdef WIFI_USE
 	int ResolveFlag = 0,Data_Len = 0,Command_Id = 0;
 	stBaseInfo baseInfo;
 	char setTime[15];
@@ -263,6 +264,7 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 				break;
 		}
 	}
+	#endif 
 }
 
 
@@ -285,13 +287,23 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 /*****************************************************************************/
 void phone_server_thread_entry(void* parameter)
 {
-	char *data = NULL;
-	int length = 0;
-	unsigned char ID[9] = {'\0'};
-	data = malloc(2048);	
+	
 	while(1)
 	{
-		memset(data,0x00,2048);
+		
+		
+		
+		
+		WIFI_GetEvent();
+		if(WIFI_Recv_SocketA_Event == 1)
+		{
+			print2msg(ECU_DBG_WIFI,"phone_server",(char *)WIFI_RecvSocketAData);
+			WIFI_Recv_SocketA_Event = 0;
+			//WIFI_SendData((char *)WIFI_RecvSocketAData, WIFI_Recv_SocketA_LEN);
+		}
+		
+		
+		
 #ifdef WIFI_USE 	
 		rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 		//Recv socket A data by serial,If the data is received, the phone is sent.
@@ -308,8 +320,7 @@ void phone_server_thread_entry(void* parameter)
 			
 		}
 #endif		
-		rt_thread_delay(RT_TICK_PER_SECOND);
+		rt_thread_delay(RT_TICK_PER_SECOND/2);
 	}
-	//free(data);
 	
 }

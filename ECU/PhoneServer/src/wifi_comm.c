@@ -1,7 +1,6 @@
 #include "wifi_comm.h"
 #include "string.h"
 #include "variation.h"
-#include "usr_wifi232.h"
 #include "stdio.h"
 #include "version.h"
 #include "file.h"
@@ -10,7 +9,7 @@
 extern ecu_info ecu;
 static char SendData[4096] = {'\0'};
 
-
+#ifdef WIFI_USE
 
 int phone_add_inverter(int num,char *uidstring)
 {
@@ -385,3 +384,4 @@ void APP_Response_SetWifiPasswd(char mapping,unsigned char *ID)
 	SendToSocketA(SendData ,packlength,(char *)ID);
 }
 
+#endif

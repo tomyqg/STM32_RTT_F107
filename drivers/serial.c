@@ -42,10 +42,6 @@
 #if defined(RT_USING_UART4)
 extern int zigbeeReadFlag;
 #endif
-#if defined(RT_USING_UART5)
-extern int WiFiReadFlag;
-#endif
-
 
 /*
  * Serial poll routines
@@ -584,13 +580,6 @@ static rt_size_t rt_serial_write(struct rt_device *dev,
 		zigbeeReadFlag = 0;
 	}
 #endif
-#if defined(RT_USING_UART5)
-		if(rt_strncmp("uart5",dev->parent.name,5))
-		{
-			WiFiReadFlag = 0;
-		}
-#endif
-
 
 	//-----------------------------------------
     if (dev->open_flag & RT_DEVICE_FLAG_INT_TX)

@@ -561,6 +561,11 @@
               <FileType>1</FileType>
               <FilePath>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_iwdg.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32f10x_tim.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_tim.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -672,11 +677,6 @@
               <FilePath>..\components\DeviceDrivers\rtc.c</FilePath>
             </File>
             <File>
-              <FileName>usr_wifi232.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\components\net\WIFI\usr_wifi232.c</FilePath>
-            </File>
-            <File>
               <FileName>spi_core.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\components\DeviceDrivers\spi_core.c</FilePath>
@@ -700,6 +700,16 @@
               <FileName>watchdog.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\components\DeviceDrivers\watchdog.c</FilePath>
+            </File>
+            <File>
+              <FileName>timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\DeviceDrivers\timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>usart5.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\DeviceDrivers\usart5.c</FilePath>
             </File>
           </Files>
         </Group>

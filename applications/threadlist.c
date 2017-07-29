@@ -19,7 +19,6 @@
 #include <board.h>
 #include <rtthread.h>
 #include "file.h"
-#include "usr_wifi232.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <lwip/netdb.h> /* 为了解析主机名，需要包含netdb.h头文件 */

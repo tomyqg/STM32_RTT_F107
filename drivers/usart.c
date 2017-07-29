@@ -52,10 +52,6 @@
 #if defined(RT_USING_UART4)
 int zigbeeReadFlag = 0;
 #endif
-#if defined(RT_USING_UART5)
-int WiFiReadFlag = 0;
-#endif
-
 
 /* STM32 uart driver */
 struct stm32_uart
@@ -370,33 +366,6 @@ void DMA2_Channel3_IRQHandler(void) {
 }
 #endif /* RT_USING_UART4 */
 
-#if defined(RT_USING_UART5)
-/* UART4 device driver structure */
-struct stm32_uart uart5 =
-{
-    UART5,
-    UART5_IRQn,
-    NULL,
-};
-struct rt_serial_device serial5;
-
-void UART5_IRQHandler(void)
-{
-    /* enter interrupt */
-    rt_interrupt_enter();
-	//新增  如果是WIFI串口uart1 则设置就收到数据标志
-	WiFiReadFlag = 1;
-
-    uart_isr(&serial5);
-
-    /* leave interrupt */
-    rt_interrupt_leave();
-}
-
-#endif /* RT_USING_UART5 */
-
-
-
 static void RCC_Configuration(void)
 {
 #if defined(RT_USING_UART1)
@@ -413,13 +382,6 @@ static void RCC_Configuration(void)
     /* Enable UART clock */
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART4, ENABLE);
 #endif /* RT_USING_UART4 */
-
-#if defined(RT_USING_UART5)
-    /* Enable UART GPIO clocks */
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD| RCC_APB2Periph_AFIO, ENABLE);
-    /* Enable UART clock */
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5, ENABLE);
-#endif /* RT_USING_UART5 */
 
 }
 
@@ -450,17 +412,6 @@ static void GPIO_Configuration(void)
     GPIO_InitStructure.GPIO_Pin = UART4_GPIO_TX;
     GPIO_Init(UART4_GPIO, &GPIO_InitStructure);
 #endif /* RT_USING_UART4 */
-
-#if defined(RT_USING_UART5)
-    /* Configure USART Rx/tx PIN */
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_InitStructure.GPIO_Pin = UART5_GPIO_RX;
-    GPIO_Init(UART5_GPIO_2, &GPIO_InitStructure);
-
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_InitStructure.GPIO_Pin = UART5_GPIO_TX;
-    GPIO_Init(UART5_GPIO_1, &GPIO_InitStructure);
-#endif /* RT_USING_UART5 */
 
 }
 
@@ -556,24 +507,5 @@ void rt_hw_usart_init(void)
                           RT_DEVICE_FLAG_INT_TX |   RT_DEVICE_FLAG_DMA_RX,
                           uart);
 #endif /* RT_USING_UART4 */
-
-#if defined(RT_USING_UART5)
-    uart = &uart5;
-
-    config.baud_rate = BAUD_RATE_57600;
-
-    serial5.ops    = &stm32_uart_ops;
-    serial5.config = config;
-	//buff大小
-	serial1.config.bufsz = 2048;
-
-    NVIC_Configuration(uart);
-
-    /* register UART5 device */
-    rt_hw_serial_register(&serial5, "uart5",
-                          RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX |
-                          RT_DEVICE_FLAG_INT_TX ,
-                          uart);
-#endif /* RT_USING_UART5 */
 
 }
