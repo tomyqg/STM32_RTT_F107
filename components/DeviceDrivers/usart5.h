@@ -53,6 +53,7 @@ typedef enum
 extern unsigned char WIFI_RecvSocketAData[SOCKETA_LEN];
 extern unsigned char WIFI_Recv_SocketA_Event;
 extern unsigned int WIFI_Recv_SocketA_LEN;
+extern unsigned char ID_A[9];
 
 extern unsigned char WIFI_RecvSocketBData[SOCKETB_LEN];
 extern unsigned char WIFI_Recv_SocketB_Event;
@@ -71,6 +72,11 @@ void WIFI_GetEvent(void);
 void clear_WIFI(void);
 //³õÊ¼»¯´®¿Ú5
 void uart5_init(unsigned int bound);
+
+
+int SendToSocketA(char *data ,int length,char ID[8]);
+int SendToSocketB(char *data ,int length);
+int SendToSocketC(char *data ,int length);
 
 int AT(void);
 int AT_ENTM(void);

@@ -264,7 +264,7 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 				break;
 		}
 	}
-	#endif 
+	#endif
 }
 
 
@@ -287,39 +287,23 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 /*****************************************************************************/
 void phone_server_thread_entry(void* parameter)
 {
-	
+
 	while(1)
-	{
-		
-		
-		
-		
+	{	
+		//上锁
+		rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+		//获取WIFI事件
 		WIFI_GetEvent();
+		//解锁
+		rt_mutex_release(usr_wifi_lock);
+		
 		if(WIFI_Recv_SocketA_Event == 1)
 		{
 			print2msg(ECU_DBG_WIFI,"phone_server",(char *)WIFI_RecvSocketAData);
 			WIFI_Recv_SocketA_Event = 0;
-			//WIFI_SendData((char *)WIFI_RecvSocketAData, WIFI_Recv_SocketA_LEN);
+			process_WIFI(ID_A,(char *)WIFI_RecvSocketAData);
 		}
 		
-		
-		
-#ifdef WIFI_USE 	
-		rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
-		//Recv socket A data by serial,If the data is received, the phone is sent.
-		length = RecvSocketData(SOCKET_A,data,1);
-		rt_mutex_release(usr_wifi_lock);
-		if(length > 0)
-		{			
-			memcpy(ID,&data[1],8);
-			ID[8] = '\0';
-			print2msg(ECU_DBG_WIFI,"phone_server",&data[9]);
-			
-			//检查是哪个功能函数		
-			process_WIFI(ID,&data[9]);
-			
-		}
-#endif		
 		rt_thread_delay(RT_TICK_PER_SECOND/2);
 	}
 	

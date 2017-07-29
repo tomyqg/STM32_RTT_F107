@@ -5,11 +5,10 @@
 #include "version.h"
 #include "file.h"
 #include "rtc.h"
+#include "usart5.h"
 
 extern ecu_info ecu;
 static char SendData[4096] = {'\0'};
-
-#ifdef WIFI_USE
 
 int phone_add_inverter(int num,char *uidstring)
 {
@@ -252,7 +251,7 @@ void APP_Response_PowerCurve(char mapping,unsigned char *ID,char * date)
 //04 COMMAND_GENERATIONCURVE		//发电量曲线请求    mapping :: 0x00 匹配  0x01 不匹配  
 void APP_Response_GenerationCurve(char mapping,unsigned char *ID,char request_type)
 {
-	int packlength = 0,length = 0,len_body = 0;
+	int packlength = 0,len_body = 0;
 	char date_time[15] = { '\0' };
 	memset(SendData,'\0',4096);	
 	apstime(date_time);
@@ -384,4 +383,3 @@ void APP_Response_SetWifiPasswd(char mapping,unsigned char *ID)
 	SendToSocketA(SendData ,packlength,(char *)ID);
 }
 
-#endif

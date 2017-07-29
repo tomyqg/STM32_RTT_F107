@@ -1127,3 +1127,22 @@ int WIFI_Factory(char *ECUID12)
 	return 0;
 
 }
+
+
+//SOCKET A 发送数据 
+int SendToSocketA(char *data ,int length,char ID[8])
+{
+	
+}
+
+//SOCKET B 发送数据
+int SendToSocketB(char *data ,int length)
+{
+	
+}
+
+//SOCKET C 发送数据
+int SendToSocketC(char *data ,int length)
+{
+	
+}
