@@ -108,7 +108,7 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 			
 				baseInfo.LifttimeEnergy = (int)(ecu.life_energy*10);				//ECU 历史发电量		OK
 				baseInfo.LastSystemPower = ecu.system_power;			//ECU 当前系统功率		OK
-				baseInfo.GenerationCurrentDay = ecu.today_energy;//ECU 当天发电量
+				baseInfo.GenerationCurrentDay = (unsigned int)(ecu.today_energy * 100);//ECU 当天发电量
 			
 				memset(baseInfo.LastToEMA,'\0',8);	//ECU 最后一次连接EMA的时间
 				baseInfo.LastToEMA[0] = (ecu.last_ema_time[0] - '0')*16+(ecu.last_ema_time[1] - '0');

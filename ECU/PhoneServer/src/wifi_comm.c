@@ -86,12 +86,17 @@ void APP_Response_BaseInfo(unsigned char *ID,stBaseInfo baseInfo)
 	SendData[packlength++] = (baseInfo.LastSystemPower/65536)%256;
 	SendData[packlength++] = (baseInfo.LastSystemPower/256)%256;
 	SendData[packlength++] =  baseInfo.LastSystemPower%256;
-	
-	SendData[packlength++] = baseInfo.LastSystemPower/256;
+
+	SendData[packlength++] = (baseInfo.LastSystemPower/16777216)%256;
+	SendData[packlength++] = (baseInfo.LastSystemPower/65536)%256;
+	SendData[packlength++] = (baseInfo.LastSystemPower/256)%256;
 	SendData[packlength++] = baseInfo.LastSystemPower%256;
-	
-	SendData[packlength++] = baseInfo.GenerationCurrentDay/256;
+
+	SendData[packlength++] = (baseInfo.GenerationCurrentDay/16777216)%256;
+	SendData[packlength++] = (baseInfo.GenerationCurrentDay/65536)%256;
+	SendData[packlength++] = (baseInfo.GenerationCurrentDay/256)%256;
 	SendData[packlength++] = baseInfo.GenerationCurrentDay%256;
+	
 	
 	memcpy(&SendData[packlength],baseInfo.LastToEMA,7);
 	packlength += 7;

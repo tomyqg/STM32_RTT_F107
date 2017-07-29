@@ -23,8 +23,8 @@ typedef struct
 {
 	char ECUID[13];											//ECU ID
 	unsigned int LifttimeEnergy;				//ECU 历史发电量
-	unsigned short LastSystemPower;			//ECU 当前系统功率
-	unsigned short GenerationCurrentDay;//ECU 当天发电量
+	unsigned int LastSystemPower;			//ECU 当前系统功率
+	unsigned int GenerationCurrentDay;//ECU 当天发电量
 	char LastToEMA[8];									//ECU 最后一次连接EMA的时间
 	unsigned short InvertersNum;				//ECU 逆变器总数
 	unsigned short LastInvertersNum;		//ECU 当前连接的逆变器总数
