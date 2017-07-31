@@ -15,23 +15,12 @@ int phone_add_inverter(int num,char *uidstring)
 	int i = 0;
 	char inverter_id[13] = { '\0' };
 	char buff[25] = { '\0' };
-	char allbuff[500] = { '\0' };
+	char allbuff[1024] = { '\0' };
 	for(i = 0; i < num; i++)
 	{
 		memset(inverter_id,'\0',13);
 		memset(buff,'\0',25);
-		inverter_id[0] =  (uidstring[0+i*6]/16) + '0';
-		inverter_id[1] =  (uidstring[0+i*6]%16) + '0';
-		inverter_id[2] =  (uidstring[1+i*6]/16) + '0';
-		inverter_id[3] =  (uidstring[1+i*6]%16) + '0';
-		inverter_id[4] =  (uidstring[2+i*6]/16) + '0';
-		inverter_id[5] =  (uidstring[2+i*6]%16) + '0';
-		inverter_id[6] =  (uidstring[3+i*6]/16) + '0';
-		inverter_id[7] =  (uidstring[3+i*6]%16) + '0';
-		inverter_id[8] =  (uidstring[4+i*6]/16) + '0';
-		inverter_id[9] =  (uidstring[4+i*6]%16) + '0';
-		inverter_id[10] = (uidstring[5+i*6]/16) + '0';
-		inverter_id[11] = (uidstring[5+i*6]%16) + '0';
+		memcpy(inverter_id,&uidstring[0+i*12],12);
 		sprintf(buff,"%s,,,,,,\n",inverter_id);
 		
 		memcpy(&allbuff[0+19*i],buff,19);
@@ -119,7 +108,11 @@ void APP_Response_BaseInfo(unsigned char *ID,stBaseInfo baseInfo)
 	
 	memcpy(&SendData[packlength],baseInfo.MacAddress,6);
 	packlength += 6;
-
+	
+	memset(baseInfo.WifiMac,0x00,6);
+	memcpy(&SendData[packlength],baseInfo.WifiMac,6);
+	packlength += 6;
+	
 	SendData[packlength++] = 'E';
 	SendData[packlength++] = 'N';
 	SendData[packlength++] = 'D';
@@ -162,9 +155,15 @@ void APP_Response_PowerGeneration(char mapping,unsigned char *ID,inverter_info *
 	
 	SendData[packlength++] = VaildNum/256;
 	SendData[packlength++] = VaildNum%256;
-	memcpy(&SendData[packlength],ecu.had_data_broadcast_time,14);
-	packlength += 14;
 	
+	SendData[packlength++] = (ecu.had_data_broadcast_time[0] - '0')*16+(ecu.had_data_broadcast_time[1] - '0');
+	SendData[packlength++] = (ecu.had_data_broadcast_time[2] - '0')*16+(ecu.had_data_broadcast_time[3] - '0');
+	SendData[packlength++] = (ecu.had_data_broadcast_time[4] - '0')*16+(ecu.had_data_broadcast_time[5] - '0');
+	SendData[packlength++] = (ecu.had_data_broadcast_time[6] - '0')*16+(ecu.had_data_broadcast_time[7] - '0');
+	SendData[packlength++] = (ecu.had_data_broadcast_time[8] - '0')*16+(ecu.had_data_broadcast_time[9] - '0');
+	SendData[packlength++] = (ecu.had_data_broadcast_time[10] - '0')*16+(ecu.had_data_broadcast_time[11] - '0');
+	SendData[packlength++] = (ecu.had_data_broadcast_time[12] - '0')*16+(ecu.had_data_broadcast_time[13] - '0');
+		
 	for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)
 	{
 		//UID
@@ -232,7 +231,7 @@ void APP_Response_PowerCurve(char mapping,unsigned char *ID,char * date)
 	sprintf(SendData,"APS110015000300");
 	packlength = 15;
 	
-	read_system_power(date,&SendData[13],&length);
+	read_system_power(date,&SendData[15],&length);
 	packlength += length;
 	
 	SendData[packlength++] = 'E';
@@ -266,9 +265,8 @@ void APP_Response_GenerationCurve(char mapping,unsigned char *ID,char request_ty
 
 	sprintf(SendData,"APS110015000400");
 	packlength = 15;
-	
 	//拼接需要发送的报文
-	if(request_type == 0x00)
+	if(request_type == '0')
 	{//最近一周
 		SendData[packlength++] = '0';
 		SendData[packlength++] = '0';
@@ -276,14 +274,14 @@ void APP_Response_GenerationCurve(char mapping,unsigned char *ID,char request_ty
 		read_weekly_energy(date_time, &SendData[packlength],&len_body);
 		packlength += len_body;
 		
-	}else if(request_type == 0x01)
+	}else if(request_type == '1')
 	{//最近一个月
 		SendData[packlength++] = '0';
 		SendData[packlength++] = '1';
 		read_monthly_energy(date_time, &SendData[packlength],&len_body);
 		packlength += len_body;
 		
-	}else if(request_type == 0x02)
+	}else if(request_type == '2')
 	{//最近一年
 		SendData[packlength++] = '0';
 		SendData[packlength++] = '2';

@@ -33,7 +33,7 @@ typedef struct
 	unsigned char TimeZoneLength;				//ECU 时区长度
 	char TimeZone[20];									//ECU 时区
 	char MacAddress[7];									//ECU 有线Mac地址
-	//char WifiMac[7];										//ECU 无线Mac地址
+	char WifiMac[7];										//ECU 无线Mac地址
 } stBaseInfo;
 
 #ifdef WIFI_USE

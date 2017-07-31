@@ -27,6 +27,7 @@
 #include "version.h"
 #include "arch/sys_arch.h"
 #include "usart5.h"
+#include "client.h"
 
 extern rt_mutex_t usr_wifi_lock;
 extern ecu_info ecu;
@@ -97,7 +98,6 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 	char setTime[15];
 	char date[9];
 	
-	get_ecuid(ecu.id);
 	ResolveFlag =  Resolve_RecvData((char *)WIFI_RecvData,&Data_Len,&Command_Id);
 	if(ResolveFlag == 0)
 	{
@@ -105,12 +105,13 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 		{
 			case COMMAND_BASEINFO:						//获取基本信息请求	OK
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_BASEINFO,WIFI_RecvData);
-				memcpy(baseInfo.ECUID,ecu.id,13);											//ECU ID		OK
 			
+				memcpy(baseInfo.ECUID,ecu.id,13);											//ECU ID		OK
 				baseInfo.LifttimeEnergy = (int)(ecu.life_energy*10);				//ECU 历史发电量		OK
 				baseInfo.LastSystemPower = ecu.system_power;			//ECU 当前系统功率		OK
 				baseInfo.GenerationCurrentDay = (unsigned int)(ecu.today_energy * 100);//ECU 当天发电量
-			
+				
+				printf("%s\n",ecu.last_ema_time);
 				memset(baseInfo.LastToEMA,'\0',8);	//ECU 最后一次连接EMA的时间
 				baseInfo.LastToEMA[0] = (ecu.last_ema_time[0] - '0')*16+(ecu.last_ema_time[1] - '0');
 				baseInfo.LastToEMA[1] = (ecu.last_ema_time[2] - '0')*16+(ecu.last_ema_time[3] - '0');
@@ -139,13 +140,13 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 
 				break;
 					
-			case COMMAND_POWERCURVE:					//功率曲线请求
+			case COMMAND_POWERCURVE:					//功率曲线请求   OK
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_POWERCURVE,WIFI_RecvData);
 				memset(date,'\0',9);
 				//匹配成功进行相应操作
 				printf("COMMAND_POWERCURVE  Mapping\n");
 				memcpy(date,&WIFI_RecvData[28],8);
-				APP_Response_PowerCurve(0x01,ID,date);
+				APP_Response_PowerCurve(0x00,ID,date);
 
 				break;
 						
@@ -153,7 +154,7 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 				printf("WIFI_Recv_Event%d %s\n",COMMAND_GENERATIONCURVE,WIFI_RecvData);
 				//匹配成功进行相应操作
 				printf("COMMAND_GENERATIONCURVE  Mapping\n");
-				APP_Response_GenerationCurve(0x00,ID,WIFI_RecvData[28]);
+				APP_Response_GenerationCurve(0x00,ID,WIFI_RecvData[29]);
 			
 				break;
 						
@@ -165,7 +166,8 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 					//匹配成功进行相应操作
 					printf("COMMAND_REGISTERID  Mapping\n");
 					//计算台数
-					AddNum = (Data_Len - 29)/6;
+					AddNum = (Data_Len - 31)/12;
+					printf("AddNum:%d\n",AddNum);
 					//添加ID到文件
 					phone_add_inverter(AddNum,&WIFI_RecvData[28]);
 					//重启main线程
@@ -288,6 +290,8 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 void phone_server_thread_entry(void* parameter)
 {
 
+	get_ecuid(ecu.id);
+	readconnecttime();
 	while(1)
 	{	
 		//上锁
@@ -301,8 +305,8 @@ void phone_server_thread_entry(void* parameter)
 		{
 			print2msg(ECU_DBG_WIFI,"phone_server",(char *)WIFI_RecvSocketAData);
 			WIFI_Recv_SocketA_Event = 0;
-			SendToSocketA("123456\n",7,ID_A);
-			//process_WIFI(ID_A,(char *)WIFI_RecvSocketAData);
+	
+			process_WIFI(ID_A,(char *)WIFI_RecvSocketAData);
 		}
 		
 		rt_thread_delay(RT_TICK_PER_SECOND/2);

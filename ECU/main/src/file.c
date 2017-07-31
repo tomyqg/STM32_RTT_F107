@@ -707,7 +707,7 @@ int read_weekly_energy(char *date_time, char *power_buff,int *length)
 				{
 					memcpy(energy_tmp,&buff[9],(strlen(buff)-9));
 					energy = (int)(atof(energy_tmp)*100);
-					//printf("buff:%s\n energy:%d\n",buff,energy);
+					printf("buff:%s\n energy:%d\n",buff,energy);
 					power_buff[(*length)++] = (date_tmp[0]-'0')*16 + (date_tmp[1]-'0');
 					power_buff[(*length)++] = (date_tmp[2]-'0')*16 + (date_tmp[3]-'0');
 					power_buff[(*length)++] = (date_tmp[4]-'0')*16 + (date_tmp[5]-'0');
@@ -741,7 +741,7 @@ int read_weekly_energy(char *date_time, char *power_buff,int *length)
 			{
 				memcpy(energy_tmp,&buff[9],(strlen(buff)-9));
 				energy = (int)(atof(energy_tmp)*100);
-				//printf("buff:%s\n energy:%d\n",buff,energy);
+				printf("buff:%s\n energy:%d\n",buff,energy);
 				power_buff[(*length)++] = (date_tmp[0]-'0')*16 + (date_tmp[1]-'0');
 				power_buff[(*length)++] = (date_tmp[2]-'0')*16 + (date_tmp[3]-'0');
 				power_buff[(*length)++] = (date_tmp[4]-'0')*16 + (date_tmp[5]-'0');
@@ -1209,6 +1209,8 @@ void initPath(void)
 	rt_hw_ms_delay(20);
 	mkdir("/home/record/inversta",0x777);
 	rt_hw_ms_delay(20);
+	mkdir("/home/record/power",0x777);
+	mkdir("/home/record/energy",0x777);
 	rt_hw_ms_delay(20);
 	echo("/yuneng/area.con","SAA");
 	rt_hw_ms_delay(20);
