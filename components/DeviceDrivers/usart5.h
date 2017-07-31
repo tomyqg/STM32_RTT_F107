@@ -41,7 +41,12 @@ typedef enum
 	EN_RECV_TYPE_C    		= 3,				//采集的是SOCKET C的数据
 } eRecvType;
 
-
+typedef enum 
+{
+	SOCKET_A = 1,
+	SOCKET_B = 2,
+	SOCKET_C = 3,
+} eSocketType;
 
 #define USART_REC_LEN  				2048  	//定义最大接收字节数 2048
 #define SOCKETA_LEN						2048
@@ -73,8 +78,11 @@ void clear_WIFI(void);
 //初始化串口5
 void uart5_init(unsigned int bound);
 
+int WIFI_Create(eSocketType Type);
+int WIFI_Close(eSocketType Type);
+int WIFI_QueryStatus(eSocketType Type);
 
-int SendToSocketA(char *data ,int length,char ID[8]);
+int SendToSocketA(char *data ,int length,unsigned char ID[8]);
 int SendToSocketB(char *data ,int length);
 int SendToSocketC(char *data ,int length);
 
@@ -90,6 +98,8 @@ int WIFI_SoftReset(void);
 
 int WIFI_Test(void);
 int WIFI_Factory(char *ECUID12);
+
+int WIFI_ChangeSSID(char *SSID,char *Passwd);
+int WIFI_ConStatus(void);
+
 #endif
-
-

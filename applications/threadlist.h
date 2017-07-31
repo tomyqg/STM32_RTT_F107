@@ -20,7 +20,7 @@
 /*****************************************************************************/
 /*  Definitions                                                              */
 /*****************************************************************************/
-//#define WIFI_USE 
+#define WIFI_USE 
 //restartThread parameter
 typedef enum THREADTYPE {
 	TYPE_LED = 1,
@@ -76,9 +76,9 @@ typedef struct IPConfig
 #define START_TIME_UPDATE									15
 #define START_TIME_NTP										10
 #define START_TIME_IDWRITE								15
-#define START_TIME_MAIN										120
-#define START_TIME_CONTROL_CLIENT					180
-#define START_TIME_CLIENT									240
+#define START_TIME_MAIN										90
+#define START_TIME_CONTROL_CLIENT					120
+#define START_TIME_CLIENT									180
 #define START_TIME_PHONE_SERVER						20
 
 /*****************************************************************************/

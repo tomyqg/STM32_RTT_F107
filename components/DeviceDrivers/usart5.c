@@ -1,5 +1,5 @@
 /*****************************************************************************/
-/* File      : usart5.c                                                        */
+/* File      : usart5.c                                                      */
 /*****************************************************************************/
 /*  History:                                                                 */
 /*****************************************************************************/
@@ -18,6 +18,11 @@
 #include "string.h"
 #include "stm32f10x.h"
 #include "rthw.h"
+#include "stdio.h"
+#include "rtthread.h"
+#include "stdlib.h"
+#include "debug.h"
+#include "client.h"
 
 /*****************************************************************************/
 /*  Definitions                                                              */
@@ -26,6 +31,7 @@
 #define WIFI_GPIO                   GPIOC
 #define WIFI_PIN                    (GPIO_Pin_6)
 
+extern rt_mutex_t usr_wifi_lock;
 /*****************************************************************************/
 /*  Function Implementations                                                 */
 /*****************************************************************************/
@@ -483,9 +489,10 @@ void WIFI_GetEvent(void)
 			while(pos < Cur)
       {
 				//判断是否有a出现  如果出现了判断后面8个字节
-				if(12 == pos)   //接收数据长度结束
+				if(19 == pos)   //接收数据长度结束
 				{
-					PackLen = (packetlen_B(&USART_RX_BUF[10])+9);
+					//SEGGER_RTT_printf(0, "EN_RECV_ST_GET_B_LEN LENGTH11111 :     %s\n",&USART_RX_BUF[19]);
+					PackLen = (packetlen_B(&USART_RX_BUF[19])+9);
 					//SEGGER_RTT_printf(0, "EN_RECV_ST_GET_B_LEN LENGTH11111 : %d\n",PackLen);
 					//计算长度
 					eStateMachine = EN_RECV_ST_GET_B_DATA;
@@ -538,7 +545,7 @@ void WIFI_GetEvent(void)
 		//receive start character
 		if(eStateMachine == EN_RECV_ST_GET_C_HEAD)    //接收报文头部
 		{
-			//SEGGER_RTT_printf(0, "EN_RECV_ST_GET_A_HEAD\n");
+			//SEGGER_RTT_printf(0, "EN_RECV_ST_GET_C_HEAD\n");
 			// check for the start character(SYNC_CHARACTER)
       // also check it's not arriving the end of valid data
       while(pos < Cur)
@@ -629,7 +636,7 @@ void WIFI_GetEvent(void)
 		if(eStateMachine == EN_RECV_ST_GET_C_END)
 		{
 			pos = 0;
-			//SEGGER_RTT_printf(0, "EN_RECV_ST_GET_END\n");
+			//SEGGER_RTT_printf(0, "EN_RECV_ST_GET_C_END\n");
 			while(pos <= Cur)
       {
 				
@@ -701,6 +708,7 @@ void clear_WIFI(void)
 //进入AT模式
 int AT(void)
 {
+	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 	clear_WIFI();
 	//先向模块写入"+++"然后再写入"a" 写入+++返回"a" 写入"a"返回+ok
 	WIFI_SendData("+++", 3);
@@ -708,11 +716,15 @@ int AT(void)
 	delayMS(350);
 	if(Cur <1)
 	{
+		rt_mutex_release(usr_wifi_lock);
+		clear_WIFI();
 		return -1;
 	}else
 	{
 		if(memcmp(USART_RX_BUF,"a",1))
 		{
+			rt_mutex_release(usr_wifi_lock);
+			clear_WIFI();
 			return -1;
 		}
 	}
@@ -723,17 +735,22 @@ int AT(void)
 	delayMS(350);
 	if(Cur < 3)
 	{
+		rt_mutex_release(usr_wifi_lock);
+		clear_WIFI();
 		return -1;
 	}else
 	{
 		if(memcmp(USART_RX_BUF,"+ok",3))
 		{
+			rt_mutex_release(usr_wifi_lock);
+			clear_WIFI();
 			return -1;
 		}
 
 	}
 	SEGGER_RTT_printf(0, "AT :a+ok\n");
 	clear_WIFI();
+	rt_mutex_release(usr_wifi_lock);
 	return 0;
 }
 
@@ -741,48 +758,86 @@ int AT(void)
 //切换回原来的工作模式    OK
 int AT_ENTM(void)
 {
-
+	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 	clear_WIFI();
 	//发送"AT+ENTM\n",返回+ok
 	WIFI_SendData("AT+ENTM\n", 8);
 	delayMS(300);
 	if(Cur < 10)
 	{
+		rt_mutex_release(usr_wifi_lock);
+		clear_WIFI();
 		return -1;
 	}else
 	{
 		if(memcmp(&USART_RX_BUF[9],"+ok",3))
 		{
+			rt_mutex_release(usr_wifi_lock);
+			clear_WIFI();
 			return -1;
 		}
 
 	}
 	SEGGER_RTT_printf(0, "AT+ENTM :+ok\n");
 	clear_WIFI();
+	rt_mutex_release(usr_wifi_lock);
 	return 0;
 	
 }
 
+//usr 版本信息
+int AT_VER(void)
+{
+	int j = 0;
+	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+	clear_WIFI();
+	WIFI_SendData("AT+VER\n", 7);
+
+	for(j = 0;j < 300;j++)
+	{
+		if(Cur >= 11)
+		{
+			if(!memcmp(&USART_RX_BUF[8],"+ok",3))
+			{
+				rt_mutex_release(usr_wifi_lock);
+				print2msg(ECU_DBG_WIFI,"Version",(char *)USART_RX_BUF);
+				clear_WIFI();
+				return 0;
+			}
+		}
+		rt_hw_ms_delay(10);
+	}
+	printmsg(ECU_DBG_WIFI,"AT_VER WIFI Get reply time out 1");
+	clear_WIFI();
+	rt_mutex_release(usr_wifi_lock);
+	return -1;
+
+}
+
+
 int AT_Z(void)
 {
-
+	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 	clear_WIFI();
 	//发送"AT+Z\n",返回+ok
 	WIFI_SendData("AT+Z\n", 5);
 	delayMS(300);
 	if(Cur < 6)
 	{
+		rt_mutex_release(usr_wifi_lock);
 		return -1;
 	}else
 	{
 		if(memcmp(&USART_RX_BUF[6],"+ok",3))
 		{
+			rt_mutex_release(usr_wifi_lock);
 			return -1;
 		}
 
 	}
 	SEGGER_RTT_printf(0, "AT+Z :+ok\n");
 	clear_WIFI();
+	rt_mutex_release(usr_wifi_lock);
 	return 0;
 	
 }
@@ -792,6 +847,7 @@ int AT_Z(void)
 int AT_WAP(char *ECUID12)
 {
 	char AT[100] = { '\0' };
+	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 	clear_WIFI();
 	//发送"AT+WAKEY\n",返回+ok
 	sprintf(AT,"AT+WAP=11BGN,ECU_R_%s,Auto\n",ECUID12);
@@ -802,16 +858,19 @@ int AT_WAP(char *ECUID12)
 	
 	if(Cur < 10)
 	{
+		rt_mutex_release(usr_wifi_lock);
 		return -1;
 	}else
 	{
 		if(memcmp(&USART_RX_BUF[strlen(AT)+1],"+ok",3))
 		{
+			rt_mutex_release(usr_wifi_lock);
 			return -1;
 		}
 	}
 	SEGGER_RTT_printf(0, "AT+WAP :+ok\n");
 	clear_WIFI();
+	rt_mutex_release(usr_wifi_lock);
 	return 0;
 }
 
@@ -819,6 +878,7 @@ int AT_WAP(char *ECUID12)
 int AT_WAKEY(char *NewPasswd)
 {
 	char AT[100] = { '\0' };
+	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 	clear_WIFI();
 	//发送"AT+WAKEY\n",返回+ok
 	sprintf(AT,"AT+WAKEY=WPA2PSK,AES,%s\n",NewPasswd);
@@ -829,16 +889,19 @@ int AT_WAKEY(char *NewPasswd)
 	
 	if(Cur < 10)
 	{
+		rt_mutex_release(usr_wifi_lock);
 		return -1;
 	}else
 	{
 		if(memcmp(&USART_RX_BUF[strlen(AT)+1],"+ok",3))
 		{
+			rt_mutex_release(usr_wifi_lock);
 			return -1;
 		}
 	}
 	SEGGER_RTT_printf(0, "AT+WAKEY :+ok\n");
 	clear_WIFI();
+	rt_mutex_release(usr_wifi_lock);
 	return 0;
 }
 
@@ -846,6 +909,7 @@ int AT_WAKEY(char *NewPasswd)
 int AT_WAKEY_Clear(void)
 {
 	char AT[100] = { '\0' };
+	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 	clear_WIFI();
 	//发送"AT+WAKEY\n",返回+ok
 	sprintf(AT,"AT+WAKEY=OPEN,NONE\n");
@@ -856,16 +920,19 @@ int AT_WAKEY_Clear(void)
 	
 	if(Cur < 10)
 	{
+		rt_mutex_release(usr_wifi_lock);
 		return -1;
 	}else
 	{
 		if(memcmp(&USART_RX_BUF[strlen(AT)+1],"+ok",3))
 		{
+			rt_mutex_release(usr_wifi_lock);
 			return -1;
 		}
 	}
 	SEGGER_RTT_printf(0, "AT+WAKEY Clear :+ok\n");
 	clear_WIFI();
+	rt_mutex_release(usr_wifi_lock);
 	return 0;
 }
 
@@ -1129,20 +1196,282 @@ int WIFI_Factory(char *ECUID12)
 }
 
 
-//SOCKET A 发送数据 
-int SendToSocketA(char *data ,int length,char ID[8])
+//创建SOCKET连接
+//返回0 表示创建连接成功  -1表示创建连接失败
+int WIFI_Create(eSocketType Type)
 {
+	char send[50] = {'\0'};
+	char recv[255] = { '\0' };
+	int i = 0,j = 0;
+	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+	send[0]= 0x65;
+	if(Type == SOCKET_B)
+		send[1]= 0x62;
+	else if(Type == SOCKET_C)
+		send[1]= 0x63;
+	else
+		return -1;
 	
+	send[2]= 0x06;
+	send[3]= 0x01;
+	send[4]= 0x00;
+	send[5]= 0x02;
+	for(i = 0;i<2;i++)
+	{
+		clear_WIFI();
+		WIFI_SendData(send, 6);
+		for(j = 0;j <300;j++)
+		{
+				if(Cur >= 6)
+				{
+					memcpy(recv,USART_RX_BUF,6);
+					if((recv[0] == 0x65)&&
+						(recv[1] == send[1])&&
+						(recv[2] == 0x06)&&
+						(recv[4] == 0x01))
+					{
+						//创建SOCKET 成功
+						printmsg(ECU_DBG_WIFI,"WIFI_CreateSocket Successful");
+						rt_mutex_release(usr_wifi_lock);
+						clear_WIFI();
+						return 0;
+					}else
+					{
+						//创建SOCKET 失败
+						printmsg(ECU_DBG_WIFI,"WIFI_CreateSocket Failed");
+						rt_mutex_release(usr_wifi_lock);
+						clear_WIFI();
+						return -1;
+					}
+					
+				}
+				rt_hw_ms_delay(10);
+		}
+		printmsg(ECU_DBG_WIFI,"WIFI_CreateSocket WIFI Get reply time out 1");
+	}	
+	rt_mutex_release(usr_wifi_lock);
+	clear_WIFI();
+	return -1;
+}
+
+//关闭Socket连接
+//返回0 表示断开连接成功  -1表示断开连接失败
+int WIFI_Close(eSocketType Type)
+{
+	char send[50] = {'\0'};
+	char recv[255] = { '\0' };
+	int i = 0,j = 0;
+	if(1 != WIFI_QueryStatus(Type))
+		return -1;
+
+	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+	send[0]= 0x65;
+	if(Type == SOCKET_B)
+		send[1]= 0x62;
+	else if(Type == SOCKET_C)
+		send[1]= 0x63;
+	else
+		return -1;
+	
+	send[2]= 0x06;
+	send[3]= 0x02;
+	send[4]= 0x00;
+	send[5]= 0x03;
+	for(i = 0;i<2;i++)
+	{
+		clear_WIFI();
+		WIFI_SendData(send, 6);
+		for(j = 0;j <300;j++)
+		{
+				if(Cur >= 6)
+				{
+					memcpy(recv,USART_RX_BUF,6);
+					if((recv[0] == 0x65)&&
+					(recv[1] == send[1])&&
+					(recv[2] == 0x06)&&
+					(recv[4] == 0x01))
+					{
+						//创建SOCKET 成功
+						printmsg(ECU_DBG_WIFI,"WIFI_CloseSocket Successful");
+						rt_mutex_release(usr_wifi_lock);
+						clear_WIFI();
+						return 0;
+					}else
+					{
+						//创建SOCKET 失败
+						printmsg(ECU_DBG_WIFI,"WIFI_CloseSocket Failed");
+						rt_mutex_release(usr_wifi_lock);
+						clear_WIFI();
+						return -1;
+					}
+					
+				}
+				rt_hw_ms_delay(10);
+		}
+		printmsg(ECU_DBG_WIFI,"WIFI_CreateSocket WIFI Get reply time out 1");
+	}	
+	rt_mutex_release(usr_wifi_lock);
+	clear_WIFI();
+	return -1;
+
+}
+
+
+int WIFI_QueryStatus(eSocketType Type)
+{
+	char send[50] = {'\0'};
+	char recv[255] = { '\0' };
+	int i = 0,j = 0;
+	clear_WIFI();
+	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+	send[0]= 0x65;
+	if(Type == SOCKET_B)
+		send[1]= 0x62;
+	else if(Type == SOCKET_C)
+		send[1]= 0x63;
+	else
+		return -1;
+	
+	send[2]= 0x06;
+	send[3]= 0x03;
+	send[4]= 0x00;
+	send[5]= 0x04;
+
+	for(i = 0;i<2;i++)
+	{
+		clear_WIFI();
+		WIFI_SendData(send, 6);
+		for(j = 0;j <300;j++)
+		{
+				if(Cur >= 6)
+				{
+					memcpy(recv,USART_RX_BUF,6);
+					if((recv[0] == 0x65)&&
+					(recv[1] == send[1])&&
+					(recv[2] == 0x06))
+					{
+						//创建SOCKET 成功
+						printmsg(ECU_DBG_WIFI,"WIFI_QueryStatus Successful");
+						rt_mutex_release(usr_wifi_lock);
+						clear_WIFI();
+						return 0;
+					}else
+					{
+						//创建SOCKET 失败
+						printmsg(ECU_DBG_WIFI,"WIFI_QueryStatus Failed");
+						rt_mutex_release(usr_wifi_lock);
+						clear_WIFI();
+						return -1;
+					}
+					
+				}
+				rt_hw_ms_delay(10);
+		}
+		printmsg(ECU_DBG_WIFI,"WIFI_CreateSocket WIFI Get reply time out 1");
+	}	
+	rt_mutex_release(usr_wifi_lock);
+	clear_WIFI();
+	return -1;
+}
+
+//SOCKET A 发送数据  \n需要在传入字符串中带入
+int SendToSocketA(char *data ,int length,unsigned char ID[8])
+{
+	char *sendbuff = NULL;
+	sendbuff = malloc(4096);
+	sprintf(sendbuff,"a%c%c%c%c%c%c%c%c",ID[0],ID[1],ID[2],ID[3],ID[4],ID[5],ID[6],ID[7]);
+	memcpy(&sendbuff[9],data,length);
+	clear_WIFI();
+
+	WIFI_SendData(sendbuff, (length+9));
+	
+	free(sendbuff);
+	sendbuff = NULL;
+	return 0;
 }
 
 //SOCKET B 发送数据
 int SendToSocketB(char *data ,int length)
 {
-	
+	char *sendbuff = NULL;
+	if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
+	{
+		writeconnecttime();
+		sendbuff = malloc(4096);
+		sprintf(sendbuff,"b00000000");
+		memcpy(&sendbuff[9],data,length);
+		
+		clear_WIFI();
+		WIFI_SendData(sendbuff, (length+9));
+
+		free(sendbuff);
+		sendbuff = NULL;
+		return 0;
+	}
+	return -1;
 }
 
 //SOCKET C 发送数据
 int SendToSocketC(char *data ,int length)
 {
-	
+	int i = 0;
+	char *sendbuff = NULL;
+	char msg_length[6] = {'\0'};
+	if((1 == WIFI_QueryStatus(SOCKET_C)) || (0 == WIFI_Create(SOCKET_C)))
+	{
+		sendbuff = malloc(4096);
+
+		if(data[strlen(data)-1] == '\n'){
+			sprintf(msg_length, "%05d", strlen(data)-1);
+		}
+		else{
+			sprintf(msg_length, "%05d", strlen(data));
+			strcat(data, "\n");
+		}
+		strncpy(&data[5], msg_length, 5);
+
+		print2msg(ECU_DBG_WIFI,"SendToSocketC",data);
+		sprintf(sendbuff,"c00000000");
+		memcpy(&sendbuff[9],data,length);
+		clear_WIFI();
+
+		for(i = 0;i<(length+9);i++)	
+		{
+			printf("%x ",sendbuff[i]);
+		}
+		printf("\n");
+
+		WIFI_SendData(sendbuff, (length+9));
+
+		free(sendbuff);
+		sendbuff = NULL;
+
+		return 0;
+		
+		
+	}
+	return -1;
 }
+
+int WIFI_ChangeSSID(char *SSID,char *Passwd)
+{
+	return 0;
+}
+
+int WIFI_ConStatus(void)
+{
+	int status = 0;
+	status = GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_8); 
+	printf("status : %d\n",status);
+	return status;
+}
+
+
+#ifdef RT_USING_FINSH
+#include <finsh.h>
+FINSH_FUNCTION_EXPORT(SendToSocketB , Send SOCKET B.)
+FINSH_FUNCTION_EXPORT(SendToSocketC , Send SOCKET C.)
+
+#endif
+
+

@@ -28,12 +28,12 @@
 #include <lwip/sockets.h> 
 #include "threadlist.h"
 #include "variation.h"
+#include "usart5.h"
 
 /*****************************************************************************/
 /*  Variable Declarations                                                    */
 /*****************************************************************************/
 extern rt_mutex_t record_data_lock;
-extern rt_mutex_t usr_wifi_lock;
 extern ecu_info ecu;
 
 /*****************************************************************************/
@@ -630,13 +630,13 @@ int wifi_socketb_format(char *data ,int length)
 	head[7] = 0x00;
 	head[8] = 0x00;
 	
-	for(p = &data[9],i = 0;p <= (data+length-9);p++,i++)
+	for(p = data,i = 0;p <= (data+length-9);p++,i++)
 	{
 		if(!memcmp(p,head,9))
 		{
-			memcpy(p,p+9,(length-18-i));
+			memcpy(p,p+9,(length-9-i));
 			length -= 9;
-			data[length - i+1] = '\0';
+			data[length] = '\0';
 			retlength = length;
 		}
 	}
@@ -648,22 +648,25 @@ int wifi_socketb_format(char *data ,int length)
 
 int wifi_send_record(char *sendbuff, char *send_date_time)		//通过WIFI发送数据到EMA  注意在存储的时候结尾未添加'\n'  在发送时的时候记得添加
 {
-	int length = 0;
-	char readbuff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};
+	int j = 0;
 	SendToSocketB(sendbuff, strlen(sendbuff));
 
-	if(-1 == (length = RecvSocketData(SOCKET_B, readbuff,10)))
-		return -1;
-	else
+	for(j = 0;j<800;j++)
 	{
-		//检查格式，如果是多个包在一起了，进行合并
-		wifi_socketb_format(readbuff ,length);
-		print2msg(ECU_DBG_CLIENT,"readbuff",&readbuff[9]);
-		if('1' == readbuff[9])
-			update_send_flag(send_date_time);
-		clear_send_flag(&readbuff[9]);
-		return 0;
+		if(WIFI_Recv_SocketB_Event == 1)
+		{
+			//检查格式，如果是多个包在一起了，进行合并
+			wifi_socketb_format((char *)WIFI_RecvSocketBData ,WIFI_Recv_SocketB_LEN);
+			print2msg(ECU_DBG_CLIENT,"readbuff",(char *)WIFI_RecvSocketBData);
+			if('1' == WIFI_RecvSocketBData[0])
+				update_send_flag(send_date_time);
+			clear_send_flag((char *)WIFI_RecvSocketBData);
+			WIFI_Recv_SocketB_Event = 0;
+			return 0;
+		}
+		rt_hw_ms_delay(10);
 	}
+	return -1;
 
 }
 #endif
@@ -674,10 +677,8 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 	char readbuff[1024] = {'\0'};
 	char sendbuff[256] = {'\0'};
 	FILE *fp;
-	int fd_sock;
-#ifdef WIFI_USE	
-	int length = 0;
-#endif	
+	int fd_sock,flag_failed = 0;
+
 	if(0 == detection_resendflag2())		//	检测是否有resendflag='2'的记录
 		return 0;
 
@@ -711,30 +712,35 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 		}
 #ifdef WIFI_USE		
 	}else
-	{	//连接服务器失败,使用WIFI传输数据
-		//加锁
-		rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
-		if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
-		{
-			writeconnecttime();
+	{
+		int j = 0;
+
 			//创建成功
-			while(1)
+		while(1)
+		{
+			memset(readbuff, '\0', sizeof(readbuff));
+			SendToSocketB(sendbuff, strlen(sendbuff));	
+			for(j=0;j < 800;j++)
 			{
-				memset(readbuff, '\0', sizeof(readbuff));
-				SendToSocketB(sendbuff, strlen(sendbuff));
-				if((length = RecvSocketData(SOCKET_B,readbuff,5))> 9)
+				if(WIFI_Recv_SocketB_Event == 1)
 				{
+					flag_failed = 1;
 					//检查格式，如果是多个包在一起了，进行合并
-					wifi_socketb_format(readbuff ,length);
-					clear_send_flag(&readbuff[9]);
-				}	
-				else
-					break;
+					wifi_socketb_format((char *)WIFI_RecvSocketBData ,WIFI_Recv_SocketB_LEN);
+					clear_send_flag((char *)WIFI_RecvSocketBData);
+
+					WIFI_Recv_SocketB_Event = 0;
+					return 0;
+				}
 			}
+			if(flag_failed == 0)
+			{
+				break;
+			}
+
 		}
-		WIFI_Close(SOCKET_B);
-		//解锁
-		rt_mutex_release(usr_wifi_lock);
+
+
 #endif
 	}
 
@@ -768,24 +774,15 @@ int resend_record()
 #ifdef WIFI_USE 
 	}else
 	{
-		//连接服务器失败,使用WIFI传输数据
-		rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
-		if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
+		while(search_readflag(data,time,&flag,'2'))
 		{
-			writeconnecttime();
-			//创建成功
-			while(search_readflag(data,time,&flag,'2'))
-			{
-				if(1 == flag)		// 还存在需要上传的数据
-					data[78] = '1';
-				printmsg(ECU_DBG_CLIENT,data);
-				res = wifi_send_record(data, time);
-				if(-1 == res)
-					break;
-			}
+			if(1 == flag)		// 还存在需要上传的数据
+				data[78] = '1';
+			printmsg(ECU_DBG_CLIENT,data);
+			res = wifi_send_record(data, time);
+			if(-1 == res)
+				break;
 		}
-		WIFI_Close(SOCKET_B);
-		rt_mutex_release(usr_wifi_lock);
 #endif
 	}
 	close_socket(fd_sock);
@@ -843,7 +840,6 @@ void client_thread_entry(void* parameter)
 #ifdef WIFI_USE			
 		}else
 		{
-			rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 			//不需要先打开，在有数据需要发送的时候打开 就行。
 			//if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
 			{
@@ -868,7 +864,6 @@ void client_thread_entry(void* parameter)
 				}
 			}
 			WIFI_Close(SOCKET_B);
-			rt_mutex_release(usr_wifi_lock);
 #endif	
 		}
 		close_socket(fd_sock);

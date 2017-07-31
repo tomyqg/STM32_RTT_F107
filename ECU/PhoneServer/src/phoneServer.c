@@ -301,7 +301,8 @@ void phone_server_thread_entry(void* parameter)
 		{
 			print2msg(ECU_DBG_WIFI,"phone_server",(char *)WIFI_RecvSocketAData);
 			WIFI_Recv_SocketA_Event = 0;
-			process_WIFI(ID_A,(char *)WIFI_RecvSocketAData);
+			SendToSocketA("123456\n",7,ID_A);
+			//process_WIFI(ID_A,(char *)WIFI_RecvSocketAData);
 		}
 		
 		rt_thread_delay(RT_TICK_PER_SECOND/2);

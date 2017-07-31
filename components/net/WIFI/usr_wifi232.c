@@ -1528,7 +1528,7 @@ int WIFI_ChangeSSID(char *SSID,char *Passwd)
 	for(index = 0;index<3;index++)
 	{
 		rt_hw_ms_delay(200);
-		ret =AT_ENTM();;
+		ret =AT_ENTM();
 		if(ret == 0) break;
 	}
 	if(ret == -1) return -1;
