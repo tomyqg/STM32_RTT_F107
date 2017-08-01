@@ -61,6 +61,8 @@
 /*  Variable Declarations                                                    */
 /*****************************************************************************/
 extern rt_mutex_t record_data_lock;
+extern rt_mutex_t usr_wifi_lock;
+
 char ecuid[13] = {'\0'};
 
 typedef struct socket_config
@@ -1048,6 +1050,7 @@ int check_inverter_abnormal_status_sent(int hour)
 			strcpy(send_buffer, "APS13AAA51A123AAA0");
 			strcat(send_buffer, ecuid);
 			strcat(send_buffer, "000000000000000000END\n");
+			rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 			SendToSocketC(send_buffer, strlen(send_buffer));
 
 			for(j=0;j<800;j++)
@@ -1056,10 +1059,11 @@ int check_inverter_abnormal_status_sent(int hour)
 				{
 					flag_failed = 1;
 					WIFI_Recv_SocketC_Event = 0;
+					break;
 				}
 				rt_hw_ms_delay(10);
 			}
-
+			rt_mutex_release(usr_wifi_lock);
 
 			if(flag_failed == 0)
 			{
@@ -1187,6 +1191,7 @@ int response_inverter_abnormal_status()
 			//逐条发送逆变器异常状态
 			while(search_statusflag(data,time,&havaflag,'1'))		//	获取一条resendflag为1的数据
 			{	
+				rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 				//发送一条逆变器异常状态信息
 				if(SendToSocketC(data, strlen(data)) < 0){
 					continue;
@@ -1197,10 +1202,11 @@ int response_inverter_abnormal_status()
 					{
 						flag_failed = 1;
 						WIFI_Recv_SocketC_Event = 0;
+						break;
 					}
 					rt_hw_ms_delay(10);
 				}
-				
+				rt_mutex_release(usr_wifi_lock);
 				if(flag_failed == 0)
 				{
 					rt_free(recv_buffer);
@@ -1423,6 +1429,7 @@ int communication_with_EMA(int next_cmd_id)
 				{
 					//ECU向EMA发送请求命令指令
 					msg_REQ(send_buffer);
+					rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 					SendToSocketC(send_buffer, strlen(send_buffer));
 					memset(send_buffer, '\0', sizeof(send_buffer));
 					for(j = 0;j<800;j++)
@@ -1431,10 +1438,11 @@ int communication_with_EMA(int next_cmd_id)
 						{
 							flag_failed = 1;
 							WIFI_Recv_SocketC_Event = 0;
+							break;
 						}
 						rt_hw_ms_delay(10);
 					}
-						
+					rt_mutex_release(usr_wifi_lock);	
 					if(flag_failed == 0)
 					{
 						rt_free(recv_buffer);

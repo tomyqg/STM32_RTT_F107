@@ -28,10 +28,66 @@
 #include "arch/sys_arch.h"
 #include "usart5.h"
 #include "client.h"
+#include "myfile.h"
+#include <lwip/netdb.h> /* 为了解析主机名，需要包含netdb.h头文件 */
+#include <lwip/sockets.h> /* 使用BSD socket，需要包含sockets.h头文件 */
 
-extern rt_mutex_t usr_wifi_lock;
+
+extern rt_mutex_t wifi_uart_lock;
 extern ecu_info ecu;
 extern inverter_info inverter[MAXINVERTERCOUNT];
+
+int getAddr(MyArray *array, int num,IPConfig_t *IPconfig)
+{
+	int i;
+	ip_addr_t addr;
+	for(i=0; i<num; i++){
+		memset(&addr,0x00,sizeof(addr));
+		if(!strlen(array[i].name))break;
+		//IP地址
+		if(!strcmp(array[i].name, "IPAddr")){
+			ipaddr_aton(array[i].value,&addr);
+			IPconfig->IPAddr.IP1 = (addr.addr&(0x000000ff))>>0;
+			IPconfig->IPAddr.IP2 = (addr.addr&(0x0000ff00))>>8;
+			IPconfig->IPAddr.IP3 = (addr.addr&(0x00ff0000))>>16;
+			IPconfig->IPAddr.IP4 = (addr.addr&(0xff000000))>>24;
+		}
+		//掩码地址
+		else if(!strcmp(array[i].name, "MSKAddr")){
+			ipaddr_aton(array[i].value,&addr);
+			IPconfig->MSKAddr.IP1 = (addr.addr&(0x000000ff))>>0;
+			IPconfig->MSKAddr.IP2 = (addr.addr&(0x0000ff00))>>8;
+			IPconfig->MSKAddr.IP3 = (addr.addr&(0x00ff0000))>>16;
+			IPconfig->MSKAddr.IP4 = (addr.addr&(0xff000000))>>24;
+		}
+		//网关地址
+		else if(!strcmp(array[i].name, "GWAddr")){
+			ipaddr_aton(array[i].value,&addr);
+			IPconfig->GWAddr.IP1 = (addr.addr&(0x000000ff))>>0;
+			IPconfig->GWAddr.IP2 = (addr.addr&(0x0000ff00))>>8;
+			IPconfig->GWAddr.IP3 = (addr.addr&(0x00ff0000))>>16;
+			IPconfig->GWAddr.IP4 = (addr.addr&(0xff000000))>>24;
+		}
+		//DNS1地址
+		else if(!strcmp(array[i].name, "DNS1Addr")){
+			ipaddr_aton(array[i].value,&addr);
+			IPconfig->DNS1Addr.IP1 = (addr.addr&(0x000000ff))>>0;
+			IPconfig->DNS1Addr.IP2 = (addr.addr&(0x0000ff00))>>8;
+			IPconfig->DNS1Addr.IP3 = (addr.addr&(0x00ff0000))>>16;
+			IPconfig->DNS1Addr.IP4 = (addr.addr&(0xff000000))>>24;
+		}
+		//DNS2地址
+		else if(!strcmp(array[i].name, "DNS2Addr")){
+			ipaddr_aton(array[i].value,&addr);
+			IPconfig->DNS2Addr.IP1 = (addr.addr&(0x000000ff))>>0;
+			IPconfig->DNS2Addr.IP2 = (addr.addr&(0x0000ff00))>>8;
+			IPconfig->DNS2Addr.IP3 = (addr.addr&(0x00ff0000))>>16;
+			IPconfig->DNS2Addr.IP4 = (addr.addr&(0xff000000))>>24;
+		}	
+	}
+	return 0;
+}
+
 	
 int ResolveWifiPasswd(char *oldPasswd,int *oldLen,char *newPasswd,int *newLen,char *passwdstring)
 {
@@ -56,10 +112,10 @@ int ResolveWifiSSID(char *SSID,int *SSIDLen,char *PassWD,int *PassWDLen,char *st
 //返回0 表示动态IP  返回1 表示固定IP   返回-1表示失败
 int ResolveWired(char *string,IP_t *IPAddr,IP_t *MSKAddr,IP_t *GWAddr,IP_t *DNS1Addr,IP_t *DNS2Addr)
 {
-	if(string[0] == 0x00)	//动态IP
+	if(string[0] == '0')	//动态IP
 	{
 		return 0;
-	}else if(string[0] == 0x01) //静态IP
+	}else if(string[0] == '1') //静态IP
 	{
 		IPAddr->IP1 = string[1];
 		IPAddr->IP2 = string[2];
@@ -204,12 +260,15 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 					ModeFlag = ResolveWired(&WIFI_RecvData[28],&IPAddr,&MSKAddr,&GWAddr,&DNS1Addr,&DNS2Addr);
 					if(ModeFlag == 0x00)		//DHCP
 					{
+						printmsg(ECU_DBG_WIFI,"dynamic IP");
 						dhcp_reset();
 					}else if (ModeFlag == 0x01)		//固定IP		
 					{
+						printmsg(ECU_DBG_WIFI,"static IP");
 						//保存网络地址
 						sprintf(buff,"IPAddr=%d.%d.%d.%d\nMSKAddr=%d.%d.%d.%d\nGWAddr=%d.%d.%d.%d\nDNS1Addr=%d.%d.%d.%d\nDNS2Addr=%d.%d.%d.%d\n",IPAddr.IP1,IPAddr.IP2,IPAddr.IP3,IPAddr.IP4,
 										MSKAddr.IP1,MSKAddr.IP2,MSKAddr.IP3,MSKAddr.IP4,GWAddr.IP1,GWAddr.IP2,GWAddr.IP3,GWAddr.IP4,DNS1Addr.IP1,DNS1Addr.IP2,DNS1Addr.IP3,DNS1Addr.IP4,DNS2Addr.IP1,DNS2Addr.IP2,DNS2Addr.IP3,DNS2Addr.IP4);
+						echo("/yuneng/staticIP.con",buff);
 						//设置固定IP
 						StaticIP(IPAddr,MSKAddr,GWAddr,DNS1Addr,DNS2Addr);
 					}
@@ -243,7 +302,7 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 						APP_Response_SearchWifiStatus(0x00,ID);
 					}else
 					{
-						APP_Response_SearchWifiStatus(0x02,ID);
+						APP_Response_SearchWifiStatus(0x01,ID);
 					}
 				}
 				break;
@@ -289,17 +348,32 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 /*****************************************************************************/
 void phone_server_thread_entry(void* parameter)
 {
+	MyArray array[5];
+	int fileflag = 0; 
+	IPConfig_t IPconfig;
 
 	get_ecuid(ecu.id);
 	readconnecttime();
+	
+	
+		
+	//3?ê??ˉIP
+	fileflag = file_get_array(array, 5, "/yuneng/staticIP.con");
+	if(fileflag == 0)
+	{
+		getAddr(array, 5,&IPconfig);
+		StaticIP(IPconfig.IPAddr,IPconfig.MSKAddr,IPconfig.GWAddr,IPconfig.DNS1Addr,IPconfig.DNS2Addr);
+	}
+
+	
 	while(1)
 	{	
 		//上锁
-		rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+		rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
 		//获取WIFI事件
 		WIFI_GetEvent();
 		//解锁
-		rt_mutex_release(usr_wifi_lock);
+		rt_mutex_release(wifi_uart_lock);
 		
 		if(WIFI_Recv_SocketA_Event == 1)
 		{

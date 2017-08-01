@@ -30,6 +30,7 @@
 #include "led.h"
 #include "version.h"
 #include "debug.h"
+#include "usart5.h"
 
 /*****************************************************************************/
 /*  Definitions                                                              */
@@ -283,6 +284,8 @@ void idwrite_thread_entry(void* parameter)
 			fp=fopen("/yuneng/ecuid.con","w");
 			fputs(ecuid,fp);
 			fclose(fp);
+			ecuid[12] = '\0';
+			WIFI_Factory(ecuid);
 			memset(ecuid,'\0',sizeof(ecuid));
 			
 			fp=fopen("/yuneng/ecuid.con","r");

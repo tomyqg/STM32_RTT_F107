@@ -126,6 +126,8 @@ static struct rt_thread phone_server_thread;
 
 rt_mutex_t record_data_lock = RT_NULL;
 rt_mutex_t usr_wifi_lock = RT_NULL;
+extern rt_mutex_t wifi_uart_lock;
+
 
 
 /*****************************************************************************/
@@ -133,59 +135,6 @@ rt_mutex_t usr_wifi_lock = RT_NULL;
 /*****************************************************************************/
 extern void cpu_usage_init(void);
 extern void cpu_usage_get(rt_uint8_t *major, rt_uint8_t *minor);
-
-
-
-int getAddr(MyArray *array, int num,IPConfig_t *IPconfig)
-{
-	int i;
-	ip_addr_t addr;
-	for(i=0; i<num; i++){
-		memset(&addr,0x00,sizeof(addr));
-		if(!strlen(array[i].name))break;
-		//IP地址
-		if(!strcmp(array[i].name, "IPAddr")){
-			ipaddr_aton(array[i].value,&addr);
-			IPconfig->IPAddr.IP1 = (addr.addr&(0x000000ff))>>0;
-			IPconfig->IPAddr.IP2 = (addr.addr&(0x0000ff00))>>8;
-			IPconfig->IPAddr.IP3 = (addr.addr&(0x00ff0000))>>16;
-			IPconfig->IPAddr.IP4 = (addr.addr&(0xff000000))>>24;
-		}
-		//掩码地址
-		else if(!strcmp(array[i].name, "MSKAddr")){
-			ipaddr_aton(array[i].value,&addr);
-			IPconfig->MSKAddr.IP1 = (addr.addr&(0x000000ff))>>0;
-			IPconfig->MSKAddr.IP2 = (addr.addr&(0x0000ff00))>>8;
-			IPconfig->MSKAddr.IP3 = (addr.addr&(0x00ff0000))>>16;
-			IPconfig->MSKAddr.IP4 = (addr.addr&(0xff000000))>>24;
-		}
-		//网关地址
-		else if(!strcmp(array[i].name, "GWAddr")){
-			ipaddr_aton(array[i].value,&addr);
-			IPconfig->GWAddr.IP1 = (addr.addr&(0x000000ff))>>0;
-			IPconfig->GWAddr.IP2 = (addr.addr&(0x0000ff00))>>8;
-			IPconfig->GWAddr.IP3 = (addr.addr&(0x00ff0000))>>16;
-			IPconfig->GWAddr.IP4 = (addr.addr&(0xff000000))>>24;
-		}
-		//DNS1地址
-		else if(!strcmp(array[i].name, "DNS1Addr")){
-			ipaddr_aton(array[i].value,&addr);
-			IPconfig->DNS1Addr.IP1 = (addr.addr&(0x000000ff))>>0;
-			IPconfig->DNS1Addr.IP2 = (addr.addr&(0x0000ff00))>>8;
-			IPconfig->DNS1Addr.IP3 = (addr.addr&(0x00ff0000))>>16;
-			IPconfig->DNS1Addr.IP4 = (addr.addr&(0xff000000))>>24;
-		}
-		//DNS2地址
-		else if(!strcmp(array[i].name, "DNS2Addr")){
-			ipaddr_aton(array[i].value,&addr);
-			IPconfig->DNS2Addr.IP1 = (addr.addr&(0x000000ff))>>0;
-			IPconfig->DNS2Addr.IP2 = (addr.addr&(0x0000ff00))>>8;
-			IPconfig->DNS2Addr.IP3 = (addr.addr&(0x00ff0000))>>16;
-			IPconfig->DNS2Addr.IP4 = (addr.addr&(0xff000000))>>24;
-		}	
-	}
-	return 0;
-}
 
 /*****************************************************************************/
 /* Function Description:                                                     */
@@ -202,9 +151,7 @@ int getAddr(MyArray *array, int num,IPConfig_t *IPconfig)
 /*****************************************************************************/
 void rt_init_thread_entry(void* parameter)
 {
-	//MyArray array[5];
-	//int fileflag = 0; 
-	//IPConfig_t IPconfig;
+
     {
         extern void rt_platform_init(void);
         rt_platform_init();
@@ -289,17 +236,11 @@ void rt_init_thread_entry(void* parameter)
 	}
 	/* WiFi Serial Initialize*/
 	usr_wifi_lock = rt_mutex_create("usr_wifi_lock", RT_IPC_FLAG_FIFO);
+	/* WiFi Serial Initialize*/
+	wifi_uart_lock = rt_mutex_create("wifi_uart_lock", RT_IPC_FLAG_FIFO);
 
 
 	cpu_usage_init();
-	
-	//初始化IP
-	//fileflag = file_get_array(array, 5, "/yuneng/staticIP.con");
-	//if(fileflag == 0)
-	//{
-	//	getAddr(array, 5,&IPconfig);
-	//	StaticIP(IPconfig.IPAddr,IPconfig.MSKAddr,IPconfig.GWAddr,IPconfig.DNS1Addr,IPconfig.DNS2Addr);
-	//}
 }
 
 /*****************************************************************************/
@@ -356,7 +297,7 @@ static void led_thread_entry(void* parameter)
 #ifdef THREAD_PRIORITY_LAN8720_RST
 static void lan8720_rst_thread_entry(void* parameter)
 {
-    int value;
+  int value;
 	
 	  while (1)
     {

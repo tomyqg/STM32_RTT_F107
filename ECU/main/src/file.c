@@ -1212,7 +1212,7 @@ void initPath(void)
 	mkdir("/home/record/power",0x777);
 	mkdir("/home/record/energy",0x777);
 	rt_hw_ms_delay(20);
-	echo("/yuneng/area.con","SAA");
+	echo("/yuneng/area.con","NA");
 	rt_hw_ms_delay(20);
 	echo("/yuneng/channel.con","0x10");
 	rt_hw_ms_delay(20);
@@ -1463,8 +1463,10 @@ int initsystem(char *ecuid,char *mac)
 	fileecuid[12] = '\n';
 	echo("/yuneng/ecuid.con",fileecuid);
 	rt_hw_ms_delay(20);
-	echo("/yuneng/area.con","SAA");
+	echo("/yuneng/area.con","NA");
 	rt_hw_ms_delay(20);
+	mkdir("/home/record/power",0x777);
+	mkdir("/home/record/energy",0x777);
 	echo("/yuneng/ecumac.con",mac);
 	rt_hw_ms_delay(20);
 	echo("/yuneng/channel.con","0x10");

@@ -35,6 +35,8 @@
 /*****************************************************************************/
 extern rt_mutex_t record_data_lock;
 extern ecu_info ecu;
+extern rt_mutex_t usr_wifi_lock;
+
 
 /*****************************************************************************/
 /*  Function Implementations                                                 */
@@ -649,8 +651,9 @@ int wifi_socketb_format(char *data ,int length)
 int wifi_send_record(char *sendbuff, char *send_date_time)		//通过WIFI发送数据到EMA  注意在存储的时候结尾未添加'\n'  在发送时的时候记得添加
 {
 	int j = 0;
+	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 	SendToSocketB(sendbuff, strlen(sendbuff));
-
+	
 	for(j = 0;j<800;j++)
 	{
 		if(WIFI_Recv_SocketB_Event == 1)
@@ -662,10 +665,12 @@ int wifi_send_record(char *sendbuff, char *send_date_time)		//通过WIFI发送数据到
 				update_send_flag(send_date_time);
 			clear_send_flag((char *)WIFI_RecvSocketBData);
 			WIFI_Recv_SocketB_Event = 0;
+			rt_mutex_release(usr_wifi_lock);
 			return 0;
 		}
 		rt_hw_ms_delay(10);
 	}
+	rt_mutex_release(usr_wifi_lock);
 	return -1;
 
 }
@@ -719,6 +724,7 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 		while(1)
 		{
 			memset(readbuff, '\0', sizeof(readbuff));
+			rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 			SendToSocketB(sendbuff, strlen(sendbuff));	
 			for(j=0;j < 800;j++)
 			{
@@ -730,9 +736,11 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 					clear_send_flag((char *)WIFI_RecvSocketBData);
 
 					WIFI_Recv_SocketB_Event = 0;
+					rt_mutex_release(usr_wifi_lock);
 					return 0;
 				}
 			}
+			rt_mutex_release(usr_wifi_lock);
 			if(flag_failed == 0)
 			{
 				break;

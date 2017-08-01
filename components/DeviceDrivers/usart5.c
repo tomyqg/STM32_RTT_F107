@@ -31,7 +31,7 @@
 #define WIFI_GPIO                   GPIOC
 #define WIFI_PIN                    (GPIO_Pin_6)
 
-extern rt_mutex_t usr_wifi_lock;
+rt_mutex_t wifi_uart_lock = RT_NULL;
 /*****************************************************************************/
 /*  Function Implementations                                                 */
 /*****************************************************************************/
@@ -138,6 +138,7 @@ void uart5_init(u32 bound){
     GPIO_InitStructure.GPIO_Pin   = WIFI_PIN;
     GPIO_Init(WIFI_GPIO, &GPIO_InitStructure);
 	GPIO_SetBits(WIFI_GPIO, WIFI_PIN);
+	
 
 }
 
@@ -708,41 +709,63 @@ void clear_WIFI(void)
 //进入AT模式
 int AT(void)
 {
-	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+	int i = 0,flag_failed = 0;
+	delayMS(400);
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
 	clear_WIFI();
 	//先向模块写入"+++"然后再写入"a" 写入+++返回"a" 写入"a"返回+ok
 	WIFI_SendData("+++", 3);
 	//获取到a
-	delayMS(350);
-	if(Cur <1)
+	
+	for(i = 0;i< 70;i++)
 	{
-		rt_mutex_release(usr_wifi_lock);
+		delayMS(5);
+		if(Cur >= 1) 
+		{
+			flag_failed = 1;
+			break;
+		}
+		
+	}
+	if(flag_failed == 0)
+	{
+		rt_mutex_release(wifi_uart_lock);
 		clear_WIFI();
 		return -1;
 	}else
 	{
 		if(memcmp(USART_RX_BUF,"a",1))
 		{
-			rt_mutex_release(usr_wifi_lock);
+			rt_mutex_release(wifi_uart_lock);
 			clear_WIFI();
 			return -1;
 		}
 	}
-	
+	flag_failed = 0;
 	//接着发送a
 	clear_WIFI();
 	WIFI_SendData("a", 1);
-	delayMS(350);
-	if(Cur < 3)
+	
+	for(i = 0;i< 70;i++)
 	{
-		rt_mutex_release(usr_wifi_lock);
+		delayMS(5);
+		if(Cur >= 3)
+		{
+			flag_failed = 1;
+			break;
+		}
+	}
+	
+	if(flag_failed == 0)
+	{
+		rt_mutex_release(wifi_uart_lock);
 		clear_WIFI();
 		return -1;
 	}else
 	{
 		if(memcmp(USART_RX_BUF,"+ok",3))
 		{
-			rt_mutex_release(usr_wifi_lock);
+			rt_mutex_release(wifi_uart_lock);
 			clear_WIFI();
 			return -1;
 		}
@@ -750,7 +773,7 @@ int AT(void)
 	}
 	SEGGER_RTT_printf(0, "AT :a+ok\n");
 	clear_WIFI();
-	rt_mutex_release(usr_wifi_lock);
+	rt_mutex_release(wifi_uart_lock);
 	return 0;
 }
 
@@ -758,21 +781,34 @@ int AT(void)
 //切换回原来的工作模式    OK
 int AT_ENTM(void)
 {
-	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+	int i = 0,flag_failed = 0;
+	
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
 	clear_WIFI();
 	//发送"AT+ENTM\n",返回+ok
 	WIFI_SendData("AT+ENTM\n", 8);
-	delayMS(300);
-	if(Cur < 10)
+	
+	for(i = 0;i< 60;i++)
 	{
-		rt_mutex_release(usr_wifi_lock);
+		delayMS(5);
+		if(Cur >= 11) 
+		{
+			flag_failed = 1;
+			break;
+		}
+		
+	}
+	
+	if(flag_failed == 0)
+	{
+		rt_mutex_release(wifi_uart_lock);
 		clear_WIFI();
 		return -1;
 	}else
 	{
 		if(memcmp(&USART_RX_BUF[9],"+ok",3))
 		{
-			rt_mutex_release(usr_wifi_lock);
+			rt_mutex_release(wifi_uart_lock);
 			clear_WIFI();
 			return -1;
 		}
@@ -780,7 +816,7 @@ int AT_ENTM(void)
 	}
 	SEGGER_RTT_printf(0, "AT+ENTM :+ok\n");
 	clear_WIFI();
-	rt_mutex_release(usr_wifi_lock);
+	rt_mutex_release(wifi_uart_lock);
 	return 0;
 	
 }
@@ -788,28 +824,42 @@ int AT_ENTM(void)
 //usr 版本信息
 int AT_VER(void)
 {
-	int j = 0;
-	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+	int i = 0,flag_failed = 0;
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
 	clear_WIFI();
 	WIFI_SendData("AT+VER\n", 7);
 
-	for(j = 0;j < 300;j++)
+	for(i = 0;i< 200;i++)
 	{
-		if(Cur >= 11)
+		delayMS(5);
+		if(Cur >= 10) 
 		{
-			if(!memcmp(&USART_RX_BUF[8],"+ok",3))
-			{
-				rt_mutex_release(usr_wifi_lock);
-				print2msg(ECU_DBG_WIFI,"Version",(char *)USART_RX_BUF);
-				clear_WIFI();
-				return 0;
-			}
+			flag_failed = 1;
+			break;
 		}
-		rt_hw_ms_delay(10);
+		
 	}
+	
+	if(flag_failed == 0)
+	{
+		rt_mutex_release(wifi_uart_lock);
+		clear_WIFI();
+		return -1;
+	}else
+	{
+		if(memcmp(&USART_RX_BUF[8],"+ok",3))
+		{
+			rt_mutex_release(wifi_uart_lock);
+			print2msg(ECU_DBG_WIFI,"Version",(char *)USART_RX_BUF);
+			clear_WIFI();
+			return 0;
+		}
+	}
+	
+
 	printmsg(ECU_DBG_WIFI,"AT_VER WIFI Get reply time out 1");
 	clear_WIFI();
-	rt_mutex_release(usr_wifi_lock);
+	rt_mutex_release(wifi_uart_lock);
 	return -1;
 
 }
@@ -817,122 +867,245 @@ int AT_VER(void)
 
 int AT_Z(void)
 {
-	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+	int i = 0,flag_failed = 0;
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
 	clear_WIFI();
 	//发送"AT+Z\n",返回+ok
 	WIFI_SendData("AT+Z\n", 5);
-	delayMS(300);
-	if(Cur < 6)
+	
+	for(i = 0;i< 200;i++)
 	{
-		rt_mutex_release(usr_wifi_lock);
+		delayMS(5);
+		if(Cur >= 8) 
+		{
+			flag_failed = 1;
+			break;
+		}
+		
+	}
+	
+	if(flag_failed == 0)
+	{
+		rt_mutex_release(wifi_uart_lock);
 		return -1;
 	}else
 	{
 		if(memcmp(&USART_RX_BUF[6],"+ok",3))
 		{
-			rt_mutex_release(usr_wifi_lock);
+			rt_mutex_release(wifi_uart_lock);
 			return -1;
 		}
 
 	}
 	SEGGER_RTT_printf(0, "AT+Z :+ok\n");
 	clear_WIFI();
-	rt_mutex_release(usr_wifi_lock);
+	rt_mutex_release(wifi_uart_lock);
 	return 0;
 	
 }
 
-//设置WIFI SSID
+//设置连接无线路由器SSID
+int AT_WSSSID(char *SSSID)
+{
+	int i = 0,flag_failed = 0;
+	char AT[100] = { '\0' };
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
+	clear_WIFI();
+	//发送"AT+WSSSID\n",返回+ok
+	sprintf(AT,"AT+WSSSID=%s\n",SSSID);
+	SEGGER_RTT_printf(0, "%s",AT);
+	WIFI_SendData(AT, (strlen(AT)+1));
+	delayMS(5);
+	for(i = 0;i< 200;i++)
+	{
+		delayMS(5);
+		if(Cur >= (strlen(AT)+ 4)) 
+		{
+			flag_failed = 1;
+			break;
+		}
+		
+	}
+	
+	if(flag_failed == 0)
+	{
+		rt_mutex_release(wifi_uart_lock);
+		return -1;
+	}else
+	{
+		if(memcmp(&USART_RX_BUF[strlen(AT)+1],"+ok",3))
+		{
+			rt_mutex_release(wifi_uart_lock);
+			return -1;
+		}
+	}
+	SEGGER_RTT_printf(0, "AT+WSSSID :+ok\n");
+	clear_WIFI();
+	rt_mutex_release(wifi_uart_lock);
+	return 0;
+}
 
+//设置连接路由器KEY
+int AT_WSKEY(char *SKEY)
+{
+	int i = 0,flag_failed = 0;
+	char AT[100] = { '\0' };
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
+	clear_WIFI();
+	//发送"AT+WSSSID\n",返回+ok
+	sprintf(AT,"AT+WSKEY=WPA2PSK,AES,%s\n",SKEY);
+	SEGGER_RTT_printf(0, "%s",AT);
+	WIFI_SendData(AT, (strlen(AT)+1));
+	
+	for(i = 0;i< 200;i++)
+	{
+		delayMS(5);
+		if(Cur >= (strlen(AT)+4)) 
+		{
+			flag_failed = 1;
+			break;
+		}
+		
+	}
+	
+	if(flag_failed == 0)
+	{
+		rt_mutex_release(wifi_uart_lock);
+		return -1;
+	}else
+	{
+		if(memcmp(&USART_RX_BUF[strlen(AT)+1],"+ok",3))
+		{
+			rt_mutex_release(wifi_uart_lock);
+			return -1;
+		}
+	}
+	SEGGER_RTT_printf(0, "AT+WSSSID :+ok\n");
+	clear_WIFI();
+	rt_mutex_release(wifi_uart_lock);
+	return 0;
+}
+
+//设置WIFI SSID
 int AT_WAP(char *ECUID12)
 {
+	int i = 0,flag_failed = 0;
 	char AT[100] = { '\0' };
-	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
 	clear_WIFI();
 	//发送"AT+WAKEY\n",返回+ok
 	sprintf(AT,"AT+WAP=11BGN,ECU_R_%s,Auto\n",ECUID12);
 	SEGGER_RTT_printf(0, "%s",AT);
 	WIFI_SendData(AT, (strlen(AT)+1));
 	
-	delayMS(1000);
-	
-	if(Cur < 10)
+	for(i = 0;i< 200;i++)
 	{
-		rt_mutex_release(usr_wifi_lock);
+		delayMS(5);
+		if(Cur >= (strlen(AT)+4)) 
+		{
+			flag_failed = 1;
+			break;
+		}
+		
+	}
+	
+	if(flag_failed == 0)
+	{
+		rt_mutex_release(wifi_uart_lock);
 		return -1;
 	}else
 	{
 		if(memcmp(&USART_RX_BUF[strlen(AT)+1],"+ok",3))
 		{
-			rt_mutex_release(usr_wifi_lock);
+			rt_mutex_release(wifi_uart_lock);
 			return -1;
 		}
 	}
 	SEGGER_RTT_printf(0, "AT+WAP :+ok\n");
 	clear_WIFI();
-	rt_mutex_release(usr_wifi_lock);
+	rt_mutex_release(wifi_uart_lock);
 	return 0;
 }
 
 //设置WIFI密码
 int AT_WAKEY(char *NewPasswd)
 {
+	int i = 0,flag_failed = 0;
 	char AT[100] = { '\0' };
-	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
 	clear_WIFI();
 	//发送"AT+WAKEY\n",返回+ok
 	sprintf(AT,"AT+WAKEY=WPA2PSK,AES,%s\n",NewPasswd);
 	SEGGER_RTT_printf(0, "%s",AT);
 	WIFI_SendData(AT, (strlen(AT)+1));
 	
-	delayMS(1000);
-	
-	if(Cur < 10)
+	for(i = 0;i< 200;i++)
 	{
-		rt_mutex_release(usr_wifi_lock);
+		delayMS(5);
+		if(Cur >= (strlen(AT)+4)) 
+		{
+			flag_failed = 1;
+			break;
+		}
+		
+	}
+	
+	if(flag_failed == 0)
+	{
+		rt_mutex_release(wifi_uart_lock);
 		return -1;
 	}else
 	{
 		if(memcmp(&USART_RX_BUF[strlen(AT)+1],"+ok",3))
 		{
-			rt_mutex_release(usr_wifi_lock);
+			rt_mutex_release(wifi_uart_lock);
 			return -1;
 		}
 	}
 	SEGGER_RTT_printf(0, "AT+WAKEY :+ok\n");
 	clear_WIFI();
-	rt_mutex_release(usr_wifi_lock);
+	rt_mutex_release(wifi_uart_lock);
 	return 0;
 }
 
 //设置WIFI密码
 int AT_WAKEY_Clear(void)
 {
+	int i = 0,flag_failed = 0;
 	char AT[100] = { '\0' };
-	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
 	clear_WIFI();
 	//发送"AT+WAKEY\n",返回+ok
 	sprintf(AT,"AT+WAKEY=OPEN,NONE\n");
 	SEGGER_RTT_printf(0, "%s",AT);
 	WIFI_SendData(AT, (strlen(AT)+1));
 	
-	delayMS(1000);
-	
-	if(Cur < 10)
+	for(i = 0;i< 200;i++)
 	{
-		rt_mutex_release(usr_wifi_lock);
+		delayMS(5);
+		if(Cur >= (strlen(AT)+4)) 
+		{
+			flag_failed = 1;
+			break;
+		}
+		
+	}
+	
+	if(flag_failed == 0)
+	{
+		rt_mutex_release(wifi_uart_lock);
 		return -1;
 	}else
 	{
 		if(memcmp(&USART_RX_BUF[strlen(AT)+1],"+ok",3))
 		{
-			rt_mutex_release(usr_wifi_lock);
+			rt_mutex_release(wifi_uart_lock);
 			return -1;
 		}
 	}
 	SEGGER_RTT_printf(0, "AT+WAKEY Clear :+ok\n");
 	clear_WIFI();
-	rt_mutex_release(usr_wifi_lock);
+	rt_mutex_release(wifi_uart_lock);
 	return 0;
 }
 
@@ -941,17 +1114,17 @@ int WIFI_ChangePasswd(char *NewPasswd)
 	int ret = 0,index;
 	for(index = 0;index<3;index++)
 	{
-		delayMS(200);
+		delayMS(5);
 		ret =AT();
 		if(ret == 0) break;
 	}
 	if(ret == -1) return -1;
 	
-	delayMS(200);
+	delayMS(5);
 	
 	for(index = 0;index<3;index++)
 	{
-		delayMS(200);
+		delayMS(5);
 		ret =AT_WAKEY(NewPasswd);
 		if(ret == 0) break;
 	}
@@ -959,7 +1132,7 @@ int WIFI_ChangePasswd(char *NewPasswd)
 	{
 		for(index = 0;index<3;index++)
 		{
-			delayMS(200);
+			delayMS(5);
 			ret =AT_ENTM();;
 			if(ret == 0) break;
 		}
@@ -969,14 +1142,14 @@ int WIFI_ChangePasswd(char *NewPasswd)
 	
 	for(index = 0;index<3;index++)
 	{
-		delayMS(200);
+		delayMS(5);
 		ret =AT_Z();
 		if(ret == 0) return 0;
 	}
 	
 	for(index = 0;index<3;index++)
 	{
-		delayMS(200);
+		delayMS(5);
 		ret =AT_ENTM();;
 		if(ret == 0) break;
 	}
@@ -1000,7 +1173,7 @@ int WIFI_SoftReset(void)
 	int ret = 0,index;
 	for(index = 0;index<3;index++)
 	{
-		delayMS(200);
+		delayMS(5);
 		ret =AT();
 		if(ret == 0) break;
 	}
@@ -1008,7 +1181,7 @@ int WIFI_SoftReset(void)
 	{
 		for(index = 0;index<3;index++)
 		{
-			delayMS(200);
+			delayMS(5);
 			ret =AT_ENTM();
 			if(ret == 0) break;
 		}
@@ -1016,18 +1189,18 @@ int WIFI_SoftReset(void)
 		return -1;
 	}	
 	
-	delayMS(200);	
+	delayMS(5);	
 	
 	for(index = 0;index<3;index++)
 	{
-		delayMS(200);
+		delayMS(5);
 		ret =AT_Z();
 		if(ret == 0) return 0;
 	}
 	
 	for(index = 0;index<3;index++)
 	{
-		delayMS(200);
+		delayMS(5);
 		ret =AT_ENTM();;
 		if(ret == 0) break;
 	}
@@ -1045,7 +1218,7 @@ int WIFI_ClearPasswd(void)
 	int ret = 0,index;
 	for(index = 0;index<3;index++)
 	{
-		delayMS(200);
+		delayMS(5);
 		ret =AT();
 		if(ret == 0) break;
 	}
@@ -1053,7 +1226,7 @@ int WIFI_ClearPasswd(void)
 	{
 		for(index = 0;index<3;index++)
 		{
-			delayMS(200);
+			delayMS(5);
 			ret =AT_ENTM();
 			if(ret == 0) break;
 		}
@@ -1061,11 +1234,11 @@ int WIFI_ClearPasswd(void)
 		return -1;
 	}	
 	
-	delayMS(200);
+	delayMS(5);
 	
 	for(index = 0;index<3;index++)
 	{
-		delayMS(200);
+		delayMS(5);
 		ret = AT_WAKEY_Clear();
 		if(ret == 0) break;
 	}
@@ -1073,7 +1246,7 @@ int WIFI_ClearPasswd(void)
 	{
 		for(index = 0;index<3;index++)
 		{
-			delayMS(200);
+			delayMS(5);
 			ret =AT_ENTM();
 			if(ret == 0) break;
 		}
@@ -1083,14 +1256,14 @@ int WIFI_ClearPasswd(void)
 	
 	for(index = 0;index<3;index++)
 	{
-		delayMS(200);
+		delayMS(5);
 		ret =AT_Z();
 		if(ret == 0) return 0;
 	}
 	
 	for(index = 0;index<3;index++)
 	{
-		delayMS(200);
+		delayMS(5);
 		ret =AT_ENTM();;
 		if(ret == 0) break;
 	}
@@ -1107,7 +1280,7 @@ int WIFI_Test(void)
 	int ret = 0,index;
 	for(index = 0;index<3;index++)
 	{
-		delayMS(200);
+		delayMS(5);
 		ret =AT();
 		if(ret == 0) break;
 	}
@@ -1115,7 +1288,7 @@ int WIFI_Test(void)
 	{
 		for(index = 0;index<3;index++)
 		{
-			delayMS(200);
+			delayMS(5);
 			ret =AT_ENTM();
 			if(ret == 0)return 0;
 		}
@@ -1125,7 +1298,7 @@ int WIFI_Test(void)
 	
 	for(index = 0;index<3;index++)
 	{
-		delayMS(200);
+		delayMS(5);
 		ret =AT_ENTM();
 		if(ret == 0) return 0;
 	}
@@ -1138,7 +1311,7 @@ int WIFI_Factory(char *ECUID12)
 	int ret = 0,index;
 	for(index = 0;index<3;index++)
 	{
-		delayMS(200);
+		delayMS(5);
 		ret =AT();
 		if(ret == 0) break;
 	}
@@ -1146,7 +1319,7 @@ int WIFI_Factory(char *ECUID12)
 	{
 		for(index = 0;index<3;index++)
 		{
-			delayMS(200);
+			delayMS(5);
 			ret =AT_ENTM();
 			if(ret == 0) break;
 		}
@@ -1154,11 +1327,11 @@ int WIFI_Factory(char *ECUID12)
 		return -1;
 	}	
 	
-	delayMS(200);
+	delayMS(5);
 	
 	for(index = 0;index<3;index++)
 	{
-		delayMS(200);
+		delayMS(5);
 		ret = AT_WAP(ECUID12);
 		ret = AT_WAKEY("88888888");
 		if(ret == 0) break;
@@ -1167,7 +1340,7 @@ int WIFI_Factory(char *ECUID12)
 	{
 		for(index = 0;index<3;index++)
 		{
-			delayMS(200);
+			delayMS(5);
 			ret =AT_ENTM();
 			if(ret == 0) break;
 		}
@@ -1177,14 +1350,14 @@ int WIFI_Factory(char *ECUID12)
 	
 	for(index = 0;index<3;index++)
 	{
-		delayMS(200);
+		delayMS(5);
 		ret =AT_Z();
 		if(ret == 0) return 0;
 	}
 	
 	for(index = 0;index<3;index++)
 	{
-		delayMS(200);
+		delayMS(5);
 		ret =AT_ENTM();;
 		if(ret == 0) break;
 	}
@@ -1203,7 +1376,7 @@ int WIFI_Create(eSocketType Type)
 	char send[50] = {'\0'};
 	char recv[255] = { '\0' };
 	int i = 0,j = 0;
-	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
 	send[0]= 0x65;
 	if(Type == SOCKET_B)
 		send[1]= 0x62;
@@ -1232,24 +1405,24 @@ int WIFI_Create(eSocketType Type)
 					{
 						//创建SOCKET 成功
 						printmsg(ECU_DBG_WIFI,"WIFI_CreateSocket Successful");
-						rt_mutex_release(usr_wifi_lock);
+						rt_mutex_release(wifi_uart_lock);
 						clear_WIFI();
 						return 0;
 					}else
 					{
 						//创建SOCKET 失败
 						printmsg(ECU_DBG_WIFI,"WIFI_CreateSocket Failed");
-						rt_mutex_release(usr_wifi_lock);
+						rt_mutex_release(wifi_uart_lock);
 						clear_WIFI();
 						return -1;
 					}
 					
 				}
-				rt_hw_ms_delay(10);
+				delayMS(10);
 		}
 		printmsg(ECU_DBG_WIFI,"WIFI_CreateSocket WIFI Get reply time out 1");
 	}	
-	rt_mutex_release(usr_wifi_lock);
+	rt_mutex_release(wifi_uart_lock);
 	clear_WIFI();
 	return -1;
 }
@@ -1264,7 +1437,7 @@ int WIFI_Close(eSocketType Type)
 	if(1 != WIFI_QueryStatus(Type))
 		return -1;
 
-	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
 	send[0]= 0x65;
 	if(Type == SOCKET_B)
 		send[1]= 0x62;
@@ -1293,24 +1466,24 @@ int WIFI_Close(eSocketType Type)
 					{
 						//创建SOCKET 成功
 						printmsg(ECU_DBG_WIFI,"WIFI_CloseSocket Successful");
-						rt_mutex_release(usr_wifi_lock);
+						rt_mutex_release(wifi_uart_lock);
 						clear_WIFI();
 						return 0;
 					}else
 					{
 						//创建SOCKET 失败
 						printmsg(ECU_DBG_WIFI,"WIFI_CloseSocket Failed");
-						rt_mutex_release(usr_wifi_lock);
+						rt_mutex_release(wifi_uart_lock);
 						clear_WIFI();
 						return -1;
 					}
 					
 				}
-				rt_hw_ms_delay(10);
+				delayMS(10);
 		}
 		printmsg(ECU_DBG_WIFI,"WIFI_CreateSocket WIFI Get reply time out 1");
 	}	
-	rt_mutex_release(usr_wifi_lock);
+	rt_mutex_release(wifi_uart_lock);
 	clear_WIFI();
 	return -1;
 
@@ -1323,7 +1496,7 @@ int WIFI_QueryStatus(eSocketType Type)
 	char recv[255] = { '\0' };
 	int i = 0,j = 0;
 	clear_WIFI();
-	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
 	send[0]= 0x65;
 	if(Type == SOCKET_B)
 		send[1]= 0x62;
@@ -1352,24 +1525,24 @@ int WIFI_QueryStatus(eSocketType Type)
 					{
 						//创建SOCKET 成功
 						printmsg(ECU_DBG_WIFI,"WIFI_QueryStatus Successful");
-						rt_mutex_release(usr_wifi_lock);
+						rt_mutex_release(wifi_uart_lock);
 						clear_WIFI();
 						return 0;
 					}else
 					{
 						//创建SOCKET 失败
 						printmsg(ECU_DBG_WIFI,"WIFI_QueryStatus Failed");
-						rt_mutex_release(usr_wifi_lock);
+						rt_mutex_release(wifi_uart_lock);
 						clear_WIFI();
 						return -1;
 					}
 					
 				}
-				rt_hw_ms_delay(10);
+				delayMS(10);
 		}
 		printmsg(ECU_DBG_WIFI,"WIFI_CreateSocket WIFI Get reply time out 1");
 	}	
-	rt_mutex_release(usr_wifi_lock);
+	rt_mutex_release(wifi_uart_lock);
 	clear_WIFI();
 	return -1;
 }
@@ -1382,7 +1555,6 @@ int SendToSocketA(char *data ,int length,unsigned char ID[8])
 	sprintf(sendbuff,"a%c%c%c%c%c%c%c%c",ID[0],ID[1],ID[2],ID[3],ID[4],ID[5],ID[6],ID[7]);
 	memcpy(&sendbuff[9],data,length);
 	clear_WIFI();
-
 	WIFI_SendData(sendbuff, (length+9));
 	
 	free(sendbuff);
@@ -1455,6 +1627,69 @@ int SendToSocketC(char *data ,int length)
 
 int WIFI_ChangeSSID(char *SSID,char *Passwd)
 {
+		int ret = 0,index;
+	for(index = 0;index<3;index++)
+	{
+		delayMS(5);
+		ret =AT();
+		if(ret == 0) break;
+	}
+	if(ret == -1) return -1;
+	
+	delayMS(5);
+	
+	for(index = 0;index<3;index++)
+	{
+		delayMS(5);
+		ret =AT_WSSSID(SSID);
+		if(ret == 0) break;
+	}
+	if(ret == -1)
+	{
+		for(index = 0;index<3;index++)
+		{
+			delayMS(5);
+			ret =AT_ENTM();;
+			if(ret == 0) break;
+		}
+	
+		return -1;
+	}	
+
+	for(index = 0;index<3;index++)
+	{
+		delayMS(5);
+		ret =AT_WSKEY(Passwd);
+		if(ret == 0) break;
+	}
+	if(ret == -1)
+	{
+		for(index = 0;index<3;index++)
+		{
+			delayMS(5);
+			ret =AT_ENTM();;
+			if(ret == 0) break;
+		}
+	
+		return -1;
+	}	
+
+	for(index = 0;index<3;index++)
+	{
+		delayMS(5);
+		ret =AT_Z();
+		if(ret == 0) return 0;
+	}
+	
+	for(index = 0;index<3;index++)
+	{
+		delayMS(5);
+		ret =AT_ENTM();
+		if(ret == 0) break;
+	}
+	if(ret == -1) return -1;
+	
+	WIFI_Reset();	
 	return 0;
 }
 
