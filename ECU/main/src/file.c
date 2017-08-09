@@ -1226,7 +1226,7 @@ void initPath(void)
 	echo("/yuneng/ftpadd.con", "IP=60.190.131.190\nPort=9219\nuser=zhyf\npassword=yuneng\n");
 	//echo("/yuneng/ftpadd.con", "IP=192.168.1.103\nPort=21\nuser=admin\npassword=admin\n");
 	rt_hw_ms_delay(20);
-	echo("/yuneng/datacent.con","Domain=111.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
+	echo("/yuneng/datacent.con","Domain=eee.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
 	rt_hw_ms_delay(20);
 	echo("/home/data/power","");
 	rt_hw_ms_delay(20);
@@ -1474,7 +1474,7 @@ int initsystem(char *ecuid,char *mac)
 	echo("/yuneng/limiteid.con","1");
 	rt_hw_ms_delay(20);
 	//echo("/yuneng/control.con","Timeout=10\nReport_Interval=15\nDomain=eee.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
-	echo("/yuneng/control.con","Timeout=10\nReport_Interval=5\nDomain=111.apsema.com\nIP=139.168.200.158\nPort1=8997\nPort2=8997\n");
+	echo("/yuneng/control.con","Timeout=15\nReport_Interval=5\nDomain=111.apsema.com\nIP=139.168.200.158\nPort1=8997\nPort2=8997\n");
 	//echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.100\nPort1=8997\nPort2=8997\n");
 	rt_hw_ms_delay(20);
 	echo("/yuneng/vernum.con","2\n");

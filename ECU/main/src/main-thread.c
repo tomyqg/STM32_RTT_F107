@@ -250,8 +250,6 @@ void main_thread_entry(void* parameter)
 			
 			if(ecu.count>0)
 			{
-				ecu.system_power = 277;
-				ecu.current_energy = 0.23;
 				save_system_power(ecu.system_power,ecu.broadcast_time);			//保存系统功率
 				update_daily_energy(ecu.current_energy,ecu.broadcast_time);		//保存每日发电量
 				update_monthly_energy(ecu.current_energy,ecu.broadcast_time);	//保存每月的发电量

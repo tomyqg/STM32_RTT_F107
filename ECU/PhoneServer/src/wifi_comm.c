@@ -69,10 +69,10 @@ void APP_Response_BaseInfo(unsigned char *ID,stBaseInfo baseInfo)
 	SendData[packlength++] = '0';
 	SendData[packlength++] = '1';
 	
-	SendData[packlength++] = (baseInfo.LastSystemPower/16777216)%256;
-	SendData[packlength++] = (baseInfo.LastSystemPower/65536)%256;
-	SendData[packlength++] = (baseInfo.LastSystemPower/256)%256;
-	SendData[packlength++] =  baseInfo.LastSystemPower%256;
+	SendData[packlength++] = (baseInfo.LifttimeEnergy/16777216)%256;
+	SendData[packlength++] = (baseInfo.LifttimeEnergy/65536)%256;
+	SendData[packlength++] = (baseInfo.LifttimeEnergy/256)%256;
+	SendData[packlength++] =  baseInfo.LifttimeEnergy%256;
 
 	SendData[packlength++] = (baseInfo.LastSystemPower/16777216)%256;
 	SendData[packlength++] = (baseInfo.LastSystemPower/65536)%256;
