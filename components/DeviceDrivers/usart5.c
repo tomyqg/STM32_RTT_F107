@@ -771,7 +771,7 @@ int AT(void)
 		}
 
 	}
-	SEGGER_RTT_printf(0, "AT :a+ok\n");
+	printf("AT :a+ok\n");
 	clear_WIFI();
 	rt_mutex_release(wifi_uart_lock);
 	return 0;
@@ -788,7 +788,7 @@ int AT_ENTM(void)
 	//发送"AT+ENTM\n",返回+ok
 	WIFI_SendData("AT+ENTM\n", 8);
 	
-	for(i = 0;i< 60;i++)
+	for(i = 0;i< 400;i++)
 	{
 		delayMS(5);
 		if(Cur >= 11) 
@@ -814,7 +814,7 @@ int AT_ENTM(void)
 		}
 
 	}
-	SEGGER_RTT_printf(0, "AT+ENTM :+ok\n");
+	printf("AT+ENTM :+ok\n");
 	clear_WIFI();
 	rt_mutex_release(wifi_uart_lock);
 	return 0;
@@ -829,7 +829,7 @@ int AT_VER(void)
 	clear_WIFI();
 	WIFI_SendData("AT+VER\n", 7);
 
-	for(i = 0;i< 200;i++)
+	for(i = 0;i< 400;i++)
 	{
 		delayMS(5);
 		if(Cur >= 10) 
@@ -847,7 +847,7 @@ int AT_VER(void)
 		return -1;
 	}else
 	{
-		if(memcmp(&USART_RX_BUF[8],"+ok",3))
+		if(memcmp(&USART_RX_BUF[7],"+ok",3))
 		{
 			rt_mutex_release(wifi_uart_lock);
 			print2msg(ECU_DBG_WIFI,"Version",(char *)USART_RX_BUF);
@@ -873,7 +873,7 @@ int AT_Z(void)
 	//发送"AT+Z\n",返回+ok
 	WIFI_SendData("AT+Z\n", 5);
 	
-	for(i = 0;i< 200;i++)
+	for(i = 0;i< 400;i++)
 	{
 		delayMS(5);
 		if(Cur >= 8) 
@@ -897,7 +897,7 @@ int AT_Z(void)
 		}
 
 	}
-	SEGGER_RTT_printf(0, "AT+Z :+ok\n");
+	printf("AT+Z :+ok\n");
 	clear_WIFI();
 	rt_mutex_release(wifi_uart_lock);
 	return 0;
@@ -913,10 +913,10 @@ int AT_WSSSID(char *SSSID)
 	clear_WIFI();
 	//发送"AT+WSSSID\n",返回+ok
 	sprintf(AT,"AT+WSSSID=%s\n",SSSID);
-	SEGGER_RTT_printf(0, "%s",AT);
+	printf("%s\n",AT);
 	WIFI_SendData(AT, (strlen(AT)+1));
 	delayMS(5);
-	for(i = 0;i< 200;i++)
+	for(i = 0;i< 400;i++)
 	{
 		delayMS(5);
 		if(Cur >= (strlen(AT)+ 4)) 
@@ -939,7 +939,7 @@ int AT_WSSSID(char *SSSID)
 			return -1;
 		}
 	}
-	SEGGER_RTT_printf(0, "AT+WSSSID :+ok\n");
+	printf("AT+WSSSID :+ok\n");
 	clear_WIFI();
 	rt_mutex_release(wifi_uart_lock);
 	return 0;
@@ -954,10 +954,10 @@ int AT_WSKEY(char *SKEY)
 	clear_WIFI();
 	//发送"AT+WSSSID\n",返回+ok
 	sprintf(AT,"AT+WSKEY=WPA2PSK,AES,%s\n",SKEY);
-	SEGGER_RTT_printf(0, "%s",AT);
+	printf("%s\n",AT);
 	WIFI_SendData(AT, (strlen(AT)+1));
 	
-	for(i = 0;i< 200;i++)
+	for(i = 0;i< 400;i++)
 	{
 		delayMS(5);
 		if(Cur >= (strlen(AT)+4)) 
@@ -980,7 +980,7 @@ int AT_WSKEY(char *SKEY)
 			return -1;
 		}
 	}
-	SEGGER_RTT_printf(0, "AT+WSSSID :+ok\n");
+	printf("AT+WSSSID :+ok\n");
 	clear_WIFI();
 	rt_mutex_release(wifi_uart_lock);
 	return 0;
@@ -995,10 +995,10 @@ int AT_WAP(char *ECUID12)
 	clear_WIFI();
 	//发送"AT+WAKEY\n",返回+ok
 	sprintf(AT,"AT+WAP=11BGN,ECU_R_%s,Auto\n",ECUID12);
-	SEGGER_RTT_printf(0, "%s",AT);
+	printf("%s\n",AT);
 	WIFI_SendData(AT, (strlen(AT)+1));
 	
-	for(i = 0;i< 200;i++)
+	for(i = 0;i< 400;i++)
 	{
 		delayMS(5);
 		if(Cur >= (strlen(AT)+4)) 
@@ -1021,7 +1021,7 @@ int AT_WAP(char *ECUID12)
 			return -1;
 		}
 	}
-	SEGGER_RTT_printf(0, "AT+WAP :+ok\n");
+	printf("AT+WAP :+ok\n");
 	clear_WIFI();
 	rt_mutex_release(wifi_uart_lock);
 	return 0;
@@ -1036,10 +1036,10 @@ int AT_WAKEY(char *NewPasswd)
 	clear_WIFI();
 	//发送"AT+WAKEY\n",返回+ok
 	sprintf(AT,"AT+WAKEY=WPA2PSK,AES,%s\n",NewPasswd);
-	SEGGER_RTT_printf(0, "%s",AT);
+	printf("%s\n",AT);
 	WIFI_SendData(AT, (strlen(AT)+1));
 	
-	for(i = 0;i< 200;i++)
+	for(i = 0;i< 400;i++)
 	{
 		delayMS(5);
 		if(Cur >= (strlen(AT)+4)) 
@@ -1062,7 +1062,7 @@ int AT_WAKEY(char *NewPasswd)
 			return -1;
 		}
 	}
-	SEGGER_RTT_printf(0, "AT+WAKEY :+ok\n");
+	printf("AT+WAKEY :+ok\n");
 	clear_WIFI();
 	rt_mutex_release(wifi_uart_lock);
 	return 0;
@@ -1077,10 +1077,10 @@ int AT_WAKEY_Clear(void)
 	clear_WIFI();
 	//发送"AT+WAKEY\n",返回+ok
 	sprintf(AT,"AT+WAKEY=OPEN,NONE\n");
-	SEGGER_RTT_printf(0, "%s",AT);
+	printf("%s\n",AT);
 	WIFI_SendData(AT, (strlen(AT)+1));
 	
-	for(i = 0;i< 200;i++)
+	for(i = 0;i< 400;i++)
 	{
 		delayMS(5);
 		if(Cur >= (strlen(AT)+4)) 
@@ -1103,15 +1103,468 @@ int AT_WAKEY_Clear(void)
 			return -1;
 		}
 	}
-	SEGGER_RTT_printf(0, "AT+WAKEY Clear :+ok\n");
+	printf("AT+WAKEY Clear :+ok\n");
+	clear_WIFI();
+	rt_mutex_release(wifi_uart_lock);
+	return 0;
+}
+//配置SOCKET B 开启
+int AT_TCPB_ON(void)
+{
+	int i = 0,flag_failed = 0;
+	char AT[255] = { '\0' };
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
+	clear_WIFI();
+	sprintf(AT,"AT+TCPB=on\n");
+	printf("%s\n",AT);
+	WIFI_SendData(AT, (strlen(AT)+1));
+	
+	for(i = 0;i< 400;i++)
+	{
+		delayMS(5);
+		if(Cur >= (strlen(AT)+4)) 
+		{
+			flag_failed = 1;
+			break;
+		}
+	}
+	
+	if(flag_failed == 0)
+	{
+		rt_mutex_release(wifi_uart_lock);
+		return -1;
+	}else
+	{
+		if(memcmp(&USART_RX_BUF[strlen(AT)+1],"+ok",3))
+		{
+			rt_mutex_release(wifi_uart_lock);
+			return -1;
+		}
+	}
+	printf("AT+TCPB=on :+ok\n");
+	clear_WIFI();
+	rt_mutex_release(wifi_uart_lock);
+	return 0;
+}
+
+//配置SOCKET B IP地址
+int AT_TCPADDB(char *IP)
+{
+	int i = 0,flag_failed = 0;
+	char AT[255] = { '\0' };
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
+	clear_WIFI();
+	
+	sprintf(AT,"AT+TCPADDB=%s\n",IP);
+	printf("%s\n",AT);
+	WIFI_SendData(AT, (strlen(AT)+1));
+	
+	for(i = 0;i< 400;i++)
+	{
+		delayMS(5);
+		if(Cur >= (strlen(AT)+4)) 
+		{
+			flag_failed = 1;
+			break;
+		}
+	}
+	
+	if(flag_failed == 0)
+	{
+		rt_mutex_release(wifi_uart_lock);
+		return -1;
+	}else
+	{
+		if(memcmp(&USART_RX_BUF[strlen(AT)+1],"+ok",3))
+		{
+			rt_mutex_release(wifi_uart_lock);
+			return -1;
+		}
+	}
+	printf("AT+TCPADDB :+ok\n");
+	clear_WIFI();
+	rt_mutex_release(wifi_uart_lock);
+	return 0;
+}
+
+//配置SOCKET B IP端口
+int AT_TCPPTB(int port)
+{
+	int i = 0,flag_failed = 0;
+	char AT[255] = { '\0' };
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
+	clear_WIFI();
+	
+	sprintf(AT,"AT+TCPPTB=%d\n",port);
+	printf("%s\n",AT);
+	WIFI_SendData(AT, (strlen(AT)+1));
+	
+	for(i = 0;i< 400;i++)
+	{
+		delayMS(5);
+		if(Cur >= (strlen(AT)+4)) 
+		{
+			flag_failed = 1;
+			break;
+		}
+	}
+	
+	if(flag_failed == 0)
+	{
+		rt_mutex_release(wifi_uart_lock);
+		return -1;
+	}else
+	{
+		if(memcmp(&USART_RX_BUF[strlen(AT)+1],"+ok",3))
+		{
+			rt_mutex_release(wifi_uart_lock);
+			return -1;
+		}
+	}
+	printf("AT+TCPPTB :+ok\n");
+	clear_WIFI();
+	rt_mutex_release(wifi_uart_lock);
+	return 0;
+}
+
+//配置SOCKET C 开启
+int AT_TCPC_ON(void)
+{
+	int i = 0,flag_failed = 0;
+	char AT[255] = { '\0' };
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
+	clear_WIFI();
+	
+	sprintf(AT,"AT+TCPC=on\n");
+	printf("%s\n",AT);
+	WIFI_SendData(AT, (strlen(AT)+1));
+	
+	for(i = 0;i< 400;i++)
+	{
+		delayMS(5);
+		if(Cur >= (strlen(AT)+4)) 
+		{
+			flag_failed = 1;
+			break;
+		}
+	}
+	
+	if(flag_failed == 0)
+	{
+		rt_mutex_release(wifi_uart_lock);
+		return -1;
+	}else
+	{
+		if(memcmp(&USART_RX_BUF[strlen(AT)+1],"+ok",3))
+		{
+			rt_mutex_release(wifi_uart_lock);
+			return -1;
+		}
+	}
+	printf("AT+TCPC :+ok\n");
+	clear_WIFI();
+	rt_mutex_release(wifi_uart_lock);
+	return 0;
+}
+
+//配置SOCKET C IP端口
+int AT_TCPADDC(char *IP)
+{
+	int i = 0,flag_failed = 0;
+	char AT[255] = { '\0' };
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
+	clear_WIFI();
+	
+	sprintf(AT,"AT+TCPADDC=%s\n",IP);
+	printf("%s\n",AT);
+	WIFI_SendData(AT, (strlen(AT)+1));
+	
+	for(i = 0;i< 400;i++)
+	{
+		delayMS(5);
+		if(Cur >= (strlen(AT)+4)) 
+		{
+			flag_failed = 1;
+			break;
+		}
+	}
+	
+	if(flag_failed == 0)
+	{
+		rt_mutex_release(wifi_uart_lock);
+		return -1;
+	}else
+	{
+		if(memcmp(&USART_RX_BUF[strlen(AT)+1],"+ok",3))
+		{
+			rt_mutex_release(wifi_uart_lock);
+			return -1;
+		}
+	}
+	printf("AT+TCPADDC :+ok\n");
+	clear_WIFI();
+	rt_mutex_release(wifi_uart_lock);
+	return 0;
+}
+
+//配置SOCKET C IP端口
+int AT_TCPPTC(int port)
+{
+	int i = 0,flag_failed = 0;
+	char AT[255] = { '\0' };
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
+	clear_WIFI();
+	
+	sprintf(AT,"AT+TCPPTC=%d\n",port);
+	printf("%s\n",AT);
+	WIFI_SendData(AT, (strlen(AT)+1));
+	
+	for(i = 0;i< 400;i++)
+	{
+		delayMS(5);
+		if(Cur >= (strlen(AT)+4)) 
+		{
+			flag_failed = 1;
+			break;
+		}
+	}
+	
+	if(flag_failed == 0)
+	{
+		rt_mutex_release(wifi_uart_lock);
+		return -1;
+	}else
+	{
+		if(memcmp(&USART_RX_BUF[strlen(AT)+1],"+ok",3))
+		{
+			rt_mutex_release(wifi_uart_lock);
+			return -1;
+		}
+	}
+	printf("AT+TCPPTC:+ok\n");
+	clear_WIFI();
+	rt_mutex_release(wifi_uart_lock);
+	return 0;
+
+}
+
+//开启AP+STA功能模式
+int AT_FAPSTA_ON(void)
+{
+	int i = 0,flag_failed = 0;
+	char AT[255] = { '\0' };
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
+	clear_WIFI();
+	
+	sprintf(AT,"AT+FAPSTA=on\n");
+	printf("%s\n",AT);
+	WIFI_SendData(AT, (strlen(AT)+1));
+	
+	for(i = 0;i< 600;i++)
+	{
+		delayMS(5);
+		if(Cur >= (strlen(AT)+4)) 
+		{
+			flag_failed = 1;
+			break;
+		}
+	}
+	
+	if(flag_failed == 0)
+	{
+		rt_mutex_release(wifi_uart_lock);
+		return -1;
+	}else
+	{
+		if(memcmp(&USART_RX_BUF[strlen(AT)+1],"+ok",3))
+		{
+			rt_mutex_release(wifi_uart_lock);
+			return -1;
+		}
+	}
+	printf("AT+TCPPTC:+ok\n");
+	clear_WIFI();
+	rt_mutex_release(wifi_uart_lock);
+	return 0;
+}
+
+//设置WIFI工作模式  STA or AP
+int AT_WMODE(char *WMode)
+{
+	int i = 0,flag_failed = 0;
+	char AT[255] = { '\0' };
+	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
+	clear_WIFI();
+	
+	sprintf(AT,"AT+WMODE=%s\n",WMode);
+	printf("%s\n",AT);
+	WIFI_SendData(AT, (strlen(AT)+1));
+	
+	for(i = 0;i< 400;i++)
+	{
+		delayMS(5);
+		if(Cur >= (strlen(AT)+4)) 
+		{
+			flag_failed = 1;
+			break;
+		}
+	}
+	
+	if(flag_failed == 0)
+	{
+		rt_mutex_release(wifi_uart_lock);
+		return -1;
+	}else
+	{
+		if(memcmp(&USART_RX_BUF[strlen(AT)+1],"+ok",3))
+		{
+			rt_mutex_release(wifi_uart_lock);
+			return -1;
+		}
+	}
+	printf("AT+TCPPTC:+ok\n");
 	clear_WIFI();
 	rt_mutex_release(wifi_uart_lock);
 	return 0;
 }
 
 
+int InitTestMode(void)
+{
+	int i = 0,res = 0;
+	//进入AT模式
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT())
+		{//进入AT模式成功
+			//printf("AT Successful\n");
+			res = 0;
+			break;
+		}else
+		{//进入AT模式失败，尝试先退出AT模式。
+			//printf("AT Failed,AT_ENTM\n");
+			res = -1;
+			AT_ENTM();
+		}
+	}
+	if(res == -1) return -1;
+	//只有在进入AT模式之后才能进行后续的操作
+
+	//设置工作模式 WMODE
+		for(i = 0;i<3;i++)
+	{
+		if(0 == AT_WMODE("STA"))
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;	
+
+	//设置同时开启AP-STA模式
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_FAPSTA_ON())
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;	
+
+	//打开SOCKET B功能
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_TCPB_ON())
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;	
+	//配置SOCKET B的服务器IP地址
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_TCPADDB("139.168.200.158"))
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;
+	
+	//配置SOCKET B的服务器端口号
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_TCPPTB(8093))
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;
+	
+	//打开SOCKET C功能
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_TCPC_ON())
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;
+	
+	//配置SOCKET C的服务器IP地址
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_TCPADDC("139.168.200.158"))
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;
+	//配置SOCKET C的服务器端口号
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_TCPPTC(8997))
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;
+	
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_ENTM())
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;
+	
+	printmsg(ECU_DBG_WIFI,"WIFI_InitTestMode Over");
+	return 0;
 
 
+}
+
+int InitWorkMode(void)
+{
+	return 0;
+}
 
 
 int WIFI_ChangePasswd(char *NewPasswd)
@@ -1722,7 +2175,21 @@ FINSH_FUNCTION_EXPORT(AT_WAP , Set WAP.)
 FINSH_FUNCTION_EXPORT(AT_WAKEY , Set WAKEY.)
 FINSH_FUNCTION_EXPORT(AT_WAKEY_Clear , Clear WAKEY.)
 
+FINSH_FUNCTION_EXPORT(AT_TCPB_ON , Set TCP B ON.)
+FINSH_FUNCTION_EXPORT(AT_TCPADDB , Set TCP B ADDR.)
+FINSH_FUNCTION_EXPORT(AT_TCPPTB , Set TCP B PORT.)
+FINSH_FUNCTION_EXPORT(AT_TCPC_ON , Set TCP C ON.)
+FINSH_FUNCTION_EXPORT(AT_TCPADDC , Set TCP C ADDR.)
+FINSH_FUNCTION_EXPORT(AT_TCPPTC , Set TCP C PORT.)
 
+FINSH_FUNCTION_EXPORT(AT_FAPSTA_ON , Set FAPSTA ON.)
+FINSH_FUNCTION_EXPORT(AT_WMODE , Set WMode AP or STA.)
+
+
+
+FINSH_FUNCTION_EXPORT(InitTestMode , Init Test Mode.)
+
+FINSH_FUNCTION_EXPORT(WIFI_Factory , Set WIFI ID .)
 
 FINSH_FUNCTION_EXPORT(SendToSocketB , Send SOCKET B.)
 FINSH_FUNCTION_EXPORT(SendToSocketC , Send SOCKET C.)
