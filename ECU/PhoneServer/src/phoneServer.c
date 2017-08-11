@@ -112,31 +112,31 @@ int ResolveWifiSSID(char *SSID,int *SSIDLen,char *PassWD,int *PassWDLen,char *st
 //返回0 表示动态IP  返回1 表示固定IP   返回-1表示失败
 int ResolveWired(char *string,IP_t *IPAddr,IP_t *MSKAddr,IP_t *GWAddr,IP_t *DNS1Addr,IP_t *DNS2Addr)
 {
-	if(string[0] == '0')	//动态IP
+	if(string[1] == '0')	//动态IP
 	{
 		return 0;
-	}else if(string[0] == '1') //静态IP
+	}else if(string[1] == '1') //静态IP
 	{
-		IPAddr->IP1 = string[1];
-		IPAddr->IP2 = string[2];
-		IPAddr->IP3 = string[3];
-		IPAddr->IP4 = string[4];
-		MSKAddr->IP1 = string[5];
-		MSKAddr->IP2 = string[6];
-		MSKAddr->IP3 = string[7];
-		MSKAddr->IP4 = string[8];
-		GWAddr->IP1 = string[9];
-		GWAddr->IP2 = string[10];
-		GWAddr->IP3 = string[11];
-		GWAddr->IP4 = string[12];	
-		DNS1Addr->IP1 = string[13];	
-		DNS1Addr->IP2 = string[14];	
-		DNS1Addr->IP3 = string[15];	
-		DNS1Addr->IP4 = string[16];	
-		DNS2Addr->IP1 = string[17];	
-		DNS2Addr->IP2 = string[18];	
-		DNS2Addr->IP3 = string[19];	
-		DNS2Addr->IP4 = string[20];	
+		IPAddr->IP1 = string[2];
+		IPAddr->IP2 = string[3];
+		IPAddr->IP3 = string[4];
+		IPAddr->IP4 = string[5];
+		MSKAddr->IP1 = string[6];
+		MSKAddr->IP2 = string[7];
+		MSKAddr->IP3 = string[8];
+		MSKAddr->IP4 = string[9];
+		GWAddr->IP1 = string[10];
+		GWAddr->IP2 = string[11];
+		GWAddr->IP3 = string[12];
+		GWAddr->IP4 = string[13];	
+		DNS1Addr->IP1 = string[14];	
+		DNS1Addr->IP2 = string[15];	
+		DNS1Addr->IP3 = string[16];	
+		DNS1Addr->IP4 = string[17];	
+		DNS2Addr->IP1 = string[18];	
+		DNS2Addr->IP2 = string[19];	
+		DNS2Addr->IP3 = string[20];	
+		DNS2Addr->IP4 = string[21];	
 		return 1;
 	}else
 	{
@@ -224,11 +224,13 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 					//计算台数
 					AddNum = (Data_Len - 31)/12;
 					printf("AddNum:%d\n",AddNum);
+					APP_Response_RegisterID(0x00,ID);
 					//添加ID到文件
 					phone_add_inverter(AddNum,&WIFI_RecvData[28]);
+					
 					//重启main线程
 					restartThread(TYPE_MAIN);					
-					APP_Response_RegisterID(0x00,ID);
+					
 				}
 				break;
 				
