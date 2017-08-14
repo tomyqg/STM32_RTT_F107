@@ -10,7 +10,7 @@
 extern ecu_info ecu;
 static char SendData[4096] = {'\0'};
 
-int phone_add_inverter(int num,char *uidstring)
+int phone_add_inverter(int num,const char *uidstring)
 {
 	int i = 0;
 	char inverter_id[13] = { '\0' };
@@ -31,9 +31,6 @@ int phone_add_inverter(int num,char *uidstring)
 	echo("/yuneng/limiteid.con","1");
 	return 0;
 }
-
-
-
 
 //解析报文长度
 unsigned short packetlen(unsigned char *packet)
@@ -379,5 +376,37 @@ void APP_Response_SetWifiPasswd(char mapping,unsigned char *ID)
 	packlength = 16;
 	
 	SendToSocketA(SendData ,packlength,ID);
+}
+
+//11	AP密码设置请求
+void APP_Response_GetIDInfo(char mapping,unsigned char *ID)
+{
+	int packlength = 0;
+	memset(SendData,'\0',4096);	
+	
+	//拼接需要发送的报文
+	sprintf(SendData,"APS1100150011%02d\n",mapping);
+	packlength = 16;
+	
+	SendToSocketA(SendData ,packlength,ID);
+
+}
+//12	AP密码设置请求
+void APP_Response_GetTime(char mapping,unsigned char *ID,char *Time)
+{
+	int packlength = 0;
+	memset(SendData,'\0',4096);	
+	if(mapping = 0x00)
+	{
+		sprintf(SendData,"APS110015001200%sEND\n",mapping,Time);
+		packlength = 33;
+	}else
+	{
+		sprintf(SendData,"APS110015001201\n",mapping);
+		packlength = 16;
+	}	
+	
+	SendToSocketA(SendData ,packlength,ID);
+
 }
 

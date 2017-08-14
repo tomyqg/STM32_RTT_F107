@@ -36,6 +36,35 @@
 extern rt_mutex_t wifi_uart_lock;
 extern ecu_info ecu;
 extern inverter_info inverter[MAXINVERTERCOUNT];
+enum CommandID{
+	P0000, P0001, P0002, P0003, P0004, P0005, P0006, P0007, P0008, P0009, //0-9
+	P0010, P0011, P0012, P0013, P0014, P0015, P0016, P0017, P0018, P0019, //10-19
+	P0020, P0021, P0022, P0023, P0024, P0025, P0026, P0027, P0028, P0029, //20-29
+	P0030, P0031, P0032, P0033, P0034, P0035, P0036, P0037, P0038, P0039, //30-39
+	P0040, P0041, P0042, P0043, P0044, P0045, P0046, P0047, P0048, P0049, //40-49
+	P0050, P0051, P0052, P0053, P0054, P0055, P0056, P0057, P0058, P0059, //50-59
+};
+
+
+void (*pfun_Phone[100])(unsigned char * ID,int Data_Len,const char *recvbuffer);
+
+void add_Phone_functions(void)
+{
+  pfun_Phone[P0001] = Phone_GetBaseInfo; 				//获取基本信息请求
+  pfun_Phone[P0002] = Phone_GetGenerationData; 	//获取逆变器发电量数据
+	pfun_Phone[P0003] = Phone_GetPowerCurve; 			//获取功率曲线
+	pfun_Phone[P0004] = Phone_GetGenerationCurve; 			//获取发电量曲线
+	pfun_Phone[P0005] = Phone_RegisterID; 			//逆变器ID注册
+	pfun_Phone[P0006] = Phone_SetTime; 			//ECU时间设置
+	pfun_Phone[P0007] = Phone_SetWiredNetwork; 			//有线网络设置
+	pfun_Phone[P0008] = Phone_SetWIFI; 			//无线网络连接
+	pfun_Phone[P0009] = Phone_SearchWIFIStatus; 			//无线网络连接状态
+	pfun_Phone[P0010] = Phone_SetWIFIPasswd; 			//AP密码设置
+	pfun_Phone[P0011] = Phone_GetIDInfo; 			//获取ID信息
+	pfun_Phone[P0012] = Phone_GetTime; 			//获取时间
+
+}
+
 
 int getAddr(MyArray *array, int num,IPConfig_t *IPconfig)
 {
@@ -110,7 +139,7 @@ int ResolveWifiSSID(char *SSID,int *SSIDLen,char *PassWD,int *PassWDLen,char *st
 }	
 
 //返回0 表示动态IP  返回1 表示固定IP   返回-1表示失败
-int ResolveWired(char *string,IP_t *IPAddr,IP_t *MSKAddr,IP_t *GWAddr,IP_t *DNS1Addr,IP_t *DNS2Addr)
+int ResolveWired(const char *string,IP_t *IPAddr,IP_t *MSKAddr,IP_t *GWAddr,IP_t *DNS1Addr,IP_t *DNS2Addr)
 {
 	if(string[1] == '0')	//动态IP
 	{
@@ -145,187 +174,198 @@ int ResolveWired(char *string,IP_t *IPAddr,IP_t *MSKAddr,IP_t *GWAddr,IP_t *DNS1
 
 }
 	
+ 
+void Phone_GetBaseInfo(unsigned char * ID,int Data_Len,const char *recvbuffer) 				//获取基本信息请求
+{
+	stBaseInfo baseInfo;
+	printf("WIFI_Recv_Event%d %s\n",P0001,recvbuffer);
+			
+	memcpy(baseInfo.ECUID,ecu.id,13);											//ECU ID		OK
+	baseInfo.LifttimeEnergy = (int)(ecu.life_energy*10);				//ECU 历史发电量		OK
+	baseInfo.LastSystemPower = ecu.system_power;			//ECU 当前系统功率		OK
+	baseInfo.GenerationCurrentDay = (unsigned int)(ecu.today_energy * 100);//ECU 当天发电量
+				
+	printf("%s\n",ecu.last_ema_time);
+	memset(baseInfo.LastToEMA,'\0',8);	//ECU 最后一次连接EMA的时间
+	baseInfo.LastToEMA[0] = (ecu.last_ema_time[0] - '0')*16+(ecu.last_ema_time[1] - '0');
+	baseInfo.LastToEMA[1] = (ecu.last_ema_time[2] - '0')*16+(ecu.last_ema_time[3] - '0');
+	baseInfo.LastToEMA[2] = (ecu.last_ema_time[4] - '0')*16+(ecu.last_ema_time[5] - '0');
+	baseInfo.LastToEMA[3] = (ecu.last_ema_time[6] - '0')*16+(ecu.last_ema_time[7] - '0');
+	baseInfo.LastToEMA[4] = (ecu.last_ema_time[8] - '0')*16+(ecu.last_ema_time[9] - '0');
+	baseInfo.LastToEMA[5] = (ecu.last_ema_time[10] - '0')*16+(ecu.last_ema_time[11] - '0');
+	baseInfo.LastToEMA[6] = (ecu.last_ema_time[12] - '0')*16+(ecu.last_ema_time[13] - '0');
+
+	baseInfo.InvertersNum = ecu.total;				//ECU 逆变器总数
+	baseInfo.LastInvertersNum = ecu.count;		//ECU 当前连接的逆变器总数
+	baseInfo.Length = ECU_VERSION_LENGTH;								//ECU 版本号长度
+	sprintf(baseInfo.Version,"%s_%s_%s",ECU_VERSION,MAJORVERSION,MINORVERSION);	//ECU 版本
+	baseInfo.TimeZoneLength = 9;				//ECU 时区长度
+	sprintf(baseInfo.TimeZone,"Etc/GMT+8");									//ECU 时区
+	memset(baseInfo.MacAddress,'\0',7);
+	get_mac((unsigned char*)baseInfo.MacAddress);			//ECU 有线Mac地址									
+	APP_Response_BaseInfo(ID,baseInfo);
+}
+void Phone_GetGenerationData(unsigned char * ID,int Data_Len,const char *recvbuffer) 	//获取逆变器发电量数据
+{
+	printf("WIFI_Recv_Event%d %s\n",P0002,recvbuffer);
+	//匹配成功进行相应操作
+	printf("COMMAND_POWERGENERATION  Mapping\n");
+	APP_Response_PowerGeneration(0x00,ID,inverter,ecu.count);
+}
+void Phone_GetPowerCurve(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//获取功率曲线
+{
+	char date[9];
+	printf("WIFI_Recv_Event%d %s\n",P0003,recvbuffer);
+	memset(date,'\0',9);
+	//匹配成功进行相应操作
+	printf("COMMAND_POWERCURVE  Mapping\n");
+	memcpy(date,&recvbuffer[28],8);
+	APP_Response_PowerCurve(0x00,ID,date);
+
+}
+void Phone_GetGenerationCurve(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//获取发电量曲线
+{
+	printf("WIFI_Recv_Event%d %s\n",P0004,recvbuffer);
+	//匹配成功进行相应操作
+	printf("COMMAND_GENERATIONCURVE  Mapping\n");
+	APP_Response_GenerationCurve(0x00,ID,recvbuffer[29]);
+}
+void Phone_RegisterID(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//逆变器ID注册
+{
+	printf("WIFI_Recv_Event%d %s\n",P0005,recvbuffer);				
+
+	{
+	int AddNum = 0;
+	//匹配成功进行相应操作
+	printf("COMMAND_REGISTERID  Mapping\n");
+	//计算台数
+	AddNum = (Data_Len - 31)/12;
+	printf("AddNum:%d\n",AddNum);
+	APP_Response_RegisterID(0x00,ID);
+	//添加ID到文件
+	phone_add_inverter(AddNum,&recvbuffer[28]);
+					
+	//重启main线程
+	restartThread(TYPE_MAIN);					
+					
+	}
+}
+void Phone_SetTime(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//ECU时间设置
+{
+	char setTime[15];
+	printf("WIFI_Recv_Event%d %s\n",P0006,recvbuffer);
+	
+	//匹配成功进行相应操作
+	printf("COMMAND_SETTIME  Mapping\n");
+	memset(setTime,'\0',15);
+	memcpy(setTime,&recvbuffer[28],14);
+	//设置时间
+	set_time(setTime);
+	APP_Response_SetTime(0x00,ID);
+
+}
+void Phone_SetWiredNetwork(unsigned char * ID,int Data_Len,const char *recvbuffer)			//有线网络设置
+{
+	printf("WIFI_Recv_Event%d %s\n",P0007,recvbuffer);	
+
+	{
+	int ModeFlag = 0;
+	char buff[200] = {'\0'};
+	IP_t IPAddr,MSKAddr,GWAddr,DNS1Addr,DNS2Addr;
+	//匹配成功进行相应操作
+	printf("COMMAND_SETWIREDNETWORK  Mapping\n");
+	//检查是DHCP  还是固定IP
+	ModeFlag = ResolveWired(&recvbuffer[28],&IPAddr,&MSKAddr,&GWAddr,&DNS1Addr,&DNS2Addr);
+	if(ModeFlag == 0x00)		//DHCP
+	{
+		printmsg(ECU_DBG_WIFI,"dynamic IP");
+		dhcp_reset();
+	}else if (ModeFlag == 0x01)		//固定IP		
+	{
+		printmsg(ECU_DBG_WIFI,"static IP");
+		//保存网络地址
+		sprintf(buff,"IPAddr=%d.%d.%d.%d\nMSKAddr=%d.%d.%d.%d\nGWAddr=%d.%d.%d.%d\nDNS1Addr=%d.%d.%d.%d\nDNS2Addr=%d.%d.%d.%d\n",IPAddr.IP1,IPAddr.IP2,IPAddr.IP3,IPAddr.IP4,
+		MSKAddr.IP1,MSKAddr.IP2,MSKAddr.IP3,MSKAddr.IP4,GWAddr.IP1,GWAddr.IP2,GWAddr.IP3,GWAddr.IP4,DNS1Addr.IP1,DNS1Addr.IP2,DNS1Addr.IP3,DNS1Addr.IP4,DNS2Addr.IP1,DNS2Addr.IP2,DNS2Addr.IP3,DNS2Addr.IP4);
+		echo("/yuneng/staticIP.con",buff);
+		//设置固定IP
+		StaticIP(IPAddr,MSKAddr,GWAddr,DNS1Addr,DNS2Addr);
+	}
+					
+	APP_Response_SetWiredNetwork(0x00,ID);
+	}	
+}
+void Phone_SetWIFI(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//无线网络连接
+{
+	printf("WIFI_Recv_Event%d %s\n",P0008,recvbuffer);
+	{
+	char SSID[100] = {'\0'};
+	char Password[100] = {'\0'};
+	int SSIDLen,passWDLen;
+	//匹配成功进行相应操作
+	printf("COMMAND_SETWIFI  Mapping\n");
+	ResolveWifiSSID(SSID,&SSIDLen,Password,&passWDLen,(char *)&recvbuffer[28]);
+	APP_Response_SetWifi(0x00,ID);
+	WIFI_ChangeSSID(SSID,Password);
+					
+	}	
+}
+void Phone_SearchWIFIStatus(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//无线网络连接状态
+{
+	printf("WIFI_Recv_Event%d %s\n",P0009,recvbuffer);
+	{
+	//匹配成功进行相应操作
+	printf("COMMAND_SEARCHWIFISTATUS  Mapping\n");
+	if(0 == WIFI_ConStatus())
+	{
+		APP_Response_SearchWifiStatus(0x00,ID);
+	}else
+	{
+		APP_Response_SearchWifiStatus(0x01,ID);
+	}
+	}
+}
+void Phone_SetWIFIPasswd(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//AP密码设置
+{
+	printf("WIFI_Recv_Event%d %s\n",P0010,recvbuffer);
+	{
+	char OldPassword[100] = {'\0'};
+	char NewPassword[100] = {'\0'};
+	int oldLen,newLen;
+					
+	//匹配成功进行相应操作
+	printf("COMMAND_SETWIFIPASSWD  Mapping\n");
+	//获取密码
+	ResolveWifiPasswd(OldPassword,&oldLen,NewPassword,&newLen,(char *)&recvbuffer[28]);
+	APP_Response_SetWifiPasswd(0x00,ID);
+	WIFI_ChangePasswd(NewPassword);
+					
+	}	
+}
+
+
+void Phone_GetIDInfo(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//获取ID信息
+{
+
+}
+
+void Phone_GetTime(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//获取时间
+{
+	char Time[15] = {'\0'};
+	apstime(Time);
+	Time[14] = '\0';
+	APP_Response_GetTime(0x00,ID,Time);
+
+}
+
 //WIFI事件处理
 void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 {
 #ifdef WIFI_USE
 	int ResolveFlag = 0,Data_Len = 0,Command_Id = 0;
-	stBaseInfo baseInfo;
-	char setTime[15];
-	char date[9];
-	
 	ResolveFlag =  Resolve_RecvData((char *)WIFI_RecvData,&Data_Len,&Command_Id);
 	if(ResolveFlag == 0)
 	{
-		switch(Command_Id)
-		{
-			case COMMAND_BASEINFO:						//获取基本信息请求	OK
-				printf("WIFI_Recv_Event%d %s\n",COMMAND_BASEINFO,WIFI_RecvData);
-			
-				memcpy(baseInfo.ECUID,ecu.id,13);											//ECU ID		OK
-				baseInfo.LifttimeEnergy = (int)(ecu.life_energy*10);				//ECU 历史发电量		OK
-				baseInfo.LastSystemPower = ecu.system_power;			//ECU 当前系统功率		OK
-				baseInfo.GenerationCurrentDay = (unsigned int)(ecu.today_energy * 100);//ECU 当天发电量
-				
-				printf("%s\n",ecu.last_ema_time);
-				memset(baseInfo.LastToEMA,'\0',8);	//ECU 最后一次连接EMA的时间
-				baseInfo.LastToEMA[0] = (ecu.last_ema_time[0] - '0')*16+(ecu.last_ema_time[1] - '0');
-				baseInfo.LastToEMA[1] = (ecu.last_ema_time[2] - '0')*16+(ecu.last_ema_time[3] - '0');
-				baseInfo.LastToEMA[2] = (ecu.last_ema_time[4] - '0')*16+(ecu.last_ema_time[5] - '0');
-				baseInfo.LastToEMA[3] = (ecu.last_ema_time[6] - '0')*16+(ecu.last_ema_time[7] - '0');
-				baseInfo.LastToEMA[4] = (ecu.last_ema_time[8] - '0')*16+(ecu.last_ema_time[9] - '0');
-				baseInfo.LastToEMA[5] = (ecu.last_ema_time[10] - '0')*16+(ecu.last_ema_time[11] - '0');
-				baseInfo.LastToEMA[6] = (ecu.last_ema_time[12] - '0')*16+(ecu.last_ema_time[13] - '0');
-
-				baseInfo.InvertersNum = ecu.total;				//ECU 逆变器总数
-				baseInfo.LastInvertersNum = ecu.count;		//ECU 当前连接的逆变器总数
-				baseInfo.Length = ECU_VERSION_LENGTH;								//ECU 版本号长度
-				sprintf(baseInfo.Version,"%s_%s_%s",ECU_VERSION,MAJORVERSION,MINORVERSION);	//ECU 版本
-				baseInfo.TimeZoneLength = 9;				//ECU 时区长度
-				sprintf(baseInfo.TimeZone,"Etc/GMT+8");									//ECU 时区
-				memset(baseInfo.MacAddress,'\0',7);
-				get_mac((unsigned char*)baseInfo.MacAddress);			//ECU 有线Mac地址									
-				APP_Response_BaseInfo(ID,baseInfo);
-				break;	
-			
-			case COMMAND_POWERGENERATION:			//逆变器发电数据请求		OK
-				printf("WIFI_Recv_Event%d %s\n",COMMAND_POWERGENERATION,WIFI_RecvData);
-				//匹配成功进行相应操作
-				printf("COMMAND_POWERGENERATION  Mapping\n");
-				APP_Response_PowerGeneration(0x00,ID,inverter,ecu.count);
-
-				break;
-					
-			case COMMAND_POWERCURVE:					//功率曲线请求   OK
-				printf("WIFI_Recv_Event%d %s\n",COMMAND_POWERCURVE,WIFI_RecvData);
-				memset(date,'\0',9);
-				//匹配成功进行相应操作
-				printf("COMMAND_POWERCURVE  Mapping\n");
-				memcpy(date,&WIFI_RecvData[28],8);
-				APP_Response_PowerCurve(0x00,ID,date);
-
-				break;
-						
-			case COMMAND_GENERATIONCURVE:			//发电量曲线请求	
-				printf("WIFI_Recv_Event%d %s\n",COMMAND_GENERATIONCURVE,WIFI_RecvData);
-				//匹配成功进行相应操作
-				printf("COMMAND_GENERATIONCURVE  Mapping\n");
-				APP_Response_GenerationCurve(0x00,ID,WIFI_RecvData[29]);
-			
-				break;
-						
-			case COMMAND_REGISTERID:					//逆变器ID注册请求	OK
-				printf("WIFI_Recv_Event%d %s\n",COMMAND_REGISTERID,WIFI_RecvData);				
-
-				{
-					int AddNum = 0;
-					//匹配成功进行相应操作
-					printf("COMMAND_REGISTERID  Mapping\n");
-					//计算台数
-					AddNum = (Data_Len - 31)/12;
-					printf("AddNum:%d\n",AddNum);
-					APP_Response_RegisterID(0x00,ID);
-					//添加ID到文件
-					phone_add_inverter(AddNum,&WIFI_RecvData[28]);
-					
-					//重启main线程
-					restartThread(TYPE_MAIN);					
-					
-				}
-				break;
-				
-			case COMMAND_SETTIME:							//时间设置请求	OK
-				printf("WIFI_Recv_Event%d %s\n",COMMAND_SETTIME,WIFI_RecvData);
-	
-
-				//匹配成功进行相应操作
-				printf("COMMAND_SETTIME  Mapping\n");
-				memset(setTime,'\0',15);
-				memcpy(setTime,&WIFI_RecvData[28],14);
-				//设置时间
-				set_time(setTime);
-				APP_Response_SetTime(0x00,ID);
-
-				break;
-			
-			case COMMAND_SETWIREDNETWORK:			//有线网络设置请求  OK
-				
-				printf("WIFI_Recv_Event%d %s\n",COMMAND_SETWIREDNETWORK,WIFI_RecvData);	
-
-				{
-					int ModeFlag = 0;
-					char buff[200] = {'\0'};
-					IP_t IPAddr,MSKAddr,GWAddr,DNS1Addr,DNS2Addr;
-					//匹配成功进行相应操作
-					printf("COMMAND_SETWIREDNETWORK  Mapping\n");
-					//检查是DHCP  还是固定IP
-					ModeFlag = ResolveWired(&WIFI_RecvData[28],&IPAddr,&MSKAddr,&GWAddr,&DNS1Addr,&DNS2Addr);
-					if(ModeFlag == 0x00)		//DHCP
-					{
-						printmsg(ECU_DBG_WIFI,"dynamic IP");
-						dhcp_reset();
-					}else if (ModeFlag == 0x01)		//固定IP		
-					{
-						printmsg(ECU_DBG_WIFI,"static IP");
-						//保存网络地址
-						sprintf(buff,"IPAddr=%d.%d.%d.%d\nMSKAddr=%d.%d.%d.%d\nGWAddr=%d.%d.%d.%d\nDNS1Addr=%d.%d.%d.%d\nDNS2Addr=%d.%d.%d.%d\n",IPAddr.IP1,IPAddr.IP2,IPAddr.IP3,IPAddr.IP4,
-										MSKAddr.IP1,MSKAddr.IP2,MSKAddr.IP3,MSKAddr.IP4,GWAddr.IP1,GWAddr.IP2,GWAddr.IP3,GWAddr.IP4,DNS1Addr.IP1,DNS1Addr.IP2,DNS1Addr.IP3,DNS1Addr.IP4,DNS2Addr.IP1,DNS2Addr.IP2,DNS2Addr.IP3,DNS2Addr.IP4);
-						echo("/yuneng/staticIP.con",buff);
-						//设置固定IP
-						StaticIP(IPAddr,MSKAddr,GWAddr,DNS1Addr,DNS2Addr);
-					}
-					
-					APP_Response_SetWiredNetwork(0x00,ID);
-				}
-				break;
-			
-			case COMMAND_SETWIFI:							//无线网络设置请求	OK
-				printf("WIFI_Recv_Event%d %s\n",COMMAND_SETWIFI,WIFI_RecvData);
-				{
-					char SSID[100] = {'\0'};
-					char Password[100] = {'\0'};
-					int SSIDLen,passWDLen;
-					//匹配成功进行相应操作
-					printf("COMMAND_SETWIFI  Mapping\n");
-					ResolveWifiSSID(SSID,&SSIDLen,Password,&passWDLen,(char *)&WIFI_RecvData[28]);
-					APP_Response_SetWifi(0x00,ID);
-					WIFI_ChangeSSID(SSID,Password);
-					
-				}
-				break;
-			
-			case COMMAND_SEARCHWIFISTATUS:		//无线网络连接状态请求	OK
-				printf("WIFI_Recv_Event%d %s\n",COMMAND_SEARCHWIFISTATUS,WIFI_RecvData);
-				{
-					//匹配成功进行相应操作
-					printf("COMMAND_SEARCHWIFISTATUS  Mapping\n");
-					if(0 == WIFI_ConStatus())
-					{
-						APP_Response_SearchWifiStatus(0x00,ID);
-					}else
-					{
-						APP_Response_SearchWifiStatus(0x01,ID);
-					}
-				}
-				break;
-			
-			case COMMAND_SETWIFIPASSWD:				//AP密码设置请求     OK
-				printf("WIFI_Recv_Event%d %s\n",COMMAND_SETWIFIPASSWD,WIFI_RecvData);
-				{
-					char OldPassword[100] = {'\0'};
-					char NewPassword[100] = {'\0'};
-					int oldLen,newLen;
-					
-					//匹配成功进行相应操作
-					printf("COMMAND_SETWIFIPASSWD  Mapping\n");
-					//获取密码
-					ResolveWifiPasswd(OldPassword,&oldLen,NewPassword,&newLen,(char *)&WIFI_RecvData[28]);
-					APP_Response_SetWifiPasswd(0x00,ID);
-					WIFI_ChangePasswd(NewPassword);
-					
-				}
-				break;
-		}
+		(*pfun_Phone[Command_Id])(ID,Data_Len,WIFI_RecvData);
 	}
 	#endif
 }
@@ -357,7 +397,7 @@ void phone_server_thread_entry(void* parameter)
 	get_ecuid(ecu.id);
 	readconnecttime();
 	
-	
+	add_Phone_functions();
 		
 	//3?ê??ˉIP
 	fileflag = file_get_array(array, 5, "/yuneng/staticIP.con");
@@ -385,7 +425,7 @@ void phone_server_thread_entry(void* parameter)
 			process_WIFI(ID_A,(char *)WIFI_RecvSocketAData);
 		}
 		
-		rt_thread_delay(RT_TICK_PER_SECOND/2);
+		rt_thread_delay(RT_TICK_PER_SECOND/4);
 	}
 	
 }

@@ -3,22 +3,6 @@
 
 #include "variation.h"
 
-typedef enum
-{ 
-    COMMAND_BASEINFO         	= 1,		//获取基本信息请求
-    COMMAND_POWERGENERATION  	= 2,		//逆变器发电数据请求
-    COMMAND_POWERCURVE      	= 3,		//功率曲线请求
-    COMMAND_GENERATIONCURVE  	= 4,		//发电量曲线请求
-		COMMAND_REGISTERID 				= 5,		//逆变器ID注册请求
-		COMMAND_SETTIME			 			= 6,		//时间设置请求
-		COMMAND_SETWIREDNETWORK		= 7,		//有线网络设置请求
-		COMMAND_SETWIFI 					= 8,		//无线网络设置请求
-		COMMAND_SEARCHWIFISTATUS	= 9,		//无线网络连接状态请求
-		COMMAND_SETWIFIPASSWD			= 10,		//AP密码设置请求
-	
-} eCommandID;// receive state machin
-
-
 typedef struct
 {
 	char ECUID[13];											//ECU ID
@@ -40,7 +24,7 @@ typedef struct
 unsigned short packetlen(unsigned char *packet);
 
 int Resolve_RecvData(char *RecvData,int* Data_Len,int* Command_Id);
-int phone_add_inverter(int num,char *uidstring);
+int phone_add_inverter(int num,const char *uidstring);
 //01	获取基本信息请求
 void APP_Response_BaseInfo(unsigned char *ID,stBaseInfo baseInfo);
 //02	逆变器发电数据请求
@@ -61,6 +45,12 @@ void APP_Response_SetWifi(char mapping,unsigned char *ID);
 void APP_Response_SearchWifiStatus(char mapping,unsigned char *ID);
 //10	AP密码设置请求
 void APP_Response_SetWifiPasswd(char mapping,unsigned char *ID);
+//11	AP密码设置请求
+void APP_Response_GetIDInfo(char mapping,unsigned char *ID);
+//12	AP密码设置请求
+void APP_Response_GetTime(char mapping,unsigned char *ID,char *Time);
+
+
 
 #endif 
 #endif /*__WIFI_COMM_H__*/
