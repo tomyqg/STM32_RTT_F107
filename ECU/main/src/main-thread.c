@@ -225,8 +225,8 @@ void main_thread_entry(void* parameter)
 	
 	while(1)
 	{
-		if(compareTime(durabletime ,thistime,reportinterval)){
-		//if(compareTime(durabletime ,thistime,60)){
+		//if(compareTime(durabletime ,thistime,reportinterval)){
+		if(compareTime(durabletime ,thistime,60)){
 			//printf("******1-----------main acquire_time:\n");
 			thistime = acquire_time();
 			rt_memset(ecu.broadcast_time, '\0', sizeof(ecu.broadcast_time));				//清空本次广播时间
@@ -241,7 +241,8 @@ void main_thread_entry(void* parameter)
 			
 			//保存最新一轮采集数据的时间
 			memcpy(ecu.had_data_broadcast_time,ecu.broadcast_time,16);
-			
+			//ecu.system_power = 277;
+			//ecu.current_energy = 0.23;
 			//printdecmsg(ECU_DBG_MAIN,"ecu.count",ecu.count);
 			ecu.life_energy = ecu.life_energy + ecu.current_energy;				//计算系统历史发电量
 			printfloatmsg(ECU_DBG_MAIN,"ecu.life_energy",ecu.life_energy);
