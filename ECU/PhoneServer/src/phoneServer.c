@@ -345,12 +345,14 @@ void Phone_SetWIFIPasswd(unsigned char * ID,int Data_Len,const char *recvbuffer)
 
 void Phone_GetIDInfo(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//获取ID信息
 {
-
+	printf("WIFI_Recv_Event%d %s\n",P0011,recvbuffer);
+	APP_Response_GetIDInfo(0x00,ID,inverter);
 }
 
 void Phone_GetTime(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//获取时间
 {
 	char Time[15] = {'\0'};
+	printf("WIFI_Recv_Event%d %s\n",P0012,recvbuffer);
 	apstime(Time);
 	Time[14] = '\0';
 	APP_Response_GetTime(0x00,ID,Time);

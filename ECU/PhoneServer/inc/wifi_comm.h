@@ -46,7 +46,7 @@ void APP_Response_SearchWifiStatus(char mapping,unsigned char *ID);
 //10	AP密码设置请求
 void APP_Response_SetWifiPasswd(char mapping,unsigned char *ID);
 //11	AP密码设置请求
-void APP_Response_GetIDInfo(char mapping,unsigned char *ID);
+void APP_Response_GetIDInfo(char mapping,unsigned char *ID,inverter_info *inverter);
 //12	AP密码设置请求
 void APP_Response_GetTime(char mapping,unsigned char *ID,char *Time);
 

@@ -379,15 +379,39 @@ void APP_Response_SetWifiPasswd(char mapping,unsigned char *ID)
 }
 
 //11	AP密码设置请求
-void APP_Response_GetIDInfo(char mapping,unsigned char *ID)
+void APP_Response_GetIDInfo(char mapping,unsigned char *ID,inverter_info *inverter)
 {
-	int packlength = 0;
+	int packlength = 0,index = 0;
+	inverter_info *curinverter = inverter;
 	memset(SendData,'\0',4096);	
-	
-	//拼接需要发送的报文
-	sprintf(SendData,"APS1100150011%02d\n",mapping);
-	packlength = 16;
-	
+
+	if(mapping == 0x00)
+	{
+		sprintf(SendData,"APS110015001100");
+		packlength = 15;
+		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)
+		{
+			printf("%s\n",curinverter->id);
+			memcpy(&SendData[packlength],curinverter->id,12);	
+			packlength += 12;
+		}
+		
+		SendData[packlength++] = 'E';
+		SendData[packlength++] = 'N';
+		SendData[packlength++] = 'D';
+		
+		SendData[5] = (packlength/1000) + '0';
+		SendData[6] = ((packlength/100)%10) + '0';
+		SendData[7] = ((packlength/10)%10) + '0';
+		SendData[8] = ((packlength)%10) + '0';
+		SendData[packlength++] = '\n';
+
+		
+	}else
+	{
+		sprintf(SendData,"APS110015001101\n");
+		packlength = 16;
+	}		
 	SendToSocketA(SendData ,packlength,ID);
 
 }
@@ -396,13 +420,13 @@ void APP_Response_GetTime(char mapping,unsigned char *ID,char *Time)
 {
 	int packlength = 0;
 	memset(SendData,'\0',4096);	
-	if(mapping = 0x00)
+	if(mapping == 0x00)
 	{
-		sprintf(SendData,"APS110015001200%sEND\n",mapping,Time);
+		sprintf(SendData,"APS110015001200%sEND\n",Time);
 		packlength = 33;
 	}else
 	{
-		sprintf(SendData,"APS110015001201\n",mapping);
+		sprintf(SendData,"APS110015001201\n");
 		packlength = 16;
 	}	
 	
