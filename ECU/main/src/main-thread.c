@@ -80,7 +80,7 @@ int init_inverter(inverter_info *inverter)
 	for(i=0; i<MAXINVERTERCOUNT; i++, curinverter++)
 	{
 		rt_memset(curinverter->id, '\0', sizeof(curinverter->id));		//清空逆变器UID
-		rt_memset(curinverter->tnuid, '\0', sizeof(curinverter->tnuid));			//清空逆变器ID
+		//rt_memset(curinverter->tnuid, '\0', sizeof(curinverter->tnuid));			//清空逆变器ID
 
 		curinverter->model = 0;
 
@@ -273,7 +273,7 @@ void main_thread_entry(void* parameter)
 //			printinverterinfo(&inverter);										//打印逆变器解析信息,ZK
 //			format(inverter, ecu.broadcast_time, ecu.system_power, ecu.current_energy, ecu.life_energy);
 			
-			reset_inverter(inverter);											//重置每个逆变器
+			//reset_inverter(inverter);											//重置每个逆变器
 			
 			remote_update(inverter);
 			

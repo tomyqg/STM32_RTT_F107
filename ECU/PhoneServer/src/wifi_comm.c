@@ -13,16 +13,12 @@ static char SendData[4096] = {'\0'};
 int phone_add_inverter(int num,const char *uidstring)
 {
 	int i = 0;
-	char inverter_id[13] = { '\0' };
 	char buff[25] = { '\0' };
 	char allbuff[1024] = { '\0' };
 	for(i = 0; i < num; i++)
 	{
-		memset(inverter_id,'\0',13);
 		memset(buff,'\0',25);
-		memcpy(inverter_id,&uidstring[0+i*12],12);
-		sprintf(buff,"%s,,,,,,\n",inverter_id);
-		
+		sprintf(buff,"%02x%02x%02x%02x%02x%02x,,,,,,\n",uidstring[0+i*6],uidstring[1+i*6],uidstring[2+i*6],uidstring[3+i*6],uidstring[4+i*6],uidstring[5+i*6]);
 		memcpy(&allbuff[0+19*i],buff,19);
 	}
 	
@@ -170,6 +166,8 @@ void APP_Response_PowerGeneration(char mapping,unsigned char *ID,inverter_info *
 		SendData[packlength++] = ((curinverter->id[6]-'0') << 4) + (curinverter->id[7]-'0');
 		SendData[packlength++] = ((curinverter->id[8]-'0') << 4) + (curinverter->id[9]-'0');
 		SendData[packlength++] = ((curinverter->id[10]-'0') << 4)+ (curinverter->id[11]-'0');
+
+		SendData[packlength++] = (curinverter->dataflag & 0x01);
 		
 		//µçÍøÆµÂÊ
 		SendData[packlength++] = (int)(curinverter->gf * 10) / 256;
@@ -383,6 +381,7 @@ void APP_Response_GetIDInfo(char mapping,unsigned char *ID,inverter_info *invert
 {
 	int packlength = 0,index = 0;
 	inverter_info *curinverter = inverter;
+	char uid[7];
 	memset(SendData,'\0',4096);	
 
 	if(mapping == 0x00)
@@ -391,9 +390,16 @@ void APP_Response_GetIDInfo(char mapping,unsigned char *ID,inverter_info *invert
 		packlength = 15;
 		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)
 		{
-			printf("%s\n",curinverter->id);
-			memcpy(&SendData[packlength],curinverter->id,12);	
-			packlength += 12;
+			
+			uid[0] = (curinverter->id[0] - '0')*16+(curinverter->id[1] - '0');
+			uid[1] = (curinverter->id[2] - '0')*16+(curinverter->id[3] - '0');
+			uid[2] = (curinverter->id[4] - '0')*16+(curinverter->id[5] - '0');
+			uid[3] = (curinverter->id[6] - '0')*16+(curinverter->id[7] - '0');
+			uid[4] = (curinverter->id[8] - '0')*16+(curinverter->id[9] - '0');
+			uid[5] = (curinverter->id[10] - '0')*16+(curinverter->id[11] - '0');
+			printf("%02x%02x%02x%02x%02x%02x\n",uid[0],uid[1],uid[2],uid[3],uid[4],uid[5]);
+			memcpy(&SendData[packlength],uid,6);	
+			packlength += 6;
 		}
 		
 		SendData[packlength++] = 'E';

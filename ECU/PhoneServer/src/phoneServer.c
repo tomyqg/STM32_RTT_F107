@@ -239,7 +239,7 @@ void Phone_RegisterID(unsigned char * ID,int Data_Len,const char *recvbuffer) 		
 	//匹配成功进行相应操作
 	printf("COMMAND_REGISTERID  Mapping\n");
 	//计算台数
-	AddNum = (Data_Len - 31)/12;
+	AddNum = (Data_Len - 31)/6;
 	printf("AddNum:%d\n",AddNum);
 	APP_Response_RegisterID(0x00,ID);
 	//添加ID到文件

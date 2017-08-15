@@ -1845,12 +1845,15 @@ int process_all(inverter_info *firstinverter)
 
 int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 {
-	int i, j;
+	int i, j,dataflag_clear = 0;
 	inverter_info *curinverter = firstinverter;
 	int count=0, syspower=0;
 	float curenergy=0;
+#if 0
 	char buff[50] = {'\0'};
 	int fd;
+#endif 
+	
 	int out_flag = 0;	//跳出查询标志
 
 	for(i=0;i<3;i++)
@@ -1864,9 +1867,31 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 	{
 		out_flag = 0;
 		curinverter = firstinverter;
+		
 		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++)			//每个逆变器最多要5次数据
 		{
-		
+			if(dataflag_clear == 0)
+			{
+				curinverter->dataflag = 0;		//没有接收到数据就置为0
+				curinverter->dv=0;
+				curinverter->di=0;
+				curinverter->op=0;
+				curinverter->gf=0;
+				curinverter->it=0;
+				curinverter->gv=0;
+
+				curinverter->dvb=0;
+				curinverter->dib=0;
+				curinverter->opb=0;
+
+				curinverter->curgeneration = 0;
+				curinverter->curgenerationb = 0;
+				curinverter->status_send_flag=0;
+
+				rt_memset(curinverter->status_web, '\0', sizeof(curinverter->status_web));		//????????
+				rt_memset(curinverter->status, '\0', sizeof(curinverter->status));
+				rt_memset(curinverter->statusb, '\0', sizeof(curinverter->statusb));
+			}
 			process_all(firstinverter);
 			if((0 == curinverter->dataflag) && (0 != curinverter->shortaddr))
 			{
@@ -1902,6 +1927,7 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 			}
 			curinverter++;
 		}
+		dataflag_clear = 1;
 		if(out_flag == 0) break;
 	}
 	ecu.polling_total_times++;				//ECU总轮训加1 ,ZK

@@ -23,7 +23,7 @@
 typedef struct inverter_info_t{
 	char id[13];		//逆变器的ID
 	unsigned short shortaddr;			//Zigbee的短地址
-	char tnuid[8];				//逆变器3501ID（逆变器ID的BCD编码）
+	//char tnuid[8];				//逆变器3501ID（逆变器ID的BCD编码）
 	int model;					//机型：1是YC250CN,2是YC250NA，3是YC500CN，4是YC500NA，5是YC900CN，6是YC900NA
 	int version;				//软件版本号
 	int dataflag;				//1表示读到当前数据；0表示读取数据失败
