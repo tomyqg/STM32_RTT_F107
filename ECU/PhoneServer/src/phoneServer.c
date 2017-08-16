@@ -128,13 +128,14 @@ int ResolveWifiPasswd(char *oldPasswd,int *oldLen,char *newPasswd,int *newLen,ch
 	return 0;
 }	
 
-int ResolveWifiSSID(char *SSID,int *SSIDLen,char *PassWD,int *PassWDLen,char *string)
+int ResolveWifiSSID(char *SSID,int *SSIDLen,char *Auth,char *Encry,char *PassWD,int *PassWDLen,char *string)
 {
 	*SSIDLen = (string[0]-'0')*100+(string[1]-'0')*10+(string[2]-'0');
 	memcpy(SSID,&string[3],*SSIDLen);
-	*PassWDLen = (string[3+(*SSIDLen)]-'0')*100+(string[4+(*SSIDLen)]-'0')*10+(string[5+(*SSIDLen)]-'0');
-	memcpy(PassWD,&string[6+*SSIDLen],*PassWDLen);
-	
+	*Auth = string[3+(*SSIDLen)];
+	*Encry = string[4+(*SSIDLen)];
+	*PassWDLen = (string[5+(*SSIDLen)]-'0')*100+(string[6+(*SSIDLen)]-'0')*10+(string[7+(*SSIDLen)]-'0');
+	memcpy(PassWD,&string[8+*SSIDLen],*PassWDLen);
 	return 0;
 }	
 
@@ -300,12 +301,14 @@ void Phone_SetWIFI(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//
 	{
 	char SSID[100] = {'\0'};
 	char Password[100] = {'\0'};
+	char Auth;
+	char Encry;
 	int SSIDLen,passWDLen;
 	//匹配成功进行相应操作
 	printf("COMMAND_SETWIFI  Mapping\n");
-	ResolveWifiSSID(SSID,&SSIDLen,Password,&passWDLen,(char *)&recvbuffer[28]);
+	ResolveWifiSSID(SSID,&SSIDLen,&Auth,&Encry,Password,&passWDLen,(char *)&recvbuffer[28]);
 	APP_Response_SetWifi(0x00,ID);
-	WIFI_ChangeSSID(SSID,Password);
+	WIFI_ChangeSSID(SSID,Auth,Encry,Password,passWDLen);
 					
 	}	
 }

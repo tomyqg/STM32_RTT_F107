@@ -946,21 +946,72 @@ int AT_WSSSID(char *SSSID)
 }
 
 //设置连接路由器KEY
-int AT_WSKEY(char *SKEY)
+int AT_WSKEY(char Auth,char Encry,char *SKEY,int passWDLen)
 {
 	int i = 0,flag_failed = 0;
 	char AT[100] = { '\0' };
+	char AuthString[20] = {'\0'};
+	char EncryString[20] = {'\0'};
+	int AT_length = 0;
 	rt_mutex_take(wifi_uart_lock, RT_WAITING_FOREVER);
 	clear_WIFI();
+
+	if(Auth == '1')
+	{
+		sprintf(AuthString,"OPEN");
+	}else if(Auth == '2')
+	{
+		sprintf(AuthString,"SHARED");
+	}else if(Auth == '3')
+	{
+		sprintf(AuthString,"WPAPSK");
+	}else if(Auth == '4')
+	{
+		sprintf(AuthString,"WPA2PSK");
+	}
+
+	if(Encry == '1')
+	{
+		sprintf(EncryString,"NONE");
+	}else if(Encry == '2')
+	{
+		sprintf(EncryString,"WEP-H");
+	}else if(Encry == '3')
+	{	
+		sprintf(EncryString,"WEP-A");
+	}else if(Encry == '4')
+	{
+		sprintf(EncryString,"TKIP");
+	}else if(Encry == '5')
+	{
+		sprintf(EncryString,"AES");
+	}
+	
 	//发送"AT+WSSSID\n",返回+ok
-	sprintf(AT,"AT+WSKEY=WPA2PSK,AES,%s\n",SKEY);
+	if(passWDLen > 0)
+	{
+		//密码长度大于0
+		
+		sprintf(AT,"AT+WSKEY=%s,%s,",AuthString,EncryString);
+		AT_length = strlen(AT);
+		memcpy(&AT[AT_length],SKEY,passWDLen);
+		AT[AT_length+passWDLen]  = '\n';
+		AT_length = AT_length+passWDLen + 1;
+		
+	}else
+	{
+		//密码长度为0
+		sprintf(AT,"AT+WSKEY=%s,%s\n",AuthString,EncryString);
+		AT_length = strlen(AT);
+	}
+	
 	printf("%s\n",AT);
-	WIFI_SendData(AT, (strlen(AT)+1));
+	WIFI_SendData(AT, (AT_length+1));
 	
 	for(i = 0;i< 400;i++)
 	{
 		delayMS(5);
-		if(Cur >= (strlen(AT)+4)) 
+		if(Cur >= (AT_length+4)) 
 		{
 			flag_failed = 1;
 			break;
@@ -974,7 +1025,7 @@ int AT_WSKEY(char *SKEY)
 		return -1;
 	}else
 	{
-		if(memcmp(&USART_RX_BUF[strlen(AT)+1],"+ok",3))
+		if(memcmp(&USART_RX_BUF[AT_length+1],"+ok",3))
 		{
 			rt_mutex_release(wifi_uart_lock);
 			return -1;
@@ -2083,7 +2134,7 @@ int SendToSocketC(char *data ,int length)
 	return -1;
 }
 
-int WIFI_ChangeSSID(char *SSID,char *Passwd)
+int WIFI_ChangeSSID(char *SSID,char Auth,char Encry,char *Passwd,int passWDLen)
 {
 		int ret = 0,index;
 	for(index = 0;index<3;index++)
@@ -2117,7 +2168,7 @@ int WIFI_ChangeSSID(char *SSID,char *Passwd)
 	for(index = 0;index<3;index++)
 	{
 		delayMS(5);
-		ret =AT_WSKEY(Passwd);
+		ret =AT_WSKEY(Auth,Encry,Passwd,passWDLen);
 		if(ret == 0) break;
 	}
 	if(ret == -1)

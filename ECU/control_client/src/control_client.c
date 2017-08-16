@@ -1708,12 +1708,13 @@ void control_client_thread_entry(void* parameter)
 	if(file_get_array(array, ARRAYNUM, "/yuneng/control.con") == 0){
 		get_socket_config(&sockcfg, array);
 	}
+	printf("1------------------->\n");
 	/* ECU轮训主循环 */
 	while(1)
 	{
 		//每天一点时向EMA确认逆变器异常状态是否被存储
 		check_inverter_abnormal_status_sent(1);
- 
+ 		printf("2------------------->\n");
 		fp=fopen("/yuneng/A118.con","r");
 		if(fp!=NULL)
 		{
@@ -1724,19 +1725,31 @@ void control_client_thread_entry(void* parameter)
 			fclose(fp);
 			unlink("/yuneng/A118.con");
 		}
+		printf("3------------------->\n");
 		if(exist_inverter_abnormal_status() && ecu_flag){
+			printf("4------------------->\n");
 			ecu_time =  acquire_time();
+			printf("5------------------->\n");
 			result = response_inverter_abnormal_status();
+			printf("6------------------->\n");
 			printdecmsg(ECU_DBG_CLIENT,"result",result);
+			printf("7------------------->\n");
 			response_process_result();
+			printf("8------------------->\n");
 		}
 		else if(compareTime(acquire_time() ,ecu_time,60*sockcfg.report_interval)){
+			printf("9------------------->\n");
 			ecu_time = acquire_time();
+			printf("10------------------->\n");
 			if(ecu_flag){ //如果ecu_flag = 0 则不上报处理结果
+			printf("11------------------->\n");
 				response_process_result();
 			}
+			printf("12------------------->\n");
 			result = communication_with_EMA(0);
+			printf("13------------------->\n");
 		}
+		printf("4------------------->\n");
 		//程序自行跳过本次循环
 		if(result < 0){
 			result = 0;

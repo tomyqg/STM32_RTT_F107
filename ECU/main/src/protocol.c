@@ -529,8 +529,8 @@ int protocol_status(struct inverter_info_t *firstinverter, char *datetime)
 {
 	int i, count=0;
 	struct inverter_info_t *inverter = firstinverter;
-	char sendbuff[850]={'\0'};
-	char temp[850]={'\0'};
+	char sendbuff[MAXINVERTERCOUNT*64+RECORDTAIL]={'\0'};
+	char temp[MAXINVERTERCOUNT*64+RECORDTAIL]={'\0'};
 	char length[16]={'\0'};
 
 
@@ -565,7 +565,7 @@ int saveevent(inverter_info *inverter, char *sendcommanddatatime)			//保存系�
 		{
 			if(0 != strcmp(inverter->status_web, "000000000000000000000000"))
 			{
-				memset(event_buff, '\0', 100);
+				memset(event_buff, '\0', 200);
 			
 				for(j=1; j<=3; j++)
 				{
