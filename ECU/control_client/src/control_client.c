@@ -197,9 +197,11 @@ int detection_statusflag(char flag)		//¼ì²â/home/record/inverstaÄ¿Â¼ÏÂÊÇ·ñ´æÔÚfl
 	char dir[30] = "/home/record/inversta";
 	struct dirent *d;
 	char path[100];
-	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	char *buff = NULL;
 	FILE *fp;
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	if(result == RT_EOK)
 	{
 		/* ´ò¿ªdirÄ¿Â¼*/
@@ -228,6 +230,8 @@ int detection_statusflag(char flag)		//¼ì²â/home/record/inverstaÄ¿Â¼ÏÂÊÇ·ñ´æÔÚfl
 						{
 							fclose(fp);
 							closedir(dirp);
+							free(buff);
+							buff = NULL;
 							rt_mutex_release(record_data_lock);
 							return 1;
 						}		
@@ -240,6 +244,8 @@ int detection_statusflag(char flag)		//¼ì²â/home/record/inverstaÄ¿Â¼ÏÂÊÇ·ñ´æÔÚfl
 			closedir(dirp);
 		}
 	}
+	free(buff);
+	buff = NULL;
 	rt_mutex_release(record_data_lock);
 	return 0;
 }
@@ -251,9 +257,11 @@ int change_statusflag1()  //¸Ä±ä³É¹¦·µ»Ø1
 	char dir[30] = "/home/record/inversta";
 	struct dirent *d;
 	char path[100];
-	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	char *buff = NULL;
 	FILE *fp;
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	if(result == RT_EOK)
 	{
 		/* ´ò¿ªdirÄ¿Â¼*/
@@ -284,6 +292,8 @@ int change_statusflag1()  //¸Ä±ä³É¹¦·µ»Ø1
 							fputc('1',fp);
 							fclose(fp);
 							closedir(dirp);
+							free(buff);
+							buff = NULL;
 							rt_mutex_release(record_data_lock);
 							return 1;
 						}
@@ -296,6 +306,8 @@ int change_statusflag1()  //¸Ä±ä³É¹¦·µ»Ø1
 			closedir(dirp);
 		}
 	}
+	free(buff);
+	buff = NULL;
 	rt_mutex_release(record_data_lock);
 	return 0;	
 }	
@@ -306,10 +318,12 @@ void delete_statusflag0()		//Çå¿ÕÊý¾Ýflag±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 	char dir[30] = "/home/record/inversta";
 	struct dirent *d;
 	char path[100];
-	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	char *buff = NULL;
 	FILE *fp;
 	int flag = 0;
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	if(result == RT_EOK)
 	{
 		/* ´ò¿ªdirÄ¿Â¼*/
@@ -363,6 +377,8 @@ void delete_statusflag0()		//Çå¿ÕÊý¾Ýflag±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 			closedir(dirp);
 		}
 	}
+	free(buff);
+	buff = NULL;
 	rt_mutex_release(record_data_lock);
 	return;
 
@@ -376,9 +392,11 @@ int change_statusflag(char *time,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ±¼äµã·µ»Ø
 	struct dirent *d;
 	char path[100];
 	char filetime[15] = {'\0'};
-	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	char *buff = NULL;
 	FILE *fp;
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	if(result == RT_EOK)
 	{
 		/* ´ò¿ªdirÄ¿Â¼*/
@@ -414,6 +432,8 @@ int change_statusflag(char *time,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ±¼äµã·µ»Ø
 								//print2msg(ECU_DBG_CONTROL_CLIENT,"change_resendflag",filetime);
 								fclose(fp);
 								closedir(dirp);
+								free(buff);
+								buff = NULL;
 								rt_mutex_release(record_data_lock);
 								return 1;
 							}
@@ -427,6 +447,8 @@ int change_statusflag(char *time,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ±¼äµã·µ»Ø
 			closedir(dirp);
 		}
 	}
+	free(buff);
+	buff = NULL;
 	rt_mutex_release(record_data_lock);
 	return 0;
 	
@@ -444,10 +466,12 @@ int search_statusflag(char *data,char * time, int *flag,char sendflag)
 	char dir[30] = "/home/record/inversta";
 	struct dirent *d = NULL;
 	char path[100] = {'\0'};
-	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	char *buff = NULL;
 	FILE *fp = NULL;
 	int nextfileflag = 0;	//0±íÊ¾µ±Ç°ÎÄ¼þÕÒµ½ÁËÊý¾Ý£¬1±íÊ¾ÐèÒª´ÓºóÃæµÄÎÄ¼þ²éÕÒÊý¾Ý
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	*flag = 0;
 	if(result == RT_EOK)
 	{
@@ -492,6 +516,8 @@ int search_statusflag(char *data,char * time, int *flag,char sendflag)
 												*flag = 1;
 												fclose(fp);
 												closedir(dirp);
+												free(buff);
+												buff = NULL;
 												rt_mutex_release(record_data_lock);
 												return 1;
 											}
@@ -516,6 +542,8 @@ int search_statusflag(char *data,char * time, int *flag,char sendflag)
 									*flag = 1;
 									fclose(fp);
 									closedir(dirp);
+									free(buff);
+									buff = NULL;
 									rt_mutex_release(record_data_lock);
 									return 1;
 								}
@@ -530,6 +558,8 @@ int search_statusflag(char *data,char * time, int *flag,char sendflag)
 			closedir(dirp);
 		}
 	}
+	free(buff);
+	buff = NULL;
 	rt_mutex_release(record_data_lock);
 
 	return nextfileflag;
@@ -543,10 +573,12 @@ void delete_pro_result_flag0()		//Çå¿ÕÊý¾Ýflag±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 	char dir[30] = "/home/data/proc_res";
 	struct dirent *d;
 	char path[100];
-	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	char *buff = NULL;
 	FILE *fp;
 	int flag = 0;
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	if(result == RT_EOK)
 	{
 		/* ´ò¿ªdirÄ¿Â¼*/
@@ -600,6 +632,8 @@ void delete_pro_result_flag0()		//Çå¿ÕÊý¾Ýflag±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 			closedir(dirp);
 		}
 	}
+	free(buff);
+	buff = NULL;
 	rt_mutex_release(record_data_lock);
 	return;
 
@@ -611,10 +645,12 @@ void delete_inv_pro_result_flag0()		//Çå¿ÕÊý¾Ýflag±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 	char dir[30] = "/home/data/iprocres";
 	struct dirent *d;
 	char path[100];
-	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	char *buff = NULL;
 	FILE *fp;
 	int flag = 0;
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	if(result == RT_EOK)
 	{
 		/* ´ò¿ªdirÄ¿Â¼*/
@@ -668,6 +704,8 @@ void delete_inv_pro_result_flag0()		//Çå¿ÕÊý¾Ýflag±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 			closedir(dirp);
 		}
 	}
+	free(buff);
+	buff = NULL;
 	rt_mutex_release(record_data_lock);
 	return;
 
@@ -681,9 +719,11 @@ int change_pro_result_flag(char *item,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ±¼äµ
 	struct dirent *d;
 	char path[100];
 	char fileitem[4] = {'\0'};
-	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	char *buff = NULL;
 	FILE *fp;
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	if(result == RT_EOK)
 	{
 		/* ´ò¿ªdirÄ¿Â¼*/
@@ -721,6 +761,8 @@ int change_pro_result_flag(char *item,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ±¼äµ
 									//print2msg(ECU_DBG_CONTROL_CLIENT,"filetime",filetime);
 									fclose(fp);
 									closedir(dirp);
+									free(buff);
+									buff = NULL;
 									rt_mutex_release(record_data_lock);
 									return 1;
 								}
@@ -737,6 +779,8 @@ int change_pro_result_flag(char *item,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ±¼äµ
 			closedir(dirp);
 		}
 	}
+	free(buff);
+	buff = NULL;
 	rt_mutex_release(record_data_lock);
 	return 0;
 	
@@ -749,9 +793,11 @@ int change_inv_pro_result_flag(char *item,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ
 	struct dirent *d;
 	char path[100];
 	char fileitem[4] = {'\0'};
-	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	char *buff = NULL;
 	FILE *fp;
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	if(result == RT_EOK)
 	{
 		/* ´ò¿ªdirÄ¿Â¼*/
@@ -789,6 +835,8 @@ int change_inv_pro_result_flag(char *item,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ
 								//print2msg(ECU_DBG_CONTROL_CLIENT,"filetime",filetime);
 								fclose(fp);
 								closedir(dirp);
+								free(buff);
+								buff = NULL;
 								rt_mutex_release(record_data_lock);
 								return 1;
 							}
@@ -805,6 +853,8 @@ int change_inv_pro_result_flag(char *item,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ
 			closedir(dirp);
 		}
 	}
+	free(buff);
+	buff = NULL;
 	rt_mutex_release(record_data_lock);
 	return 0;
 	
@@ -823,10 +873,12 @@ int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)
 	char dir[30] = "/home/data/proc_res";
 	struct dirent *d;
 	char path[100];
-	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	char *buff = NULL;
 	FILE *fp;
 	int nextfileflag = 0;	
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	*flag = 0;
 	if(result == RT_EOK)
 	{
@@ -869,6 +921,8 @@ int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)
 												*flag = 1;
 												fclose(fp);
 												closedir(dirp);
+												free(buff);
+												buff = NULL;
 												rt_mutex_release(record_data_lock);
 												return 1;
 											}
@@ -892,6 +946,8 @@ int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)
 									*flag = 1;
 									fclose(fp);
 									closedir(dirp);
+									free(buff);
+									buff = NULL;
 									rt_mutex_release(record_data_lock);
 									return 1;
 								}
@@ -905,6 +961,8 @@ int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)
 			closedir(dirp);
 		}
 	}
+	free(buff);
+	buff = NULL;
 	rt_mutex_release(record_data_lock);
 
 	return nextfileflag;
@@ -924,10 +982,12 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 	char dir[30] = "/home/data/iprocres";
 	struct dirent *d;
 	char path[100];
-	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	char *buff = NULL;
 	FILE *fp;
 	int nextfileflag = 0;	
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	*flag = 0;
 	if(result == RT_EOK)
 	{
@@ -970,6 +1030,8 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 												*flag = 1;
 												fclose(fp);
 												closedir(dirp);
+												free(buff);
+												buff = NULL;
 												rt_mutex_release(record_data_lock);
 												return 1;
 											}
@@ -994,6 +1056,8 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 									*flag = 1;
 									fclose(fp);
 									closedir(dirp);
+									free(buff);
+									buff = NULL;
 									rt_mutex_release(record_data_lock);
 									return 1;
 								}
@@ -1007,6 +1071,8 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 			closedir(dirp);
 		}
 	}
+	free(buff);
+	buff = NULL;
 	rt_mutex_release(record_data_lock);
 
 	return nextfileflag;
@@ -1169,7 +1235,7 @@ int response_inverter_abnormal_status()
 	char *command = NULL;
 	char *send_buffer = NULL;
 	char da_time[20]={'\0'};
-	char data[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};//²éÑ¯µ½µÄÊý¾Ý
+	char *data = NULL;//²éÑ¯µ½µÄÊý¾Ý
 	char time[15] = {'\0'};
 	FILE *fp = NULL;	
 
@@ -1177,7 +1243,8 @@ int response_inverter_abnormal_status()
 	recv_buffer = (char *)rt_malloc(2048);
 	command = (char *)rt_malloc(2048);
 	send_buffer = (char *)rt_malloc(1024);
-
+	data = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
+	memset(data,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 	//½¨Á¢socketÁ¬½Ó
 	sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);
 	if(sockfd < 0)
@@ -1212,6 +1279,8 @@ int response_inverter_abnormal_status()
 					rt_free(recv_buffer);
 					rt_free(command);
 					rt_free(send_buffer);
+					free(data);
+					data = NULL;
 					return -1;
 				}
 	
@@ -1257,6 +1326,8 @@ int response_inverter_abnormal_status()
 							rt_free(recv_buffer);
 							rt_free(command);
 							rt_free(send_buffer);
+							free(data);
+							data = NULL;
 							return -1;
 						}
 						else
@@ -1294,6 +1365,8 @@ int response_inverter_abnormal_status()
 			rt_free(recv_buffer);
 			rt_free(command);
 			rt_free(send_buffer);
+			free(data);
+			data = NULL;
 
 			return result;
 				
@@ -1315,6 +1388,8 @@ int response_inverter_abnormal_status()
 				rt_free(recv_buffer);
 				rt_free(command);
 				rt_free(send_buffer);
+				free(data);
+				data = NULL;
 				return -1;
 			}
 			//Ð£ÑéÃüÁî
@@ -1357,6 +1432,8 @@ int response_inverter_abnormal_status()
 						rt_free(recv_buffer);
 						rt_free(command);
 						rt_free(send_buffer);
+						free(data);
+						data = NULL;
 						return -1;
 					}
 					else
@@ -1395,6 +1472,8 @@ int response_inverter_abnormal_status()
 		rt_free(recv_buffer);
 		rt_free(command);
 		rt_free(send_buffer);
+		free(data);
+		data = NULL;
 
 		return result;
 	}
@@ -1598,13 +1677,16 @@ int communication_with_EMA(int next_cmd_id)
 /* ÉÏ±¨process_result±íÖÐµÄÐÅÏ¢ */
 int response_process_result()
 {
-	char sendbuffer[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};
+	char *sendbuffer = NULL;
 	int sockfd, flag;
 	char inverterId[13] = {'\0'};
 	//int item_num[32] = {0};
-	char data[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};//²éÑ¯µ½µÄÊý¾Ý
+	char *data = NULL;//²éÑ¯µ½µÄÊý¾Ý
 	char item[4] = {'\0'};
-	
+	sendbuffer = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
+	data = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
+	memset(sendbuffer,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
+	memset(data,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 
 	{
 		//²éÑ¯ËùÓÐ[ECU¼¶±ð]´¦Àí½á¹û
@@ -1681,6 +1763,10 @@ int response_process_result()
 		delete_inv_pro_result_flag0();
 
 	}
+	free(sendbuffer);
+	sendbuffer = NULL;
+	free(data);
+	data = NULL;
 	return 0;
 }
 
@@ -1708,13 +1794,11 @@ void control_client_thread_entry(void* parameter)
 	if(file_get_array(array, ARRAYNUM, "/yuneng/control.con") == 0){
 		get_socket_config(&sockcfg, array);
 	}
-	printf("1------------------->\n");
 	/* ECUÂÖÑµÖ÷Ñ­»· */
 	while(1)
 	{
 		//Ã¿ÌìÒ»µãÊ±ÏòEMAÈ·ÈÏÄæ±äÆ÷Òì³£×´Ì¬ÊÇ·ñ±»´æ´¢
-		check_inverter_abnormal_status_sent(1);
- 		printf("2------------------->\n");
+		check_inverter_abnormal_status_sent(14);
 		fp=fopen("/yuneng/A118.con","r");
 		if(fp!=NULL)
 		{
@@ -1725,31 +1809,20 @@ void control_client_thread_entry(void* parameter)
 			fclose(fp);
 			unlink("/yuneng/A118.con");
 		}
-		printf("3------------------->\n");
+		
 		if(exist_inverter_abnormal_status() && ecu_flag){
-			printf("4------------------->\n");
 			ecu_time =  acquire_time();
-			printf("5------------------->\n");
 			result = response_inverter_abnormal_status();
-			printf("6------------------->\n");
 			printdecmsg(ECU_DBG_CLIENT,"result",result);
-			printf("7------------------->\n");
 			response_process_result();
-			printf("8------------------->\n");
 		}
 		else if(compareTime(acquire_time() ,ecu_time,60*sockcfg.report_interval)){
-			printf("9------------------->\n");
 			ecu_time = acquire_time();
-			printf("10------------------->\n");
 			if(ecu_flag){ //Èç¹ûecu_flag = 0 Ôò²»ÉÏ±¨´¦Àí½á¹û
-			printf("11------------------->\n");
 				response_process_result();
 			}
-			printf("12------------------->\n");
 			result = communication_with_EMA(0);
-			printf("13------------------->\n");
 		}
-		printf("4------------------->\n");
 		//³ÌÐò×ÔÐÐÌø¹ý±¾´ÎÑ­»·
 		if(result < 0){
 			result = 0;

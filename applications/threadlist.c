@@ -70,7 +70,7 @@ static struct rt_thread DRM_thread;
 #ifdef THREAD_PRIORITY_MAIN
 #include "main-thread.h"
 ALIGN(RT_ALIGN_SIZE)
-rt_uint8_t main_stack[ 8192 ];
+rt_uint8_t main_stack[ 12288 ];
 struct rt_thread main_thread;
 #endif
 
@@ -151,7 +151,6 @@ extern void cpu_usage_get(rt_uint8_t *major, rt_uint8_t *minor);
 /*****************************************************************************/
 void rt_init_thread_entry(void* parameter)
 {
-
     {
         extern void rt_platform_init(void);
         rt_platform_init();

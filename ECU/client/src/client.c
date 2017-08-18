@@ -129,7 +129,7 @@ int connect_socket(int fd_sock)				//连接到服务器
 	char domain[100]={'\0'};		//EMA的域名
 	char ip[20] = {'\0'};	//EMA的缺省IP
 	int port[2]={8093, 8093};
-	char buff[1024] = {'\0'};
+	char buff[512] = {'\0'};
 	struct sockaddr_in serv_addr;
 	struct hostent * host;
 	FILE *fp;
@@ -303,9 +303,11 @@ int detection_resendflag2()		//存在返回1，不存在返回0
 	char dir[30] = "/home/record/data";
 	struct dirent *d;
 	char path[100];
-	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	char *buff = NULL;
 	FILE *fp;
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	if(result == RT_EOK)
 	{
 		/* 打开dir目录*/
@@ -337,6 +339,8 @@ int detection_resendflag2()		//存在返回1，不存在返回0
 							{
 								fclose(fp);
 								closedir(dirp);
+								free(buff);
+								buff = NULL;
 								rt_mutex_release(record_data_lock);
 								return 1;
 							}		
@@ -350,6 +354,8 @@ int detection_resendflag2()		//存在返回1，不存在返回0
 			closedir(dirp);
 		}
 	}
+	free(buff);
+	buff = NULL;
 	rt_mutex_release(record_data_lock);
 	return 0;
 }
@@ -361,9 +367,11 @@ int change_resendflag(char *time,char flag)  //改变成功返回1，未找到该时间点返回
 	struct dirent *d;
 	char path[100];
 	char filetime[15] = {'\0'};
-	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	char *buff = NULL;
 	FILE *fp;
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	if(result == RT_EOK)
 	{
 		/* 打开dir目录*/
@@ -399,6 +407,8 @@ int change_resendflag(char *time,char flag)  //改变成功返回1，未找到该时间点返回
 								//print2msg(ECU_DBG_CLIENT,"change_resendflag",filetime);
 								fclose(fp);
 								closedir(dirp);
+								free(buff);
+								buff = NULL;
 								rt_mutex_release(record_data_lock);
 								return 1;
 							}
@@ -412,6 +422,8 @@ int change_resendflag(char *time,char flag)  //改变成功返回1，未找到该时间点返回
 			closedir(dirp);
 		}
 	}
+	free(buff);
+	buff = NULL;
 	rt_mutex_release(record_data_lock);
 	return 0;
 	
@@ -429,10 +441,12 @@ int search_readflag(char *data,char * time, int *flag,char sendflag)
 	char dir[30] = "/home/record/data";
 	struct dirent *d;
 	char path[100];
-	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	char *buff = NULL;
 	FILE *fp;
 	int nextfileflag = 0;	//0表示当前文件找到了数据，1表示需要从后面的文件查找数据
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	*flag = 0;
 	if(result == RT_EOK)
 	{
@@ -477,6 +491,8 @@ int search_readflag(char *data,char * time, int *flag,char sendflag)
 												*flag = 1;
 												fclose(fp);
 												closedir(dirp);
+												free(buff);
+												buff = NULL;
 												rt_mutex_release(record_data_lock);
 												return 1;
 											}
@@ -507,6 +523,8 @@ int search_readflag(char *data,char * time, int *flag,char sendflag)
 									*flag = 1;
 									fclose(fp);
 									closedir(dirp);
+									free(buff);
+									buff = NULL;
 									rt_mutex_release(record_data_lock);
 									return 1;
 								}
@@ -521,6 +539,8 @@ int search_readflag(char *data,char * time, int *flag,char sendflag)
 			closedir(dirp);
 		}
 	}
+	free(buff);
+	buff = NULL;
 	rt_mutex_release(record_data_lock);
 
 	return nextfileflag;
@@ -533,10 +553,12 @@ void delete_file_resendflag0()		//清空数据resend标志全部为0的目录
 	char dir[30] = "/home/record/data";
 	struct dirent *d;
 	char path[100];
-	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18]={'\0'};
+	char *buff = NULL;
 	FILE *fp;
 	int flag = 0;
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	if(result == RT_EOK)
 	{
 		/* 打开dir目录*/
@@ -590,6 +612,8 @@ void delete_file_resendflag0()		//清空数据resend标志全部为0的目录
 			closedir(dirp);
 		}
 	}
+	free(buff);
+	buff = NULL;
 	rt_mutex_release(record_data_lock);
 	return;
 
@@ -600,18 +624,31 @@ void delete_file_resendflag0()		//清空数据resend标志全部为0的目录
 int send_record(int fd_sock, char *sendbuff, char *send_date_time)			//发送数据到EMA  注意在存储的时候结尾未添加'\n'  在发送时的时候记得添加
 {
 	int sendbytes=0;
-	char readbuff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};
+	char *readbuff = NULL;
+	readbuff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
+	memset(readbuff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 	sendbytes = send(fd_sock, sendbuff, strlen(sendbuff), 0);
 	if(-1 == sendbytes)
+	{
+		free(readbuff);
+		readbuff = NULL;
 		return -1;
+	}
+		
 	if(-1 == recv_response(fd_sock, readbuff))
+	{
+		free(readbuff);
+		readbuff = NULL;
 		return -1;
+	}
 	else
 	{
 		print2msg(ECU_DBG_CLIENT,"readbuff",readbuff);
 		if('1' == readbuff[0])
 			update_send_flag(send_date_time);
 		clear_send_flag(readbuff);
+		free(readbuff);
+		readbuff = NULL;
 		return 0;
 	}
 }
@@ -795,6 +832,7 @@ int resend_record()
 	}
 	close_socket(fd_sock);
 	free(data);
+	data = NULL;
 	return 0;
 }
 
@@ -805,11 +843,13 @@ void client_thread_entry(void* parameter)
 	char broadcast_time[16];
 	int fd_sock;
 	int thistime=0, lasttime=0,res,flag;
-	char data[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};//查询到的数据
+	char *data = NULL;//查询到的数据
 	char time[15] = {'\0'};
 	rt_thread_delay(RT_TICK_PER_SECOND*START_TIME_CLIENT);
 	printmsg(ECU_DBG_CLIENT,"Started");
-	
+
+	data = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
+	memset(data,0x00,MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 	while(1)
 	{
 		thistime = lasttime = acquire_time();

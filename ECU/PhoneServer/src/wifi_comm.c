@@ -428,7 +428,7 @@ void APP_Response_GetTime(char mapping,unsigned char *ID,char *Time)
 	memset(SendData,'\0',4096);	
 	if(mapping == 0x00)
 	{
-		sprintf(SendData,"APS110015001200%sEND\n",Time);
+		sprintf(SendData,"APS110032001200%sEND\n",Time);
 		packlength = 33;
 	}else
 	{
