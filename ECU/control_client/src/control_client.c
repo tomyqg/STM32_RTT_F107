@@ -1230,7 +1230,7 @@ int response_inverter_abnormal_status()
 	int result = 0;
 	int  j, sockfd, flag, num = 0, cmd_id, next_cmd_id,havaflag;
 	char datetime[15] = {'\0'};
-	char save_buffer[MAXBUFFER] = {'\0'};
+	char *save_buffer = NULL;
 	char *recv_buffer = NULL;
 	char *command = NULL;
 	char *send_buffer = NULL;
@@ -1240,11 +1240,14 @@ int response_inverter_abnormal_status()
 	FILE *fp = NULL;	
 
 	printmsg(ECU_DBG_CONTROL_CLIENT,">>Start Response Abnormal Status");
-	recv_buffer = (char *)rt_malloc(2048);
-	command = (char *)rt_malloc(2048);
+	
+	recv_buffer = (char *)rt_malloc(4096);
+	command = (char *)rt_malloc(4096);
 	send_buffer = (char *)rt_malloc(1024);
 	data = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 	memset(data,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
+	save_buffer = malloc(MAXBUFFER);
+	memset(save_buffer,'\0',MAXBUFFER);
 	//建立socket连接
 	sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);
 	if(sockfd < 0)
@@ -1281,6 +1284,8 @@ int response_inverter_abnormal_status()
 					rt_free(send_buffer);
 					free(data);
 					data = NULL;
+					free(save_buffer);
+					save_buffer = NULL;
 					return -1;
 				}
 	
@@ -1328,6 +1333,8 @@ int response_inverter_abnormal_status()
 							rt_free(send_buffer);
 							free(data);
 							data = NULL;
+							free(save_buffer);
+							save_buffer = NULL;
 							return -1;
 						}
 						else
@@ -1367,7 +1374,8 @@ int response_inverter_abnormal_status()
 			rt_free(send_buffer);
 			free(data);
 			data = NULL;
-
+			free(save_buffer);
+			save_buffer = NULL;
 			return result;
 				
 		}
@@ -1390,6 +1398,8 @@ int response_inverter_abnormal_status()
 				rt_free(send_buffer);
 				free(data);
 				data = NULL;
+				free(save_buffer);
+				save_buffer = NULL;
 				return -1;
 			}
 			//校验命令
@@ -1434,6 +1444,8 @@ int response_inverter_abnormal_status()
 						rt_free(send_buffer);
 						free(data);
 						data = NULL;
+						free(save_buffer);
+						save_buffer = NULL;
 						return -1;
 					}
 					else
@@ -1474,7 +1486,8 @@ int response_inverter_abnormal_status()
 		rt_free(send_buffer);
 		free(data);
 		data = NULL;
-
+		free(save_buffer);
+		save_buffer = NULL;
 		return result;
 	}
 
@@ -1683,6 +1696,7 @@ int response_process_result()
 	//int item_num[32] = {0};
 	char *data = NULL;//查询到的数据
 	char item[4] = {'\0'};
+	
 	sendbuffer = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 	data = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 	memset(sendbuffer,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
@@ -1832,7 +1846,6 @@ void control_client_thread_entry(void* parameter)
 		}
 		rt_thread_delay(RT_TICK_PER_SECOND*sockcfg.report_interval*60/3);
 	
-		
 	}
 
 }

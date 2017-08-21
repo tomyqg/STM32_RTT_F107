@@ -265,7 +265,10 @@ int recv_response(int fd_sock, char *readbuff)
 	fd_set rd;
 	struct timeval timeout;
 	int recvbytes, res, count=0, readbytes = 0;
-	char recvbuff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18], temp[16];
+	char *recvbuff = NULL;
+	char temp[16];
+	recvbuff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(recvbuff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	while(1)
 	{
 		FD_ZERO(&rd);
@@ -277,6 +280,8 @@ int recv_response(int fd_sock, char *readbuff)
 		if(res <= 0){
 			//printerrmsg("select");
 			printmsg(ECU_DBG_CLIENT,"Receive data reply from EMA timeout");
+			free(recvbuff);
+			recvbuff = NULL;
 			return -1;
 		}
 		else{
@@ -284,14 +289,22 @@ int recv_response(int fd_sock, char *readbuff)
 			memset(temp, '\0', sizeof(temp));
 			recvbytes = recv(fd_sock, recvbuff, sizeof(recvbuff), 0);
 			if(0 == recvbytes)
+			{
+				free(recvbuff);
+				recvbuff = NULL;
 				return -1;
+			}	
 			strcat(readbuff, recvbuff);
 			readbytes += recvbytes;
 			if(readbytes >= 3)
 			{
 				count = (readbuff[1]-0x30)*10 + (readbuff[2]-0x30);
 				if(count==((strlen(readbuff)-3)/14))
+				{
+					free(recvbuff);
+					recvbuff = NULL;
 					return readbytes;
+				}		
 			}
 		}
 	}
