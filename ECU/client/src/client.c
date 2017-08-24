@@ -137,7 +137,6 @@ int connect_socket(int fd_sock)				//连接到服务器
 
 	if(rt_hw_GetWiredNetConnect() == 0)
 	{
-		closesocket(fd_sock);
 		return -1;
 	}
 
@@ -200,7 +199,6 @@ int connect_socket(int fd_sock)				//连接到服务器
 
 	if(-1==connect(fd_sock,(struct sockaddr *)&serv_addr,sizeof(struct sockaddr))){
 		showdisconnected();
-		closesocket(fd_sock);
 		printmsg(ECU_DBG_CLIENT,"Failed to connect to EMA");
 		return -1;
 	}
@@ -776,11 +774,7 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 			if(recv_response(fd_sock, readbuff) > 3)
 				clear_send_flag(readbuff);
 			else
-			{
-				close_socket(fd_sock);
 				break;
-			}
-				
 		}
 #ifdef WIFI_USE		
 	}else
@@ -824,7 +818,7 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 #endif
 	}
 
-	
+	close_socket(fd_sock);
 	return 0;
 }
 
@@ -849,11 +843,7 @@ int resend_record()
 			printmsg(ECU_DBG_CLIENT,data);
 			res = send_record(fd_sock, data, time);
 			if(-1 == res)
-			{
-				close_socket(fd_sock);
 				break;
-			}
-				
 		}
 #ifdef WIFI_USE 
 	}else
@@ -869,7 +859,7 @@ int resend_record()
 		}
 #endif
 	}
-	
+	close_socket(fd_sock);
 	free(data);
 	data = NULL;
 	return 0;
@@ -912,7 +902,6 @@ void client_thread_entry(void* parameter)
 			{
 				if(compareTime(thistime ,lasttime,300))
 				{
-					close_socket(fd_sock);
 					break;
 				}
 				if(1 == flag)		// 还存在需要上传的数据
@@ -920,11 +909,7 @@ void client_thread_entry(void* parameter)
 				printmsg(ECU_DBG_CLIENT,data);
 				res = send_record(fd_sock, data, time);
 				if(-1 == res)
-				{
-					close_socket(fd_sock);
 					break;
-				}
-					
 				thistime = acquire_time();
 				memset(data,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL));
 				memset(time,0,15);
@@ -958,8 +943,9 @@ void client_thread_entry(void* parameter)
 			WIFI_Close(SOCKET_B);
 #endif	
 		}
-		
+		close_socket(fd_sock);
 		delete_file_resendflag0();		//清空数据resend标志全部为0的目录
+		
 		if((thistime < 300) && (lasttime > 300))
 		{
 			if((thistime+(24*60*60+1)-lasttime) < 300)

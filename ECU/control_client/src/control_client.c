@@ -1178,7 +1178,6 @@ int check_inverter_abnormal_status_sent(int hour)
 			return 0;
 		}
 #endif		
-		return -1;
 	}else
 	{
 		strcpy(send_buffer, "APS13AAA51A123AAA0");
@@ -1398,7 +1397,6 @@ int response_inverter_abnormal_status()
 				
 		}
 #endif
-		return -1;
 	}
 	else
 	{

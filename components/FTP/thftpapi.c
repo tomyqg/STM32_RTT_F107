@@ -546,6 +546,7 @@ int ftp_connect( char *host, int port, char *user, char *pwd )
     int     c_sock;
 	if(rt_hw_GetWiredNetConnect() == 0)
 	{
+		closesocket( c_sock );
 		return -1;
 	}
     c_sock = connect_server( host, port );
