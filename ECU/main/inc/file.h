@@ -42,6 +42,7 @@ int save_process_result(int item, char *result);	//设置保护参数,功率等完成后把结
 int save_inverter_parameters_result(inverter_info *inverter, int item, char *inverter_result);
 int save_inverter_parameters_result2(char *id, int item, char *inverter_result);
 void save_system_power(int system_power, char *date_time);
+void delete_system_power_2_month_ago(char *date_time);
 int read_system_power(char *date_time, char *power_buff,int *length);
 void update_daily_energy(float current_energy, char *date_time);
 void update_monthly_energy(float current_energy, char *date_time);

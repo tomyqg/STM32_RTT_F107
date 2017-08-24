@@ -20,7 +20,6 @@ typedef struct
 	char WifiMac[7];										//ECU ŒﬁœﬂMacµÿ÷∑
 } stBaseInfo;
 
-#ifdef WIFI_USE
 unsigned short packetlen(unsigned char *packet);
 
 int Resolve_RecvData(char *RecvData,int* Data_Len,int* Command_Id);
@@ -52,5 +51,5 @@ void APP_Response_GetTime(char mapping,unsigned char *ID,char *Time);
 
 
 
-#endif 
+
 #endif /*__WIFI_COMM_H__*/

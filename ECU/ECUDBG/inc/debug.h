@@ -43,7 +43,7 @@ typedef enum DEBUG {
 #endif 
 
 //宏开关，打开关闭线程打印信息
-#define ECU_DEBUG_UPDATE					ECU_DBG_OFF
+#define ECU_DEBUG_UPDATE					ECU_DBG_ON
 #define ECU_DEBUG_IDWRITE					ECU_DBG_ON
 #define ECU_DEBUG_MAIN						ECU_DBG_ON
 #define ECU_DEBUG_CLIENT					ECU_DBG_ON

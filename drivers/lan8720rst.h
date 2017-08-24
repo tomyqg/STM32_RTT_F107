@@ -21,6 +21,6 @@
 /*****************************************************************************/
 void rt_hw_lan8720_init(void);	//lan8720≥ı ºªØ
 void rt_hw_lan8720_rst(void);	//lan8720∏¥Œª
-
+int rt_hw_GetWiredNetConnect(void);
 
 #endif

@@ -15,6 +15,8 @@
 #include <rtthread.h>
 #include <stm32f10x.h>
 #include <rthw.h>
+#include "stm32_eth.h"
+#include "stdio.h"
 
 /*****************************************************************************/
 /*  Definitions                                                              */
@@ -47,8 +49,15 @@ void rt_hw_lan8720_rst(void)
 	GPIO_SetBits(LAN8720_GPIO, LAN8720_PIN);
 }
 
+int rt_hw_GetWiredNetConnect(void)
+{
+	int value = 0,ret = 0;
+	value = ETH_ReadPHYRegister(0x00, 1);
+	ret = (value & (1 << 2)) >> 2;
+	return ret;
+}
 
-#if 0
+#if 1
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 void lanrst()
@@ -56,6 +65,12 @@ void lanrst()
 	rt_hw_lan8720_rst();
 }
 FINSH_FUNCTION_EXPORT(lanrst, lanrst.)
+void GetNet()
+{
+	rt_hw_GetWiredNetConnect();
+}
+FINSH_FUNCTION_EXPORT(GetNet, GetNet.)
+
 #endif
 #endif
 

@@ -75,10 +75,10 @@ typedef struct IPConfig
 //thread start time
 #define START_TIME_UPDATE									15
 #define START_TIME_NTP										10
-#define START_TIME_IDWRITE								10
-#define START_TIME_MAIN										20			//90
-#define START_TIME_CONTROL_CLIENT					30			//120
-#define START_TIME_CLIENT									40			//180
+#define START_TIME_IDWRITE								5
+#define START_TIME_MAIN										0			//90
+#define START_TIME_CONTROL_CLIENT					20			//120
+#define START_TIME_CLIENT									30			//180
 #define START_TIME_PHONE_SERVER						20
 
 /*****************************************************************************/

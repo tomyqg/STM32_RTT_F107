@@ -21,6 +21,7 @@
 #include <fcntl.h>
 #include "datetime.h"
 #include "debug.h"
+#include "lan8720rst.h"
 
 /*****************************************************************************/
 /*  Function Implementations                                                 */
@@ -74,6 +75,12 @@ int connect__socket(int sockfd, int port, const char *ip, const char *domain)
 	struct hostent *host;
 	struct sockaddr_in serv_addr;
 	char time[20];
+
+	if(rt_hw_GetWiredNetConnect() == 0)
+	{
+		closesocket(sockfd);
+		return -1;
+	}
 	
 	memset(&serv_addr, 0, sizeof(struct sockaddr_in));
 	serv_addr.sin_family = AF_INET; //地址族

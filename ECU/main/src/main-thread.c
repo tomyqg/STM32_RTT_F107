@@ -254,6 +254,8 @@ void main_thread_entry(void* parameter)
 				save_system_power(ecu.system_power,ecu.broadcast_time);			//保存系统功率
 				update_daily_energy(ecu.current_energy,ecu.broadcast_time);		//保存每日发电量
 				update_monthly_energy(ecu.current_energy,ecu.broadcast_time);	//保存每月的发电量
+				//最多保存两个月的数据
+				delete_system_power_2_month_ago(ecu.broadcast_time);
 			}
 			printf("today energy:%f\n",ecu.today_energy);
 						

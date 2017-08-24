@@ -236,6 +236,8 @@ void Phone_RegisterID(unsigned char * ID,int Data_Len,const char *recvbuffer) 		
 	printf("WIFI_Recv_Event%d %s\n",P0005,recvbuffer);				
 
 	{
+	int i = 0;
+	inverter_info *curinverter = inverter;
 	int AddNum = 0;
 	//匹配成功进行相应操作
 	printf("COMMAND_REGISTERID  Mapping\n");
@@ -245,6 +247,62 @@ void Phone_RegisterID(unsigned char * ID,int Data_Len,const char *recvbuffer) 		
 	APP_Response_RegisterID(0x00,ID);
 	//添加ID到文件
 	phone_add_inverter(AddNum,&recvbuffer[28]);
+		
+	for(i=0; i<MAXINVERTERCOUNT; i++, curinverter++)
+	{
+		rt_memset(curinverter->id, '\0', sizeof(curinverter->id));		//清空逆变器UID
+		//rt_memset(curinverter->tnuid, '\0', sizeof(curinverter->tnuid));			//清空逆变器ID
+
+		curinverter->model = 0;
+
+		curinverter->dv=0;			//清空当前一轮直流电压
+		curinverter->di=0;			//清空当前一轮直流电流
+		curinverter->op=0;			//清空当前逆变器输出功率
+		curinverter->gf=0;			//清空电网频率
+		curinverter->it=0;			//清空逆变器温度
+		curinverter->gv=0;			//清空电网电压
+		curinverter->dvb=0;			//B路清空当前一轮直流电压
+		curinverter->dib=0;			//B路清空当前一轮直流电流
+		curinverter->opb=0;			//B路清空当前逆变器输出功率
+		curinverter->gvb=0;
+		curinverter->dvc=0;
+		curinverter->dic=0;
+		curinverter->opc=0;
+		curinverter->gvc=0;
+		curinverter->dvd=0;
+		curinverter->did=0;
+		curinverter->opd=0;
+		curinverter->gvd=0;
+
+
+
+		curinverter->curgeneration = 0;	//清空逆变器当前一轮发电量
+		curinverter->curgenerationb = 0;	//B路清空当前一轮发电量
+
+		curinverter->preaccgen = 0;
+		curinverter->preaccgenb = 0;
+		curinverter->curaccgen = 0;
+		curinverter->curaccgenb = 0;
+		curinverter->preacctime = 0;
+		curinverter->curacctime = 0;
+
+		rt_memset(curinverter->status_web, '\0', sizeof(curinverter->status_web));		//清空逆变器状态
+		rt_memset(curinverter->status, '\0', sizeof(curinverter->status));		//清空逆变器状态
+		rt_memset(curinverter->statusb, '\0', sizeof(curinverter->statusb));		//B路清空逆变器状态
+
+		curinverter->dataflag = 0;		//上一轮有数据的标志置位
+	//	curinverter->bindflag=0;		//绑定逆变器标志位置清0
+		curinverter->no_getdata_num=0;	//ZK,清空连续获取不到的次数
+		curinverter->disconnect_times=0;		//没有与逆变器通信上的次数清0, ZK
+		curinverter->signalstrength=0;			//信号强度初始化为0
+
+		curinverter->updating=0;
+		curinverter->raduis=0;
+	}
+	
+	get_id_from_file(inverter);
+
+
 					
 	//重启main线程
 	restartThread(TYPE_MAIN);					
@@ -348,63 +406,10 @@ void Phone_SetWIFIPasswd(unsigned char * ID,int Data_Len,const char *recvbuffer)
 
 void Phone_GetIDInfo(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//获取ID信息
 {
-	int i = 0;
-	inverter_info *curinverter = inverter;
+	
+	
 	printf("WIFI_Recv_Event%d %s\n",P0011,recvbuffer);
-	
-	for(i=0; i<MAXINVERTERCOUNT; i++, curinverter++)
-	{
-		rt_memset(curinverter->id, '\0', sizeof(curinverter->id));		//清空逆变器UID
-		//rt_memset(curinverter->tnuid, '\0', sizeof(curinverter->tnuid));			//清空逆变器ID
 
-		curinverter->model = 0;
-
-		curinverter->dv=0;			//清空当前一轮直流电压
-		curinverter->di=0;			//清空当前一轮直流电流
-		curinverter->op=0;			//清空当前逆变器输出功率
-		curinverter->gf=0;			//清空电网频率
-		curinverter->it=0;			//清空逆变器温度
-		curinverter->gv=0;			//清空电网电压
-		curinverter->dvb=0;			//B路清空当前一轮直流电压
-		curinverter->dib=0;			//B路清空当前一轮直流电流
-		curinverter->opb=0;			//B路清空当前逆变器输出功率
-		curinverter->gvb=0;
-		curinverter->dvc=0;
-		curinverter->dic=0;
-		curinverter->opc=0;
-		curinverter->gvc=0;
-		curinverter->dvd=0;
-		curinverter->did=0;
-		curinverter->opd=0;
-		curinverter->gvd=0;
-
-
-
-		curinverter->curgeneration = 0;	//清空逆变器当前一轮发电量
-		curinverter->curgenerationb = 0;	//B路清空当前一轮发电量
-
-		curinverter->preaccgen = 0;
-		curinverter->preaccgenb = 0;
-		curinverter->curaccgen = 0;
-		curinverter->curaccgenb = 0;
-		curinverter->preacctime = 0;
-		curinverter->curacctime = 0;
-
-		rt_memset(curinverter->status_web, '\0', sizeof(curinverter->status_web));		//清空逆变器状态
-		rt_memset(curinverter->status, '\0', sizeof(curinverter->status));		//清空逆变器状态
-		rt_memset(curinverter->statusb, '\0', sizeof(curinverter->statusb));		//B路清空逆变器状态
-
-		curinverter->dataflag = 0;		//上一轮有数据的标志置位
-	//	curinverter->bindflag=0;		//绑定逆变器标志位置清0
-		curinverter->no_getdata_num=0;	//ZK,清空连续获取不到的次数
-		curinverter->disconnect_times=0;		//没有与逆变器通信上的次数清0, ZK
-		curinverter->signalstrength=0;			//信号强度初始化为0
-
-		curinverter->updating=0;
-		curinverter->raduis=0;
-	}
-	
-	get_id_from_file(inverter);
 	APP_Response_GetIDInfo(0x00,ID,inverter);
 }
 
@@ -421,14 +426,14 @@ void Phone_GetTime(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//
 //WIFI事件处理
 void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 {
-#ifdef WIFI_USE
+//#ifdef WIFI_USE
 	int ResolveFlag = 0,Data_Len = 0,Command_Id = 0;
 	ResolveFlag =  Resolve_RecvData((char *)WIFI_RecvData,&Data_Len,&Command_Id);
 	if(ResolveFlag == 0)
 	{
 		(*pfun_Phone[Command_Id])(ID,Data_Len,WIFI_RecvData);
 	}
-	#endif
+//#endif
 }
 
 
@@ -487,7 +492,7 @@ void phone_server_thread_entry(void* parameter)
 			process_WIFI(ID_A,(char *)WIFI_RecvSocketAData);
 		}
 		
-		rt_thread_delay(RT_TICK_PER_SECOND/8);
+		rt_thread_delay(RT_TICK_PER_SECOND/20);
 	}
 	
 }

@@ -29,6 +29,7 @@
 #include "threadlist.h"
 #include "variation.h"
 #include "usart5.h"
+#include "lan8720rst.h"
 
 /*****************************************************************************/
 /*  Variable Declarations                                                    */
@@ -52,7 +53,7 @@ int writeconnecttime(void)			//保存最后一次连接上服务器的时间
 	fclose(fp);
 
 	memcpy(ecu.last_ema_time,connecttime,15);
-	printf("ecu.last_ema_time:%s\n",ecu.last_ema_time);
+	print2msg(ECU_DBG_CLIENT,"ecu.last_ema_time:",ecu.last_ema_time);
 	return 0;
 }
 
@@ -69,7 +70,7 @@ int readconnecttime(void)			//保存最后一次连接上服务器的时间
 		memcpy(ecu.last_ema_time,connecttime,15);
 		fclose(fp);
 	}
-	printf("ecu.last_ema_time:%s\n",ecu.last_ema_time);
+	print2msg(ECU_DBG_CLIENT,"ecu.last_ema_time:",ecu.last_ema_time);
 	return 0;
 }
 
@@ -134,6 +135,12 @@ int connect_socket(int fd_sock)				//连接到服务器
 	struct hostent * host;
 	FILE *fp;
 
+	if(rt_hw_GetWiredNetConnect() == 0)
+	{
+		closesocket(fd_sock);
+		return -1;
+	}
+
 	fp = fopen("/yuneng/datacent.con", "r");
 	if(fp)
 	{
@@ -193,6 +200,7 @@ int connect_socket(int fd_sock)				//连接到服务器
 
 	if(-1==connect(fd_sock,(struct sockaddr *)&serv_addr,sizeof(struct sockaddr))){
 		showdisconnected();
+		closesocket(fd_sock);
 		printmsg(ECU_DBG_CLIENT,"Failed to connect to EMA");
 		return -1;
 	}
@@ -700,9 +708,14 @@ int wifi_socketb_format(char *data ,int length)
 
 int wifi_send_record(char *sendbuff, char *send_date_time)		//通过WIFI发送数据到EMA  注意在存储的时候结尾未添加'\n'  在发送时的时候记得添加
 {
-	int j = 0;
+	int j = 0,ret = 0;
 	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
-	SendToSocketB(sendbuff, strlen(sendbuff));
+	ret = SendToSocketB(sendbuff, strlen(sendbuff));
+	if(ret == -1)
+	{
+		rt_mutex_release(usr_wifi_lock);
+		return -1;
+	}
 	
 	for(j = 0;j<800;j++)
 	{
@@ -732,7 +745,7 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 	char readbuff[1024] = {'\0'};
 	char sendbuff[256] = {'\0'};
 	FILE *fp;
-	int fd_sock,flag_failed = 0;
+	int fd_sock;
 
 	if(0 == detection_resendflag2())		//	检测是否有resendflag='2'的记录
 		return 0;
@@ -763,19 +776,28 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 			if(recv_response(fd_sock, readbuff) > 3)
 				clear_send_flag(readbuff);
 			else
+			{
+				close_socket(fd_sock);
 				break;
+			}
+				
 		}
 #ifdef WIFI_USE		
 	}else
 	{
-		int j = 0;
-
+		int j = 0,flag_failed = 0,ret = 0;
+		
 			//创建成功
 		while(1)
 		{
 			memset(readbuff, '\0', sizeof(readbuff));
 			rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
-			SendToSocketB(sendbuff, strlen(sendbuff));	
+			ret = SendToSocketB(sendbuff, strlen(sendbuff));
+			if(ret == -1)
+			{
+				rt_mutex_release(usr_wifi_lock);
+				break;
+			}
 			for(j=0;j < 800;j++)
 			{
 				if(WIFI_Recv_SocketB_Event == 1)
@@ -802,7 +824,7 @@ int preprocess()			//发送头信息到EMA,读取已经存在EMA的记录时间
 #endif
 	}
 
-	close_socket(fd_sock);
+	
 	return 0;
 }
 
@@ -827,7 +849,11 @@ int resend_record()
 			printmsg(ECU_DBG_CLIENT,data);
 			res = send_record(fd_sock, data, time);
 			if(-1 == res)
+			{
+				close_socket(fd_sock);
 				break;
+			}
+				
 		}
 #ifdef WIFI_USE 
 	}else
@@ -843,7 +869,7 @@ int resend_record()
 		}
 #endif
 	}
-	close_socket(fd_sock);
+	
 	free(data);
 	data = NULL;
 	return 0;
@@ -886,6 +912,7 @@ void client_thread_entry(void* parameter)
 			{
 				if(compareTime(thistime ,lasttime,300))
 				{
+					close_socket(fd_sock);
 					break;
 				}
 				if(1 == flag)		// 还存在需要上传的数据
@@ -893,7 +920,11 @@ void client_thread_entry(void* parameter)
 				printmsg(ECU_DBG_CLIENT,data);
 				res = send_record(fd_sock, data, time);
 				if(-1 == res)
+				{
+					close_socket(fd_sock);
 					break;
+				}
+					
 				thistime = acquire_time();
 				memset(data,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL));
 				memset(time,0,15);
@@ -927,7 +958,7 @@ void client_thread_entry(void* parameter)
 			WIFI_Close(SOCKET_B);
 #endif	
 		}
-		close_socket(fd_sock);
+		
 		delete_file_resendflag0();		//清空数据resend标志全部为0的目录
 		if((thistime < 300) && (lasttime > 300))
 		{

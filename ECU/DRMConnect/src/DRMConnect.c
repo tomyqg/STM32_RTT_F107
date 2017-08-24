@@ -70,9 +70,7 @@ void DRM_Connect_thread_entry(void* parameter)
 	}
 	
 	while(1)
-	{
-		//printf("DRM1: %d   DRM2: %d\n",DRM0_IN1,DRM0_IN2);
-		
+	{		
 		if((DRM0_IN1 != DRM0_IN2) && (status !=1))
 		{
 			status = 1;

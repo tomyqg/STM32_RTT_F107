@@ -483,6 +483,89 @@ void save_system_power(int system_power, char *date_time)
 	
 }
 
+//计算两个月前的月份
+int calculate_earliest_2_month_ago(char *date,int *earliest_data)
+{
+	char year_s[5] = {'\0'};
+	char month_s[3] = {'\0'};
+	int year = 0,month = 0;	//year为年份 month为月份 day为日期  flag 为瑞年判断标志 count表示上个月好需要补的天数 number_of_days:上个月的总天数
+	
+	memcpy(year_s,date,4);
+	year_s[4] = '\0';
+	year = atoi(year_s);
+
+	memcpy(month_s,&date[4],2);
+	month_s[2] = '\0';
+	month = atoi(month_s);
+	
+	if(month >= 3)
+	{
+		month -= 2;
+		*earliest_data = (year * 100 + month);
+		printf("calculate_earliest_2_month_ago:%d %d    %d \n",year,month,*earliest_data);
+		return 0;
+	}else if(month == 2)
+	{
+		month = 12;
+		year = year - 1;
+		*earliest_data = (year * 100 + month);
+		printf("calculate_earliest_2_month_ago:%d %d    %d \n",year,month,*earliest_data);
+		return 0;
+	}else if(month == 1)
+	{
+		month = 11;
+		year = year - 1;
+		*earliest_data = (year * 100 + month);
+		printf("calculate_earliest_2_month_ago:%d %d    %d \n",year,month,*earliest_data);
+		return 0;
+	}
+	
+	return -1;
+}
+
+
+//删除两个月之前的数据
+void delete_system_power_2_month_ago(char *date_time)
+{
+	DIR *dirp;
+	char dir[30] = "/home/record/power";
+	struct dirent *d;
+	char path[100];
+	int earliest_data,file_data;
+	char fileTime[20] = {'\0'};
+
+	/* 打开dir目录*/
+	dirp = opendir("/home/record/power");
+	if(dirp == RT_NULL)
+	{
+		printmsg(ECU_DBG_CLIENT,"delete_system_power_2_month_ago open directory error");
+	}
+	else
+	{
+		calculate_earliest_2_month_ago(date_time,&earliest_data);
+		printf("calculate_earliest_2_month_ago:::::%d\n",earliest_data);
+		/* 读取dir目录*/
+		while ((d = readdir(dirp)) != RT_NULL)
+		{
+		
+			
+			memcpy(fileTime,d->d_name,6);
+			fileTime[6] = '\0';
+			file_data = atoi(fileTime);
+			if(file_data <= earliest_data)
+			{
+				sprintf(path,"%s/%s",dir,d->d_name);
+				unlink(path);
+			}
+
+			
+		}
+		/* 关闭目录 */
+		closedir(dirp);
+	}
+
+
+}
 
 //读取某日的功率曲线参数   日期   报文
 int read_system_power(char *date_time, char *power_buff,int *length)
@@ -643,7 +726,6 @@ int calculate_earliest_week(char *date,int *earliest_data)
 	if(day > 7)
 	{
 		*earliest_data = (year * 10000 + month * 100 + day) - 6;
-		//printf("calculate_earliest_week:%d %d  %d  %d   %d \n",year,month,day,flag,*earliest_data);
 		return 0;
 	}else
 	{
@@ -659,7 +741,6 @@ int calculate_earliest_week(char *date,int *earliest_data)
 		flag = leap(year);
 		day = day_tab[flag][month-1]+1-count;
 		*earliest_data = (year * 10000 + month * 100 + day);	
-		//printf("calculate_earliest_week:%d %d  %d  %d   %d \n",year,month,day,flag,*earliest_data);
 		
 		return 1;
 	}
@@ -692,7 +773,7 @@ int read_weekly_energy(char *date_time, char *power_buff,int *length)
 		//组件文件目录
 		sprintf(path,"%s/%s.dat",dir,date_tmp);
 		//打开文件
-		printf("path:%s\n",path);
+		print2msg(ECU_DBG_OTHER,"path",path);
 		fp = fopen(path, "r");
 		if(fp)
 		{
@@ -707,7 +788,8 @@ int read_weekly_energy(char *date_time, char *power_buff,int *length)
 				{
 					memcpy(energy_tmp,&buff[9],(strlen(buff)-9));
 					energy = (int)(atof(energy_tmp)*100);
-					printf("buff:%s\n energy:%d\n",buff,energy);
+					print2msg(ECU_DBG_OTHER,"buff",buff);
+					printdecmsg(ECU_DBG_OTHER,"energy",energy);
 					power_buff[(*length)++] = (date_tmp[0]-'0')*16 + (date_tmp[1]-'0');
 					power_buff[(*length)++] = (date_tmp[2]-'0')*16 + (date_tmp[3]-'0');
 					power_buff[(*length)++] = (date_tmp[4]-'0')*16 + (date_tmp[5]-'0');
@@ -726,7 +808,7 @@ int read_weekly_energy(char *date_time, char *power_buff,int *length)
 	date_tmp[6] = '\0';
 	sprintf(path,"%s/%s.dat",dir,date_tmp);
 
-	printf("path:%s\n",path);
+	print2msg(ECU_DBG_OTHER,"path",path);
 	fp = fopen(path, "r");
 	if(fp)
 	{
@@ -741,7 +823,8 @@ int read_weekly_energy(char *date_time, char *power_buff,int *length)
 			{
 				memcpy(energy_tmp,&buff[9],(strlen(buff)-9));
 				energy = (int)(atof(energy_tmp)*100);
-				printf("buff:%s\n energy:%d\n",buff,energy);
+				print2msg(ECU_DBG_OTHER,"buff",buff);
+				printdecmsg(ECU_DBG_OTHER,"energy",energy);
 				power_buff[(*length)++] = (date_tmp[0]-'0')*16 + (date_tmp[1]-'0');
 				power_buff[(*length)++] = (date_tmp[2]-'0')*16 + (date_tmp[3]-'0');
 				power_buff[(*length)++] = (date_tmp[4]-'0')*16 + (date_tmp[5]-'0');
@@ -953,12 +1036,12 @@ int read_yearly_energy(char *date_time, char *power_buff,int *length)
 			memcpy(date_tmp,buff,6);
 			date_tmp[6] = '\0';
 			compare_time = atoi(date_tmp);
-			printf("compare_time %d     earliest_date %d\n",compare_time,earliest_date);
+			//printf("compare_time %d     earliest_date %d\n",compare_time,earliest_date);
 			if(compare_time >= earliest_date)
 			{
 				memcpy(energy_tmp,&buff[7],(strlen(buff)-7));
 				energy = (int)(atof(energy_tmp)*100);
-				printf("buff:%s\n energy:%d\n",buff,energy);
+				//printf("buff:%s\n energy:%d\n",buff,energy);
 				power_buff[(*length)++] = (date_tmp[0]-'0')*16 + (date_tmp[1]-'0');
 				power_buff[(*length)++] = (date_tmp[2]-'0')*16 + (date_tmp[3]-'0');
 				power_buff[(*length)++] = (date_tmp[4]-'0')*16 + (date_tmp[5]-'0');
@@ -1428,7 +1511,7 @@ int cal(char * date)
 	char power_buff[1024] = { '\0' };
 	//calculate_earliest_week(date,&earliest_data);
 	read_yearly_energy(date, power_buff,&length);
-	printf("length:%d \n",length);
+	//printf("length:%d \n",length);
 	//calculate_earliest_month(date,&earliest_data);
 	//calculate_earliest_year(date,&earliest_data);
 	return 0;

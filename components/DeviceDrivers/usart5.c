@@ -904,6 +904,9 @@ int AT_Z(void)
 	
 }
 
+
+
+
 //设置连接无线路由器SSID
 int AT_WSSSID(char *SSSID)
 {
@@ -2095,7 +2098,6 @@ int SendToSocketB(char *data ,int length)
 //SOCKET C 发送数据
 int SendToSocketC(char *data ,int length)
 {
-	int i = 0;
 	char *sendbuff = NULL;
 	char msg_length[6] = {'\0'};
 	if((1 == WIFI_QueryStatus(SOCKET_C)) || (0 == WIFI_Create(SOCKET_C)))
@@ -2115,13 +2117,7 @@ int SendToSocketC(char *data ,int length)
 		sprintf(sendbuff,"c00000000");
 		memcpy(&sendbuff[9],data,length);
 		clear_WIFI();
-
-		for(i = 0;i<(length+9);i++)	
-		{
-			printf("%x ",sendbuff[i]);
-		}
-		printf("\n");
-
+		
 		WIFI_SendData(sendbuff, (length+9));
 
 		free(sendbuff);
