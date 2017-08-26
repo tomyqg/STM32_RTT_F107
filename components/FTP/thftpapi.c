@@ -128,7 +128,7 @@ int connect_server( char *host, int port )
     int       result;
     ssize_t   len;
     fd_set rd;
-		struct timeval timeout;
+	struct timeval timeout;
 	buf = malloc(512);
     ctrl_sock = socket_connect(host, port);
     if (ctrl_sock == -1) {
@@ -141,6 +141,7 @@ int connect_server( char *host, int port )
 		timeout.tv_usec = 0;
 		len = select(ctrl_sock+1, &rd, NULL, NULL, &timeout);
 		if(len <= 0){
+			closesocket( ctrl_sock );
 			free(buf);
 			return -1;
 		}else
@@ -378,10 +379,11 @@ int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, i
     result = ftp_sendcmd( c_sock, buf );
     if (result >= 300 || result == 0)
     {
-			printmsg(ECU_DBG_UPDATE,"RETR response error");
-      fileclose(handle);
-			free(buf);
-			unlink(d);
+    	closesocket( d_sock );
+		printmsg(ECU_DBG_UPDATE,"RETR response error");
+	    fileclose(handle);
+		free(buf);
+		unlink(d);
       return result;
     }
      
@@ -546,7 +548,6 @@ int ftp_connect( char *host, int port, char *user, char *pwd )
     int     c_sock;
 	if(rt_hw_GetWiredNetConnect() == 0)
 	{
-		closesocket( c_sock );
 		return -1;
 	}
     c_sock = connect_server( host, port );

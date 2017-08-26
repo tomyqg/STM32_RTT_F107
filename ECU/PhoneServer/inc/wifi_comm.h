@@ -48,6 +48,9 @@ void APP_Response_SetWifiPasswd(char mapping,unsigned char *ID);
 void APP_Response_GetIDInfo(char mapping,unsigned char *ID,inverter_info *inverter);
 //12	AP√‹¬Î…Ë÷√«Î«Û
 void APP_Response_GetTime(char mapping,unsigned char *ID,char *Time);
+//13	FlashSize ≈–∂œ
+void APP_Response_FlashSize(char mapping,unsigned char *ID,unsigned int Flashsize);
+
 
 
 

@@ -31,6 +31,12 @@
 #include "myfile.h"
 #include <lwip/netdb.h> /* 为了解析主机名，需要包含netdb.h头文件 */
 #include <lwip/sockets.h> /* 使用BSD socket，需要包含sockets.h头文件 */
+#include <dfs_fs.h>
+#include <dfs_file.h>
+
+
+#define MIN_FUNCTION_ID 0
+#define MAX_FUNCTION_ID 13
 
 
 extern rt_mutex_t wifi_uart_lock;
@@ -62,6 +68,7 @@ void add_Phone_functions(void)
 	pfun_Phone[P0010] = Phone_SetWIFIPasswd; 			//AP密码设置
 	pfun_Phone[P0011] = Phone_GetIDInfo; 			//获取ID信息
 	pfun_Phone[P0012] = Phone_GetTime; 			//获取时间
+	pfun_Phone[P0013] = Phone_FlashSize; 			//获取时间
 
 }
 
@@ -422,6 +429,26 @@ void Phone_GetTime(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//
 	APP_Response_GetTime(0x00,ID,Time);
 
 }
+void Phone_FlashSize(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//获取时间
+{
+	int result;
+	long long cap;
+	struct statfs buffer;
+
+	printf("WIFI_Recv_Event%d %s\n",P0013,recvbuffer);
+	result = dfs_statfs("/", &buffer);
+	if (result != 0)
+	{
+		APP_Response_FlashSize(0x00,ID,0);
+		return;
+	}
+	cap = buffer.f_bsize * buffer.f_bfree / 1024;
+
+	APP_Response_FlashSize(0x00,ID,(unsigned int)cap);
+
+}
+
+
 
 //WIFI事件处理
 void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
@@ -431,7 +458,12 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 	ResolveFlag =  Resolve_RecvData((char *)WIFI_RecvData,&Data_Len,&Command_Id);
 	if(ResolveFlag == 0)
 	{
-		(*pfun_Phone[Command_Id])(ID,Data_Len,WIFI_RecvData);
+		printf("pfun_Phone ID:%d\n",Command_Id);
+		if((Command_Id <= MAX_FUNCTION_ID) && (Command_Id >= MIN_FUNCTION_ID))
+		{
+			(*pfun_Phone[Command_Id])(ID,Data_Len,WIFI_RecvData);
+		}
+		
 	}
 //#endif
 }

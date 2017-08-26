@@ -241,8 +241,8 @@ void main_thread_entry(void* parameter)
 			
 			//保存最新一轮采集数据的时间
 			memcpy(ecu.had_data_broadcast_time,ecu.broadcast_time,16);
-			ecu.system_power = 277;
-			ecu.current_energy = 0.23;
+			//ecu.system_power = 277;
+			//ecu.current_energy = 0.23;
 			//printdecmsg(ECU_DBG_MAIN,"ecu.count",ecu.count);
 			ecu.life_energy = ecu.life_energy + ecu.current_energy;				//计算系统历史发电量
 			printfloatmsg(ECU_DBG_MAIN,"ecu.life_energy",ecu.life_energy);

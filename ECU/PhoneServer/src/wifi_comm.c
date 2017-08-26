@@ -440,3 +440,39 @@ void APP_Response_GetTime(char mapping,unsigned char *ID,char *Time)
 
 }
 
+
+void APP_Response_FlashSize(char mapping,unsigned char *ID,unsigned int Flashsize)
+{
+	int packlength = 0;
+	memset(SendData,'\0',4096);	
+	if(mapping == 0x00)
+	{
+		sprintf(SendData,"APS110000001300");
+		packlength = 15;
+		printf("%d\n",Flashsize);
+		SendData[packlength++] = (Flashsize/16777216)%256;
+		SendData[packlength++] = (Flashsize/65536)%256;
+		SendData[packlength++] = (Flashsize/256)%256;
+		SendData[packlength++] = Flashsize%256;
+		
+		SendData[packlength++] = 'E';
+		SendData[packlength++] = 'N';
+		SendData[packlength++] = 'D';
+		
+		SendData[5] = (packlength/1000) + '0';
+		SendData[6] = ((packlength/100)%10) + '0';
+		SendData[7] = ((packlength/10)%10) + '0';
+		SendData[8] = ((packlength)%10) + '0';
+		SendData[packlength++] = '\n';
+		
+	}else
+	{
+		sprintf(SendData,"APS110015001301\n");
+		packlength = 16;
+	}	
+	
+	SendToSocketA(SendData ,packlength,ID);
+
+}
+
+

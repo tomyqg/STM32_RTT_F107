@@ -1178,6 +1178,12 @@ int check_inverter_abnormal_status_sent(int hour)
 			return 0;
 		}
 #endif		
+		
+#ifndef WIFI_USE
+	rt_free(recv_buffer);
+	rt_free(send_buffer);
+	return -1;
+#endif		
 	}else
 	{
 		strcpy(send_buffer, "APS13AAA51A123AAA0");
@@ -1396,6 +1402,16 @@ int response_inverter_abnormal_status()
 			return result;
 				
 		}
+#endif
+#ifndef WIFI_USE
+	rt_free(recv_buffer);
+	rt_free(command);
+	rt_free(send_buffer);
+	free(data);
+	data = NULL;
+	free(save_buffer);
+	save_buffer = NULL;
+	return 0;
 #endif
 	}
 	else
@@ -1627,6 +1643,10 @@ int communication_with_EMA(int next_cmd_id)
 				}				
 			}
 #endif
+
+#ifndef WIFI_USE
+		break;
+#endif
 		}
 		else
 		{
@@ -1748,7 +1768,12 @@ int response_process_result()
 					printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
 				
 				}
-#endif				
+#endif		
+
+#ifndef WIFI_USE
+		break;
+#endif
+
 			}else
 			{
 				//发送一条记录
@@ -1785,7 +1810,11 @@ int response_process_result()
 					change_inv_pro_result_flag(item,'0');
 									
 				}
-#endif		
+#endif	
+
+#ifndef WIFI_USE
+					break;
+#endif
 			}else
 			{
 				if(send_socket(sockfd, sendbuffer, strlen(sendbuffer)) < 0){

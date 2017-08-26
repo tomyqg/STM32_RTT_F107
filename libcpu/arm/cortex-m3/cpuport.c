@@ -18,7 +18,7 @@
  */
 
 #include <rtthread.h>
-
+#include "rthw.h"
 struct exception_stack_frame
 {
     rt_uint32_t r0;
@@ -338,7 +338,7 @@ void rt_hw_hard_fault_exception(struct exception_info * exception_info)
 #ifdef RT_USING_FINSH
     hard_fault_track();
 #endif /* RT_USING_FINSH */
-
+	//reboot();
     while (1);
 }
 
