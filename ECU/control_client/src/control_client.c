@@ -1260,8 +1260,8 @@ int response_inverter_abnormal_status()
 	command = (char *)rt_malloc(4096);
 	send_buffer = (char *)rt_malloc(1024);
 	data = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
-	memset(data,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 	save_buffer = malloc(MAXBUFFER);
+	memset(data,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 	memset(save_buffer,'\0',MAXBUFFER);
 	//建立socket连接
 	sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);

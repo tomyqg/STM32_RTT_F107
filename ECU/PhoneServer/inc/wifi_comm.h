@@ -2,6 +2,7 @@
 #define __WIFI_COMM_H__
 
 #include "variation.h"
+#include "arch/sys_arch.h"
 
 typedef struct
 {
@@ -50,8 +51,8 @@ void APP_Response_GetIDInfo(char mapping,unsigned char *ID,inverter_info *invert
 void APP_Response_GetTime(char mapping,unsigned char *ID,char *Time);
 //13	FlashSize 判断
 void APP_Response_FlashSize(char mapping,unsigned char *ID,unsigned int Flashsize);
-
-
+//14	获取有线网络设置
+void APP_Response_GetWiredNetwork(char mapping,unsigned char *ID,char dhcpStatus,IP_t IPAddr,IP_t MSKAddr,IP_t GWAddr,IP_t DNS1Addr,IP_t DNS2Addr);
 
 
 

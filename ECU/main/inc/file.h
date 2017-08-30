@@ -27,6 +27,10 @@ int fileopen(const char *file, int flags, int mode);
 int fileclose(int fd);
 int fileWrite(int fd,char* buf,int len);
 int fileRead(int fd,char* buf,int len);
+int get_Passwd(char *PassWD);
+int set_Passwd(char *PassWD,int length);
+int get_DHCP_Status(void);
+
 //读取DRM开关函数   返回值为1：表示功能打开   返回值为-1表示功能关闭
 int DRMFunction(void);
 void get_ecuid(char *ecuid);

@@ -64,6 +64,54 @@ int fileRead(int fd,char* buf,int len)
 	return read( fd, buf, len );
 }
 
+int get_Passwd(char *PassWD)
+{
+	int fd;
+	fd = open("/YUNENG/PASSWD.CON", O_RDONLY, 0);
+	if (fd >= 0)
+	{
+		read(fd, PassWD, 100);
+		close(fd);
+		return 0;
+	}else
+	{
+		return -1;
+	}
+
+}
+
+int set_Passwd(char *PassWD,int length)
+{
+	int fd;
+	fd = open("/YUNENG/PASSWD.CON", O_WRONLY, 0);
+	if (fd >= 0)
+	{
+		write(fd, PassWD, length);
+		close(fd);
+		return 0;
+	}else
+	{
+		return -1;
+	}
+
+
+}
+
+//返回0表示DHCP模式  返回1表示静态IP模式
+int get_DHCP_Status(void)
+{
+	int fd;
+	fd = open("/yuneng/staticIP.con", O_RDONLY, 0);
+	if (fd >= 0)
+	{
+		close(fd);
+		return 1;
+	}else
+	{
+		return 0;
+	}
+
+}
 
 int get_ecu_type()			
 {

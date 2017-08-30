@@ -41,6 +41,8 @@ void Phone_GetIDInfo(unsigned char * ID,int Data_Len,const char *recvbuffer); 		
 void Phone_GetTime(unsigned char * ID,int Data_Len,const char *recvbuffer); 			//获取时间
 //获取Flash空间
 void Phone_FlashSize(unsigned char * ID,int Data_Len,const char *recvbuffer);
+//获取有线网络信息
+void Phone_GetWiredNetwork(unsigned char * ID,int Data_Len,const char *recvbuffer);			//有线网络设置
 
 
 //Phone Server线程

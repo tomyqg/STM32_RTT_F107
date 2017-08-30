@@ -286,6 +286,7 @@ void idwrite_thread_entry(void* parameter)
 			fclose(fp);
 			ecuid[12] = '\0';
 			WIFI_Factory(ecuid);
+			set_Passwd("88888888",8);
 			memset(ecuid,'\0',sizeof(ecuid));
 			
 			fp=fopen("/yuneng/ecuid.con","r");

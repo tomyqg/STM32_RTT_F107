@@ -216,7 +216,7 @@ int StaticIP(IP_t IPAddr,IP_t MSKAddr,IP_t GWAddr,IP_t DNS1Addr,IP_t DNS2Addr)
 	IP4_ADDR(&ipaddr, IPAddr.IP1, IPAddr.IP2, IPAddr.IP3, IPAddr.IP4);
 	IP4_ADDR(&gw, GWAddr.IP1, GWAddr.IP2, GWAddr.IP3, GWAddr.IP4);
 	IP4_ADDR(&netmask, MSKAddr.IP1, MSKAddr.IP2, MSKAddr.IP3, MSKAddr.IP4);
-	
+	dhcp_stop(netif_default);
 	netifapi_netif_set_addr(netif_default, &ipaddr, &netmask, &gw);
 	memset(DNS,'\0',100);
 	sprintf(DNS,"%d,%d,%d,%d",DNS1Addr.IP1,DNS1Addr.IP2,DNS1Addr.IP3,DNS1Addr.IP4);

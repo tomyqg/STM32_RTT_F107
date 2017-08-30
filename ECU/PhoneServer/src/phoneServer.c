@@ -33,10 +33,14 @@
 #include <lwip/sockets.h> /* 使用BSD socket，需要包含sockets.h头文件 */
 #include <dfs_fs.h>
 #include <dfs_file.h>
-
+#include "file.h"
+#include <dfs_posix.h> 
+#include "lwip/netif.h"
+#include "lwip/ip_addr.h"
+#include "lwip/dns.h"
 
 #define MIN_FUNCTION_ID 0
-#define MAX_FUNCTION_ID 13
+#define MAX_FUNCTION_ID 14
 
 
 extern rt_mutex_t wifi_uart_lock;
@@ -69,6 +73,7 @@ void add_Phone_functions(void)
 	pfun_Phone[P0011] = Phone_GetIDInfo; 			//获取ID信息
 	pfun_Phone[P0012] = Phone_GetTime; 			//获取时间
 	pfun_Phone[P0013] = Phone_FlashSize; 			//获取时间
+	pfun_Phone[P0014] = Phone_GetWiredNetwork; 			//获取时间
 
 }
 
@@ -345,6 +350,7 @@ void Phone_SetWiredNetwork(unsigned char * ID,int Data_Len,const char *recvbuffe
 	if(ModeFlag == 0x00)		//DHCP
 	{
 		printmsg(ECU_DBG_WIFI,"dynamic IP");
+		unlink("/yuneng/staticIP.con");
 		dhcp_reset();
 	}else if (ModeFlag == 0x01)		//固定IP		
 	{
@@ -396,17 +402,28 @@ void Phone_SetWIFIPasswd(unsigned char * ID,int Data_Len,const char *recvbuffer)
 {
 	printf("WIFI_Recv_Event%d %s\n",P0010,recvbuffer);
 	{
-	char OldPassword[100] = {'\0'};
-	char NewPassword[100] = {'\0'};
-	int oldLen,newLen;
-					
-	//匹配成功进行相应操作
-	printf("COMMAND_SETWIFIPASSWD  Mapping\n");
-	//获取密码
-	ResolveWifiPasswd(OldPassword,&oldLen,NewPassword,&newLen,(char *)&recvbuffer[28]);
-	APP_Response_SetWifiPasswd(0x00,ID);
-	WIFI_ChangePasswd(NewPassword);
-					
+		char OldPassword[100] = {'\0'};
+		char NewPassword[100] = {'\0'};
+		char EEPROMPasswd[100] = {'\0'};
+		int oldLen,newLen;
+						
+		//匹配成功进行相应操作
+		printf("COMMAND_SETWIFIPASSWD  Mapping\n");
+		//获取密码
+		ResolveWifiPasswd(OldPassword,&oldLen,NewPassword,&newLen,(char *)&recvbuffer[28]);
+		//读取旧密码，如果旧密码相同，设置新密码
+		get_Passwd(EEPROMPasswd);
+								
+		if((!memcmp(EEPROMPasswd,OldPassword,oldLen))&&(oldLen == strlen(EEPROMPasswd)))
+		{
+			APP_Response_SetWifiPasswd(0x00,ID);
+			WIFI_ChangePasswd(NewPassword);
+
+			set_Passwd(NewPassword,newLen);
+		}else
+		{
+			APP_Response_SetWifiPasswd(0x02,ID);
+		}				
 	}	
 }
 
@@ -447,6 +464,62 @@ void Phone_FlashSize(unsigned char * ID,int Data_Len,const char *recvbuffer) 			
 	APP_Response_FlashSize(0x00,ID,(unsigned int)cap);
 
 }
+
+
+void Phone_GetWiredNetwork(unsigned char * ID,int Data_Len,const char *recvbuffer)			//获取有线网络设置
+{
+	printf("WIFI_Recv_Event%d %s\n",P0014,recvbuffer);	
+
+	{
+	unsigned int addr = 0;
+	extern struct netif *netif_list;
+  struct netif * netif;
+	int ModeFlag = 0;
+	ip_addr_t DNS;
+	IP_t IPAddr,MSKAddr,GWAddr,DNS1Addr,DNS2Addr;
+	//匹配成功进行相应操作
+	printf("COMMAND_GETWIREDNETWORK  Mapping\n");
+	netif = netif_list;
+	addr = ip4_addr_get_u32(&netif->ip_addr);
+	IPAddr.IP4 = (addr/16777216)%256;
+	IPAddr.IP3 = (addr/65536)%256;
+	IPAddr.IP2 = (addr/256)%256;
+	IPAddr.IP1 = (addr/1)%256;
+	
+	addr = ip4_addr_get_u32(&netif->netmask);
+	MSKAddr.IP4 = (addr/16777216)%256;
+	MSKAddr.IP3 = (addr/65536)%256;
+	MSKAddr.IP2 = (addr/256)%256;
+	MSKAddr.IP1 = (addr/1)%256;
+	
+	addr = ip4_addr_get_u32(&netif->gw);
+	GWAddr.IP4 = (addr/16777216)%256;
+	GWAddr.IP3 = (addr/65536)%256;
+	GWAddr.IP2 = (addr/256)%256;
+	GWAddr.IP1 = (addr/1)%256;
+	
+	DNS = dns_getserver(0);
+	addr = ip4_addr_get_u32(&DNS);
+	DNS1Addr.IP4 = (addr/16777216)%256;
+	DNS1Addr.IP3 = (addr/65536)%256;
+	DNS1Addr.IP2 = (addr/256)%256;
+	DNS1Addr.IP1 = (addr/1)%256;
+
+	DNS = dns_getserver(1);
+	addr = ip4_addr_get_u32(&DNS);
+	DNS2Addr.IP4 = (addr/16777216)%256;
+	DNS2Addr.IP3 = (addr/65536)%256;
+	DNS2Addr.IP2 = (addr/256)%256;
+	DNS2Addr.IP1 = (addr/1)%256;
+
+	//检查是DHCP  还是固定IP
+	ModeFlag = get_DHCP_Status();
+		
+	APP_Response_GetWiredNetwork(0x00,ID,ModeFlag,IPAddr,MSKAddr,GWAddr,DNS1Addr,DNS2Addr);
+
+	}	
+}
+
 
 
 

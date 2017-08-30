@@ -476,3 +476,63 @@ void APP_Response_FlashSize(char mapping,unsigned char *ID,unsigned int Flashsiz
 }
 
 
+//14 COMMAND_SETWIREDNETWORK		//有线网络设置请求			mapping :: 0x00 匹配  0x01 不匹配  
+void APP_Response_GetWiredNetwork(char mapping,unsigned char *ID,char dhcpStatus,IP_t IPAddr,IP_t MSKAddr,IP_t GWAddr,IP_t DNS1Addr,IP_t DNS2Addr)
+{
+	int packlength = 0;
+	memset(SendData,'\0',4096);	
+	
+	//拼接需要发送的报文
+	sprintf(SendData,"APS1100150014%02d\n",mapping);
+	packlength = 15;
+	if(dhcpStatus == 0)
+	{
+		SendData[packlength++] = '0';
+		SendData[packlength++] = '0';
+	}else
+	{
+		SendData[packlength++] = '0';
+		SendData[packlength++] = '1';
+	}
+	SendData[packlength++] = IPAddr.IP1;
+	SendData[packlength++] = IPAddr.IP2;
+	SendData[packlength++] = IPAddr.IP3;
+	SendData[packlength++] = IPAddr.IP4;
+			
+	SendData[packlength++] = MSKAddr.IP1;
+	SendData[packlength++] = MSKAddr.IP2;
+	SendData[packlength++] = MSKAddr.IP3;
+	SendData[packlength++] = MSKAddr.IP4;
+	
+	SendData[packlength++] = GWAddr.IP1;
+	SendData[packlength++] = GWAddr.IP2;
+	SendData[packlength++] = GWAddr.IP3;
+	SendData[packlength++] = GWAddr.IP4;
+
+	SendData[packlength++] = DNS1Addr.IP1;
+	SendData[packlength++] = DNS1Addr.IP2;
+	SendData[packlength++] = DNS1Addr.IP3;
+	SendData[packlength++] = DNS1Addr.IP4;
+
+	SendData[packlength++] = DNS2Addr.IP1;
+	SendData[packlength++] = DNS2Addr.IP2;
+	SendData[packlength++] = DNS2Addr.IP3;
+	SendData[packlength++] = DNS2Addr.IP4;
+
+	SendData[packlength++] = 'E';
+	SendData[packlength++] = 'N';
+	SendData[packlength++] = 'D';
+	
+	SendData[5] = (packlength/1000) + '0';
+	SendData[6] = ((packlength/100)%10) + '0';
+	SendData[7] = ((packlength/10)%10) + '0';
+	SendData[8] = ((packlength)%10) + '0';
+	SendData[packlength++] = '\n';
+
+
+	
+	
+	SendToSocketA(SendData ,packlength,ID);
+}
+
+
