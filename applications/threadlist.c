@@ -27,6 +27,8 @@
 #include "debug.h"
 #include "SEGGER_RTT.h"
 #include "myfile.h"
+#include "mcp1316.h"
+
 
 #ifdef RT_USING_DFS
 #include <dfs_fs.h>
@@ -240,6 +242,7 @@ void rt_init_thread_entry(void* parameter)
 
 
 	cpu_usage_init();
+	
 }
 
 /*****************************************************************************/
@@ -262,11 +265,15 @@ static void led_thread_entry(void* parameter)
 		rt_uint8_t major,minor;
 		/* Initialize led */
     rt_hw_led_init();
+	MCP1316_init();
+	
+	
 
     while (1)
     {
         /* led1 on */
         count++;
+		MCP1316_kickwatchdog();
         rt_hw_led_on();
 				//rt_kprintf("rt_hw_led_on:%d\n",count);
         rt_thread_delay( RT_TICK_PER_SECOND/2 ); /* sleep 0.5 second and switch to other thread */
