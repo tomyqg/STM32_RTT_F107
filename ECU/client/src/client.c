@@ -183,10 +183,10 @@ int connect_socket(int fd_sock)				//连接到服务器
 	else
 	{
 		memset(ip, '\0', sizeof(ip));
-		//inet_ntop(AF_INET, *host->h_addr_list, ip, 32);
+		sprintf(ip,"%s",ip_ntoa((ip_addr_t*)*host->h_addr_list));
 	}
 
-	strcpy(ip, "139.168.200.158");
+	
 	print2msg(ECU_DBG_CLIENT,"IP", ip);
 	printdecmsg(ECU_DBG_CLIENT,"Port1", port[0]);
 	printdecmsg(ECU_DBG_CLIENT,"Port2", port[1]);

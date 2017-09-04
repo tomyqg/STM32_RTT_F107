@@ -53,6 +53,8 @@ int rt_hw_GetWiredNetConnect(void)
 {
 	int value = 0,ret = 0;
 	value = ETH_ReadPHYRegister(0x00, 1);
+	rt_hw_ms_delay(5);
+	value = ETH_ReadPHYRegister(0x00, 1);
 	ret = (value & (1 << 2)) >> 2;
 	return ret;
 }

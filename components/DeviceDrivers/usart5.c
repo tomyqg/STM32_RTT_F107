@@ -2035,11 +2035,24 @@ int WIFI_QueryStatus(eSocketType Type)
 					(recv[1] == send[1])&&
 					(recv[2] == 0x06))
 					{
-						//创建SOCKET 成功
-						printmsg(ECU_DBG_WIFI,"WIFI_QueryStatus Successful");
-						rt_mutex_release(wifi_uart_lock);
-						clear_WIFI();
-						return 0;
+						//查询SOCKET 成功
+						printf("WIFI_QueryStatus Successful\n");
+						if(recv[4] == 0x01)	//在线
+						{
+							rt_mutex_release(wifi_uart_lock);
+							clear_WIFI();
+							return 1;
+						}else if(recv[4] == 0x00)	//离线
+						{
+							rt_mutex_release(wifi_uart_lock);
+							clear_WIFI();
+							return 0;
+						}else	//未知
+						{
+							rt_mutex_release(wifi_uart_lock);
+							clear_WIFI();
+							return -1;
+						}
 					}else
 					{
 						//创建SOCKET 失败

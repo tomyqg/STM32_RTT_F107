@@ -223,7 +223,7 @@ void Phone_GetGenerationData(unsigned char * ID,int Data_Len,const char *recvbuf
 	printf("WIFI_Recv_Event%d %s\n",P0002,recvbuffer);
 	//匹配成功进行相应操作
 	printf("COMMAND_POWERGENERATION  Mapping\n");
-	APP_Response_PowerGeneration(0x00,ID,inverter,ecu.count);
+	APP_Response_PowerGeneration(0x00,ID,inverter,ecu.total);
 }
 void Phone_GetPowerCurve(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//获取功率曲线
 {
@@ -324,12 +324,24 @@ void Phone_RegisterID(unsigned char * ID,int Data_Len,const char *recvbuffer) 		
 void Phone_SetTime(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//ECU时间设置
 {
 	char setTime[15];
+	char getTime[15];
 	printf("WIFI_Recv_Event%d %s\n",P0006,recvbuffer);
 	
 	//匹配成功进行相应操作
 	printf("COMMAND_SETTIME  Mapping\n");
 	memset(setTime,'\0',15);
 	memcpy(setTime,&recvbuffer[28],14);
+	apstime(getTime);
+	if(!memcmp("99999999",setTime,8))
+	{	//如果年月日都是9 年月日取当前的
+		memcpy(setTime,getTime,8);
+	}
+
+	if(!memcmp("999999",&setTime[8],6))
+	{	//如果时间都是9 时间取当前的
+		memcpy(&setTime[8],&getTime[8],6);
+	}
+		
 	//设置时间
 	set_time(setTime);
 	APP_Response_SetTime(0x00,ID);
