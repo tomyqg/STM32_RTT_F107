@@ -550,21 +550,21 @@ int calculate_earliest_2_month_ago(char *date,int *earliest_data)
 	{
 		month -= 2;
 		*earliest_data = (year * 100 + month);
-		printf("calculate_earliest_2_month_ago:%d %d    %d \n",year,month,*earliest_data);
+		//printf("calculate_earliest_2_month_ago:%d %d    %d \n",year,month,*earliest_data);
 		return 0;
 	}else if(month == 2)
 	{
 		month = 12;
 		year = year - 1;
 		*earliest_data = (year * 100 + month);
-		printf("calculate_earliest_2_month_ago:%d %d    %d \n",year,month,*earliest_data);
+		//printf("calculate_earliest_2_month_ago:%d %d    %d \n",year,month,*earliest_data);
 		return 0;
 	}else if(month == 1)
 	{
 		month = 11;
 		year = year - 1;
 		*earliest_data = (year * 100 + month);
-		printf("calculate_earliest_2_month_ago:%d %d    %d \n",year,month,*earliest_data);
+		//printf("calculate_earliest_2_month_ago:%d %d    %d \n",year,month,*earliest_data);
 		return 0;
 	}
 	
@@ -591,7 +591,7 @@ void delete_system_power_2_month_ago(char *date_time)
 	else
 	{
 		calculate_earliest_2_month_ago(date_time,&earliest_data);
-		printf("calculate_earliest_2_month_ago:::::%d\n",earliest_data);
+		//printf("calculate_earliest_2_month_ago:::::%d\n",earliest_data);
 		/* ¶ÁÈ¡dirÄ¿Â¼*/
 		while ((d = readdir(dirp)) != RT_NULL)
 		{
@@ -1348,22 +1348,24 @@ void initPath(void)
 	echo("/yuneng/channel.con","0x10");
 	rt_hw_ms_delay(20);
 	echo("/yuneng/limiteid.con","1");
-	rt_hw_ms_delay(20);
-	echo("/yuneng/control.con","Timeout=15\nReport_Interval=15\nDomain=eee.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
-	//echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.100\nPort1=8997\nPort2=8997\n");
+	rt_hw_ms_delay(20);	
+	echo("/yuneng/control.con","Timeout=10\nReport_Interval=15\nDomain=ecu.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
+	//echo("/yuneng/control.con","Timeout=15\nReport_Interval=15\nDomain=eee.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
 	rt_hw_ms_delay(20);
 	echo("/yuneng/vernum.con","2\n");
 	rt_hw_ms_delay(20);
 	echo("/yuneng/ftpadd.con", "IP=60.190.131.190\nPort=9219\nuser=zhyf\npassword=yuneng\n");
 	//echo("/yuneng/ftpadd.con", "IP=192.168.1.103\nPort=21\nuser=admin\npassword=admin\n");
 	rt_hw_ms_delay(20);
-	echo("/yuneng/datacent.con","Domain=eee.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
+	echo("/yuneng/datacent.con","Domain=ecu.apsema.com\nIP=60.190.131.190\nPort1=8995\nPort2=8996\n");
+	//echo("/yuneng/datacent.con","Domain=eee.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
 	rt_hw_ms_delay(20);
 	echo("/home/data/power","");
 	rt_hw_ms_delay(20);
-	echo("/yuneng/timezone.con","Etc/GMT+8\n");
+	echo("/yuneng/timezone.con","Etc/GMT-8\n");
 	rt_hw_ms_delay(20);
 	mkdir("/ftp",0x777);
+	echo("/yuneng/A118.con","1");
 }
 
 int getTimeZone()
@@ -1604,23 +1606,23 @@ int initsystem(char *ecuid,char *mac)
 	rt_hw_ms_delay(20);
 	echo("/yuneng/limiteid.con","1");
 	rt_hw_ms_delay(20);
-	//echo("/yuneng/control.con","Timeout=10\nReport_Interval=15\nDomain=eee.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
-	echo("/yuneng/control.con","Timeout=15\nReport_Interval=5\nDomain=111.apsema.com\nIP=139.168.200.158\nPort1=8997\nPort2=8997\n");
-	//echo("/yuneng/control.con","Timeout=10\nReport_Interval=1\nDomain=eee.apsema.com\nIP=192.168.1.100\nPort1=8997\nPort2=8997\n");
+	echo("/yuneng/control.con","Timeout=10\nReport_Interval=15\nDomain=ecu.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
+	//echo("/yuneng/control.con","Timeout=15\nReport_Interval=5\nDomain=111.apsema.com\nIP=139.168.200.158\nPort1=8997\nPort2=8997\n");
 	rt_hw_ms_delay(20);
 	echo("/yuneng/vernum.con","2\n");
 	rt_hw_ms_delay(20);
 	echo("/yuneng/ftpadd.con", "IP=60.190.131.190\nPort=9219\nuser=zhyf\npassword=yuneng\n");
 	//echo("/yuneng/ftpadd.con", "IP=192.168.1.103\nPort=21\nuser=admin\npassword=admin\n");
 	rt_hw_ms_delay(20);
-	echo("/yuneng/datacent.con","Domain=eee.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
+	echo("/yuneng/datacent.con","Domain=ecu.apsema.com\nIP=60.190.131.190\nPort1=8995\nPort2=8996\n");
+	//echo("/yuneng/datacent.con","Domain=eee.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
 	rt_hw_ms_delay(20);
 	echo("/home/data/power","");
 	rt_hw_ms_delay(20);
-	echo("/yuneng/timezone.con","Etc/GMT+8\n");
+	echo("/yuneng/timezone.con","Etc/GMT-8\n");
 	rt_hw_ms_delay(20);
 	mkdir("/ftp",0x777);
-	
+	echo("/yuneng/A118.con","1");
 	return 0;
 }
 FINSH_FUNCTION_EXPORT(initsystem, eg:initsystem("123456789012","80:97:1B:00:72:1C"));

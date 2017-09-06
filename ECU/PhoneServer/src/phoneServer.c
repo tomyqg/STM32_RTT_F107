@@ -213,7 +213,7 @@ void Phone_GetBaseInfo(unsigned char * ID,int Data_Len,const char *recvbuffer) 	
 	baseInfo.Length = ECU_VERSION_LENGTH;								//ECU 版本号长度
 	sprintf(baseInfo.Version,"%s_%s_%s",ECU_VERSION,MAJORVERSION,MINORVERSION);	//ECU 版本
 	baseInfo.TimeZoneLength = 9;				//ECU 时区长度
-	sprintf(baseInfo.TimeZone,"Etc/GMT+8");									//ECU 时区
+	sprintf(baseInfo.TimeZone,"Etc/GMT-8");									//ECU 时区
 	memset(baseInfo.MacAddress,'\0',7);
 	memcpy(baseInfo.MacAddress,ecu.MacAddress,7);//ECU 有线Mac地址										
 	APP_Response_BaseInfo(ID,baseInfo);
@@ -477,7 +477,6 @@ void Phone_FlashSize(unsigned char * ID,int Data_Len,const char *recvbuffer) 			
 
 }
 
-
 void Phone_GetWiredNetwork(unsigned char * ID,int Data_Len,const char *recvbuffer)			//获取有线网络设置
 {
 	printf("WIFI_Recv_Event%d %s\n",P0014,recvbuffer);	
@@ -531,8 +530,6 @@ void Phone_GetWiredNetwork(unsigned char * ID,int Data_Len,const char *recvbuffe
 
 	}	
 }
-
-
 
 
 //WIFI事件处理

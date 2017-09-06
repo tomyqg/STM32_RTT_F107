@@ -81,7 +81,10 @@ int connect__socket(int sockfd, int port, const char *ip, const char *domain)
 		closesocket(sockfd);
 		return -1;
 	}
-	
+	print2msg(ECU_DBG_CONTROL_CLIENT,"IP",(char*)ip);
+	print2msg(ECU_DBG_CONTROL_CLIENT,"Domain",(char*)domain);
+	printdecmsg(ECU_DBG_CONTROL_CLIENT,"port",port);
+
 	memset(&serv_addr, 0, sizeof(struct sockaddr_in));
 	serv_addr.sin_family = AF_INET; //地址族
 	serv_addr.sin_port = htons(port); //服务器端口号
@@ -92,7 +95,8 @@ int connect__socket(int sockfd, int port, const char *ip, const char *domain)
 		serv_addr.sin_addr.s_addr = inet_addr(ip); //服务器IP地址
 	}
 	else{
-		host = gethostbyname(ip_addr);
+		memset(ip_addr, '\0', sizeof(ip_addr));
+		sprintf(ip_addr,"%s",ip_ntoa((ip_addr_t*)*host->h_addr_list));
 		serv_addr.sin_addr.s_addr = inet_addr(ip_addr); //服务器IP地址
 	}
 	memset((serv_addr.sin_zero),0x00,8);

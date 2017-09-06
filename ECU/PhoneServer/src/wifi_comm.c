@@ -96,7 +96,7 @@ void APP_Response_BaseInfo(unsigned char *ID,stBaseInfo baseInfo)
 	SendData[packlength++] = '0';
 	SendData[packlength++] = '0';
 	SendData[packlength++] = '9';
-	sprintf(&SendData[packlength],"Etc/GMT+8");
+	sprintf(&SendData[packlength],"Etc/GMT-8");
 	packlength += 9;	
 	
 	memcpy(&SendData[packlength],baseInfo.MacAddress,6);

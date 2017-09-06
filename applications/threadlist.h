@@ -78,7 +78,7 @@ typedef struct IPConfig
 #define START_TIME_IDWRITE								5
 #define START_TIME_MAIN										0			//90
 #define START_TIME_CONTROL_CLIENT					20			//120
-#define START_TIME_CLIENT									30			//180
+#define START_TIME_CLIENT									60			//180
 #define START_TIME_PHONE_SERVER						20
 
 /*****************************************************************************/

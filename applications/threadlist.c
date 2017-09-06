@@ -72,7 +72,7 @@ static struct rt_thread DRM_thread;
 #ifdef THREAD_PRIORITY_MAIN
 #include "main-thread.h"
 ALIGN(RT_ALIGN_SIZE)
-rt_uint8_t main_stack[ 12288 ];
+rt_uint8_t main_stack[ 16384 ];
 struct rt_thread main_thread;
 #endif
 

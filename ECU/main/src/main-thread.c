@@ -257,7 +257,7 @@ void main_thread_entry(void* parameter)
 				//最多保存两个月的数据
 				delete_system_power_2_month_ago(ecu.broadcast_time);
 			}
-			printf("today energy:%f\n",ecu.today_energy);
+			//printf("today energy:%f\n",ecu.today_energy);
 						
 			optimizeFileSystem();
 			if(ecu.count>0)

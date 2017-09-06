@@ -1617,9 +1617,131 @@ int InitTestMode(void)
 
 int InitWorkMode(void)
 {
+	int i = 0,res = 0;
+	//进入AT模式
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT())
+		{//进入AT模式成功
+			//printf("AT Successful\n");
+			res = 0;
+			break;
+		}else
+		{//进入AT模式失败，尝试先退出AT模式。
+			//printf("AT Failed,AT_ENTM\n");
+			res = -1;
+			AT_ENTM();
+		}
+	}
+	if(res == -1) return -1;
+	//只有在进入AT模式之后才能进行后续的操作
+		//设置工作模式 WMODE
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_WMODE("STA"))
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;	
+	
+	//设置同时开启AP-STA模式
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_FAPSTA_ON())
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;	
+	//打开SOCKET B功能
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_TCPB_ON())
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;	
+	//配置SOCKET B的服务器IP地址
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_TCPADDB("60.190.131.190"))
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;
+	
+	//配置SOCKET B的服务器端口号
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_TCPPTB(8995))
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;
+	
+	//打开SOCKET C功能
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_TCPC_ON())
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;
+	
+	//配置SOCKET C的服务器IP地址
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_TCPADDC("60.190.131.190"))
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;
+	//配置SOCKET C的服务器端口号
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_TCPPTC(8997))
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;
+	
+	for(i = 0;i<3;i++)
+	{
+		if(0 == AT_ENTM())
+		{
+			res = 0;
+			break;
+		}else
+			res = -1;
+	}
+	if(res == -1) return -1;
+	
+	printmsg(ECU_DBG_WIFI,"WIFI_InitWorkMode Over");
 	return 0;
 }
-
 
 int WIFI_ChangePasswd(char *NewPasswd)
 {
@@ -2247,6 +2369,7 @@ FINSH_FUNCTION_EXPORT(AT_WMODE , Set WMode AP or STA.)
 
 
 
+FINSH_FUNCTION_EXPORT(InitWorkMode , Init Work Mode.)
 FINSH_FUNCTION_EXPORT(InitTestMode , Init Test Mode.)
 
 FINSH_FUNCTION_EXPORT(WIFI_Factory , Set WIFI ID .)

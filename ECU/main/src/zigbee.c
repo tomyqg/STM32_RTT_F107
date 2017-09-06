@@ -1980,10 +1980,19 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 	curinverter = firstinverter;
 	for(curenergy=0, i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++){		//计算当前一轮发电量
 		if(1 == curinverter->dataflag){
-			curenergy += curinverter->output_energy;
-			curenergy += curinverter->output_energyb;
-			curenergy += curinverter->output_energyc;
-			//printf("curenergy:%f\n",curenergy);
+			if((curinverter->model==5) || (curinverter->model==6) || (curinverter->model==7))
+				{
+					curenergy += curinverter->curgeneration;
+					curenergy += curinverter->curgenerationb;
+					curenergy += curinverter->curgenerationc;
+					curenergy += curinverter->curgenerationd;
+				}else
+				{
+					curenergy += curinverter->output_energy;
+					curenergy += curinverter->output_energyb;
+					curenergy += curinverter->output_energyc;			
+				}
+
 		}
 	}
 	ecu.current_energy = curenergy;
