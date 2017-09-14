@@ -585,15 +585,15 @@ int resolvedata_600(char *data, struct inverter_info_t *inverter)
 	inverter->cur_output_energy = (inverter->curaccgen+inverter->curaccgenb)*0.94*data[37];
 
 
-//	if((inverter->cur_output_energy >= inverter->pre_output_energy)&&(inverter->curacctime >= inverter->preacctime))
-//	{
-//		inverter->output_energy=inverter->cur_output_energy-inverter->pre_output_energy;
-//	}
-//	else
-//	{
-//		inverter->output_energy=inverter->cur_output_energy;
-//	}
-//	inverter->pre_output_energy=inverter->cur_output_energy;
+	if((inverter->cur_output_energy >= inverter->pre_output_energy)&&(inverter->curacctime >= inverter->preacctime))
+	{
+		inverter->output_energy=inverter->cur_output_energy-inverter->pre_output_energy;
+	}
+	else
+	{
+		inverter->output_energy=inverter->cur_output_energy;
+	}
+	inverter->pre_output_energy=inverter->cur_output_energy;
 
 	if((inverter->curaccgen >= inverter->preaccgen)&&(inverter->curaccgenb >= inverter->preaccgenb)&&(inverter->curacctime >= inverter->preacctime))
 	{	
@@ -773,15 +773,15 @@ int resolvedata_600_new(char *data, struct inverter_info_t *inverter)
 	inverter->cur_output_energy = (inverter->curaccgen+inverter->curaccgenb)*0.94*data[37];
 
 
-//	if((inverter->cur_output_energy >= inverter->pre_output_energy)&&(inverter->curacctime >= inverter->preacctime))
-//	{
-//		inverter->output_energy=inverter->cur_output_energy-inverter->pre_output_energy;
-//	}
-//	else
-//	{
-//		inverter->output_energy=inverter->cur_output_energy;
-//	}
-//	inverter->pre_output_energy=inverter->cur_output_energy;
+	if((inverter->cur_output_energy >= inverter->pre_output_energy)&&(inverter->curacctime >= inverter->preacctime))
+	{
+		inverter->output_energy=inverter->cur_output_energy-inverter->pre_output_energy;
+	}
+	else
+	{
+		inverter->output_energy=inverter->cur_output_energy;
+	}
+	inverter->pre_output_energy=inverter->cur_output_energy;
 
 	if((inverter->curaccgen >= inverter->preaccgen)&&(inverter->curaccgenb >= inverter->preaccgenb)&&(inverter->curacctime >= inverter->preacctime))
 	{	

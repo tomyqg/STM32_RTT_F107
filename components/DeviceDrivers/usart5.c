@@ -1436,7 +1436,7 @@ int AT_FAPSTA_ON(void)
 			return -1;
 		}
 	}
-	printf("AT+TCPPTC:+ok\n");
+	printf("AT+FAPSTA:+ok\n");
 	clear_WIFI();
 	rt_mutex_release(wifi_uart_lock);
 	return 0;
@@ -1476,7 +1476,7 @@ int AT_WMODE(char *WMode)
 			return -1;
 		}
 	}
-	printf("AT+TCPPTC:+ok\n");
+	printf("AT+WMODE:+ok\n");
 	clear_WIFI();
 	rt_mutex_release(wifi_uart_lock);
 	return 0;
