@@ -98,8 +98,8 @@ int WIFI_SoftReset(void);
 
 int WIFI_Test(void);
 int WIFI_Factory(char *ECUID12);
-
+/*
 int WIFI_ChangeSSID(char *SSID,char Auth,char Encry,char *Passwd,int passWDLen);
 int WIFI_ConStatus(void);
-
+*/
 #endif

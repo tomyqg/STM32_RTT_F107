@@ -67,8 +67,8 @@ void add_Phone_functions(void)
 	pfun_Phone[P0005] = Phone_RegisterID; 			//逆变器ID注册
 	pfun_Phone[P0006] = Phone_SetTime; 			//ECU时间设置
 	pfun_Phone[P0007] = Phone_SetWiredNetwork; 			//有线网络设置
-	pfun_Phone[P0008] = Phone_SetWIFI; 			//无线网络连接
-	pfun_Phone[P0009] = Phone_SearchWIFIStatus; 			//无线网络连接状态
+	//pfun_Phone[P0008] = Phone_SetWIFI; 			//无线网络连接
+	//pfun_Phone[P0009] = Phone_SearchWIFIStatus; 			//无线网络连接状态
 	pfun_Phone[P0010] = Phone_SetWIFIPasswd; 			//AP密码设置
 	pfun_Phone[P0011] = Phone_GetIDInfo; 			//获取ID信息
 	pfun_Phone[P0012] = Phone_GetTime; 			//获取时间
@@ -344,6 +344,8 @@ void Phone_SetTime(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//
 		
 	//设置时间
 	set_time(setTime);
+	//重启main线程
+	restartThread(TYPE_MAIN);	
 	APP_Response_SetTime(0x00,ID);
 
 }
@@ -357,6 +359,7 @@ void Phone_SetWiredNetwork(unsigned char * ID,int Data_Len,const char *recvbuffe
 	IP_t IPAddr,MSKAddr,GWAddr,DNS1Addr,DNS2Addr;
 	//匹配成功进行相应操作
 	printf("COMMAND_SETWIREDNETWORK  Mapping\n");
+	APP_Response_SetWiredNetwork(0x00,ID);
 	//检查是DHCP  还是固定IP
 	ModeFlag = ResolveWired(&recvbuffer[28],&IPAddr,&MSKAddr,&GWAddr,&DNS1Addr,&DNS2Addr);
 	if(ModeFlag == 0x00)		//DHCP
@@ -375,9 +378,11 @@ void Phone_SetWiredNetwork(unsigned char * ID,int Data_Len,const char *recvbuffe
 		StaticIP(IPAddr,MSKAddr,GWAddr,DNS1Addr,DNS2Addr);
 	}
 					
-	APP_Response_SetWiredNetwork(0x00,ID);
+	
 	}	
 }
+
+/*
 void Phone_SetWIFI(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//无线网络连接
 {
 	printf("WIFI_Recv_Event%d %s\n",P0008,recvbuffer);
@@ -410,6 +415,7 @@ void Phone_SearchWIFIStatus(unsigned char * ID,int Data_Len,const char *recvbuff
 	}
 	}
 }
+*/
 void Phone_SetWIFIPasswd(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//AP密码设置
 {
 	printf("WIFI_Recv_Event%d %s\n",P0010,recvbuffer);
@@ -541,7 +547,7 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 	if(ResolveFlag == 0)
 	{
 		printf("pfun_Phone ID:%d\n",Command_Id);
-		if((Command_Id <= MAX_FUNCTION_ID) && (Command_Id >= MIN_FUNCTION_ID))
+		if(pfun_Phone[Command_Id])
 		{
 			(*pfun_Phone[Command_Id])(ID,Data_Len,WIFI_RecvData);
 		}

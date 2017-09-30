@@ -205,14 +205,10 @@ int getevent(char *eve)
 
 int clearrecord()
 {
-	FILE *fp;
-	DIR *dirp;
-	struct dirent *d;
-	char path[100];
-	char dir[30] = "/home/record/data";
-
+	FILE *fp
 	fp = fopen("/etc/yuneng/connect_time.conf", "w");
 	fclose(fp);
+	
 	fp = fopen("/etc/yuneng/autoflag.conf", "w");
 	fputs("0", fp);
 	fclose(fp);
@@ -224,25 +220,15 @@ int clearrecord()
 
 	echo("/home/data/ltpower","0.000000");	
 
-	/* 打开dir目录*/
-	dirp = opendir("/home/record/data");
-	if(dirp == RT_NULL)
-	{
-		printmsg(ECU_DBG_IDWRITE,"clearrecord open directory error");
-	}
-	else
-	{
-		/* 读取dir目录*/
-		while ((d = readdir(dirp)) != RT_NULL)
-		{
-			memset(path,0,100);
-			sprintf(path,"%s/%s",dir,d->d_name);
-			unlink(path);
-		}
-		/* 关闭目录 */
-		closedir(dirp);
-	}
+	rm_dir("/home/record/data");
+	rm_dir("/home/record/INVERSTA");
+	rm_dir("/home/record/POWER");
+	rm_dir("/home/record/ENERGY");
+	unlink("/home/record/EVENT");
 
+	rm_dir("/tmp");
+	rm_dir("/home/data/PROC_RES");
+	rm_dir("/home/data/IPROCRES");
 	restartThread(TYPE_MAIN);
 	return 0;
 }
@@ -281,17 +267,13 @@ void idwrite_thread_entry(void* parameter)
 			strncpy(ecuid, &recvbuff[11], 12);
 			print2msg(ECU_DBG_IDWRITE,"ECU id",ecuid);
 			printdecmsg(ECU_DBG_IDWRITE,"length",strlen(ecuid));
-			fp=fopen("/yuneng/ecuid.con","w");
-			fputs(ecuid,fp);
-			fclose(fp);
 			ecuid[12] = '\0';
-			WIFI_Factory(ecuid);
-			set_Passwd("88888888",8);
-			memset(ecuid,'\0',sizeof(ecuid));
+			setECUID(ecuid);
 			
 			fp=fopen("/yuneng/ecuid.con","r");
 			fgets(ecuid,13,fp);
 			fclose(fp);
+			restartThread(TYPE_MAIN);
 			printdecmsg(ECU_DBG_IDWRITE,"Send",send(clientfd,ecuid,strlen(ecuid),0));
 		}
 		if(!strncmp(recvbuff, "get_ecu_id", 10)){

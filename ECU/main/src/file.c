@@ -25,6 +25,7 @@
 #include "rthw.h"
 #include "myfile.h"
 #include "variation.h"
+#include "usart5.h"
 
 
 /*****************************************************************************/
@@ -82,19 +83,17 @@ int get_Passwd(char *PassWD)
 
 int set_Passwd(char *PassWD,int length)
 {
-	int fd;
-	fd = open("/YUNENG/PASSWD.CON", O_WRONLY, 0);
-	if (fd >= 0)
+	FILE *file;
+	file = fopen("/YUNENG/PASSWD.CON", "w");
+	if (file != NULL)
 	{
-		write(fd, PassWD, length);
-		close(fd);
+		fputs(PassWD,file);
+		fclose(file);
 		return 0;
 	}else
 	{
 		return -1;
 	}
-
-
 }
 
 //返回0表示DHCP模式  返回1表示静态IP模式
@@ -398,6 +397,10 @@ int get_id_from_file(inverter_info *firstinverter)
 			
 			inverter++;
 			num++;
+			if(num >= 50)
+			{
+				break;
+			}
 		}
 		fclose(fp);
 	}
@@ -707,7 +710,7 @@ void update_daily_energy(float current_energy, char *date_time)
 	char sendbuff[50] = {'\0'};
 	char date_time_tmp[14] = {'\0'};
 	rt_err_t result;
-	float energy_tmp = 0;
+	float energy_tmp = current_energy;
 	int fd;
 	//当前一轮发电量为0 不更新发电量
 	if(current_energy <= EPSILON && current_energy >= -EPSILON) return;
@@ -1150,7 +1153,7 @@ void update_monthly_energy(float current_energy, char *date_time)
 	char sendbuff[50] = {'\0'};
 	char date_time_tmp[14] = {'\0'};
 	rt_err_t result;
-	float energy_tmp = 0;
+	float energy_tmp = current_energy;
 	int fd;
 	//当前一轮发电量为0 不更新发电量
 	if(current_energy <= EPSILON && current_energy >= -EPSILON) return;
@@ -1498,34 +1501,20 @@ int optimizeFileSystem(void)
 }
 
 
-#ifdef RT_USING_FINSH
-#include <finsh.h>
-
-FINSH_FUNCTION_EXPORT(echo, eg:echo("/test","test"));
-#if 0
-void splitSt(char * str)
+int setECUID(char *ECUID)
 {
-	int i = 0 , num;
-	char list[20][32];
-	num = splitString(str,list);
-	for(i = 0;i<num;i++)
-	{
-		printmsg(ECU_DBG_OTHER,list[i]);
-		if(strlen(list[i]) == 0)
-		{
-			printmsg(ECU_DBG_OTHER,"NULL");
-		}
-	}
-	printdecmsg(ECU_DBG_OTHER,"num",num);
-   
+	char ecuid[13] = {'\0'};
+	FILE *fp = fopen("/yuneng/ecuid.con","w");
+	memcpy(ecuid,ECUID,12);
+	ecuid[12] = '\0';
+	fputs(ecuid,fp);
+	fclose(fp);
+	
+	WIFI_Factory(ecuid);
+	printf("set_Passwd(\"88888888\",8);\n");
+	set_Passwd("88888888",8);
+	return 0;
 }
-FINSH_FUNCTION_EXPORT(splitSt, eg:splitSt());
-
-void testfile()
-{
-	get_id_from_file(inverter);
-}
-FINSH_FUNCTION_EXPORT(testfile, eg:testfile());
 
 void rm_dir(char* dir)
 {
@@ -1552,8 +1541,41 @@ void rm_dir(char* dir)
 		closedir(dirp);
 	}
 }
-FINSH_FUNCTION_EXPORT(rm_dir, eg:rm_dir("/home/record/data"));
+
+
+#ifdef RT_USING_FINSH
+#include <finsh.h>
+FINSH_FUNCTION_EXPORT(setECUID, eg:set ECU ID("213000000001"));
+FINSH_FUNCTION_EXPORT(echo, eg:echo("/test","test"));
+#if 0
+void splitSt(char * str)
+{
+	int i = 0 , num;
+	char list[20][32];
+	num = splitString(str,list);
+	for(i = 0;i<num;i++)
+	{
+		printmsg(ECU_DBG_OTHER,list[i]);
+		if(strlen(list[i]) == 0)
+		{
+			printmsg(ECU_DBG_OTHER,"NULL");
+		}
+	}
+	printdecmsg(ECU_DBG_OTHER,"num",num);
+   
+}
+FINSH_FUNCTION_EXPORT(splitSt, eg:splitSt());
+
+void testfile()
+{
+	get_id_from_file(inverter);
+}
+FINSH_FUNCTION_EXPORT(testfile, eg:testfile());
 #endif
+
+
+FINSH_FUNCTION_EXPORT(rm_dir, eg:rm_dir("/home/record/data"));
+
 
 int cal(char * date)
 {
@@ -1568,61 +1590,13 @@ int cal(char * date)
 }
 FINSH_FUNCTION_EXPORT(cal, eg:cal("20170721"));
 
-int initsystem(char *ecuid,char *mac)
+int initsystem(char *mac)
 {
-	char fileecuid[13];	
-	mkdir("/home",0x777);
+
+	initPath();
 	rt_hw_ms_delay(20);
-	mkdir("/tmp",0x777);
-	rt_hw_ms_delay(20);
-	mkdir("/yuneng",0x777);
-	rt_hw_ms_delay(20);
-	mkdir("/home/data",0x777);
-	rt_hw_ms_delay(20);
-	mkdir("/home/record",0x777);
-	rt_hw_ms_delay(20);
-	mkdir("/home/data/proc_res",0x777);
-	rt_hw_ms_delay(20);
-	mkdir("/home/data/iprocres",0x777);
-	rt_hw_ms_delay(20);
-	echo("/home/data/ltpower","0.000000");
-	rt_hw_ms_delay(20);
-	mkdir("/home/record/data",0x777);
-	rt_hw_ms_delay(20);
-	mkdir("/home/record/inversta",0x777);
-	rt_hw_ms_delay(20);
-	memcpy(fileecuid,ecuid,12);
-	rt_hw_ms_delay(20);
-	fileecuid[12] = '\n';
-	echo("/yuneng/ecuid.con",fileecuid);
-	rt_hw_ms_delay(20);
-	echo("/yuneng/area.con","NA");
-	rt_hw_ms_delay(20);
-	mkdir("/home/record/power",0x777);
-	mkdir("/home/record/energy",0x777);
+
 	echo("/yuneng/ecumac.con",mac);
-	rt_hw_ms_delay(20);
-	echo("/yuneng/channel.con","0x10");
-	rt_hw_ms_delay(20);
-	echo("/yuneng/limiteid.con","1");
-	rt_hw_ms_delay(20);
-	echo("/yuneng/control.con","Timeout=10\nReport_Interval=15\nDomain=ecu.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
-	//echo("/yuneng/control.con","Timeout=15\nReport_Interval=5\nDomain=111.apsema.com\nIP=139.168.200.158\nPort1=8997\nPort2=8997\n");
-	rt_hw_ms_delay(20);
-	echo("/yuneng/vernum.con","2\n");
-	rt_hw_ms_delay(20);
-	echo("/yuneng/ftpadd.con", "IP=60.190.131.190\nPort=9219\nuser=zhyf\npassword=yuneng\n");
-	//echo("/yuneng/ftpadd.con", "IP=192.168.1.103\nPort=21\nuser=admin\npassword=admin\n");
-	rt_hw_ms_delay(20);
-	echo("/yuneng/datacent.con","Domain=ecu.apsema.com\nIP=60.190.131.190\nPort1=8995\nPort2=8996\n");
-	//echo("/yuneng/datacent.con","Domain=eee.apsema.com\nIP=139.168.200.158\nPort1=8093\nPort2=8093\n");
-	rt_hw_ms_delay(20);
-	echo("/home/data/power","");
-	rt_hw_ms_delay(20);
-	echo("/yuneng/timezone.con","Etc/GMT-8\n");
-	rt_hw_ms_delay(20);
-	mkdir("/ftp",0x777);
-	echo("/yuneng/A118.con","1");
 	return 0;
 }
 FINSH_FUNCTION_EXPORT(initsystem, eg:initsystem("123456789012","80:97:1B:00:72:1C"));

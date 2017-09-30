@@ -6,6 +6,7 @@
 #include "file.h"
 #include "rtc.h"
 #include "usart5.h"
+#include "stdlib.h"
 
 extern ecu_info ecu;
 static char SendData[4096] = {'\0'};
@@ -14,7 +15,9 @@ int phone_add_inverter(int num,const char *uidstring)
 {
 	int i = 0;
 	char buff[25] = { '\0' };
-	char allbuff[1024] = { '\0' };
+	char *allbuff = NULL;
+	allbuff = malloc(2048);
+	memset(allbuff,0x00,2048);
 	for(i = 0; i < num; i++)
 	{
 		memset(buff,'\0',25);
@@ -25,6 +28,8 @@ int phone_add_inverter(int num,const char *uidstring)
 	
 	echo("/home/data/id",allbuff);
 	echo("/yuneng/limiteid.con","1");
+	free(allbuff);
+	allbuff = NULL;
 	return 0;
 }
 
