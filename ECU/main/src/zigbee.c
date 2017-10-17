@@ -1831,7 +1831,7 @@ int process_all(inverter_info *firstinverter)
 	processpower(firstinverter);			//设置功率预设值,ZK,3.10有改动	     OK
 //	process_gfdi(firstinverter);			//清GFDI标志
 //	process_protect_data(firstinverter);	//设置预设值
-	process_turn_on_off(firstinverter);		//开关机
+	process_turn_on_off(firstinverter);		//开关机 	用于DRM功能
 	process_quick_boot(firstinverter);		//快速启动
 	process_ipp(firstinverter);				//IPP设定
 	process_ird_all(firstinverter);		//0K
@@ -1996,7 +1996,7 @@ int getalldata(inverter_info *firstinverter)		//获取每个逆变器的数据
 		}
 	}
 	ecu.current_energy = curenergy;
-	//update_tmpdb(firstinverter);
+	update_tmpdb(firstinverter);
 #if 0
 	fd = open("/TMP/IDNOBIND.TXT", O_WRONLY | O_CREAT | O_TRUNC, 0); 	//为了统计显示有短地址但是没有绑定的逆变器ID
 	if (fd >= 0) 
@@ -2133,6 +2133,7 @@ int zb_change_inverter_channel_one(char *inverter_id, int channel)
 	char sendbuff[512] = {'\0'};
 	int i;
 	int check=0;
+	rt_hw_ms_delay(300); 
 
 	clear_zbmodem();
 	sendbuff[0]  = 0xAA;

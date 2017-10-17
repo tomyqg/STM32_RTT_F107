@@ -30,6 +30,7 @@
 #include "variation.h"
 #include "usart5.h"
 #include "lan8720rst.h"
+#include "clientSocket.h"
 
 /*****************************************************************************/
 /*  Variable Declarations                                                    */
@@ -42,21 +43,6 @@ extern rt_mutex_t usr_wifi_lock;
 /*****************************************************************************/
 /*  Function Implementations                                                 */
 /*****************************************************************************/
-int writeconnecttime(void)			//±£´æ×îºóÒ»´ÎÁ¬½ÓÉÏ·þÎñÆ÷µÄÊ±¼ä
-{
-	char connecttime[20]={'\0'};
-	FILE *fp;
-
-	getcurrenttime(connecttime);
-	fp=fopen("/yuneng/con_time.con","w");
-	fprintf(fp,"%s",connecttime);
-	fclose(fp);
-
-	memcpy(ecu.last_ema_time,connecttime,15);
-	print2msg(ECU_DBG_CLIENT,"ecu.last_ema_time:",ecu.last_ema_time);
-	return 0;
-}
-
 int readconnecttime(void)			//±£´æ×îºóÒ»´ÎÁ¬½ÓÉÏ·þÎñÆ÷µÄÊ±¼ä
 {
 	char connecttime[20]={'\0'};
@@ -73,149 +59,6 @@ int readconnecttime(void)			//±£´æ×îºóÒ»´ÎÁ¬½ÓÉÏ·þÎñÆ÷µÄÊ±¼ä
 	print2msg(ECU_DBG_CLIENT,"ecu.last_ema_time:",ecu.last_ema_time);
 	return 0;
 }
-
-
-void showconnected(void)		//ÒÑÁ¬½ÓEMA
-{
-	FILE *fp;
-
-	fp = fopen("/tmp/conemafl.txt", "w");
-	if(fp)
-	{
-		fputs("connected", fp);
-		fclose(fp);
-	}
-
-}
-
-void showdisconnected(void)		//ÎÞ·¨Á¬½ÓEMA
-{
-	FILE *fp;
-
-	fp = fopen("/tmp/conemafl.txt", "w");
-	if(fp)
-	{
-		fputs("disconnected", fp);
-		fclose(fp);
-	}
-
-}
-
-int randvalue(void)
-{
-	int i;
-
-	srand((unsigned)acquire_time());
-	i = rand()%2;
-	printdecmsg(ECU_DBG_CLIENT,"Randvalue", i);
-
-	return i;
-}
-
-int createsocket(void)					//´´½¨Ì×½Ó×Ö
-{
-	int fd_sock;
-
-	fd_sock=socket(AF_INET,SOCK_STREAM,0);
-	if(-1==fd_sock)
-		printmsg(ECU_DBG_CLIENT,"Failed to create socket");
-	else
-		printmsg(ECU_DBG_CLIENT,"Create socket successfully");
-
-	return fd_sock;
-}
-
-int connect_socket(int fd_sock)				//Á¬½Óµ½·þÎñÆ÷
-{
-	char domain[100]={'\0'};		//EMAµÄÓòÃû
-	char ip[20] = {'\0'};	//EMAµÄÈ±Ê¡IP
-	int port[2]={8093, 8093};
-	char buff[512] = {'\0'};
-	struct sockaddr_in serv_addr;
-	struct hostent * host;
-	FILE *fp;
-
-	if(rt_hw_GetWiredNetConnect() == 0)
-	{
-		return -1;
-	}
-
-	fp = fopen("/yuneng/datacent.con", "r");
-	if(fp)
-	{
-		while(1)
-		{
-			memset(buff, '\0', sizeof(buff));
-			fgets(buff, sizeof(buff), fp);
-			if(!strlen(buff))
-				break;
-			if(!strncmp(buff, "Domain", 6))
-			{
-				strcpy(domain, &buff[7]);
-				if('\n' == domain[strlen(domain)-1])
-					domain[strlen(domain)-1] = '\0';
-			}
-			if(!strncmp(buff, "IP", 2))
-			{
-				strcpy(ip, &buff[3]);
-				if('\n' == ip[strlen(ip)-1])
-					ip[strlen(ip)-1] = '\0';
-			}
-			if(!strncmp(buff, "Port1", 5))
-				port[0]=atoi(&buff[6]);
-			if(!strncmp(buff, "Port2", 5))
-				port[1]=atoi(&buff[6]);
-		}
-		fclose(fp);
-	}
-
-	if(!strlen(domain))
-		strcpy(domain, "ecu.apsema.com");
-	if(!strlen(ip))
-		strcpy(ip, "60.190.131.190");
-
-
-	host = gethostbyname(domain);
-	if(NULL == host)
-	{
-		printmsg(ECU_DBG_CLIENT,"Resolve domain failure");
-	}
-	else
-	{
-		memset(ip, '\0', sizeof(ip));
-		sprintf(ip,"%s",ip_ntoa((ip_addr_t*)*host->h_addr_list));
-	}
-
-	
-	print2msg(ECU_DBG_CLIENT,"IP", ip);
-	printdecmsg(ECU_DBG_CLIENT,"Port1", port[0]);
-	printdecmsg(ECU_DBG_CLIENT,"Port2", port[1]);
-
-	memset(&serv_addr,0,sizeof(struct sockaddr_in));
-	serv_addr.sin_family=AF_INET;
-	serv_addr.sin_port=htons(port[randvalue()]);
-	serv_addr.sin_addr.s_addr=inet_addr(ip);
-	memset(&(serv_addr.sin_zero),0,8);
-
-	if(-1==connect(fd_sock,(struct sockaddr *)&serv_addr,sizeof(struct sockaddr))){
-		showdisconnected();
-		printmsg(ECU_DBG_CLIENT,"Failed to connect to EMA");
-		return -1;
-	}
-	else{
-		showconnected();
-		printmsg(ECU_DBG_CLIENT,"Connect to EMA successfully");
-		writeconnecttime();
-		return 1;
-	}
-}
-
-void close_socket(int fd_sock)					//¹Ø±ÕÌ×½Ó×Ö
-{
-	closesocket(fd_sock);
-	printmsg(ECU_DBG_CLIENT,"Close socket");
-}
-
 
 int clear_send_flag(char *readbuff)
 {
@@ -260,60 +103,10 @@ int update_send_flag(char *send_date_time)
 			print2msg(ECU_DBG_CLIENT,"Update send flag into database", "1");
 			break;
 		}
-		rt_hw_s_delay(5);
+		rt_hw_s_delay(1);
 	}
 
 	return 0;
-}
-
-int recv_response(int fd_sock, char *readbuff)
-{
-	fd_set rd;
-	struct timeval timeout;
-	int recvbytes, res, count=0, readbytes = 0;
-	char *recvbuff = NULL;
-	char temp[16];
-	recvbuff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
-	memset(recvbuff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
-	while(1)
-	{
-		FD_ZERO(&rd);
-		FD_SET(fd_sock, &rd);
-		timeout.tv_sec = 120;
-		timeout.tv_usec = 0;
-
-		res = select(fd_sock+1, &rd, NULL, NULL, &timeout);
-		if(res <= 0){
-			//printerrmsg("select");
-			printmsg(ECU_DBG_CLIENT,"Receive data reply from EMA timeout");
-			free(recvbuff);
-			recvbuff = NULL;
-			return -1;
-		}
-		else{
-			memset(recvbuff, '\0', sizeof(recvbuff));
-			memset(temp, '\0', sizeof(temp));
-			recvbytes = recv(fd_sock, recvbuff, sizeof(recvbuff), 0);
-			if(0 == recvbytes)
-			{
-				free(recvbuff);
-				recvbuff = NULL;
-				return -1;
-			}	
-			strcat(readbuff, recvbuff);
-			readbytes += recvbytes;
-			if(readbytes >= 3)
-			{
-				count = (readbuff[1]-0x30)*10 + (readbuff[2]-0x30);
-				if(count==((strlen(readbuff)-3)/14))
-				{
-					free(recvbuff);
-					recvbuff = NULL;
-					return readbytes;
-				}		
-			}
-		}
-	}
 }
 
 int detection_resendflag2()		//´æÔÚ·µ»Ø1£¬²»´æÔÚ·µ»Ø0
@@ -640,13 +433,14 @@ void delete_file_resendflag0()		//Çå¿ÕÊý¾Ýresend±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 
 
 
-int send_record(int fd_sock, char *sendbuff, char *send_date_time)			//·¢ËÍÊý¾Ýµ½EMA  ×¢ÒâÔÚ´æ´¢µÄÊ±ºò½áÎ²Î´Ìí¼Ó'\n'  ÔÚ·¢ËÍÊ±µÄÊ±ºò¼ÇµÃÌí¼Ó
+int send_record(char *sendbuff, char *send_date_time)			//·¢ËÍÊý¾Ýµ½EMA  ×¢ÒâÔÚ´æ´¢µÄÊ±ºò½áÎ²Î´Ìí¼Ó'\n'  ÔÚ·¢ËÍÊ±µÄÊ±ºò¼ÇµÃÌí¼Ó
 {
-	int sendbytes=0;
+	int sendbytes=0,readbytes = 4+99*14;
 	char *readbuff = NULL;
-	readbuff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
-	memset(readbuff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
-	sendbytes = send(fd_sock, sendbuff, strlen(sendbuff), 0);
+	readbuff = malloc((4+99*14));
+	memset(readbuff,'\0',(4+99*14));
+	
+	sendbytes = serverCommunication_Client(sendbuff,strlen(sendbuff),readbuff,&readbytes,10000);
 	if(-1 == sendbytes)
 	{
 		free(readbuff);
@@ -654,7 +448,7 @@ int send_record(int fd_sock, char *sendbuff, char *send_date_time)			//·¢ËÍÊý¾Ýµ
 		return -1;
 	}
 		
-	if(-1 == recv_response(fd_sock, readbuff))
+	if(readbytes < 3)
 	{
 		free(readbuff);
 		readbuff = NULL;
@@ -662,7 +456,7 @@ int send_record(int fd_sock, char *sendbuff, char *send_date_time)			//·¢ËÍÊý¾Ýµ
 	}
 	else
 	{
-		print2msg(ECU_DBG_CLIENT,"readbuff",readbuff);
+		//print2msg(ECU_DBG_CLIENT,"readbuff",readbuff);
 		if('1' == readbuff[0])
 			update_send_flag(send_date_time);
 		clear_send_flag(readbuff);
@@ -672,197 +466,70 @@ int send_record(int fd_sock, char *sendbuff, char *send_date_time)			//·¢ËÍÊý¾Ýµ
 	}
 }
 
-#ifdef WIFI_USE		
-int wifi_socketb_format(char *data ,int length)
-{
-	char head[9] = {'\0'};
-	char *p = NULL;
-	int i = 0,retlength = 0;
-	head[0] = 0x62;
-	head[1] = 0x00;
-	head[2] = 0x00;
-	head[3] = 0x00;
-	head[4] = 0x00;
-	head[5] = 0x00;
-	head[6] = 0x00;
-	head[7] = 0x00;
-	head[8] = 0x00;
-	
-	for(p = data,i = 0;p <= (data+length-9);p++,i++)
-	{
-		if(!memcmp(p,head,9))
-		{
-			memcpy(p,p+9,(length-9-i));
-			length -= 9;
-			data[length] = '\0';
-			retlength = length;
-		}
-	}
-
-	return retlength;
-}
-
-
-
-int wifi_send_record(char *sendbuff, char *send_date_time)		//Í¨¹ýWIFI·¢ËÍÊý¾Ýµ½EMA  ×¢ÒâÔÚ´æ´¢µÄÊ±ºò½áÎ²Î´Ìí¼Ó'\n'  ÔÚ·¢ËÍÊ±µÄÊ±ºò¼ÇµÃÌí¼Ó
-{
-	int j = 0,ret = 0;
-	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
-	ret = SendToSocketB(sendbuff, strlen(sendbuff));
-	if(ret == -1)
-	{
-		rt_mutex_release(usr_wifi_lock);
-		return -1;
-	}
-	
-	for(j = 0;j<800;j++)
-	{
-		if(WIFI_Recv_SocketB_Event == 1)
-		{
-			//¼ì²é¸ñÊ½£¬Èç¹ûÊÇ¶à¸ö°üÔÚÒ»ÆðÁË£¬½øÐÐºÏ²¢
-			wifi_socketb_format((char *)WIFI_RecvSocketBData ,WIFI_Recv_SocketB_LEN);
-			print2msg(ECU_DBG_CLIENT,"readbuff",(char *)WIFI_RecvSocketBData);
-			if('1' == WIFI_RecvSocketBData[0])
-				update_send_flag(send_date_time);
-			clear_send_flag((char *)WIFI_RecvSocketBData);
-			WIFI_Recv_SocketB_Event = 0;
-			rt_mutex_release(usr_wifi_lock);
-			return 0;
-		}
-		rt_hw_ms_delay(10);
-	}
-	rt_mutex_release(usr_wifi_lock);
-	return -1;
-
-}
-#endif
 
 int preprocess()			//·¢ËÍÍ·ÐÅÏ¢µ½EMA,¶ÁÈ¡ÒÑ¾­´æÔÚEMAµÄ¼ÇÂ¼Ê±¼ä
 {
-	int sendbytes=0;
-	char readbuff[1024] = {'\0'};
-	char sendbuff[256] = {'\0'};
-	FILE *fp;
-	int fd_sock;
+	int sendbytes = 0,readbytes = 0;
+	char *readbuff = NULL;
+	char sendbuff[50] = {'\0'};
 
 	if(0 == detection_resendflag2())		//	¼ì²âÊÇ·ñÓÐresendflag='2'µÄ¼ÇÂ¼
 		return 0;
-
+	readbuff = malloc((4+99*14));
+	memset(readbuff,0x00,(4+99*14));
+	readbytes = 4+99*14;
 	strcpy(sendbuff, "APS13AAA22");
-	fp = fopen("/yuneng/ecuid.con", "r");
-	if(fp)
-	{
-		fgets(&sendbuff[10], 13, fp);
-		fclose(fp);
-	}
+	memcpy(&sendbuff[10],ecu.id,12);
 	strcat(sendbuff, "\n");
 	print2msg(ECU_DBG_CLIENT,"Sendbuff", sendbuff);
 
-	fd_sock = createsocket();
-	printdecmsg(ECU_DBG_CLIENT,"Socket", fd_sock);
-	if(1 == connect_socket(fd_sock))
+	//·¢ËÍµ½·þÎñÆ÷
+	sendbytes = serverCommunication_Client(sendbuff,strlen(sendbuff),readbuff,&readbytes,10000);
+	if(-1 == sendbytes)
 	{
-		while(1)
-		{
-			memset(readbuff, '\0', sizeof(readbuff));
-			sendbytes = send(fd_sock, sendbuff, strlen(sendbuff), 0);
-			if(-1 == sendbytes)
-			{
-				close_socket(fd_sock);
-				return -1;
-			}
-			if(recv_response(fd_sock, readbuff) > 3)
-				clear_send_flag(readbuff);
-			else
-				break;
-		}
-#ifdef WIFI_USE		
+		free(readbuff);
+		readbuff = NULL;
+		return -1;
+	}
+	if(readbytes >3)
+	{
+		clear_send_flag(readbuff);
+		
 	}else
 	{
-		int j = 0,flag_failed = 0,ret = 0;
-		
-			//´´½¨³É¹¦
-		while(1)
-		{
-			memset(readbuff, '\0', sizeof(readbuff));
-			rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
-			ret = SendToSocketB(sendbuff, strlen(sendbuff));
-			if(ret == -1)
-			{
-				rt_mutex_release(usr_wifi_lock);
-				break;
-			}
-			for(j=0;j < 800;j++)
-			{
-				if(WIFI_Recv_SocketB_Event == 1)
-				{
-					flag_failed = 1;
-					//¼ì²é¸ñÊ½£¬Èç¹ûÊÇ¶à¸ö°üÔÚÒ»ÆðÁË£¬½øÐÐºÏ²¢
-					wifi_socketb_format((char *)WIFI_RecvSocketBData ,WIFI_Recv_SocketB_LEN);
-					clear_send_flag((char *)WIFI_RecvSocketBData);
-
-					WIFI_Recv_SocketB_Event = 0;
-					rt_mutex_release(usr_wifi_lock);
-					return 0;
-				}
-			}
-			rt_mutex_release(usr_wifi_lock);
-			if(flag_failed == 0)
-			{
-				break;
-			}
-
-		}
-
-
-#endif
+		free(readbuff);
+		readbuff = NULL;
+		return -1;
 	}
-
-	close_socket(fd_sock);
+	free(readbuff);
+	readbuff = NULL;
 	return 0;
+
 }
 
 int resend_record()
 {
-	int fd_sock;
 	char *data = NULL;//²éÑ¯µ½µÄÊý¾Ý
 	char time[15] = {'\0'};
 	int flag,res;
 	
-	data = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
-	memset(data,0x00,MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
+	data = malloc(CLIENT_RECORD_HEAD+CLIENT_RECORD_ECU_HEAD+CLIENT_RECORD_INVERTER_LENGTH*MAXINVERTERCOUNT+CLIENT_RECORD_OTHER);
+	memset(data,0x00,CLIENT_RECORD_HEAD+CLIENT_RECORD_ECU_HEAD+CLIENT_RECORD_INVERTER_LENGTH*MAXINVERTERCOUNT+CLIENT_RECORD_OTHER);
 	//ÔÚ/home/record/data/Ä¿Â¼ÏÂ²éÑ¯resendflagÎª2µÄ¼ÇÂ¼
-	fd_sock = createsocket();
-	printdecmsg(ECU_DBG_CLIENT,"Socket", fd_sock);
-	if(1 == connect_socket(fd_sock))
+	while(search_readflag(data,time,&flag,'2'))		//	»ñÈ¡Ò»ÌõresendflagÎª1µÄÊý¾Ý
 	{
-		while(search_readflag(data,time,&flag,'2'))		//	»ñÈ¡Ò»ÌõresendflagÎª1µÄÊý¾Ý
-		{
-			if(1 == flag)		// »¹´æÔÚÐèÒªÉÏ´«µÄÊý¾Ý
-					data[78] = '1';
-			printmsg(ECU_DBG_CLIENT,data);
-			res = send_record(fd_sock, data, time);
-			if(-1 == res)
-				break;
-		}
-#ifdef WIFI_USE 
-	}else
-	{
-		while(search_readflag(data,time,&flag,'2'))
-		{
-			if(1 == flag)		// »¹´æÔÚÐèÒªÉÏ´«µÄÊý¾Ý
-				data[78] = '1';
-			printmsg(ECU_DBG_CLIENT,data);
-			res = wifi_send_record(data, time);
-			if(-1 == res)
-				break;
-		}
-#endif
+		//if(1 == flag)		// »¹´æÔÚÐèÒªÉÏ´«µÄÊý¾Ý
+		//		data[78] = '1';
+		//printmsg(ECU_DBG_CLIENT,data);
+		res = send_record(data, time);
+		if(-1 == res)
+			break;
 	}
-	close_socket(fd_sock);
+
 	free(data);
 	data = NULL;
 	return 0;
+
 }
 
 
@@ -870,7 +537,6 @@ void client_thread_entry(void* parameter)
 {
 	char broadcast_hour_minute[3]={'\0'};
 	char broadcast_time[16];
-	int fd_sock;
 	int thistime=0, lasttime=0,res,flag;
 	char *data = NULL;//²éÑ¯µ½µÄÊý¾Ý
 	char time[15] = {'\0'};
@@ -894,56 +560,22 @@ void client_thread_entry(void* parameter)
 		get_time(broadcast_time, broadcast_hour_minute);
 		print2msg(ECU_DBG_CLIENT,"time",broadcast_time);
 		
-		fd_sock = createsocket();
-		printdecmsg(ECU_DBG_CLIENT,"Socket", fd_sock);
-		if(1 == connect_socket(fd_sock))
+		while(search_readflag(data,time,&flag,'1'))		//	»ñÈ¡Ò»ÌõresendflagÎª1µÄÊý¾Ý
 		{
-			while(search_readflag(data,time,&flag,'1'))		//	»ñÈ¡Ò»ÌõresendflagÎª1µÄÊý¾Ý
+			if(compareTime(thistime ,lasttime,300))
 			{
-				if(compareTime(thistime ,lasttime,300))
-				{
-					break;
-				}
-				if(1 == flag)		// »¹´æÔÚÐèÒªÉÏ´«µÄÊý¾Ý
-						data[78] = '1';
-				printmsg(ECU_DBG_CLIENT,data);
-				res = send_record(fd_sock, data, time);
-				if(-1 == res)
-					break;
-				thistime = acquire_time();
-				memset(data,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL));
-				memset(time,0,15);
+				break;
 			}
-#ifdef WIFI_USE			
-		}else
-		{
-			//²»ÐèÒªÏÈ´ò¿ª£¬ÔÚÓÐÊý¾ÝÐèÒª·¢ËÍµÄÊ±ºò´ò¿ª ¾ÍÐÐ¡£
-			//if((1 == WIFI_QueryStatus(SOCKET_B)) || (0 == WIFI_Create(SOCKET_B)))
-			{
-				while(search_readflag(data,time,&flag,'1'))		//	»ñÈ¡Ò»ÌõresendflagÎª1µÄÊý¾Ý
-				{
-					if(compareTime(thistime ,lasttime,300))
-					{	
-						break;
-					}
-					if(1 == flag)		// »¹´æÔÚÐèÒªÉÏ´«µÄÊý¾Ý
-							data[78] = '1';
-					printmsg(ECU_DBG_CLIENT,data);
-					res = wifi_send_record(data, time);
-					if(-1 == res)
-					{
-						break;
-					}
-						
-					thistime = acquire_time();
-					memset(data,0,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL));
-					memset(time,0,15);
-				}
-			}
-			WIFI_Close(SOCKET_B);
-#endif	
+			//if(1 == flag)		// »¹´æÔÚÐèÒªÉÏ´«µÄÊý¾Ý
+				//data[78] = '1';
+			//printmsg(ECU_DBG_CLIENT,data);
+			res = send_record( data, time);
+			if(-1 == res)
+				break;
+			thistime = acquire_time();
+			memset(data,0,(CLIENT_RECORD_HEAD+CLIENT_RECORD_ECU_HEAD+CLIENT_RECORD_INVERTER_LENGTH*MAXINVERTERCOUNT+CLIENT_RECORD_OTHER));
+			memset(time,0,15);
 		}
-		close_socket(fd_sock);
 		delete_file_resendflag0();		//Çå¿ÕÊý¾Ýresend±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 		
 		if((thistime < 300) && (lasttime > 300))

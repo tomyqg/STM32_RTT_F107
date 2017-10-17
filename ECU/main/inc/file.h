@@ -29,9 +29,11 @@ int fileWrite(int fd,char* buf,int len);
 int fileRead(int fd,char* buf,int len);
 int get_Passwd(char *PassWD);
 int set_Passwd(char *PassWD,int length);
+void splitSpace(char *data,char *sourcePath,char *destPath);
 int setECUID(char *ECUID);
 int get_DHCP_Status(void);
 void rm_dir(char* dir);
+int update_tmpdb(inverter_info *firstinverter);
 //读取DRM开关函数   返回值为1：表示功能打开   返回值为-1表示功能关闭
 int DRMFunction(void);
 void get_ecuid(char *ecuid);

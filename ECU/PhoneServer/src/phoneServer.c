@@ -546,6 +546,7 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 	ResolveFlag =  Resolve_RecvData((char *)WIFI_RecvData,&Data_Len,&Command_Id);
 	if(ResolveFlag == 0)
 	{
+		add_Phone_functions();
 		printf("pfun_Phone ID:%d\n",Command_Id);
 		if(pfun_Phone[Command_Id])
 		{

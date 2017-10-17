@@ -13,6 +13,7 @@
 /*  Include Files                                                            */
 /*****************************************************************************/
 #include <stdio.h>
+#include <dfs_posix.h> 
 #include <stdlib.h>
 #include <string.h>
 #include <lwip/netdb.h> 

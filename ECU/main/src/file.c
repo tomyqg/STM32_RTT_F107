@@ -96,6 +96,30 @@ int set_Passwd(char *PassWD,int length)
 	}
 }
 
+//分割空格
+void splitSpace(char *data,char *sourcePath,char *destPath)
+{
+	int i,j = 0,k = 0;
+	char splitdata[3][50];
+	for(i=0;i<strlen(data);++i){
+		if(data[i] == ' ') {
+			splitdata[j][k] = 0;
+			++j;
+			k = 0; 
+		}
+		else{
+			splitdata[j][k] = data[i];
+			++k;
+		}
+	}
+
+	memcpy(sourcePath,splitdata[1],strlen(splitdata[1]));
+	sourcePath[strlen(splitdata[1])] = '\0';
+	memcpy(destPath,splitdata[2],strlen(splitdata[2]));
+	destPath[strlen(splitdata[2])-1] = '\0';
+}
+
+
 //返回0表示DHCP模式  返回1表示静态IP模式
 int get_DHCP_Status(void)
 {
@@ -285,6 +309,26 @@ void updateID(void)
 		}
 		fclose(fp);
 	}
+}
+
+int update_tmpdb(inverter_info *firstinverter)
+{
+	int fd;
+	char str[300] = {'\0'};
+	inverter_info *curinverter = firstinverter;
+	int i = 0;
+	fd = fileopen("/home/data/collect.con",O_WRONLY | O_APPEND | O_CREAT|O_TRUNC,0);
+	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++)
+	{
+		if(curinverter->dataflag == 1)
+		{
+			sprintf(str,"%s,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%d\n",curinverter->id,curinverter->preaccgen,curinverter->preaccgenb,curinverter->preaccgenc,curinverter->preaccgend,curinverter->pre_output_energy,curinverter->pre_output_energyb,curinverter->pre_output_energyc,curinverter->preacctime);
+			fileWrite(fd,str,strlen(str));
+		}
+	}
+
+	fileclose(fd);
+	return 0;
 }
 
 

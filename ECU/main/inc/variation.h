@@ -20,6 +20,19 @@
 #define CURSYSGENLEN 10			//系统当前发电量，EMA通信协议中使用
 #define LIFETIMEGENLEN 10		//历史发电量，EMA通信协议中使用
 
+
+//Client 相关通信参数
+#define CLIENT_RECORD_HEAD							20
+#define CLIENT_RECORD_ECU_HEAD					78
+#define CLIENT_RECORD_INVERTER_LENGTH		104
+#define CLIENT_RECORD_OTHER							100
+
+#define CONTROL_RECORD_HEAD							18
+#define CONTROL_RECORD_ECU_HEAD					33
+#define CONTROL_RECORD_INVERTER_LENGTH	41
+#define CONTROL_RECORD_OTHER						100
+
+
 typedef struct inverter_info_t{
 	char id[13];		//逆变器的ID
 	unsigned short shortaddr;			//Zigbee的短地址

@@ -160,12 +160,59 @@ int init_inverter(inverter_info *inverter)
 	return 1;
 }
 
+//≥ı ºªØ
+void init_tmpdb(inverter_info *firstinverter)
+{
+	int j;
+	char list[9][32];
+	char data[200];
+	unsigned char UID[13] = {'\0'};
+	FILE *fp;
+	inverter_info *curinverter = firstinverter;
+	fp = fopen("/home/data/collect.con", "r");
+	if(fp)
+	{
+		while(NULL != fgets(data,200,fp))
+		{
+			//print2msg(ECU_DBG_FILE,"ID",data);
+			memset(list,0,sizeof(list));
+			splitString(data,list);
+			memcpy(UID,list[0],12);
+			UID[12] = '\0';
+			curinverter = firstinverter;
+			for(j=0; (j<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); j++)	
+			{
+
+				if(!memcmp(curinverter->id,UID,12))
+				{
+					curinverter->preaccgen = atof(list[1]);
+					curinverter->preaccgenb = atof(list[2]);
+					curinverter->preaccgenc = atof(list[3]);
+					curinverter->preaccgend = atof(list[4]);
+					curinverter->pre_output_energy = atof(list[5]);
+					curinverter->pre_output_energyb = atof(list[6]);
+					curinverter->pre_output_energyc = atof(list[7]);
+					curinverter->preacctime = atoi(list[8]);
+					printf("%s :%lf %lf %lf %lf %lf %lf %lf %d\n",UID,curinverter->preaccgen,curinverter->preaccgenb,curinverter->preaccgenc,curinverter->preaccgend,curinverter->pre_output_energy,curinverter->pre_output_energyb,curinverter->pre_output_energyc,curinverter->preacctime);
+					break;
+				}
+				curinverter++;
+			}			
+		}
+		printf("\n\n");
+		fclose(fp);
+	}
+}
+
+
+
 int init_all(inverter_info *inverter)
 {
 	openzigbee();
 	zb_test_communication();
 	init_ecu();
 	init_inverter(inverter);
+	init_tmpdb(inverter);
 	read_gfdi_turn_on_off_status(inverter);
 	return 0;
 }

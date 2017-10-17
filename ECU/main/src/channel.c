@@ -98,23 +98,6 @@ int getNewChannel()
 	return 16; //д╛хопе╣ю
 }
 
-/*
-void saveECUChannel(int channel)
-{
-	FILE *fp;
-	char buffer[5] = {'\0'};
-
-	snprintf(buffer, sizeof(buffer), "0x%02X", channel);
-	print2msg(ECU_DBG_MAIN,"saveECUChannel", buffer);
-	fp = fopen("/yuneng/channel.con", "w");
-	if (fp) {
-		fputs(buffer, fp);
-		fclose(fp);
-	}
-	ecu.channel = channel;
-}
-*/
-
 int saveECUChannel(int channel)
 {
 	FILE *fp;

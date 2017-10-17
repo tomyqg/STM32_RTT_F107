@@ -24,6 +24,7 @@
 #include "debug.h"
 #include "client.h"
 #include "threadlist.h"
+#include "clientSocket.h"
 
 /*****************************************************************************/
 /*  Definitions                                                              */
@@ -2949,6 +2950,8 @@ int SendToSocketB(char *data ,int length)
 				length -= SIZE_PER_SEND;
 			}else
 			{	
+				showconnected();
+				writeconnecttime();
 				memcpy(&sendbuff[9],&data[send_length],length);
 				
 				
@@ -2961,6 +2964,9 @@ int SendToSocketB(char *data ,int length)
 		}
 		
 	
+	}else
+	{
+		showdisconnected();
 	}
 	
 	return -1;

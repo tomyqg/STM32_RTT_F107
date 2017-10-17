@@ -205,7 +205,7 @@ int getevent(char *eve)
 
 int clearrecord()
 {
-	FILE *fp
+	FILE *fp;
 	fp = fopen("/etc/yuneng/connect_time.conf", "w");
 	fclose(fp);
 	
