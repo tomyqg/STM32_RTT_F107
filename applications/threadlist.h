@@ -135,5 +135,6 @@ typedef struct IPConfig
 void tasks_new(void);
 //¸´Î»Ïß³Ì
 void restartThread(threadType type);
+void threadRestartTimer(int timeout,threadType Type);
 
 #endif

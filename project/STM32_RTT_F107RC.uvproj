@@ -1241,6 +1241,11 @@
               <FileType>1</FileType>
               <FilePath>..\ECU\client\src\client.c</FilePath>
             </File>
+            <File>
+              <FileName>clientSocket.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ECU\client\src\clientSocket.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

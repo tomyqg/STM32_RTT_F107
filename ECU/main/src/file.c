@@ -477,6 +477,10 @@ int save_process_result(int item, char *result)
 	char file[9];
 	int fd;
 	char time[20];
+	if('\n' == result[strlen(result)-1])
+	{
+		result[strlen(result)-1] = '\0';
+	}
 	
 	getcurrenttime(time);
 	memcpy(file,&time[0],8);

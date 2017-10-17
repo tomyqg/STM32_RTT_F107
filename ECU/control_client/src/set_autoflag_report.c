@@ -47,7 +47,8 @@ int set_autoflag_report(const char *recvbuffer, char *sendbuffer)
 		fputs("1",fp);
 		fclose(fp);
 		ack_flag=SUCCESS;
-		restartThread(TYPE_MAIN);//system("killall main.exe");
+		threadRestartTimer(10,TYPE_MAIN);
+		//restartThread(TYPE_MAIN);//system("killall main.exe");
 	}
 	//保存到数据库
 

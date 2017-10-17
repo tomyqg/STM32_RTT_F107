@@ -20,6 +20,7 @@
 #include "threadlist.h"
 #include "file.h"
 #include "thftpapi.h"
+#include "dfs_posix.h"
 
 /*****************************************************************************/
 /*  Function Implementations                                                 */
@@ -142,23 +143,28 @@ int mysystem(const char *command)
 		reboot_timer(10);
 	}else if(!memcmp(command,"restart UPDATE",14))
 	{
-		restartThread(TYPE_UPDATE);
+		threadRestartTimer(10,TYPE_UPDATE);
+		//restartThread(TYPE_UPDATE);
 		res = 0;
 	}else if(!memcmp(command,"restart IDWRITE",15))
 	{
-		restartThread(TYPE_IDWRITE);
+		threadRestartTimer(10,TYPE_IDWRITE);
+		//restartThread(TYPE_IDWRITE);
 		res = 0;
 	}else if(!memcmp(command,"restart MAIN",12))
 	{
-		restartThread(TYPE_MAIN);
+		threadRestartTimer(10,TYPE_MAIN);
+		//restartThread(TYPE_MAIN);
 		res = 0;
 	}else if(!memcmp(command,"restart CLIENT",14))
 	{
-		restartThread(TYPE_CLIENT);
+		threadRestartTimer(10,TYPE_CLIENT);
+		//restartThread(TYPE_CLIENT);
 		res = 0;
 	}else if(!memcmp(command,"restart NTP",11))
 	{
-		restartThread(TYPE_NTP);
+		threadRestartTimer(10,TYPE_NTP);
+		//restartThread(TYPE_NTP);
 		res = 0;
 	}else if(!memcmp(command,"ftpput",6))	//上传数据
 	{

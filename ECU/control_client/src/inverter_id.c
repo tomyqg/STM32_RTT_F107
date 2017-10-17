@@ -209,7 +209,8 @@ int set_inverter_id(const char *recvbuffer, char *sendbuffer)
 			}
 		}
 		//重启主线程
-		restartThread(TYPE_MAIN);
+		threadRestartTimer(10,TYPE_MAIN);
+		//restartThread(TYPE_MAIN);
 	}
 
 	//拼接应答消息

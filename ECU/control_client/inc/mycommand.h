@@ -14,6 +14,8 @@
 /*****************************************************************************/
 /*  Function Declarations                                                    */
 /*****************************************************************************/
+void reboot_timer(int timeout);
+
 int mysystem(const char *command);
 
 #endif	/*__MYCOMMAND_H__*/

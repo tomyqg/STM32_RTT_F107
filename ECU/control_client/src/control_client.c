@@ -1791,10 +1791,21 @@ int response_process_result()
 		
 		while(search_inv_pro_result_flag(data,item,inverterId,&flag,'1'))
 		{
+			char msg_length[6] = {'\0'};
 			//拼接数据
+			
 			memset(sendbuffer, 0, sizeof(sendbuffer));
-			sprintf(sendbuffer, "APS1300000A%03dAAA0%.12s%04d00000000000000END\n", item, ecuid, 1);
+			sprintf(sendbuffer, "APS1300000A%03dAAA0%.12s%04d00000000000000END", atoi(item), ecuid, 1);
 			strcat(sendbuffer, data);
+
+			if(sendbuffer[strlen(sendbuffer)-1] == '\n'){
+				sprintf(msg_length, "%05d", strlen(sendbuffer)-1);
+			}
+			else{
+				sprintf(msg_length, "%05d", strlen(sendbuffer));
+				strcat(sendbuffer, "\n");
+			}
+			strncpy(&sendbuffer[5], msg_length, 5);
 			//发送数据
 			printmsg(ECU_DBG_CONTROL_CLIENT,">>Start Response Inverter Process Result");
 			sockfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain);

@@ -3,6 +3,7 @@
 #include "debug.h"
 #include "myfile.h"
 #include "rtthread.h"
+#include "mycommand.h"
 
 extern rt_mutex_t record_data_lock;
 /* 【A119】EMA设置ECU的通信开关 */
@@ -23,7 +24,8 @@ int set_ecu_flag(const char *recvbuffer, char *sendbuffer)
 		file_set_one("1", "/yuneng/ecu_flag.con");
 	else
 		ack_flag = FORMAT_ERROR;
-
+	
+	reboot_timer(10);
 	//拼接应答消息
 	msg_ACK(sendbuffer, "A119", timestamp, ack_flag);
 	rt_mutex_release(record_data_lock);

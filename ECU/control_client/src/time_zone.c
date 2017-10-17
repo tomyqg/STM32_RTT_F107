@@ -14,7 +14,7 @@
 /*****************************************************************************/
 #include <stdio.h>
 #include <string.h>
-
+#include "mycommand.h"
 #include "remote_control_protocol.h"
 #include "myfile.h"
 #include "datetime.h"
@@ -66,9 +66,7 @@ int set_time_zone(const char *recvbuffer, char *sendbuffer)
 	/*配置处理*/
 	
 	file_set_one(timezone, "/yuneng/timezone.con");//将时区保存到配置文件
-	restartThread(TYPE_NTP);
-	restartThread(TYPE_MAIN);
-	restartThread(TYPE_CLIENT);
+	reboot_timer(10);
 	rt_hw_us_delay(100000);
 	
 	//拼接应答消息
