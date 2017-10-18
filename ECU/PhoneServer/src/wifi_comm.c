@@ -91,6 +91,9 @@ void APP_Response_BaseInfo(unsigned char *ID,stBaseInfo baseInfo)
 	
 	SendData[packlength++] = baseInfo.LastInvertersNum/256;
 	SendData[packlength++] = baseInfo.LastInvertersNum%256;
+
+	SendData[packlength++] = baseInfo.Channel[0];
+	SendData[packlength++] = baseInfo.Channel[1];
 	
 	SendData[packlength++] = '0';
 	SendData[packlength++] = '0';

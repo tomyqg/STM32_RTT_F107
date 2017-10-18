@@ -19,6 +19,7 @@ typedef struct
 	char TimeZone[20];									//ECU 时区
 	char MacAddress[7];									//ECU 有线Mac地址
 	char WifiMac[7];										//ECU 无线Mac地址
+	char Channel[3];										//信道
 } stBaseInfo;
 
 unsigned short packetlen(unsigned char *packet);

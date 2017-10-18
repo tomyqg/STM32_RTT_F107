@@ -215,7 +215,8 @@ void Phone_GetBaseInfo(unsigned char * ID,int Data_Len,const char *recvbuffer) 	
 	baseInfo.TimeZoneLength = 9;				//ECU 时区长度
 	sprintf(baseInfo.TimeZone,"Etc/GMT-8");									//ECU 时区
 	memset(baseInfo.MacAddress,'\0',7);
-	memcpy(baseInfo.MacAddress,ecu.MacAddress,7);//ECU 有线Mac地址										
+	memcpy(baseInfo.MacAddress,ecu.MacAddress,7);//ECU 有线Mac地址	
+	sprintf(baseInfo.Channel,"%02x",ecu.channel);
 	APP_Response_BaseInfo(ID,baseInfo);
 }
 void Phone_GetGenerationData(unsigned char * ID,int Data_Len,const char *recvbuffer) 	//获取逆变器发电量数据
