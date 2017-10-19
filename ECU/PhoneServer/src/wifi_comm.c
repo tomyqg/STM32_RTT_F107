@@ -153,6 +153,9 @@ void APP_Response_PowerGeneration(char mapping,unsigned char *ID,inverter_info *
 	//拼接需要发送的报文
 	sprintf(SendData,"APS110000000200");
 	packlength = 15;
+
+	SendData[packlength++] = '0';
+	SendData[packlength++] = '1';
 	
 	SendData[packlength++] = VaildNum/256;
 	SendData[packlength++] = VaildNum%256;
