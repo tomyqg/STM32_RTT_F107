@@ -49,7 +49,7 @@ void EXTIX_Init(void)
  	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB,GPIO_PinSource9);
  	EXTI_InitStructure.EXTI_Line=EXTI_Line9;	//KEY_RESET
 	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;	
- 	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+ 	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
  	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
  	EXTI_Init(&EXTI_InitStructure);	 	//根据EXTI_InitStruct中指定的参数初始化外设EXTI寄存器
 
@@ -64,7 +64,8 @@ void EXTIX_Init(void)
 //外部中断9_5服务程序
 void EXTI9_5_IRQHandler(void)
 {
-	if(KEY_Reset==1)	 	 
+	rt_hw_ms_delay(20);
+	if(KEY_Reset==0)	 	 
 	{
 		//将配置文件恢复到出厂设置
 		//initPath();

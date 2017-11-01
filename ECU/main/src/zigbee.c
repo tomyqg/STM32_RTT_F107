@@ -338,7 +338,7 @@ int zb_get_reply_from_module(char *data)			//读取zigbee模块的返回帧
 {
 	int size = 0;
 
-	if(selectZigbee(2) <= 0)
+	if(selectZigbee(1) <= 0)
 	{
 		printmsg(ECU_DBG_MAIN,"Get reply time out");
 		return -1;
@@ -794,6 +794,8 @@ int zb_send_cmd(inverter_info *inverter, char *buff, int length)		//zigbee包头
 	unsigned char sendbuff[512] = {'\0'};
 	int i;
 	int check=0;
+
+	clear_zbmodem();			//发送数据前,清空缓冲区
 	sendbuff[0]  = 0xAA;
 	sendbuff[1]  = 0xAA;
 	sendbuff[2]  = 0xAA;
@@ -2133,7 +2135,7 @@ int zb_change_inverter_channel_one(char *inverter_id, int channel)
 	char sendbuff[512] = {'\0'};
 	int i;
 	int check=0;
-	rt_hw_ms_delay(300); 
+	rt_hw_ms_delay(500); 
 
 	clear_zbmodem();
 	sendbuff[0]  = 0xAA;

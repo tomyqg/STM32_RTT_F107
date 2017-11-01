@@ -4,6 +4,7 @@
 #include "debug.h"
 #include "myfile.h"
 #include "rtthread.h"
+#include "dfs_posix.h"
 /*********************************************************************
 clrgfdi表格字段：
 id, set_flag
@@ -17,24 +18,28 @@ int clear_all()
 	char inverter_ids[MAXINVERTERCOUNT][13] = {"\0"};
 	int i, err_count = 0,num = 0;
 	char str[50];
-
-	//查询所有逆变器ID号
-	num = get_num_from_id(inverter_ids);
-	
-	for(i=1; i<=num; i++)
+	int fd = 0;
+	fd = open("/home/data/clrgfdi", O_WRONLY | O_TRUNC | O_CREAT,0);
+	if(fd >= 0)
 	{
+		//查询所有逆变器ID号
+		num = get_num_from_id(inverter_ids);
 		
-		//如果存在该逆变器数据则删除该记录
-		delete_line("/home/data/clrgfdi","/home/data/clrgfdi.t",inverter_ids[i-1],12);
-		sprintf(str,"%s,1\n",inverter_ids[i-1]);
-		
-		//插入数据
-		if(-1 == insert_line("/home/data/clrgfdi",str))
+		for(i=1; i<=num; i++)
 		{
-			err_count++;
+			sprintf(str,"%s,1\n",inverter_ids[i-1]);
+			
+			//插入数据
+			if(write(fd,str,strlen(str)) <= 0)
+			{
+				err_count++;
+			}
 		}
+		close(fd);
+		printdecmsg(ECU_DBG_CONTROL_CLIENT,"clear_all",err_count);	
 	}
-	printdecmsg(ECU_DBG_CONTROL_CLIENT,"clear_all",err_count);
+
+
 	return err_count;
 }
 
@@ -44,23 +49,28 @@ int clear_num(const char *msg, int num)
 	int i, err_count = 0;
 	char inverter_id[13] = {'\0'};
 	char str[50];
-	for(i=0; i<num; i++)
+	int fd = 0;
+	fd = open("/home/data/clrgfdi", O_WRONLY | O_TRUNC | O_CREAT,0);
+	if(fd >= 0)
 	{
-		//获取一台逆变器的ID号
-		strncpy(inverter_id, &msg[i*16], 12);
-		//获取清除GFDI标志(注意:协议中0是维持原样,1是清除标志;但在ECU数据库中1是清除标志，并没有0)
-		if(msg_get_int(&msg[i*16 + 12], 1)){
-		//插入一条逆变器开关机指令
-		//如果存在该逆变器数据则删除该记录
-		delete_line("/home/data/clrgfdi","/home/data/clrgfdi.t",inverter_id,12);
-		sprintf(str,"%s,1\n",inverter_id);
-		//插入数据
-		if(-1 == insert_line("/home/data/clrgfdi",str))
+		for(i=0; i<num; i++)
 		{
-			err_count++;
+			//获取一台逆变器的ID号
+			strncpy(inverter_id, &msg[i*16], 12);
+			//获取清除GFDI标志(注意:协议中0是维持原样,1是清除标志;但在ECU数据库中1是清除标志，并没有0)
+			if(msg_get_int(&msg[i*16 + 12], 1)){
+				//插入一条逆变器开关机指令
+				sprintf(str,"%s,1\n",inverter_id);
+				//插入数据
+				if(write(fd,str,strlen(str)) <= 0)
+				{
+					err_count++;
+				}
+			}
 		}
-		}
+		close(fd);
 	}
+
 	return err_count;
 }
 

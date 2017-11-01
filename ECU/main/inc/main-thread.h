@@ -11,10 +11,13 @@
 /*             *                 *                                           */
 /*****************************************************************************/
 
+#include "variation.h"
 /*****************************************************************************/
 /*  Function Declarations                                                    */
 /*****************************************************************************/
 int init_ecu(void);
 void main_thread_entry(void* parameter);
+int init_inverter_A103(inverter_info *inverter);
+
 
 #endif /*__MAIN_THREAD_H__*/

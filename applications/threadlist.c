@@ -28,7 +28,8 @@
 #include "SEGGER_RTT.h"
 #include "myfile.h"
 #include "mcp1316.h"
-
+#include "rtc.h"
+#include "watchdog.h"
 
 #ifdef RT_USING_DFS
 #include <dfs_fs.h>
@@ -183,26 +184,26 @@ void rt_init_thread_entry(void* parameter)
 #if ECU_JLINK_DEBUG	
     	SEGGER_RTT_printf(0,"File System initialzation failed!\n");
 #endif
-        rt_kprintf("File System initialzation failed!\n");
-				dfs_mkfs("elm","flash");
-				if (dfs_mount("flash", "/", "elm", 0, 0) == 0)
-				{
+		rt_kprintf("File System initialzation failed!\n");
+		dfs_mkfs("elm","flash");
+		if (dfs_mount("flash", "/", "elm", 0, 0) == 0)
+		{
 #if ECU_JLINK_DEBUG	
-					SEGGER_RTT_printf(0,"File System initialized!\n");
+			SEGGER_RTT_printf(0,"File System initialized!\n");
 #endif
-					rt_kprintf("File System initialized!\n");
-				}
-				initPath();
+			rt_kprintf("File System initialized!\n");
+		}
+		initPath();
 #if ECU_JLINK_DEBUG	
-				SEGGER_RTT_printf(0,"PATH initialized!\n");
+		SEGGER_RTT_printf(0,"PATH initialized!\n");
 #endif
-				rt_kprintf("PATH initialized!\n");
+		rt_kprintf("PATH initialized!\n");
     }
 #endif /* RT_USING_DFS && RT_USING_DFS_ELMFAT */
 
 #ifdef RT_USING_LWIP
-  /* initialize eth interface */
-  rt_hw_stm32_eth_init();
+	/* initialize eth interface */
+	rt_hw_stm32_eth_init();
 
 	/* initialize lwip stack */
 	/* register ethernetif device */
@@ -239,8 +240,7 @@ void rt_init_thread_entry(void* parameter)
 	usr_wifi_lock = rt_mutex_create("usr_wifi_lock", RT_IPC_FLAG_FIFO);
 	/* WiFi Serial Initialize*/
 	wifi_uart_lock = rt_mutex_create("wifi_uart_lock", RT_IPC_FLAG_FIFO);
-
-
+	
 	cpu_usage_init();
 	
 }
@@ -260,29 +260,25 @@ void rt_init_thread_entry(void* parameter)
 /*****************************************************************************/
 #ifdef THREAD_PRIORITY_LED
 static void led_thread_entry(void* parameter)
-{
-    unsigned int count=0;	
-		rt_uint8_t major,minor;
-		/* Initialize led */
-    rt_hw_led_init();
+{	
+	rt_uint8_t major,minor;
+	/* Initialize led */
+	rt_hw_led_init();
+	rt_hw_watchdog_init();
 	MCP1316_init();
-	
-	
 
-    while (1)
-    {
-        /* led1 on */
-        count++;
+	while (1)
+	{
+		kickwatchdog();
+		/* led1 on */
 		MCP1316_kickwatchdog();
-        rt_hw_led_on();
-				//rt_kprintf("rt_hw_led_on:%d\n",count);
-        rt_thread_delay( RT_TICK_PER_SECOND/2 ); /* sleep 0.5 second and switch to other thread */
-			
-        rt_hw_led_off();
-				//rt_kprintf("rt_hw_led_off:%d\n",count);
-        rt_thread_delay( RT_TICK_PER_SECOND/2 );
-				cpu_usage_get(&major, &minor);
-				//printf("CPU : %d.%d%\n", major, minor);
+		rt_hw_led_on();
+		rt_thread_delay( RT_TICK_PER_SECOND/2 ); /* sleep 0.5 second and switch to other thread */
+
+		rt_hw_led_off();
+		rt_thread_delay( RT_TICK_PER_SECOND/2 );
+		cpu_usage_get(&major, &minor);
+		//printf("CPU : %d.%d%\n", major, minor);
     }
 }
 #endif
@@ -303,19 +299,28 @@ static void led_thread_entry(void* parameter)
 #ifdef THREAD_PRIORITY_LAN8720_RST
 static void lan8720_rst_thread_entry(void* parameter)
 {
-  int value;
-	
-	  while (1)
-    {
-			value = ETH_ReadPHYRegister(0x00, 0);
+	int value;
+	char Time[15] = {'\0'};
+	while (1)
+	{
+		value = ETH_ReadPHYRegister(0x00, 0);
 			
-			if(0 == value)	//判断控制寄存器是否变为0  表示断开
-			{
-				//printf("reg 0:%x\n",value);
-				rt_hw_lan8720_rst();
-			}
-      rt_thread_delay( RT_TICK_PER_SECOND*60 );
-    }
+		if(0 == value)	//判断控制寄存器是否变为0  表示断开
+		{
+			//printf("reg 0:%x\n",value);
+			rt_hw_lan8720_rst();
+		}
+
+		apstime(Time);
+		if(!memcmp(&Time[8],"0200",4))
+		{
+			printf("reboot :%s\n",Time);
+			reboot();
+		}
+			
+      	rt_thread_delay( RT_TICK_PER_SECOND*50 );
+	}
+
 
 }
 #endif

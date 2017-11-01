@@ -273,7 +273,7 @@ int serverCommunication_Client(char *sendbuff,int sendLength,char *recvbuff,int 
 			{
 				memset(readbuff, '\0', sizeof(readbuff));
 				readbytes = recv(socketfd, readbuff, *recvLength, 0);
-				if(0 == readbytes)
+				if(readbytes <= 0)
 				{
 					free(readbuff);
 					readbuff = NULL;
@@ -286,6 +286,7 @@ int serverCommunication_Client(char *sendbuff,int sendLength,char *recvbuff,int 
 				if(recvlen >= 3)
 				{
 					print2msg(ECU_DBG_CLIENT,"recvbuff:",recvbuff);
+					printdecmsg(ECU_DBG_CLIENT,"recv length:",readbytes);
 					*recvLength = recvlen;
 					count = (recvbuff[1]-0x30)*10 + (recvbuff[2]-0x30);
 					if(count==((strlen(recvbuff)-3)/14))
@@ -294,7 +295,14 @@ int serverCommunication_Client(char *sendbuff,int sendLength,char *recvbuff,int 
 						readbuff = NULL;
 						close_socket(socketfd);
 						return *recvLength;
-					}		
+					}else if(recvbuff[0] != '1')
+					{
+						free(readbuff);
+						readbuff = NULL;
+						close_socket(socketfd);
+						*recvLength = 0;
+						return *recvLength;
+					}
 				}
 
 			}

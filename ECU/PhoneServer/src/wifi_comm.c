@@ -492,58 +492,77 @@ void APP_Response_GetWiredNetwork(char mapping,unsigned char *ID,char dhcpStatus
 {
 	int packlength = 0;
 	memset(SendData,'\0',4096);	
-	
-	//拼接需要发送的报文
-	sprintf(SendData,"APS1100150014%02d\n",mapping);
-	packlength = 15;
-	if(dhcpStatus == 0)
+	if(mapping == 0x00)
 	{
-		SendData[packlength++] = '0';
-		SendData[packlength++] = '0';
+		//拼接需要发送的报文
+		sprintf(SendData,"APS1100150014%02d\n",mapping);
+		packlength = 15;
+		if(dhcpStatus == 0)
+		{
+			SendData[packlength++] = '0';
+			SendData[packlength++] = '0';
+		}else
+		{
+			SendData[packlength++] = '0';
+			SendData[packlength++] = '1';
+		}
+		SendData[packlength++] = IPAddr.IP1;
+		SendData[packlength++] = IPAddr.IP2;
+		SendData[packlength++] = IPAddr.IP3;
+		SendData[packlength++] = IPAddr.IP4;
+				
+		SendData[packlength++] = MSKAddr.IP1;
+		SendData[packlength++] = MSKAddr.IP2;
+		SendData[packlength++] = MSKAddr.IP3;
+		SendData[packlength++] = MSKAddr.IP4;
+		
+		SendData[packlength++] = GWAddr.IP1;
+		SendData[packlength++] = GWAddr.IP2;
+		SendData[packlength++] = GWAddr.IP3;
+		SendData[packlength++] = GWAddr.IP4;
+
+		SendData[packlength++] = DNS1Addr.IP1;
+		SendData[packlength++] = DNS1Addr.IP2;
+		SendData[packlength++] = DNS1Addr.IP3;
+		SendData[packlength++] = DNS1Addr.IP4;
+
+		SendData[packlength++] = DNS2Addr.IP1;
+		SendData[packlength++] = DNS2Addr.IP2;
+		SendData[packlength++] = DNS2Addr.IP3;
+		SendData[packlength++] = DNS2Addr.IP4;
+
+		SendData[packlength++] = 'E';
+		SendData[packlength++] = 'N';
+		SendData[packlength++] = 'D';
+		
+		SendData[5] = (packlength/1000) + '0';
+		SendData[6] = ((packlength/100)%10) + '0';
+		SendData[7] = ((packlength/10)%10) + '0';
+		SendData[8] = ((packlength)%10) + '0';
+		SendData[packlength++] = '\n';
+		SendToSocketA(SendData ,packlength,ID);
 	}else
 	{
-		SendData[packlength++] = '0';
-		SendData[packlength++] = '1';
+		sprintf(SendData,"APS110015001401\n");
+		packlength = 16;
+		SendToSocketA(SendData ,packlength,ID);
 	}
-	SendData[packlength++] = IPAddr.IP1;
-	SendData[packlength++] = IPAddr.IP2;
-	SendData[packlength++] = IPAddr.IP3;
-	SendData[packlength++] = IPAddr.IP4;
-			
-	SendData[packlength++] = MSKAddr.IP1;
-	SendData[packlength++] = MSKAddr.IP2;
-	SendData[packlength++] = MSKAddr.IP3;
-	SendData[packlength++] = MSKAddr.IP4;
 	
-	SendData[packlength++] = GWAddr.IP1;
-	SendData[packlength++] = GWAddr.IP2;
-	SendData[packlength++] = GWAddr.IP3;
-	SendData[packlength++] = GWAddr.IP4;
-
-	SendData[packlength++] = DNS1Addr.IP1;
-	SendData[packlength++] = DNS1Addr.IP2;
-	SendData[packlength++] = DNS1Addr.IP3;
-	SendData[packlength++] = DNS1Addr.IP4;
-
-	SendData[packlength++] = DNS2Addr.IP1;
-	SendData[packlength++] = DNS2Addr.IP2;
-	SendData[packlength++] = DNS2Addr.IP3;
-	SendData[packlength++] = DNS2Addr.IP4;
-
-	SendData[packlength++] = 'E';
-	SendData[packlength++] = 'N';
-	SendData[packlength++] = 'D';
-	
-	SendData[5] = (packlength/1000) + '0';
-	SendData[6] = ((packlength/100)%10) + '0';
-	SendData[7] = ((packlength/10)%10) + '0';
-	SendData[8] = ((packlength)%10) + '0';
-	SendData[packlength++] = '\n';
+}
 
 
-	
-	
-	SendToSocketA(SendData ,packlength,ID);
+void APP_Response_SetChannel(unsigned char *ID,unsigned char mapflag,char SIGNAL_CHANNEL,char SIGNAL_LEVEL)
+{
+	//char SendData[22] = {'\0'};
+	memset(SendData,'\0',4096);
+	if(mapflag == 1)
+	{
+		sprintf(SendData,"APS110015001501\n");
+		SendToSocketA(SendData ,16,ID);
+	}else{
+		sprintf(SendData,"APS110023001500%02x%03dEND\n",SIGNAL_CHANNEL,SIGNAL_LEVEL);		
+		SendToSocketA(SendData ,24,ID);
+	}
 }
 
 

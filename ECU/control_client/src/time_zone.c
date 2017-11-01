@@ -22,6 +22,9 @@
 #include "threadlist.h"
 #include "rthw.h"
 
+extern inverter_info inverter[MAXINVERTERCOUNT];
+extern ecu_info ecu;
+
 /*****************************************************************************/
 /*  Function Implementations                                                 */
 /*****************************************************************************/
@@ -34,7 +37,7 @@ int response_time_zone(const char *recvbuffer, char *sendbuffer)
 	char timezone[64] = {'\0'};  //时区
 
 	//获取参数
-	file_get_one(ecuid, sizeof(ecuid), "/yuneng/ecuid.con");
+	memcpy(ecuid,ecu.id,13);
 	getcurrenttime(local_time);
 	strncpy(timestamp, &recvbuffer[34], 14);
 	file_get_one(timezone, sizeof(timezone), "/yuneng/timezone.con");
@@ -67,7 +70,6 @@ int set_time_zone(const char *recvbuffer, char *sendbuffer)
 	
 	file_set_one(timezone, "/yuneng/timezone.con");//将时区保存到配置文件
 	reboot_timer(10);
-	rt_hw_us_delay(100000);
 	
 	//拼接应答消息
 	msg_ACK(sendbuffer, "A105", timestamp, ack_flag);

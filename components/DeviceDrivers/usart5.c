@@ -2907,16 +2907,12 @@ int SendToSocketA(char *data ,int length,unsigned char ID[8])
 
 		if(length > SIZE_PER_SEND)
 		{
-			printf("%d\n",length);
-			printf("%02x%02x%02x%02x%02x%02x%02x%02x\n",ID[0],ID[1],ID[2],ID[3],ID[4],ID[5],ID[6],ID[7]);
 			memcpy(&sendbuff[9],&data[send_length],SIZE_PER_SEND);
 			WIFI_SendData(sendbuff, (SIZE_PER_SEND+9));
 			send_length += SIZE_PER_SEND;
 			length -= SIZE_PER_SEND;
 		}else
 		{
-			printf("%d\n",length);
-			printf("%02x%02x%02x%02x%02x%02x%02x%02x\n",ID[0],ID[1],ID[2],ID[3],ID[4],ID[5],ID[6],ID[7]);
 			memcpy(&sendbuff[9],&data[send_length],length);	
 			WIFI_SendData(sendbuff, (length+9));
 			length -= length;

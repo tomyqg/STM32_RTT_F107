@@ -92,9 +92,9 @@ Socket_Cfg sockcfg = {'\0'};
 
 void add_functions()
 {
-  pfun[A102] = response_inverter_id; 			//ÉÏ±¨Äæ±äÆ÷ID  										OK
-  pfun[A103] = set_inverter_id; 				//ÉèÖÃÄæ±äÆ÷ID												OK
-  pfun[A104] = response_time_zone; 			//ÉÏ±¨ECU±¾µØÊ±Çø
+	pfun[A102] = response_inverter_id; 			//ÉÏ±¨Äæ±äÆ÷ID  										OK
+	pfun[A103] = set_inverter_id; 				//ÉèÖÃÄæ±äÆ÷ID												OK
+	pfun[A104] = response_time_zone; 			//ÉÏ±¨ECU±¾µØÊ±Çø
 	pfun[A105] = set_time_zone; 				//ÉèÖÃECU±¾µØÊ±Çø
 	pfun[A106] = response_comm_config;			//ÉÏ±¨ECUÍ¨Ñ¶ÅäÖÃ²ÎÊý								OK
 	pfun[A107] = set_comm_config;				//ÉèÖÃECUÍ¨Ñ¶ÅäÖÃ²ÎÊý										OK
@@ -228,15 +228,18 @@ int detection_statusflag(char flag)		//¼ì²â/home/record/inverstaÄ¿Â¼ÏÂÊÇ·ñ´æÔÚfl
 				{
 					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
 					{
-						if(buff[strlen(buff)-2] == flag)			//¼ì²â×îºóÒ»¸ö×Ö½ÚµÄresendflagÊÇ·ñÎªflag   Èç¹û·¢ÏÖÊÇflag  ¹Ø±ÕÎÄ¼þ²¢ÇÒreturn 1
+						if(strlen(buff) > 18)
 						{
-							fclose(fp);
-							closedir(dirp);
-							free(buff);
-							buff = NULL;
-							rt_mutex_release(record_data_lock);
-							return 1;
-						}		
+							if(buff[strlen(buff)-2] == flag)			//¼ì²â×îºóÒ»¸ö×Ö½ÚµÄresendflagÊÇ·ñÎªflag   Èç¹û·¢ÏÖÊÇflag  ¹Ø±ÕÎÄ¼þ²¢ÇÒreturn 1
+							{
+								fclose(fp);
+								closedir(dirp);
+								free(buff);
+								buff = NULL;
+								rt_mutex_release(record_data_lock);
+								return 1;
+							}
+						}
 					}
 					fclose(fp);
 				}
@@ -287,17 +290,19 @@ int change_statusflag1()  //¸Ä±ä³É¹¦·µ»Ø1
 				{
 					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
 					{
-
-						if(buff[strlen(buff)-2] == '2')
+						if(strlen(buff) > 18)
 						{
-							fseek(fp,-2L,SEEK_CUR);
-							fputc('1',fp);
-							fclose(fp);
-							closedir(dirp);
-							free(buff);
-							buff = NULL;
-							rt_mutex_release(record_data_lock);
-							return 1;
+							if(buff[strlen(buff)-2] == '2')
+							{
+								fseek(fp,-2L,SEEK_CUR);
+								fputc('1',fp);
+								fclose(fp);
+								closedir(dirp);
+								free(buff);
+								buff = NULL;
+								rt_mutex_release(record_data_lock);
+								return 1;
+							}
 						}
 						
 					}
@@ -351,16 +356,19 @@ void delete_statusflag0()		//Çå¿ÕÊý¾Ýflag±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 				{
 					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
 					{
-						if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
+						if(strlen(buff) > 18)
 						{
-							if(buff[strlen(buff)-2] != '0')			//¼ì²âÊÇ·ñ´æÔÚresendflag != 0µÄ¼ÇÂ¼   Èô´æÔÚÔòÖ±½ÓÍË³öº¯Êý
+							if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
 							{
-								flag = 1;
-								break;
-								//fclose(fp);
-								//closedir(dirp);
-								//rt_mutex_release(record_data_lock);
-								//return;
+								if(buff[strlen(buff)-2] != '0')			//¼ì²âÊÇ·ñ´æÔÚresendflag != 0µÄ¼ÇÂ¼   Èô´æÔÚÔòÖ±½ÓÍË³öº¯Êý
+								{
+									flag = 1;
+									break;
+									//fclose(fp);
+									//closedir(dirp);
+									//rt_mutex_release(record_data_lock);
+									//return;
+								}
 							}
 						}
 						
@@ -422,22 +430,25 @@ int change_statusflag(char *time,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ±¼äµã·µ»Ø
 				{
 					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
 					{
-						if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
+						if(strlen(buff) > 18)
 						{
-							memset(filetime,0,15);
-							memcpy(filetime,&buff[strlen(buff)-17],14);				//»ñÈ¡Ã¿Ìõ¼ÇÂ¼µÄÊ±¼ä
-							filetime[14] = '\0';
-							if(!memcmp(time,filetime,14))						//Ã¿Ìõ¼ÇÂ¼µÄÊ±¼äºÍ´«ÈëµÄÊ±¼ä¶Ô±È£¬ÈôÏàÍ¬Ôò±ä¸üflag				
+							if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
 							{
-								fseek(fp,-2L,SEEK_CUR);
-								fputc(flag,fp);
-								//print2msg(ECU_DBG_CONTROL_CLIENT,"change_resendflag",filetime);
-								fclose(fp);
-								closedir(dirp);
-								free(buff);
-								buff = NULL;
-								rt_mutex_release(record_data_lock);
-								return 1;
+								memset(filetime,0,15);
+								memcpy(filetime,&buff[strlen(buff)-17],14);				//»ñÈ¡Ã¿Ìõ¼ÇÂ¼µÄÊ±¼ä
+								filetime[14] = '\0';
+								if(!memcmp(time,filetime,14))						//Ã¿Ìõ¼ÇÂ¼µÄÊ±¼äºÍ´«ÈëµÄÊ±¼ä¶Ô±È£¬ÈôÏàÍ¬Ôò±ä¸üflag				
+								{
+									fseek(fp,-2L,SEEK_CUR);
+									fputc(flag,fp);
+									//print2msg(ECU_DBG_CONTROL_CLIENT,"change_resendflag",filetime);
+									fclose(fp);
+									closedir(dirp);
+									free(buff);
+									buff = NULL;
+									rt_mutex_release(record_data_lock);
+									return 1;
+								}
 							}
 						}
 					}
@@ -498,56 +509,63 @@ int search_statusflag(char *data,char * time, int *flag,char sendflag)
 					{
 						while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))  //¶ÁÈ¡Ò»ÐÐÊý¾Ý
 						{
-							
-							if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
+							if(strlen(buff) > 18)
 							{
-								if(buff[strlen(buff)-2] == sendflag)			//¼ì²â×îºóÒ»¸ö×Ö½ÚµÄresendflagÊÇ·ñÎª1
+								if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
 								{
-									memcpy(time,&buff[strlen(buff)-17],14);				//»ñÈ¡Ã¿Ìõ¼ÇÂ¼µÄÊ±¼ä
-									memcpy(data,buff,(strlen(buff)-18));
-									data[strlen(buff)-18] = '\n';
-									//print2msg(ECU_DBG_CONTROL_CLIENT,"search_readflag time",time);
-									//print2msg(ECU_DBG_CONTROL_CLIENT,"search_readflag data",data);
-									rt_hw_s_delay(1);
-									while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	//ÔÙÍùÏÂ¶ÁÊý¾Ý£¬Ñ°ÕÒÊÇ·ñ»¹ÓÐÒª·¢ËÍµÄÊý¾Ý
+									if(buff[strlen(buff)-2] == sendflag)			//¼ì²â×îºóÒ»¸ö×Ö½ÚµÄresendflagÊÇ·ñÎª1
 									{
-										if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
+										memcpy(time,&buff[strlen(buff)-17],14);				//»ñÈ¡Ã¿Ìõ¼ÇÂ¼µÄÊ±¼ä
+										memcpy(data,buff,(strlen(buff)-18));
+										data[strlen(buff)-18] = '\n';
+										//print2msg(ECU_DBG_CONTROL_CLIENT,"search_readflag time",time);
+										//print2msg(ECU_DBG_CONTROL_CLIENT,"search_readflag data",data);
+										rt_hw_s_delay(1);
+										while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	//ÔÙÍùÏÂ¶ÁÊý¾Ý£¬Ñ°ÕÒÊÇ·ñ»¹ÓÐÒª·¢ËÍµÄÊý¾Ý
 										{
-											if(buff[strlen(buff)-2] == sendflag)
+											if(strlen(buff) > 18)
 											{
-												*flag = 1;
-												fclose(fp);
-												closedir(dirp);
-												free(buff);
-												buff = NULL;
-												rt_mutex_release(record_data_lock);
-												return 1;
+												if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
+												{
+													if(buff[strlen(buff)-2] == sendflag)
+													{
+														*flag = 1;
+														fclose(fp);
+														closedir(dirp);
+														free(buff);
+														buff = NULL;
+														rt_mutex_release(record_data_lock);
+														return 1;
+													}
+												}
 											}
-										}			
+										}
+
+										nextfileflag = 1;
+										break;
+
 									}
-
-									nextfileflag = 1;
-									break;
-
 								}
 							}
-								
 						}
 					}else
 					{
 						while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))  //¶ÁÈ¡Ò»ÐÐÊý¾Ý
 						{
-							if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
+							if(strlen(buff) > 18)
 							{
-								if(buff[strlen(buff)-2] == sendflag)
+								if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
 								{
-									*flag = 1;
-									fclose(fp);
-									closedir(dirp);
-									free(buff);
-									buff = NULL;
-									rt_mutex_release(record_data_lock);
-									return 1;
+									if(buff[strlen(buff)-2] == sendflag)
+									{
+										*flag = 1;
+										fclose(fp);
+										closedir(dirp);
+										free(buff);
+										buff = NULL;
+										rt_mutex_release(record_data_lock);
+										return 1;
+									}
 								}
 							}
 						}
@@ -606,16 +624,19 @@ void delete_pro_result_flag0()		//Çå¿ÕÊý¾Ýflag±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 				{
 					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
 					{
-						if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') )
+						if(strlen(buff) > 18)
 						{
-							if(buff[strlen(buff)-2] != '0')			//¼ì²âÊÇ·ñ´æÔÚresendflag != 0µÄ¼ÇÂ¼   Èô´æÔÚÔòÖ±½ÓÍË³öº¯Êý
+							if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') )
 							{
-								flag = 1;
-								break;
-								//fclose(fp);
-								//closedir(dirp);
-								//rt_mutex_release(record_data_lock);
-								//return;
+								if(buff[strlen(buff)-2] != '0')			//¼ì²âÊÇ·ñ´æÔÚresendflag != 0µÄ¼ÇÂ¼   Èô´æÔÚÔòÖ±½ÓÍË³öº¯Êý
+								{
+									flag = 1;
+									break;
+									//fclose(fp);
+									//closedir(dirp);
+									//rt_mutex_release(record_data_lock);
+									//return;
+								}
 							}
 						}
 						
@@ -678,16 +699,19 @@ void delete_inv_pro_result_flag0()		//Çå¿ÕÊý¾Ýflag±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 				{
 					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
 					{
-						if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') && (buff[strlen(buff)-20] == ','))
+						if(strlen(buff) > 18)
 						{
-							if(buff[strlen(buff)-2] != '0')			//¼ì²âÊÇ·ñ´æÔÚresendflag != 0µÄ¼ÇÂ¼   Èô´æÔÚÔòÖ±½ÓÍË³öº¯Êý
+							if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') && (buff[strlen(buff)-20] == ','))
 							{
-								flag = 1;
-								break;
-								//fclose(fp);
-								//closedir(dirp);
-								//rt_mutex_release(record_data_lock);
-								//return;
+								if(buff[strlen(buff)-2] != '0')			//¼ì²âÊÇ·ñ´æÔÚresendflag != 0µÄ¼ÇÂ¼   Èô´æÔÚÔòÖ±½ÓÍË³öº¯Êý
+								{
+									flag = 1;
+									break;
+									//fclose(fp);
+									//closedir(dirp);
+									//rt_mutex_release(record_data_lock);
+									//return;
+								}
 							}
 						}
 						
@@ -749,28 +773,30 @@ int change_pro_result_flag(char *item,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ±¼äµ
 				{
 					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
 					{
-						if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') )
+						if(strlen(buff) > 18)
 						{
-							if(buff[strlen(buff)-2] == '1')
+							if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') )
 							{
-								memset(fileitem,0,4);
-								memcpy(fileitem,&buff[strlen(buff)-6],3);				//»ñÈ¡Ã¿Ìõ¼ÇÂ¼µÄÊ±¼ä
-								fileitem[3] = '\0';
-								if(!memcmp(item,fileitem,4))						//Ã¿Ìõ¼ÇÂ¼µÄÊ±¼äºÍ´«ÈëµÄÊ±¼ä¶Ô±È£¬ÈôÏàÍ¬Ôò±ä¸üflag				
+								if(buff[strlen(buff)-2] == '1')
 								{
-									fseek(fp,-2L,SEEK_CUR);
-									fputc(flag,fp);
-									//print2msg(ECU_DBG_CONTROL_CLIENT,"filetime",filetime);
-									fclose(fp);
-									closedir(dirp);
-									free(buff);
-									buff = NULL;
-									rt_mutex_release(record_data_lock);
-									return 1;
+									memset(fileitem,0,4);
+									memcpy(fileitem,&buff[strlen(buff)-6],3);				//»ñÈ¡Ã¿Ìõ¼ÇÂ¼µÄÊ±¼ä
+									fileitem[3] = '\0';
+									if(!memcmp(item,fileitem,4))						//Ã¿Ìõ¼ÇÂ¼µÄÊ±¼äºÍ´«ÈëµÄÊ±¼ä¶Ô±È£¬ÈôÏàÍ¬Ôò±ä¸üflag				
+									{
+										fseek(fp,-2L,SEEK_CUR);
+										fputc(flag,fp);
+										//print2msg(ECU_DBG_CONTROL_CLIENT,"filetime",filetime);
+										fclose(fp);
+										closedir(dirp);
+										free(buff);
+										buff = NULL;
+										rt_mutex_release(record_data_lock);
+										return 1;
+									}
 								}
 							}
 						}
-
 						
 					}
 					fclose(fp);
@@ -823,28 +849,30 @@ int change_inv_pro_result_flag(char *item,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ
 				{
 					while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
 					{
-					if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') && (buff[strlen(buff)-20] == ',') )
-					{
-						if(buff[strlen(buff)-2] == '1')
+						if(strlen(buff) > 18)
 						{
-							memset(fileitem,0,4);
-							memcpy(fileitem,&buff[strlen(buff)-6],3);				//»ñÈ¡Ã¿Ìõ¼ÇÂ¼µÄÊ±¼ä
-							fileitem[3] = '\0';
-							if(!memcmp(item,fileitem,4))						//Ã¿Ìõ¼ÇÂ¼µÄÊ±¼äºÍ´«ÈëµÄÊ±¼ä¶Ô±È£¬ÈôÏàÍ¬Ôò±ä¸üflag				
+							if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') && (buff[strlen(buff)-20] == ',') )
 							{
-								fseek(fp,-2L,SEEK_CUR);
-								fputc(flag,fp);
-								//print2msg(ECU_DBG_CONTROL_CLIENT,"filetime",filetime);
-								fclose(fp);
-								closedir(dirp);
-								free(buff);
-								buff = NULL;
-								rt_mutex_release(record_data_lock);
-								return 1;
+								if(buff[strlen(buff)-2] == '1')
+								{
+									memset(fileitem,0,4);
+									memcpy(fileitem,&buff[strlen(buff)-6],3);				//»ñÈ¡Ã¿Ìõ¼ÇÂ¼µÄÊ±¼ä
+									fileitem[3] = '\0';
+									if(!memcmp(item,fileitem,4))						//Ã¿Ìõ¼ÇÂ¼µÄÊ±¼äºÍ´«ÈëµÄÊ±¼ä¶Ô±È£¬ÈôÏàÍ¬Ôò±ä¸üflag				
+									{
+										fseek(fp,-2L,SEEK_CUR);
+										fputc(flag,fp);
+										//print2msg(ECU_DBG_CONTROL_CLIENT,"filetime",filetime);
+										fclose(fp);
+										closedir(dirp);
+										free(buff);
+										buff = NULL;
+										rt_mutex_release(record_data_lock);
+										return 1;
+									}
+								}
 							}
 						}
-					}
-
 						
 					}
 					fclose(fp);
@@ -903,55 +931,62 @@ int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)
 					{
 						while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
 						{
-							
-							if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') )
+							if(strlen(buff) > 18)	
 							{
-								if(buff[strlen(buff)-2] == sendflag)			
+								if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') )
 								{
-									memcpy(item,&buff[strlen(buff)-6],3);				//»ñÈ¡Ã¿Ìõ¼ÇÂ¼µÄitem
-									memcpy(data,buff,(strlen(buff)-7));
-									data[strlen(buff)-7] = '\n';
-									//print2msg(ECU_DBG_CLIENT,"search_readflag time",time);
-									//print2msg(ECU_DBG_CLIENT,"search_readflag data",data);
-									rt_hw_s_delay(1);
-									while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	
+									if(buff[strlen(buff)-2] == sendflag)			
 									{
-										if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') )
+										memcpy(item,&buff[strlen(buff)-6],3);				//»ñÈ¡Ã¿Ìõ¼ÇÂ¼µÄitem
+										memcpy(data,buff,(strlen(buff)-7));
+										data[strlen(buff)-7] = '\n';
+										//print2msg(ECU_DBG_CLIENT,"search_readflag time",time);
+										//print2msg(ECU_DBG_CLIENT,"search_readflag data",data);
+										rt_hw_s_delay(1);
+										while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	
 										{
-											if(buff[strlen(buff)-2] == sendflag)
+											if(strlen(buff) > 18)	
 											{
-												*flag = 1;
-												fclose(fp);
-												closedir(dirp);
-												free(buff);
-												buff = NULL;
-												rt_mutex_release(record_data_lock);
-												return 1;
+												if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') )
+												{
+													if(buff[strlen(buff)-2] == sendflag)
+													{
+														*flag = 1;
+														fclose(fp);
+														closedir(dirp);
+														free(buff);
+														buff = NULL;
+														rt_mutex_release(record_data_lock);
+														return 1;
+													}
+												}
 											}
-										}			
-									}
+										}
 
-									nextfileflag = 1;
-									break;
+										nextfileflag = 1;
+										break;
+									}
 								}
 							}
-								
 						}
 					}else
 					{
 						while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp)) 
 						{
-							if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
+							if(strlen(buff) > 18)
 							{
-								if(buff[strlen(buff)-2] == sendflag)
+								if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
 								{
-									*flag = 1;
-									fclose(fp);
-									closedir(dirp);
-									free(buff);
-									buff = NULL;
-									rt_mutex_release(record_data_lock);
-									return 1;
+									if(buff[strlen(buff)-2] == sendflag)
+									{
+										*flag = 1;
+										fclose(fp);
+										closedir(dirp);
+										free(buff);
+										buff = NULL;
+										rt_mutex_release(record_data_lock);
+										return 1;
+									}
 								}
 							}
 						}
@@ -1012,56 +1047,64 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 					{
 						while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))  
 						{
-							if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') && (buff[strlen(buff)-20] == ',') )
+							if(strlen(buff) > 18)
 							{
-								if(buff[strlen(buff)-2] == sendflag)			
+								if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') && (buff[strlen(buff)-20] == ',') )
 								{
-									memcpy(item,&buff[strlen(buff)-6],3);				//»ñÈ¡Ã¿Ìõ¼ÇÂ¼µÄitem
-									memcpy(inverterid,&buff[strlen(buff)-19],12);
-									memcpy(data,buff,(strlen(buff)-20));
-									data[strlen(buff)-20] = '\n';
-									//print2msg(ECU_DBG_CLIENT,"search_readflag time",time);
-									//print2msg(ECU_DBG_CLIENT,"search_readflag data",data);
-									rt_hw_s_delay(1);
-									while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
+									if(buff[strlen(buff)-2] == sendflag)			
 									{
-										if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
+										memcpy(item,&buff[strlen(buff)-6],3);				//»ñÈ¡Ã¿Ìõ¼ÇÂ¼µÄitem
+										memcpy(inverterid,&buff[strlen(buff)-19],12);
+										memcpy(data,buff,(strlen(buff)-20));
+										data[strlen(buff)-20] = '\n';
+										//print2msg(ECU_DBG_CLIENT,"search_readflag time",time);
+										//print2msg(ECU_DBG_CLIENT,"search_readflag data",data);
+										rt_hw_s_delay(1);
+										while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
 										{
-											if(buff[strlen(buff)-2] == sendflag)
+											if(strlen(buff) > 18)
 											{
-												*flag = 1;
-												fclose(fp);
-												closedir(dirp);
-												free(buff);
-												buff = NULL;
-												rt_mutex_release(record_data_lock);
-												return 1;
+												if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-18] == ',') )
+												{
+													if(buff[strlen(buff)-2] == sendflag)
+													{
+														*flag = 1;
+														fclose(fp);
+														closedir(dirp);
+														free(buff);
+														buff = NULL;
+														rt_mutex_release(record_data_lock);
+														return 1;
+													}
+												}
 											}
-										}			
+										}
+
+										nextfileflag = 1;
+										break;
+
 									}
-
-									nextfileflag = 1;
-									break;
-
 								}
-							}
-								
+							}	
 						}
 					}else
 					{
 						while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))  //?¨¢¨¨?¨°?DD¨ºy?Y
 						{
-							if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') && (buff[strlen(buff)-20] == ',')  )
+							if(strlen(buff) > 18)
 							{
-								if(buff[strlen(buff)-2] == sendflag)
+								if((buff[strlen(buff)-3] == ',') && (buff[strlen(buff)-7] == ',') && (buff[strlen(buff)-20] == ',')  )
 								{
-									*flag = 1;
-									fclose(fp);
-									closedir(dirp);
-									free(buff);
-									buff = NULL;
-									rt_mutex_release(record_data_lock);
-									return 1;
+									if(buff[strlen(buff)-2] == sendflag)
+									{
+										*flag = 1;
+										fclose(fp);
+										closedir(dirp);
+										free(buff);
+										buff = NULL;
+										rt_mutex_release(record_data_lock);
+										return 1;
+									}
 								}
 							}
 						}
@@ -1875,7 +1918,7 @@ void control_client_thread_entry(void* parameter)
 	while(1)
 	{
 		//Ã¿ÌìÒ»µãÊ±ÏòEMAÈ·ÈÏÄæ±äÆ÷Òì³£×´Ì¬ÊÇ·ñ±»´æ´¢
-		check_inverter_abnormal_status_sent(14);
+		check_inverter_abnormal_status_sent(1);
 		fp=fopen("/yuneng/A118.con","r");
 		if(fp!=NULL)
 		{

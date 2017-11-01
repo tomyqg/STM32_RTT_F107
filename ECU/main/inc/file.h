@@ -63,5 +63,5 @@ void echo(const char* filename,const char* string);
 void addInverter(char *inverter_id);
 void initPath(void);
 int getTimeZone(void);
-int optimizeFileSystem(void);
+int optimizeFileSystem(int capsize);
 #endif /*__FILE_H__*/

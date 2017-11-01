@@ -19,6 +19,7 @@
 #include "debug.h"
 #include "myfile.h"
 #include "rtthread.h"
+#include "dfs_posix.h"
 
 /*********************************************************************
 power表格字段：
@@ -44,23 +45,27 @@ int set_maxpower_num(const char *msg, int num)
 	int i, maxpower, err_count = 0;
 	char inverter_id[13] = {'\0'};
 	char str[100];
-	for(i=0; i<num; i++)
+	int fd = 0;
+	fd = open("/home/data/power", O_WRONLY | O_TRUNC | O_CREAT,0);
+	if(fd >= 0)
 	{
-		//获取一台逆变器的ID号
-		strncpy(inverter_id, &msg[i*18], 12);
-		//获取最大功率
-		maxpower = msg_get_int(&msg[i*18 + 12], 3);
-		if(maxpower < 0)
-			continue;
-	
-		//如果存在该逆变器数据则删除该记录
-		delete_line("/home/data/power","/home/data/power_t",inverter_id,12);
-		sprintf(str,"%s,%3d,,,,1\n",inverter_id,maxpower);
-		//插入数据
-		if(-1 == insert_line("/home/data/power",str))
+		for(i=0; i<num; i++)
 		{
-			err_count++;
+			//获取一台逆变器的ID号
+			strncpy(inverter_id, &msg[i*18], 12);
+			//获取最大功率
+			maxpower = msg_get_int(&msg[i*18 + 12], 3);
+			if(maxpower < 0)
+				continue;
+		
+			sprintf(str,"%s,%3d,,,,1\n",inverter_id,maxpower);
+			//插入数据
+			if(write(fd,str,strlen(str)) <= 0)
+			{
+				err_count++;
+			}
 		}
+		close(fd);
 	}
 
 	return err_count;

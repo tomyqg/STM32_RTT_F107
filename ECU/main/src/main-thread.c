@@ -160,6 +160,68 @@ int init_inverter(inverter_info *inverter)
 	return 1;
 }
 
+int init_inverter_A103(inverter_info *inverter)
+{
+	int i;
+	inverter_info *curinverter = inverter;
+	
+	for(i=0; i<MAXINVERTERCOUNT; i++, curinverter++)
+	{
+		rt_memset(curinverter->id, '\0', sizeof(curinverter->id));		//清空逆变器UID
+		//rt_memset(curinverter->tnuid, '\0', sizeof(curinverter->tnuid));			//清空逆变器ID
+
+		curinverter->model = 0;
+
+		curinverter->dv=0;			//清空当前一轮直流电压
+		curinverter->di=0;			//清空当前一轮直流电流
+		curinverter->op=0;			//清空当前逆变器输出功率
+		curinverter->gf=0;			//清空电网频率
+		curinverter->it=0;			//清空逆变器温度
+		curinverter->gv=0;			//清空电网电压
+		curinverter->dvb=0;			//B路清空当前一轮直流电压
+		curinverter->dib=0;			//B路清空当前一轮直流电流
+		curinverter->opb=0;			//B路清空当前逆变器输出功率
+		curinverter->gvb=0;
+		curinverter->dvc=0;
+		curinverter->dic=0;
+		curinverter->opc=0;
+		curinverter->gvc=0;
+		curinverter->dvd=0;
+		curinverter->did=0;
+		curinverter->opd=0;
+		curinverter->gvd=0;
+
+
+
+		curinverter->curgeneration = 0;	//清空逆变器当前一轮发电量
+		curinverter->curgenerationb = 0;	//B路清空当前一轮发电量
+
+		curinverter->preaccgen = 0;
+		curinverter->preaccgenb = 0;
+		curinverter->curaccgen = 0;
+		curinverter->curaccgenb = 0;
+		curinverter->preacctime = 0;
+		curinverter->curacctime = 0;
+
+		rt_memset(curinverter->status_web, '\0', sizeof(curinverter->status_web));		//清空逆变器状态
+		rt_memset(curinverter->status, '\0', sizeof(curinverter->status));		//清空逆变器状态
+		rt_memset(curinverter->statusb, '\0', sizeof(curinverter->statusb));		//B路清空逆变器状态
+
+		curinverter->dataflag = 0;		//上一轮有数据的标志置位
+	//	curinverter->bindflag=0;		//绑定逆变器标志位置清0
+		curinverter->no_getdata_num=0;	//ZK,清空连续获取不到的次数
+		curinverter->disconnect_times=0;		//没有与逆变器通信上的次数清0, ZK
+		curinverter->signalstrength=0;			//信号强度初始化为0
+
+		curinverter->updating=0;
+		curinverter->raduis=0;
+	}
+
+	ecu.total = get_id_from_file(inverter);
+
+	return 0;
+}
+
 //初始化
 void init_tmpdb(inverter_info *firstinverter)
 {
@@ -285,12 +347,10 @@ void main_thread_entry(void* parameter)
 			
 			ecu.count = getalldata(inverter);			//获取所有逆变器数据,返回当前有数据的逆变器数量
 
-			
 			//保存最新一轮采集数据的时间
 			memcpy(ecu.had_data_broadcast_time,ecu.broadcast_time,16);
-			//ecu.system_power = 277;
-			//ecu.current_energy = 0.23;
 			//printdecmsg(ECU_DBG_MAIN,"ecu.count",ecu.count);
+			
 			ecu.life_energy = ecu.life_energy + ecu.current_energy;				//计算系统历史发电量
 			printfloatmsg(ECU_DBG_MAIN,"ecu.life_energy",ecu.life_energy);
 			update_life_energy(ecu.life_energy);								//设置系统历史发电量
@@ -304,27 +364,18 @@ void main_thread_entry(void* parameter)
 				//最多保存两个月的数据
 				delete_system_power_2_month_ago(ecu.broadcast_time);
 			}
-			//printf("today energy:%f\n",ecu.today_energy);
-						
-			optimizeFileSystem();
+
+			optimizeFileSystem(300);
 			if(ecu.count>0)
 			{
 				protocol_APS18(inverter, ecu.broadcast_time);
 				protocol_status(inverter, ecu.broadcast_time);
 				saveevent(inverter, ecu.broadcast_time);							//保存当前一轮逆变器事件
 			}
-			/*
-			if(ecu.count>0)
-			{
-				displayonweb(inverter, ecu.broadcast_time);								//实时数据页面数据
-			}
-			*/
-//			printinverterinfo(&inverter);										//打印逆变器解析信息,ZK
-//			format(inverter, ecu.broadcast_time, ecu.system_power, ecu.current_energy, ecu.life_energy);
-			
+
 			//reset_inverter(inverter);											//重置每个逆变器
 			
-			remote_update(inverter);
+			//remote_update(inverter);
 			
 			if((cur_time_hour>9)&&(1 == ecu.flag_ten_clock_getshortaddr))
 			{

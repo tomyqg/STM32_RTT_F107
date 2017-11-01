@@ -21,4 +21,8 @@ int getNewChannel(void);
 int saveECUChannel(int channel);
 void changeChannelOfInverters(int oldChannel, int newChannel);
 
+int saveOldChannel(unsigned char oldChannel);
+int saveNewChannel(unsigned char newChannel);
+int saveChannel_change_flag(void);
+
 #endif /*__CHANNEL_H__*/

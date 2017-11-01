@@ -489,7 +489,8 @@ int save_process_result(int item, char *result)
 	print2msg(ECU_DBG_MAIN,"save_process_result DIR",dir);
 	fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
 	if (fd >= 0)
-	{		
+	{	
+		write(fd,"\n",1);
 		sprintf(result,"%s,%3d,1\n",result,item);
 		print2msg(ECU_DBG_MAIN,"result",result);
 		write(fd,result,strlen(result));
@@ -514,7 +515,8 @@ int save_inverter_parameters_result(inverter_info *inverter, int item, char *inv
 	print2msg(ECU_DBG_MAIN,"save_inverter_parameters_result dir",dir);
 	fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
 	if (fd >= 0)
-	{		
+	{	
+		write(fd,"\n",1);
 		sprintf(inverter_result,"%s,%s,%3d,1\n",inverter_result,inverter->id,item);
 		print2msg(ECU_DBG_MAIN,"inverter_result",inverter_result);
 		write(fd,inverter_result,strlen(inverter_result));
@@ -540,7 +542,8 @@ int save_inverter_parameters_result2(char *id, int item, char *inverter_result)
 	fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
 	if (fd >= 0)
 	{		
-		sprintf(inverter_result,"%s,%s %3d,1\n",inverter_result,id,item);
+		write(fd,"\n",1);
+		sprintf(inverter_result,"%s,%s,%3d,1\n",inverter_result,id,item);
 		print2msg(ECU_DBG_MAIN,"inverter_result",inverter_result);
 		write(fd,inverter_result,strlen(inverter_result));
 		close(fd);
@@ -1253,6 +1256,7 @@ void save_record(char sendbuff[], char *date_time)
 		fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
 		if (fd >= 0)
 		{		
+			write(fd,"\n",1);
 			sprintf(sendbuff,"%s,%s,1\n",sendbuff,date_time);
 			//print2msg(ECU_DBG_MAIN,"save_record",sendbuff);
 			write(fd,sendbuff,strlen(sendbuff));
@@ -1275,7 +1279,8 @@ int save_status(char *result, char *date_time)
 	print2msg(ECU_DBG_MAIN,"save_status DIR",dir);
 	fd = open(dir, O_WRONLY | O_APPEND | O_CREAT,0);
 	if (fd >= 0)
-	{		
+	{	
+		write(fd,"\n",1);
 		sprintf(result,"%s,%s,1\n",result,date_time);
 		print2msg(ECU_DBG_MAIN,"result",result);
 		write(fd,result,strlen(result));
@@ -1405,7 +1410,7 @@ void initPath(void)
 	rt_hw_ms_delay(20);
 	echo("/yuneng/vernum.con","2\n");
 	rt_hw_ms_delay(20);
-	echo("/yuneng/ftpadd.con", "IP=60.190.131.190\nPort=9219\nuser=zhyf\npassword=yuneng\n");
+	echo("/yuneng/ftpadd.con", "Domain=ecu.apsema.com\nIP=60.190.131.190\nPort=9219\nuser=zhyf\npassword=yuneng\n");
 	//echo("/yuneng/ftpadd.con", "IP=192.168.1.103\nPort=21\nuser=admin\npassword=admin\n");
 	rt_hw_ms_delay(20);
 	echo("/yuneng/datacent.con","Domain=ecu.apsema.com\nIP=60.190.131.190\nPort1=8995\nPort2=8996\n");
@@ -1496,7 +1501,7 @@ static int checkOldFile(char *dir,char *oldFile)
 
 
 //检索整个文件系统，判断剩余空间存储量，如果剩余可存储空间过小，则检索相应的目录，并进行相应的删除操作
-int optimizeFileSystem(void)
+int optimizeFileSystem(int capsize)
 {
   int result;
   long long cap;
@@ -1513,7 +1518,7 @@ int optimizeFileSystem(void)
 	
 	printdecmsg(ECU_DBG_MAIN,"disk free size",(unsigned long)cap);
 	//当flash芯片所剩下的容量小于40KB的时候进行一些必要的文件删除操作。
-	if (cap < 40) 
+	if (cap < capsize) 
 	{
 		//删除最前面一天的ECU级别处理结果数据    如果该目录下存在文件的话
 		if(1 == checkOldFile("/home/data/proc_res",oldFile))

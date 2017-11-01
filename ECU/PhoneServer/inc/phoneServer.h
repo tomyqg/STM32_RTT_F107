@@ -44,6 +44,7 @@ void Phone_FlashSize(unsigned char * ID,int Data_Len,const char *recvbuffer);
 //获取有线网络信息
 void Phone_GetWiredNetwork(unsigned char * ID,int Data_Len,const char *recvbuffer);			//有线网络设置
 
+void Phone_SetChannel(unsigned char * ID,int Data_Len,const char *recvbuffer);
 
 //Phone Server线程
 void phone_server_thread_entry(void* parameter);

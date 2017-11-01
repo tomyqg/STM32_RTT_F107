@@ -22,11 +22,16 @@
 #include "threadlist.h"
 #include "rtthread.h"
 #include "version.h"
+#include "main-thread.h"
+#include "dfs_posix.h"
 
 /*****************************************************************************/
 /*  Variable Declarations                                                    */
 /*****************************************************************************/
 extern rt_mutex_t record_data_lock;
+extern inverter_info inverter[MAXINVERTERCOUNT];
+extern ecu_info ecu;
+
 
 /*****************************************************************************/
 /*  Function Implementations                                                 */
@@ -34,8 +39,6 @@ extern rt_mutex_t record_data_lock;
 /* 协议的ECU部分 */
 int ecu_msg(char *sendbuffer, int num, const char *recvbuffer)
 {
-
-
 	char ecuid[13] = {'\0'};		//ECU号码
 	char version_msg[16] = {'\0'};	//版本信息（包括：长度+版本号+数字版本号）
 	char version[16] = {'\0'};		//版本号
@@ -44,9 +47,8 @@ int ecu_msg(char *sendbuffer, int num, const char *recvbuffer)
 	char timestamp[16] = {'\0'};	//时间戳
 
 	/* 处理数据 */
-	file_get_one(ecuid, sizeof(ecuid),
-			"/yuneng/ecuid.con");
-	sprintf(version,"%s_%s.%s",ECU_VERSION,MAJORVERSION,MINORVERSION);
+	memcpy(ecuid,ecu.id,13);
+	sprintf(version,"%s_%s.%s",ECU_EMA_VERSION,MAJORVERSION,MINORVERSION);
 	file_get_one(version_number, sizeof(version_number),
 			"/yuneng/vernum.con");
 	file_get_one(area, sizeof(area),
@@ -89,22 +91,28 @@ int inverter_msg(char *sendbuffer, char* id)
 /* 添加逆变器（返回添加成功的台数） */
 int add_id(const char *msg, int num)
 {
-
 	int i, count = 0;
 	char inverter_id[13] = {'\0'};
-
-	for(i=0; i<num; i++)
-	{
-		//获取一台逆变器的ID号
-		strncpy(inverter_id, &msg[i*15], 12);
-		inverter_id[12] = '\0';
-		//查询该逆变器ID在表中是否存在(建议建表的时候以‘id’为主键，方便使用REPLASE插入)
-		//插入一个逆变器ID
-		addInverter(inverter_id);
+	int fd;
+	char buff[50];
+	fd = open("/home/data/id", O_WRONLY | O_APPEND | O_CREAT,0);
+	if (fd >= 0)
+	{	
+		for(i=0; i<num; i++)
+		{
+			strncpy(inverter_id, &msg[i*15], 12);
+			inverter_id[12] = '\0';
+			sprintf(buff,"%s,,,,,,\n",inverter_id);
+			write(fd,buff,strlen(buff));
 			count++;
+		}
+		
+		close(fd);
 	}
 
+	echo("/yuneng/limiteid.con","1");
 	return count;
+
 }
 
 /* 删除逆变器（返回删除成功的台数） */
@@ -128,7 +136,8 @@ int delete_id(const char *msg, int num)
 /* 清空逆变器 */
 int clear_id()
 {
-	return clear_file("/home/data/id");
+	unlink("/home/data/id");
+	return 0;
 }
 
 
@@ -209,6 +218,7 @@ int set_inverter_id(const char *recvbuffer, char *sendbuffer)
 			}
 		}
 		//重启主线程
+		init_inverter_A103(inverter);
 		threadRestartTimer(10,TYPE_MAIN);
 		//restartThread(TYPE_MAIN);
 	}

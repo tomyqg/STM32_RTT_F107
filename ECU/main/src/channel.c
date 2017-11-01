@@ -33,7 +33,6 @@ extern inverter_info inverter[MAXINVERTERCOUNT];
 /* 信道操作 */
 int process_channel()
 {
-	FILE *fp;
 	int oldChannel, newChannel;
 
 	if (channel_need_change()) {
@@ -49,8 +48,9 @@ int process_channel()
 		saveECUChannel(newChannel);
 
 		//清空标志位
-		fp = fopen("/tmp/changech.con", "w");
-		fclose(fp);
+		unlink("/tmp/changech.con");
+		unlink("/tmp/old_chan.con");
+		unlink("/tmp/new_chan.con");
 	}
 	return 0;
 }
@@ -69,6 +69,14 @@ int channel_need_change()
 
 	return ('1' == buff[0]);
 }
+
+int saveChannel_change_flag()
+{
+	echo("/tmp/changech.con","1");
+	echo("/yuneng/limiteid.con","1");
+	return 0;
+}
+
 
 // 获取信道，范围：11~26共16个信道
 int getOldChannel()
@@ -98,6 +106,37 @@ int getNewChannel()
 	return 16; //默认信道
 }
 
+
+// 获取信道，范围：11~26共16个信道
+int saveOldChannel(unsigned char oldChannel)
+{
+	FILE *fp;
+	char buffer[3] = {'\0'};
+	
+	fp = fopen("/tmp/old_chan.con", "w");
+	if (fp) {
+		sprintf(buffer,"%d",oldChannel);
+		fputs(buffer, fp);
+		fclose(fp);
+	}
+	return 0;
+}
+int saveNewChannel(unsigned char newChannel)
+{
+	FILE *fp;
+	char buffer[3] = {'\0'};
+
+	fp = fopen("/tmp/new_chan.con", "w");
+	if (fp) {
+		sprintf(buffer,"%d",newChannel);
+		fputs(buffer, fp);
+		fclose(fp);
+	}
+	return 0;
+}
+
+
+
 int saveECUChannel(int channel)
 {
 	FILE *fp;
@@ -109,6 +148,7 @@ int saveECUChannel(int channel)
 		echo("/yuneng/limiteid.con","1");
 		fputs(buffer, fp);
 		fclose(fp);
+		ecu.channel = channel;
 		return 1;
 	}
 	return 0;
@@ -119,11 +159,11 @@ void changeChannelOfInverters(int oldChannel, int newChannel)
 {
 	int num = 0,i = 0,nChannel;
 	inverter_info *curinverter = inverter;
-	FILE *fp;
+	
 	//获取逆变器ID
 	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++)			//有效逆变器轮训
 	{
-		if(curinverter->flag == 1)
+		curinverter->flag = 1;
 			num++;
 	}
 
@@ -141,7 +181,6 @@ void changeChannelOfInverters(int oldChannel, int newChannel)
 				if(curinverter->flag == 1)
 				{
 					zb_change_inverter_channel_one(curinverter->id, newChannel);
-					curinverter->flag = 0;
 				}	
 		
 			}
@@ -157,23 +196,11 @@ void changeChannelOfInverters(int oldChannel, int newChannel)
 					if(curinverter->flag == 1)
 					{
 						zb_change_inverter_channel_one(curinverter->id, newChannel);
-						curinverter->flag = 0;
 					}	
 				}
 			}
 		}
 	}
-	//将结果保存到/home/data/id文件中
-	fp = fopen("/home/data/id","w");
-	if(fp)
-	{
-		curinverter = inverter;
-		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++)			//有效逆变器轮训
-		{
-			fprintf(fp,"%s,%d,%d,%d,%d,%d,%d\n",curinverter->id,curinverter->shortaddr,curinverter->model,curinverter->version,curinverter->bindflag,curinverter->zigbee_version,curinverter->flag);
-			
-		}
-		fclose(fp);
-	}
+
 
 }

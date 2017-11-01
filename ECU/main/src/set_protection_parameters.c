@@ -1296,7 +1296,7 @@ int resolve_protection_paras_YC600(inverter_info *inverter, char *readbuff, int 
 
 		voltage_3_clearance_time = (readbuff[41+3]*256 + readbuff[42+3])/100.0;
 
-		temp = (readbuff[4+3]*256 + readbuff[44+3])*82.5/4096;
+		temp = (readbuff[43+3]*256 + readbuff[44+3])*82.5/4096;
 		if((temp-(int)temp)>0.5)
 			regulated_dc_working_point = (int)temp +1;
 		else
@@ -1318,7 +1318,7 @@ int resolve_protection_paras_YC600(inverter_info *inverter, char *readbuff, int 
 				break;
 			rt_hw_s_delay(1);
 		}
-
+		
 		sprintf(inverter_result, "%s%03d%03d%03d%03d%05dAAAAAAAAAAAAAAAAAAAAAAAA%03d%03d%03d%03d%06d%06d%06d%06d%03d%03d%06d%05dEND",
 				inverter->id,
 				under_voltage_slow,
@@ -1334,7 +1334,7 @@ int resolve_protection_paras_YC600(inverter_info *inverter, char *readbuff, int 
 				(int)(voltage_triptime_slow*100),
 				(int)(frequency_triptime_fast*100),
 				(int)(frequency_triptime_slow*100),
-				regulated_dc_working_point*10,
+				(int)(regulated_dc_working_point*10),
 				under_voltage_stage_2,
 				(int)(voltage_3_clearance_time*100),
 				(int)(start_time));

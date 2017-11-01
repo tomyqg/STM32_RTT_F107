@@ -382,6 +382,7 @@ int set_ird_single()		//设置单台逆变器IRD
 	char id[16]={'\0'};
 	char value[16]={'\0'};
 	int shortaddr;
+	int index = 0;
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	while(1){
 		shortaddr= get_ird_id_value(id, value);
@@ -392,7 +393,10 @@ int set_ird_single()		//设置单台逆变器IRD
 		else{
 			clear_ird_flag_single(id);
 			send_ird_command_single(shortaddr, atoi(value));	//设置一台逆变器IRD
-			get_ird_single(shortaddr,id);			//读取逆变器的设置结果
+			for(index=0; index<3; index++){
+				if(!get_ird_single(shortaddr,id))	//读取逆变器的设置结果
+					break;			
+			}
 		}
 	}
 	rt_mutex_release(record_data_lock);

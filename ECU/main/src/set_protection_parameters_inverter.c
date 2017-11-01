@@ -1196,14 +1196,17 @@ int read_protection_parameters_one(inverter_info *firstinverter, char *id)
 int set_protection_parameters_inverter_one(struct inverter_info_t *firstinverter)
 {
 	char inverter_id[16];
+	char last_inverter_id[16] = {'\0'};		//上一次通讯的逆变器ID
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 
 	while(1){
 		if(1 != set_protection_paras_one(inverter_id))
 			break;
-		else
-			read_protection_parameters_one(firstinverter, inverter_id);
+		if(memcmp(last_inverter_id,inverter_id,12)&&(strlen(last_inverter_id) == 12))	//对比上一轮和本来的ID   如果不同则采集上一轮的A131命令
+			read_protection_parameters_one(firstinverter, last_inverter_id);
+		memcpy(last_inverter_id,inverter_id,16);	
 	}
+	read_protection_parameters_one(firstinverter, inverter_id);
 	rt_mutex_release(record_data_lock);
 	return 0;
 }

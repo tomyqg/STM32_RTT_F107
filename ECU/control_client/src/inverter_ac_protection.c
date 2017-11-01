@@ -37,6 +37,8 @@ id,parameter_name, parameter_value,set_flag         primary key(id, parameter_na
 /*  Variable Declarations                                                    */
 /*****************************************************************************/
 extern rt_mutex_t record_data_lock;
+extern inverter_info inverter[MAXINVERTERCOUNT];
+extern ecu_info ecu;
 
 static const char pro_name[NUM][32] = {
 		"under_voltage_fast",
@@ -145,24 +147,24 @@ int save_ac_protection_all()
 {
 	int i, err_count = 0;
 	char str[100];
-
-	unlink("/home/data/setpropa");
-	for(i=0; i<NUM; i++)
+	int fd = 0;
+	fd = open("/home/data/setpropa", O_WRONLY | O_TRUNC | O_CREAT,0);
+	if(fd >= 0)
 	{
-		if(pro_flag[i] == 1){
-		
-			//如果存在该逆变器数据则删除该记录
-			//delete_line("/home/data/setpropa","/home/data/setpropa.t",(char *)pro_name[i],strlen(pro_name[i]));
-			sprintf(str,"%s,%.2f,1\n",pro_name[i], pro_value[i]);
-			//插入数据
-			if(-1 == insert_line("/home/data/setpropa",str))
-			{
-				err_count++;
+		for(i=0; i<NUM; i++)
+		{
+			if(pro_flag[i] == 1){
+			
+				//如果存在该逆变器数据则删除该记录
+				sprintf(str,"%s,%.2f,1\n",pro_name[i], pro_value[i]);
+				if(write(fd,str,strlen(str)) <= 0)
+				{
+					err_count++;
+				}		
 			}
-	
 		}
+		close(fd);
 	}
-
 	return err_count;
 }
 
@@ -173,27 +175,31 @@ int save_ac_protection_num(const char *msg, int num)
 	int i, j, err_count = 0;
 	char inverter_id[13] = {'\0'};
 	char str[100];
-	
-	unlink("/home/data/setpropi");
-	for(i=0; i<num; i++)
+	int fd = 0;
+	fd = open("/home/data/setpropi", O_WRONLY | O_TRUNC | O_CREAT,0);
+	if(fd >= 0)
 	{
-		//获取一台逆变器的ID号
-		strncpy(inverter_id, &msg[i*12], 12);
-
-		for(j=0; j<NUM; j++)
+		for(i=0; i<num; i++)
 		{
-			if(pro_flag[j] == 1){
-				//如果存在该逆变器数据则删除该记录
-				//delete_line("/home/data/setpropi","/home/data/setpropi.t",(char *)pro_name[j],strlen(pro_name[j]));
-				sprintf(str,"'%s', '%s', %f, 1\n",inverter_id, pro_name[j], pro_value[j]);
-				//插入数据
-				if(-1 == insert_line("/home/data/setpropi",str))
-				{
-					err_count++;
+			//获取一台逆变器的ID号
+			strncpy(inverter_id, &msg[i*12], 12);
+
+			for(j=0; j<NUM; j++)
+			{
+				if(pro_flag[j] == 1){
+					//如果存在该逆变器数据则删除该记录
+					sprintf(str,"%s,%s,%f,1\n",inverter_id, pro_name[j], pro_value[j]);
+					//插入数据
+					if(write(fd,str,strlen(str)) <= 0)
+					{
+						err_count++;
+					}		
 				}
 			}
 		}
+		close(fd);
 	}
+	
 	return err_count;
 }
 
@@ -238,7 +244,7 @@ int response_ecu_ac_protection_5(const char *recvbuffer, char *sendbuffer)
 	char timestamp[15] = {'\0'};
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	//获取参数
-	file_get_one(ecuid, sizeof(ecuid), "/yuneng/ecuid.con");
+	memcpy(ecuid,ecu.id,13);
 	strncpy(timestamp, &recvbuffer[34], 14);
 	memset(pro_value, 0, sizeof(pro_value));
 	memset(pro_flag, 0, sizeof(pro_flag));

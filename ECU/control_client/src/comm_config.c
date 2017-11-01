@@ -20,7 +20,7 @@
 #include "myfile.h"
 #include "threadlist.h"
 #include "rtthread.h"
-
+#include "mycommand.h"
 /*****************************************************************************/
 /*  Definitions                                                              */
 /*****************************************************************************/
@@ -30,6 +30,8 @@
 /*  Variable Declarations                                                    */
 /*****************************************************************************/
 extern rt_mutex_t record_data_lock;
+extern inverter_info inverter[MAXINVERTERCOUNT];
+extern ecu_info ecu;
 
 typedef struct comm_config
 {
@@ -140,7 +142,7 @@ int response_comm_config(const char *recvbuffer, char *sendbuffer)
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 
 	//ecu_id
-	file_get_one(ecuid, sizeof(ecuid), "/yuneng/ecuid.con");
+	memcpy(ecuid,ecu.id,13);
 
 	//时间戳
 	strncpy(timestamp, &recvbuffer[34], 14);
@@ -237,13 +239,14 @@ int set_comm_config(const char *recvbuffer, char *sendbuffer)
 			file_set_array(array, 2, "/yuneng/client.con");
 			file_set_array(&array[2], 4, "/yuneng/datacent.con");
 			threadRestartTimer(10,TYPE_CLIENT);
-			//restartThread(TYPE_CLIENT);//mysystem("killall client");
+			reboot_timer(10);
 		}
 		//[2]远程控制通信配置
 		else if(comm_cfg_type == 2){
 			file_get_array(array, 6, "/yuneng/control.con");
 			save_cfg(&cfg2, array, buffer);
 			file_set_array(array, 6, "/yuneng/control.con");
+			reboot_timer(10);
 		}
 		else{
 			ack_flag = FORMAT_ERROR;
