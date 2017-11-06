@@ -41,6 +41,8 @@
 /*****************************************************************************/
 inverter_info inverter[MAXINVERTERCOUNT];
 ecu_info ecu;
+extern unsigned char rateOfProgress;
+
 
 /*****************************************************************************/
 /*  Function Implementations                                                 */
@@ -270,10 +272,12 @@ void init_tmpdb(inverter_info *firstinverter)
 
 int init_all(inverter_info *inverter)
 {
+	rateOfProgress = 0;
 	openzigbee();
 	zb_test_communication();
 	init_ecu();
 	init_inverter(inverter);
+	rateOfProgress = 100;
 	init_tmpdb(inverter);
 	read_gfdi_turn_on_off_status(inverter);
 	return 0;

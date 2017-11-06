@@ -56,6 +56,7 @@ void APP_Response_FlashSize(char mapping,unsigned char *ID,unsigned int Flashsiz
 void APP_Response_GetWiredNetwork(char mapping,unsigned char *ID,char dhcpStatus,IP_t IPAddr,IP_t MSKAddr,IP_t GWAddr,IP_t DNS1Addr,IP_t DNS2Addr);
 //15 	设置信道
 void APP_Response_SetChannel(unsigned char *ID,unsigned char mapflag,char SIGNAL_CHANNEL,char SIGNAL_LEVEL);
-
+//18 	获取短地址
+void APP_Response_GetShortAddrInfo(char mapping,unsigned char *ID,inverter_info *inverter);
 
 #endif /*__WIFI_COMM_H__*/

@@ -76,7 +76,7 @@ void add_Phone_functions(void)
 	pfun_Phone[P0013] = Phone_FlashSize; 			//获取FLASH空间
 	pfun_Phone[P0014] = Phone_GetWiredNetwork; 			//获取网络配置
 	pfun_Phone[P0015] = Phone_SetChannel;			//设置信道
-
+	pfun_Phone[P0018] = Phone_GetShortAddrInfo;		//功率电流电压曲线
 }
 
 
@@ -636,6 +636,20 @@ void Phone_SetChannel(unsigned char * ID,int Data_Len,const char *recvbuffer)
 
 }
 
+void Phone_GetShortAddrInfo(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//获取ID信息
+{
+	
+	
+	printf("WIFI_Recv_Event%d %s\n",18,recvbuffer);
+	if(!memcmp(&WIFI_RecvSocketAData[13],ecu.id,12))
+	{
+		APP_Response_GetShortAddrInfo(0x00,ID,inverter);
+	}else
+	{
+		APP_Response_GetShortAddrInfo(0x01,ID,inverter);
+	}
+	
+}
 
 
 //WIFI事件处理

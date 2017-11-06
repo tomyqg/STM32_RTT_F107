@@ -219,7 +219,7 @@ int set_inverter_id(const char *recvbuffer, char *sendbuffer)
 		}
 		//重启主线程
 		init_inverter_A103(inverter);
-		threadRestartTimer(10,TYPE_MAIN);
+		threadRestartTimer(20,TYPE_MAIN);
 		//restartThread(TYPE_MAIN);
 	}
 

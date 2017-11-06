@@ -46,6 +46,7 @@ void Phone_GetWiredNetwork(unsigned char * ID,int Data_Len,const char *recvbuffe
 
 void Phone_SetChannel(unsigned char * ID,int Data_Len,const char *recvbuffer);
 
+void Phone_GetShortAddrInfo(unsigned char * ID,int Data_Len,const char *recvbuffer);
 //Phone Serverœﬂ≥Ã
 void phone_server_thread_entry(void* parameter);
 

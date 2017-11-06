@@ -26,6 +26,8 @@
 /*****************************************************************************/
 extern ecu_info ecu;
 extern inverter_info inverter[MAXINVERTERCOUNT];
+extern unsigned char rateOfProgress;
+
 
 /*****************************************************************************/
 /*  Function Implementations                                                 */
@@ -173,13 +175,14 @@ void changeChannelOfInverters(int oldChannel, int newChannel)
 		if (oldChannel) {
 			//更改ECU信道为原信道
 			zb_restore_ecu_panid_0xffff(oldChannel);
-
+			rateOfProgress = 5;
 			//更改每台逆变器信道
 			curinverter = inverter;
 			for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++)			//有效逆变器轮训
 			{
 				if(curinverter->flag == 1)
 				{
+					rateOfProgress = 5+35*(i+1)/num;
 					zb_change_inverter_channel_one(curinverter->id, newChannel);
 				}	
 		
@@ -198,6 +201,7 @@ void changeChannelOfInverters(int oldChannel, int newChannel)
 						zb_change_inverter_channel_one(curinverter->id, newChannel);
 					}	
 				}
+				rateOfProgress = 40*(nChannel-10)/16;
 			}
 		}
 	}
