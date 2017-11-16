@@ -68,7 +68,7 @@ void add_Phone_functions(void)
 	pfun_Phone[P0005] = Phone_RegisterID; 			//逆变器ID注册
 	pfun_Phone[P0006] = Phone_SetTime; 			//ECU时间设置
 	pfun_Phone[P0007] = Phone_SetWiredNetwork; 			//有线网络设置
-	//pfun_Phone[P0008] = Phone_SetWIFI; 			//无线网络连接
+	pfun_Phone[P0008] = Phone_GetECUHardwareStatus; 	//查看当前ECU硬件状态
 	//pfun_Phone[P0009] = Phone_SearchWIFIStatus; 			//无线网络连接状态
 	pfun_Phone[P0010] = Phone_SetWIFIPasswd; 			//AP密码设置
 	pfun_Phone[P0011] = Phone_GetIDInfo; 			//获取ID信息
@@ -409,41 +409,21 @@ void Phone_SetWiredNetwork(unsigned char * ID,int Data_Len,const char *recvbuffe
 	}
 }
 
-/*
-void Phone_SetWIFI(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//无线网络连接
+//获取硬件信息
+void Phone_GetECUHardwareStatus(unsigned char * ID,int Data_Len,const char *recvbuffer) 
 {
-	printf("WIFI_Recv_Event%d %s\n",P0008,recvbuffer);
-	{
-	char SSID[100] = {'\0'};
-	char Password[100] = {'\0'};
-	char Auth;
-	char Encry;
-	int SSIDLen,passWDLen;
-	//匹配成功进行相应操作
-	printf("COMMAND_SETWIFI  Mapping\n");
-	ResolveWifiSSID(SSID,&SSIDLen,&Auth,&Encry,Password,&passWDLen,(char *)&recvbuffer[28]);
-	APP_Response_SetWifi(0x00,ID);
-	WIFI_ChangeSSID(SSID,Auth,Encry,Password,passWDLen);
-					
-	}	
-}
-void Phone_SearchWIFIStatus(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//无线网络连接状态
-{
-	printf("WIFI_Recv_Event%d %s\n",P0009,recvbuffer);
-	{
-	//匹配成功进行相应操作
-	printf("COMMAND_SEARCHWIFISTATUS  Mapping\n");
-	if(0 == WIFI_ConStatus())
-	{
-		APP_Response_SearchWifiStatus(0x00,ID);
+	print2msg(ECU_DBG_WIFI,"WIFI_Recv_Event 8 ",(char *)recvbuffer);
+	if(!memcmp(&WIFI_RecvSocketAData[13],ecu.id,12))
+	{	//匹配成功进行相应的操作
+		APP_Response_GetECUHardwareStatus(0x00,ID);
 	}else
 	{
-		APP_Response_SearchWifiStatus(0x01,ID);
+		APP_Response_GetECUHardwareStatus(0x01,ID);
 	}
-	}
+
 }
-*/
-	//AP密码设置
+
+//AP密码设置
 void Phone_SetWIFIPasswd(unsigned char * ID,int Data_Len,const char *recvbuffer) 			//AP密码设置
 {
 	print2msg(ECU_DBG_WIFI,"WIFI_Recv_Event 10 ",(char *)recvbuffer);

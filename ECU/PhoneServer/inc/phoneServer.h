@@ -29,10 +29,8 @@ void Phone_RegisterID(unsigned char * ID,int Data_Len,const char *recvbuffer); 	
 void Phone_SetTime(unsigned char * ID,int Data_Len,const char *recvbuffer); 			//ECU时间设置
 //设置有线网络
 void Phone_SetWiredNetwork(unsigned char * ID,int Data_Len,const char *recvbuffer); 			//有线网络设置
-//设置WIFI
-void Phone_SetWIFI(unsigned char * ID,int Data_Len,const char *recvbuffer); 			//无线网络连接
-//查询WIFI连接状态
-void Phone_SearchWIFIStatus(unsigned char * ID,int Data_Len,const char *recvbuffer); 			//无线网络连接状态
+//获取硬件信息
+void Phone_GetECUHardwareStatus(unsigned char * ID,int Data_Len,const char *recvbuffer);
 //设置WIFI AP 密码
 void Phone_SetWIFIPasswd(unsigned char * ID,int Data_Len,const char *recvbuffer); 			//AP密码设置
 //获取ID信息

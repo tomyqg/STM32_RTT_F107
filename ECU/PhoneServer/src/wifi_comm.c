@@ -7,6 +7,7 @@
 #include "rtc.h"
 #include "usart5.h"
 #include "stdlib.h"
+#include "threadlist.h"
 
 extern ecu_info ecu;
 static char SendData[4096] = {'\0'};
@@ -349,31 +350,30 @@ void APP_Response_SetWiredNetwork(char mapping,unsigned char *ID)
 	SendToSocketA(SendData ,packlength,ID);
 }
 
-//08 COMMAND_SETWIFI 						//无线网络设置请求			mapping :: 0x00 匹配  0x01 不匹配  
-void APP_Response_SetWifi(char mapping,unsigned char *ID)
+
+//获取硬件信息
+void APP_Response_GetECUHardwareStatus(char mapping,unsigned char *ID)
 {
 	int packlength = 0;
-	memset(SendData,'\0',4096);	
 	
-	//拼接需要发送的报文
-	sprintf(SendData,"APS1100150008%02d\n",mapping);
-	packlength = 16;
-	
+	if(mapping == 0x00)
+	{
+		sprintf(SendData,"APS110120000800%02d",WIFI_MODULE_TYPE);
+		memset(&SendData[17],'0',100);
+		SendData[117] = 'E';
+		SendData[118] = 'N';
+		SendData[119] = 'D';
+		SendData[120] = '\n';
+		packlength = 121;
+	}else
+	{
+		sprintf(SendData,"APS110015000801\n");
+		packlength = 16;
+	}
 	SendToSocketA(SendData ,packlength,ID);
+
 }
 
-//09 COMMAND_SEARCHWIFISTATUS		//无线网络连接状态请求			mapping :: 0x00 匹配  0x01 不匹配  
-void APP_Response_SearchWifiStatus(char mapping,unsigned char *ID)
-{
-	int packlength = 0;
-	memset(SendData,'\0',4096);	
-	
-	//拼接需要发送的报文
-	sprintf(SendData,"APS1100150009%02d\n",mapping);
-	packlength = 16;
-	
-	SendToSocketA(SendData ,packlength,ID);
-}
 
 //10 COMMAND_SETWIFIPASSWD			//AP密码设置请求			mapping :: 0x00 匹配  0x01 不匹配  
 void APP_Response_SetWifiPasswd(char mapping,unsigned char *ID)

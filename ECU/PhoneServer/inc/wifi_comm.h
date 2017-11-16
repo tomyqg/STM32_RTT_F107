@@ -40,10 +40,8 @@ void APP_Response_RegisterID(char mapping,unsigned char *ID);
 void APP_Response_SetTime(char mapping,unsigned char *ID);
 //07	有线网络设置请求
 void APP_Response_SetWiredNetwork(char mapping,unsigned char *ID);
-//08	无线网络设置请求
-void APP_Response_SetWifi(char mapping,unsigned char *ID);
-//09	无线网络连接状态请求
-void APP_Response_SearchWifiStatus(char mapping,unsigned char *ID);
+//08 	获取ECU硬件信息
+void APP_Response_GetECUHardwareStatus(char mapping,unsigned char *ID);
 //10	AP密码设置请求
 void APP_Response_SetWifiPasswd(char mapping,unsigned char *ID);
 //11	AP密码设置请求

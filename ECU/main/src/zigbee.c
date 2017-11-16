@@ -1229,7 +1229,7 @@ int zb_clear_gfdi_broadcast(void)		//Çå³ýGFDI¹ã²¥,OK
 	sendbuff[i++] = 0xFB;
 	sendbuff[i++] = 0xFB;
 	sendbuff[i++] = 0x06;
-	sendbuff[i++] = 0xAF;
+	sendbuff[i++] = 0xCF;
 	sendbuff[i++] = 0x00;
 	sendbuff[i++] = 0x00;
 	sendbuff[i++] = 0x00;
@@ -1253,7 +1253,7 @@ int zb_clear_gfdi(inverter_info *inverter)		//Çå³ýGFDI,OK
 	sendbuff[i++] = 0xFB;
 	sendbuff[i++] = 0xFB;
 	sendbuff[i++] = 0x06;
-	sendbuff[i++] = 0xCF;
+	sendbuff[i++] = 0xAF;
 	sendbuff[i++] = 0x00;
 	sendbuff[i++] = 0x00;
 	sendbuff[i++] = 0x00;

@@ -45,9 +45,11 @@ typedef struct IPConfig
 
 //WIFI 模块使用宏
 #if 1
+#define WIFI_MODULE_TYPE	0
 //使用有人模块
 #define USR_MODULE 		
 #else
+#define WIFI_MODULE_TYPE	1
 //使用RAK475模块
 #define RAK475_MODULE	
 #endif
