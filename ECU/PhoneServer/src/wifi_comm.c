@@ -492,6 +492,7 @@ void APP_Response_FlashSize(char mapping,unsigned char *ID,unsigned int Flashsiz
 void APP_Response_GetWiredNetwork(char mapping,unsigned char *ID,char dhcpStatus,IP_t IPAddr,IP_t MSKAddr,IP_t GWAddr,IP_t DNS1Addr,IP_t DNS2Addr)
 {
 	int packlength = 0;
+	char MAC[13] = {'\0'};
 	memset(SendData,'\0',4096);	
 	if(mapping == 0x00)
 	{
@@ -531,6 +532,9 @@ void APP_Response_GetWiredNetwork(char mapping,unsigned char *ID,char dhcpStatus
 		SendData[packlength++] = DNS2Addr.IP2;
 		SendData[packlength++] = DNS2Addr.IP3;
 		SendData[packlength++] = DNS2Addr.IP4;
+		sprintf(MAC,"%02x%02x%02x%02x%02x%02x",ecu.MacAddress[0],ecu.MacAddress[1],ecu.MacAddress[2],ecu.MacAddress[3],ecu.MacAddress[4],ecu.MacAddress[5]);
+		memcpy(&SendData[packlength],MAC,12);
+		packlength += 12;
 
 		SendData[packlength++] = 'E';
 		SendData[packlength++] = 'N';
