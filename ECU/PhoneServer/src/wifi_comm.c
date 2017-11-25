@@ -409,7 +409,7 @@ void APP_Response_GetIDInfo(char mapping,unsigned char *ID,inverter_info *invert
 			uid[3] = (curinverter->id[6] - '0')*16+(curinverter->id[7] - '0');
 			uid[4] = (curinverter->id[8] - '0')*16+(curinverter->id[9] - '0');
 			uid[5] = (curinverter->id[10] - '0')*16+(curinverter->id[11] - '0');
-			printf("%02x%02x%02x%02x%02x%02x\n",uid[0],uid[1],uid[2],uid[3],uid[4],uid[5]);
+			//printf("%02x%02x%02x%02x%02x%02x\n",uid[0],uid[1],uid[2],uid[3],uid[4],uid[5]);
 			memcpy(&SendData[packlength],uid,6);	
 			packlength += 6;
 		}
@@ -461,7 +461,7 @@ void APP_Response_FlashSize(char mapping,unsigned char *ID,unsigned int Flashsiz
 	{
 		sprintf(SendData,"APS110000001300");
 		packlength = 15;
-		printf("%d\n",Flashsize);
+		//printf("%d\n",Flashsize);
 		SendData[packlength++] = (Flashsize/16777216)%256;
 		SendData[packlength++] = (Flashsize/65536)%256;
 		SendData[packlength++] = (Flashsize/256)%256;

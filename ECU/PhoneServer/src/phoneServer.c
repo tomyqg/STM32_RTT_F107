@@ -435,7 +435,7 @@ void Phone_SetWIFIPasswd(unsigned char * ID,int Data_Len,const char *recvbuffer)
 		int oldLen,newLen;
 						
 		//匹配成功进行相应操作
-		printf("COMMAND_SETWIFIPASSWD  Mapping\n");
+		//printf("COMMAND_SETWIFIPASSWD  Mapping\n");
 		//获取密码
 		ResolveWifiPasswd(OldPassword,&oldLen,NewPassword,&newLen,(char *)&recvbuffer[28]);
 		//读取旧密码，如果旧密码相同，设置新密码
@@ -524,7 +524,7 @@ void Phone_GetWiredNetwork(unsigned char * ID,int Data_Len,const char *recvbuffe
 		ip_addr_t DNS;
 		IP_t IPAddr,MSKAddr,GWAddr,DNS1Addr,DNS2Addr;
 		//匹配成功进行相应操作
-		printf("COMMAND_GETWIREDNETWORK  Mapping\n");
+		//printf("COMMAND_GETWIREDNETWORK  Mapping\n");
 		netif = netif_list;
 		addr = ip4_addr_get_u32(&netif->ip_addr);
 		IPAddr.IP4 = (addr/16777216)%256;
@@ -620,7 +620,7 @@ void Phone_GetShortAddrInfo(unsigned char * ID,int Data_Len,const char *recvbuff
 {
 	
 	
-	printf("WIFI_Recv_Event%d %s\n",18,recvbuffer);
+	//printf("WIFI_Recv_Event%d %s\n",18,recvbuffer);
 	if(!memcmp(&WIFI_RecvSocketAData[13],ecu.id,12))
 	{
 		APP_Response_GetShortAddrInfo(0x00,ID,inverter);
@@ -706,7 +706,7 @@ void phone_server_thread_entry(void* parameter)
 			process_WIFI(ID_A,(char *)WIFI_RecvSocketAData);
 		}
 		
-		rt_thread_delay(RT_TICK_PER_SECOND/20);
+		rt_thread_delay(RT_TICK_PER_SECOND/100);
 	}
 	
 }

@@ -237,9 +237,17 @@ void rt_init_thread_entry(void* parameter)
 		rt_kprintf("Initialize record_data_lock successful!\n");
 	}
 	/* WiFi Serial Initialize*/
-	usr_wifi_lock = rt_mutex_create("usr_wifi_lock", RT_IPC_FLAG_FIFO);
+	if(usr_wifi_lock == NULL)
+	{
+		usr_wifi_lock = rt_mutex_create("usr_wifi_lock", RT_IPC_FLAG_FIFO);
+	}
+	
 	/* WiFi Serial Initialize*/
-	wifi_uart_lock = rt_mutex_create("wifi_uart_lock", RT_IPC_FLAG_FIFO);
+	if(wifi_uart_lock == NULL)
+	{
+		wifi_uart_lock = rt_mutex_create("wifi_uart_lock", RT_IPC_FLAG_FIFO);
+	}
+	
 	
 	cpu_usage_init();
 	

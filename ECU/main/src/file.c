@@ -890,8 +890,8 @@ int read_weekly_energy(char *date_time, char *power_buff,int *length)
 				{
 					memcpy(energy_tmp,&buff[9],(strlen(buff)-9));
 					energy = (int)(atof(energy_tmp)*100);
-					print2msg(ECU_DBG_OTHER,"buff",buff);
-					printdecmsg(ECU_DBG_OTHER,"energy",energy);
+					//print2msg(ECU_DBG_OTHER,"buff",buff);
+					//printdecmsg(ECU_DBG_OTHER,"energy",energy);
 					power_buff[(*length)++] = (date_tmp[0]-'0')*16 + (date_tmp[1]-'0');
 					power_buff[(*length)++] = (date_tmp[2]-'0')*16 + (date_tmp[3]-'0');
 					power_buff[(*length)++] = (date_tmp[4]-'0')*16 + (date_tmp[5]-'0');
@@ -925,8 +925,8 @@ int read_weekly_energy(char *date_time, char *power_buff,int *length)
 			{
 				memcpy(energy_tmp,&buff[9],(strlen(buff)-9));
 				energy = (int)(atof(energy_tmp)*100);
-				print2msg(ECU_DBG_OTHER,"buff",buff);
-				printdecmsg(ECU_DBG_OTHER,"energy",energy);
+				//print2msg(ECU_DBG_OTHER,"buff",buff);
+				//printdecmsg(ECU_DBG_OTHER,"energy",energy);
 				power_buff[(*length)++] = (date_tmp[0]-'0')*16 + (date_tmp[1]-'0');
 				power_buff[(*length)++] = (date_tmp[2]-'0')*16 + (date_tmp[3]-'0');
 				power_buff[(*length)++] = (date_tmp[4]-'0')*16 + (date_tmp[5]-'0');

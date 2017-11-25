@@ -1807,7 +1807,7 @@ int response_process_result()
 					}
 					//发送成功则将标志位置0
 					change_pro_result_flag(item,'0');
-					WIFI_Close(SOCKET_C);
+					//WIFI_Close(SOCKET_C);
 					printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
 				
 				}

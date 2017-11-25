@@ -37,8 +37,6 @@
 /*****************************************************************************/
 extern rt_mutex_t record_data_lock;
 extern ecu_info ecu;
-extern rt_mutex_t usr_wifi_lock;
-
 
 /*****************************************************************************/
 /*  Function Implementations                                                 */

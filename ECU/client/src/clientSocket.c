@@ -130,10 +130,6 @@ int connect_client_socket(int fd_sock)				//通过有线的方式连接服务器
 		sprintf(ip,"%s",ip_ntoa((ip_addr_t*)*host->h_addr_list));
 	}
 
-	//printf("IP:%s\n", ip);
-	//printf("Port1:%d\n", port[0]);
-	//printf("Port2:%d\n", port[1]);
-
 	memset(&serv_addr,0,sizeof(struct sockaddr_in));
 	serv_addr.sin_family=AF_INET;
 	serv_addr.sin_port=htons(port[0]);
@@ -327,12 +323,12 @@ int serverCommunication_Client(char *sendbuff,int sendLength,char *recvbuff,int 
 				recvbuff[*recvLength] = '\0';
 					print2msg(ECU_DBG_CLIENT,"serverCommunication_Client",recvbuff);
 				WIFI_Recv_SocketB_Event = 0;
-				WIFI_Close(SOCKET_B);
+				//WIFI_Close(SOCKET_B);
 				return 0;
 			}
 			rt_hw_ms_delay(10);
 		}
-		WIFI_Close(SOCKET_B);
+		//WIFI_Close(SOCKET_B);
 		return -1;
 #endif
 
