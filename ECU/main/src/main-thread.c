@@ -85,7 +85,8 @@ int init_inverter(inverter_info *inverter)
 		//rt_memset(curinverter->tnuid, '\0', sizeof(curinverter->tnuid));			//清空逆变器ID
 
 		curinverter->model = 0;
-
+		curinverter->inverterstatus.deputy_model = 0;
+		
 		curinverter->dv=0;			//清空当前一轮直流电压
 		curinverter->di=0;			//清空当前一轮直流电流
 		curinverter->op=0;			//清空当前逆变器输出功率
@@ -121,13 +122,13 @@ int init_inverter(inverter_info *inverter)
 		rt_memset(curinverter->status, '\0', sizeof(curinverter->status));		//清空逆变器状态
 		rt_memset(curinverter->statusb, '\0', sizeof(curinverter->statusb));		//B路清空逆变器状态
 
-		curinverter->dataflag = 0;		//上一轮有数据的标志置位
-	//	curinverter->bindflag=0;		//绑定逆变器标志位置清0
+		curinverter->inverterstatus.dataflag = 0;		//上一轮有数据的标志置位
+	//	curinverter->inverterstatus.bindflag=0;		//绑定逆变器标志位置清0
 		curinverter->no_getdata_num=0;	//ZK,清空连续获取不到的次数
 		curinverter->disconnect_times=0;		//没有与逆变器通信上的次数清0, ZK
 		curinverter->signalstrength=0;			//信号强度初始化为0
 
-		curinverter->updating=0;
+		curinverter->inverterstatus.updating=0;
 		curinverter->raduis=0;
 	}
 
@@ -209,13 +210,13 @@ int init_inverter_A103(inverter_info *inverter)
 		rt_memset(curinverter->status, '\0', sizeof(curinverter->status));		//清空逆变器状态
 		rt_memset(curinverter->statusb, '\0', sizeof(curinverter->statusb));		//B路清空逆变器状态
 
-		curinverter->dataflag = 0;		//上一轮有数据的标志置位
-	//	curinverter->bindflag=0;		//绑定逆变器标志位置清0
+		curinverter->inverterstatus.dataflag = 0;		//上一轮有数据的标志置位
+	//	curinverter->inverterstatus.bindflag=0;		//绑定逆变器标志位置清0
 		curinverter->no_getdata_num=0;	//ZK,清空连续获取不到的次数
 		curinverter->disconnect_times=0;		//没有与逆变器通信上的次数清0, ZK
 		curinverter->signalstrength=0;			//信号强度初始化为0
 
-		curinverter->updating=0;
+		curinverter->inverterstatus.updating=0;
 		curinverter->raduis=0;
 	}
 
@@ -290,7 +291,7 @@ int reset_inverter(inverter_info *inverter)
 
 	for(i=0; i<MAXINVERTERCOUNT; i++, curinverter++)
 	{
-		curinverter->dataflag = 0;
+		curinverter->inverterstatus.dataflag = 0;
 
 		curinverter->dv=0;
 		curinverter->di=0;
@@ -320,7 +321,7 @@ void main_thread_entry(void* parameter)
 	int thistime=0, durabletime=65535, reportinterval=300;					//thistime:本轮向逆变器发送广播要数据的时间;durabletime:ECU本轮向逆变器要数据的持续时间
 	char broadcast_hour_minute[3]={'\0'};									//向逆变器发送广播命令时的时间
 	int cur_time_hour;														//当前的时间小时
-
+	long time_linux;
 	
 	
 #if ECU_JLINK_DEBUG
@@ -342,14 +343,18 @@ void main_thread_entry(void* parameter)
 		//if(compareTime(durabletime ,thistime,60)){
 			//printf("******1-----------main acquire_time:\n");
 			thistime = acquire_time();
+		
 			rt_memset(ecu.broadcast_time, '\0', sizeof(ecu.broadcast_time));				//清空本次广播时间
 
-			cur_time_hour = get_time(ecu.broadcast_time, broadcast_hour_minute);					//重新获取本次广播事件
+			cur_time_hour = get_hour();				
+			time_linux = get_time(ecu.broadcast_time, broadcast_hour_minute); //重新获取本次广播事件
 
 			printmsg(ECU_DBG_MAIN,"****************************************");
 			print2msg(ECU_DBG_MAIN,"ecu.broadcast_time",ecu.broadcast_time);
 			
-			ecu.count = getalldata(inverter);			//获取所有逆变器数据,返回当前有数据的逆变器数量
+			ecu.count = getalldata(inverter,time_linux);			//获取所有逆变器数据,返回当前有数据的逆变器数量
+			//save_time_to_database(inverter, time_linux);//YC1000补报：将补报时间戳保存到数据库
+
 
 			//保存最新一轮采集数据的时间
 			memcpy(ecu.had_data_broadcast_time,ecu.broadcast_time,16);

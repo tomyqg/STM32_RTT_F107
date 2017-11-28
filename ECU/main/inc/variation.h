@@ -32,17 +32,32 @@
 #define CONTROL_RECORD_INVERTER_LENGTH	41
 #define CONTROL_RECORD_OTHER						100
 
+typedef struct
+{
+    unsigned int deputy_model:4;				//副机型码（600里1是BB，2是B1）
+	unsigned int dataflag:1;					//1表示读到当前数据；0表示读取数据失败
+	unsigned int bindflag:1;					//逆变器绑定短地址标志，1表示绑定，0表示未绑定
+	unsigned int flag:1;						//id中的flag标志
+	unsigned int response_protection_paras_one:1;	//单台设置保护参数是否需要上报标志
+
+	unsigned int last_turn_on_off_flag:1;
+	unsigned int turn_on_off_changed_flag:1;		//0 1
+	unsigned int last_gfdi_flag:1;
+	unsigned int gfdi_changed_flag:1;				//0 1
+	unsigned int fill_up_data_flag:3;				//0 1 2 3			//逆变器是否有补数据功能的标志位，1为有功能,2为没有功能，默认0为没有响应或者第一次
+	unsigned int updating:1;						//0 1
+
+}status_t;
 
 typedef struct inverter_info_t{
 	char id[13];		//逆变器的ID
 	unsigned short shortaddr;			//Zigbee的短地址
-	//char tnuid[8];				//逆变器3501ID（逆变器ID的BCD编码）
-	int model;					//机型：1是YC250CN,2是YC250NA，3是YC500CN，4是YC500NA，5是YC900CN，6是YC900NA
-	int version;				//软件版本号
-	int dataflag;				//1表示读到当前数据；0表示读取数据失败
-	int signalstrength;			//逆变器Zigbee信号强度
-	int raduis;
-	int bindflag;				//逆变器绑定短地址标志，1表示绑定，0表示未绑定
+	
+	unsigned char model;					//机型：1是YC250CN,2是YC250NA，3是YC500CN，4是YC500NA，5是YC900CN，6是YC900NA
+	status_t inverterstatus;		//位域的各种状态
+	int version;				//软件版本号(见zigbee  zb_query_inverter_info函数)	
+	unsigned char signalstrength;			//逆变器Zigbee信号强度
+	unsigned char raduis;			
 	
 	float dv;					//直流电压
 	float di;					//直流电流
@@ -115,19 +130,12 @@ typedef struct inverter_info_t{
 	char status_send_flag;		//16项参数新加
 
 	char last_report_time[16];	//发送给EMA时的日期和时间，格式：年月日时分秒
-	int no_getdata_num;					//连续没有获取到逆变器数据的次数
-	int disconnect_times;				//一天中没有与逆变器通信上的所有次数 ZK
-	int zigbee_version;					//zigbee版本号ZK		//turned_off_rpt_flag
-	char processed_protect_flag;	//
+	unsigned char no_getdata_num;					//unsigned char(保持上限255)连续没有获取到逆变器数据的次数
+	unsigned char disconnect_times;				//unsigned char(保持上限255) 一天中没有与逆变器通信上的所有次数 ZK
+	unsigned char zigbee_version;					//unsigned char   zigbee版本号ZK		//turned_off_rpt_flag
 
-	char last_turn_on_off_flag;
-	char turn_on_off_changed_flag;
-	char last_gfdi_flag;
-	char gfdi_changed_flag;
-	int fill_up_data_flag;							//逆变器是否有补数据功能的标志位，1为有功能,2为没有功能，默认0为没有响应或者第一次
-	int updating;
 	int updating_time;
-	char flag;			//id中的flag标志
+	
 }inverter_info;
 
 typedef struct ecu_info_t{

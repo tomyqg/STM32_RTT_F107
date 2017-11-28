@@ -14,7 +14,7 @@
 /*****************************************************************************/
 /*  Function Declarations                                                    */
 /*****************************************************************************/
-int get_time(char *sendcommanddatetime, char *sendcommandtime);
+long get_time(char *sendcommanddatetime, char *sendcommandtime);
 void getdate(char date[10]);
 int acquire_time(void);
 int compareTime(int durabletime ,int thistime,int reportinterval);

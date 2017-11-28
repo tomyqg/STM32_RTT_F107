@@ -320,13 +320,11 @@ void Phone_RegisterID(unsigned char * ID,int Data_Len,const char *recvbuffer) 		
 			rt_memset(curinverter->status, '\0', sizeof(curinverter->status));		//清空逆变器状态
 			rt_memset(curinverter->statusb, '\0', sizeof(curinverter->statusb));		//B路清空逆变器状态
 
-			curinverter->dataflag = 0;		//上一轮有数据的标志置位
+			curinverter->inverterstatus.dataflag = 0;		//上一轮有数据的标志置位
 			curinverter->no_getdata_num=0;	//ZK,清空连续获取不到的次数
 			curinverter->disconnect_times=0;		//没有与逆变器通信上的次数清0, ZK
-			curinverter->signalstrength=0;			//信号强度初始化为0
 
-			curinverter->updating=0;
-			curinverter->raduis=0;
+			curinverter->inverterstatus.updating=0;
 		}
 		
 		get_id_from_file(inverter);

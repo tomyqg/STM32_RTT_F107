@@ -25,6 +25,7 @@
 extern ecu_info ecu;
 int caltype;		//¼ÆËã·½Ê½£¬NA°æºÍ·ÇNA°æµÄÇø±ğ
 extern float energy;
+extern int ecu_type;
 
 /*****************************************************************************/
 /*  Function Implementations                                                 */
@@ -47,296 +48,12 @@ float sqrt(float number) {
     return new_guess;
 }
 
-int resolvedata_250(char *data, struct inverter_info_t *inverter)
-{
-	int seconds;
 
-	inverter->it = (((data[0] & 0x0F) * 256 + data[1]) * 330 - 245760) / 4096;
-	if((0==data[2])&&(0==data[3]))								//·ÀÖ¹¿ÕÊı¾İ´«¹ıÀ´µ¼ÖÂÖ÷³ÌĞò³ö´í
-		inverter->gf = 0;
-	else
-		inverter->gf = 223750.0 / (data[2]*256 + data[3]);
-	inverter->curacctime = data[7]*256 + data[8];
-	inverter->dv = (((data[9] >> 4) & 0x0F) * 256 + ((data[9] << 4) & 0xF0) | ((data[10] >> 4) & 0x0F)) * 825 / 4096;
-	inverter->di = (((data[12] >> 4) & 0x0F) * 256 + ((data[12] << 4) & 0xF0) | ((data[13] >> 4) & 0x0F)) * 275 / 4096;
-	inverter->gv = (data[18]*256*256 + data[19]*256 + data[20]) / 26204.64;
-	inverter->curaccgen = (float)(((data[27]*256 + data[28])/1661900.0*220.0/1000.0*256.0*256.0*256.0 + (data[29]*256.0*256.0 + data[30]*256.0 + data[31])/1661900.0*220.0/1000.0)/3600.0);
-	inverter->reactive_power = (data[47] * 65536 + data[48] * 256 + data[49]) / 1712;
-	inverter->active_power = (data[56] * 65536 + data[57] * 256 + data[58]) / 3314;
-	inverter->cur_output_energy = (data[65] * 65536 + data[66] * 256 + data[67]) / 996952.0;
-
-
-	if((inverter->cur_output_energy >= inverter->pre_output_energy)&&(inverter->curacctime >= inverter->preacctime))
-	{
-		inverter->output_energy=inverter->cur_output_energy-inverter->pre_output_energy;
-	}
-	else
-	{
-		inverter->output_energy=inverter->cur_output_energy;
-	}
-	inverter->pre_output_energy=inverter->cur_output_energy;
-
-	if((inverter->curaccgen >= inverter->preaccgen)&&(inverter->curacctime >= inverter->preacctime))
-	{
-		seconds = inverter->curacctime - inverter->preacctime;
-		inverter->curgeneration = inverter->curaccgen - inverter->preaccgen;
-	}
-	else
-	{
-		seconds = inverter->curacctime;
-		inverter->curgeneration = inverter->curaccgen;
-	}
-
-	inverter->preacctime = inverter->curacctime;
-	inverter->preaccgen = inverter->curaccgen;
-
-
-
-	if(0==seconds)//·ÀÖ¹¿ÕÊı¾İ´«¹ıÀ´µ¼ÖÂÖ÷³ÌĞò³ö´í
-	{
-		inverter->op = 0;
-	}
-
-	if(inverter->curacctime > 600)		//·ÀÖ¹ÔçÉÏÆğÀ´¹¦ÂÊ±¬µã£¬ËùÒÔÔÚÆô¶¯10·ÖÖÓºó²Å²ÉÓÃÊ±¼ä²îµÄ¹¦ÂÊ¼ÆËãÄ£Ê½£¬ZK
-	{
-		inverter->op = inverter->curgeneration * 1000.0 * 3600.0 / seconds;
-	}
-	else
-	{
-		inverter->op = (int)(inverter->dv*inverter->di/100.0);
-	}
-
-	if(inverter->op>260)
-		inverter->op = (int)(inverter->dv*inverter->di/100.0);
-
-
-	inverter->status_web[0]=(data[6]&0x01)+0x30;			//AC Frequency exceeding Range 1bit
-	inverter->status_web[1]=((data[6]>>1)&0x01)+0x30;		//AC Frequency under Range 1bit
-	inverter->status_web[2]=((data[6]>>2)&0x01)+0x30;		//AC-A Voltage exceeding Range 1bit
-	inverter->status_web[3]=((data[6]>>3)&0x01)+0x30;		//AC-A Voltage under Range 1bit
-	inverter->status_web[4]='0';
-	inverter->status_web[5]='0';
-	inverter->status_web[6]='0';
-	inverter->status_web[7]='0';
-	inverter->status_web[8]=(data[5]&0x01)+0x30;			//DC-A Voltage Too High 1bit
-	inverter->status_web[9]=((data[5]>>1)&0x01)+0x30;		//DC-A Voltage Too Low 1bit
-	inverter->status_web[10]='0';
-	inverter->status_web[11]='0';
-	inverter->status_web[12]='0';
-	inverter->status_web[13]='0';
-	inverter->status_web[14]='0';
-	inverter->status_web[15]='0';
-	inverter->status_web[16]=(data[4]&0x01)+0x30;			//Over Critical Temperature 1bit
-	inverter->status_web[17]=((data[4]>>1)&0x01)+0x30;		//GFDI
-	inverter->status_web[18]=((data[4]>>2)&0x01)+0x30;		//Remote-shut
-	inverter->status_web[19]=((data[4]>>3)&0x01)+0x30;		//AC-Disconnect
-	inverter->status_web[20]='0';
-	inverter->status_web[21]='0';
-	inverter->status_web[22]='0';
-	inverter->status_web[23]='0';
-
-
-	inverter->status[0]=inverter->status_web[1];			//½»Á÷¶ËÆµÂÊÇ·Æµ
-	inverter->status[1]=inverter->status_web[0];			//½»Á÷¶ËÆµÂÊ¹ıÆµ
-	inverter->status[2]=inverter->status_web[2];			//½»Á÷¶ËµçÑ¹¹ıÑ¹
-	inverter->status[3]=inverter->status_web[3];			//½»Á÷¶ËµçÑ¹Ç·Ñ¹
-	inverter->status[4]=inverter->status_web[8];			//Ö±Á÷¶ËAÂ·¹ıÑ¹
-	inverter->status[5]=inverter->status_web[9];			//Ö±Á÷¶ËAÂ·Ç·Ñ¹
-	inverter->status[6]=inverter->status_web[16];			//ÎÂ¶È¹ı¸ß
-	inverter->status[7]=inverter->status_web[17];			//GFDI
-	inverter->status[8]=inverter->status_web[18];			//Ô¶³Ì¹Ø±Õ
-	inverter->status[9]=inverter->status_web[19];			//½»Á÷¹Ø±Õ
-	inverter->status[10] = '0';
-
-	if('1'==inverter->status_web[19])
-	{
-		if(1==inverter->model)
-			inverter->gf = 50.0;
-		if(2==inverter->model)
-			inverter->gf = 60.0;
-
-		inverter->gv=0;
-	}
-
-	if(inverter->last_gfdi_flag != inverter->status_web[17])
-		inverter->gfdi_changed_flag = 1;
-	else
-		inverter->gfdi_changed_flag = 0;
-	inverter->last_gfdi_flag = inverter->status_web[17];
-	if(inverter->last_turn_on_off_flag != inverter->status_web[18])
-		inverter->turn_on_off_changed_flag = 1;
-	else
-		inverter->turn_on_off_changed_flag = 0;
-	inverter->last_turn_on_off_flag = inverter->status_web[18];
-
-
-	check_yc200_yc250(inverter);			//ZK
-
-	strcpy(inverter->last_report_time , ecu.broadcast_time);
-
-	return 1;
-}
-
-
-int resolvedata_500(char *data, struct inverter_info_t *inverter)
-{
-	int  seconds;
-
-	inverter->it = (((data[0] & 0x0F) * 256 + data[1]) * 330 - 245760) / 4096;
-	if((0==data[2])&&(0==data[3]))								//·ÀÖ¹¿ÕÊı¾İ´«¹ıÀ´µ¼ÖÂÖ÷³ÌĞò³ö´í
-		inverter->gf = 0;
-	else
-	{
-		inverter->gf = 223750.0 / (data[2]*256 + data[3]);
-	}
-	inverter->curacctime = data[7]*256 + data[8];
-	inverter->dv = (((data[9] >> 4) & 0x0F) * 256 + ((data[9] << 4) & 0xF0) | ((data[10] >> 4) & 0x0F)) * 825 / 4096;
-	inverter->dvb = ((data[10] & 0x0F) * 256 + data[11]) * 825 / 4096;
-	inverter->di = (((data[12] >> 4) & 0x0F) * 256 + ((data[12] << 4) & 0xF0) | ((data[13] >> 4) & 0x0F)) * 275 / 4096;
-	inverter->dib = ((data[13] & 0x0F) * 256 + data[14]) * 275 / 4096;
-	inverter->gv = (data[18]*256*256 + data[19]*256 + data[20]) / 26204.64;
-	inverter->curaccgen = (float)(((data[27]*256 + data[28])/1661900.0*220.0/1000.0*256.0*256.0*256.0 + (data[29]*256.0*256.0 + data[30]*256.0 + data[31])/1642397.0*220.0/1000.0)/3600.0);
-	inverter->curaccgenb = (float)(((data[32]*256 + data[33])/1661900.0*220.0/1000.0*256.0*256.0*256.0 + (data[34]*256.0*256.0 + data[35]*256.0 + data[36])/1642397.0*220.0/1000.0)/3600.0);
-	inverter->reactive_power = (data[47] * 65536 + data[48] * 256 + data[49]) / 1712;
-	inverter->active_power = (data[56] * 65536 + data[57] * 256 + data[58]) / 3360;
-	inverter->cur_output_energy = (data[65] * 65536 + data[66] * 256 + data[67]) / 1009687.0;
-
-
-	if((inverter->cur_output_energy >= inverter->pre_output_energy)&&(inverter->curacctime >= inverter->preacctime))
-	{
-		inverter->output_energy=inverter->cur_output_energy-inverter->pre_output_energy;
-	}
-	else
-	{
-		inverter->output_energy=inverter->cur_output_energy;
-	}
-	inverter->pre_output_energy=inverter->cur_output_energy;
-
-	if((inverter->curaccgen >= inverter->preaccgen)&&(inverter->curaccgenb >= inverter->preaccgenb)&&(inverter->curacctime >= inverter->preacctime))
-	{
-		seconds = inverter->curacctime - inverter->preacctime;
-		inverter->curgeneration = inverter->curaccgen - inverter->preaccgen;
-		inverter->curgenerationb = inverter->curaccgenb - inverter->preaccgenb;
-	}
-	else
-	{
-		seconds = inverter->curacctime;
-		inverter->curgeneration = inverter->curaccgen;
-		inverter->curgenerationb = inverter->curaccgenb;
-	}
-
-	inverter->preacctime = inverter->curacctime;
-	inverter->preaccgen = inverter->curaccgen;
-	inverter->preaccgenb = inverter->curaccgenb;
-
-	if(0==seconds)//·ÀÖ¹¿ÕÊı¾İ´«¹ıÀ´µ¼ÖÂÖ÷³ÌĞò³ö´í
-	{
-		inverter->op = 0;
-		inverter->opb = 0;
-	}
-
-
-	if(inverter->curacctime > 600)		//·ÀÖ¹ÔçÉÏÆğÀ´¹¦ÂÊ±¬µã£¬ËùÒÔÔÚÆô¶¯10·ÖÖÓºó²Å²ÉÓÃÊ±¼ä²îµÄ¹¦ÂÊ¼ÆËãÄ£Ê½£¬ZK
-	{
-		inverter->op = inverter->curgeneration * 1000.0 * 3600.0 / seconds;
-		inverter->opb = inverter->curgenerationb * 1000.0 * 3600.0 / seconds;
-	}
-	else
-	{
-		inverter->op = (int)(inverter->dv*inverter->di/100.0);
-		inverter->opb = (int)(inverter->dvb*inverter->dib/100.0);
-	}
-
-
-	if(inverter->op>260)
-		inverter->op = (int)(inverter->dv*inverter->di/100.0);
-	if(inverter->opb>260)
-		inverter->opb = (int)(inverter->dvb*inverter->dib/100.0);
-
-
-	inverter->status_web[0]=(data[6]&0x01)+0x30;			//AC Frequency exceeding Range 1bit
-	inverter->status_web[1]=((data[6]>>1)&0x01)+0x30;		//AC Frequency under Range 1bit
-	inverter->status_web[2]=((data[6]>>2)&0x01)+0x30;		//AC-A Voltage exceeding Range 1bit
-	inverter->status_web[3]=((data[6]>>3)&0x01)+0x30;		//AC-A Voltage under Range 1bit
-	inverter->status_web[4]='0';
-	inverter->status_web[5]='0';
-	inverter->status_web[6]='0';
-	inverter->status_web[7]='0';
-	inverter->status_web[8]=(data[5]&0x01)+0x30;			//DC-A Voltage Too High 1bit
-	inverter->status_web[9]=((data[5]>>1)&0x01)+0x30;		//DC-A Voltage Too Low 1bit
-	inverter->status_web[10]=((data[5]>>2)&0x01)+0x30;		//DC-B Voltage Too High 1bit
-	inverter->status_web[11]=((data[5]>>3)&0x01)+0x30;		//DC-B Voltage Too Low 1bit
-	inverter->status_web[12]='0';
-	inverter->status_web[13]='0';
-	inverter->status_web[14]='0';
-	inverter->status_web[15]='0';
-	inverter->status_web[16]=(data[4]&0x01)+0x30;			//Over Critical Temperature 1bit
-	inverter->status_web[17]=((data[4]>>1)&0x01)+0x30;		//GFDI
-	inverter->status_web[18]=((data[4]>>2)&0x01)+0x30;		//Remote-shut
-	inverter->status_web[19]=((data[4]>>3)&0x01)+0x30;		//AC-Disconnect
-	inverter->status_web[20]='0';
-	inverter->status_web[21]='0';
-	inverter->status_web[22]='0';
-	inverter->status_web[23]='0';
-
-
-	inverter->status[0]=inverter->status_web[1];			//½»Á÷¶ËÆµÂÊÇ·Æµ
-	inverter->status[1]=inverter->status_web[0];			//½»Á÷¶ËÆµÂÊ¹ıÆµ
-	inverter->status[2]=inverter->status_web[2];			//½»Á÷¶ËµçÑ¹¹ıÑ¹
-	inverter->status[3]=inverter->status_web[3];			//½»Á÷¶ËµçÑ¹Ç·Ñ¹
-	inverter->status[4]=inverter->status_web[8];			//Ö±Á÷¶ËAÂ·¹ıÑ¹
-	inverter->status[5]=inverter->status_web[9];			//Ö±Á÷¶ËAÂ·Ç·Ñ¹
-	inverter->status[6]=inverter->status_web[16];			//ÎÂ¶È¹ı¸ß
-	inverter->status[7]=inverter->status_web[17];			//GFDI
-	inverter->status[8]=inverter->status_web[18];			//Ô¶³Ì¹Ø±Õ
-	inverter->status[9]=inverter->status_web[19];			//½»Á÷¹Ø±Õ
-	inverter->status[10] = '0';
-
-	inverter->statusb[0]=inverter->status_web[1];			//½»Á÷¶ËÆµÂÊÇ·Æµ
-	inverter->statusb[1]=inverter->status_web[0];			//½»Á÷¶ËÆµÂÊ¹ıÆµ
-	inverter->statusb[2]=inverter->status_web[2];			//½»Á÷¶ËµçÑ¹¹ıÑ¹
-	inverter->statusb[3]=inverter->status_web[3];			//½»Á÷¶ËµçÑ¹Ç·Ñ¹
-	inverter->statusb[4]=inverter->status_web[10];			//Ö±Á÷¶ËBÂ·¹ıÑ¹
-	inverter->statusb[5]=inverter->status_web[11];			//Ö±Á÷¶ËBÂ·Ç·Ñ¹
-	inverter->statusb[6]=inverter->status_web[16];			//ÎÂ¶È¹ı¸ß
-	inverter->statusb[7]=inverter->status_web[17];			//GFDI
-	inverter->statusb[8]=inverter->status_web[18];			//Ô¶³Ì¹Ø±Õ
-	inverter->statusb[9]=inverter->status_web[19];			//½»Á÷¹Ø±Õ
-	inverter->statusb[10] = '0';
-
-	if('1'==inverter->status_web[19])
-	{
-		if(3==inverter->model)
-			inverter->gf = 50.0;
-		if(4==inverter->model)
-			inverter->gf = 60.0;
-
-		inverter->gv=0;
-	}
-
-	if(inverter->last_gfdi_flag != inverter->status_web[17])
-		inverter->gfdi_changed_flag = 1;
-	else
-		inverter->gfdi_changed_flag = 0;
-	inverter->last_gfdi_flag = inverter->status_web[17];
-	if(inverter->last_turn_on_off_flag != inverter->status_web[18])
-		inverter->turn_on_off_changed_flag = 1;
-	else
-		inverter->turn_on_off_changed_flag = 0;
-	inverter->last_turn_on_off_flag = inverter->status_web[18];
-
-
-	check_yc500(inverter);				//ZK
-
-	strcpy(inverter->last_report_time , ecu.broadcast_time);
-
-	return 1;
-}
 
 int resolvedata_1000(char *data, struct inverter_info_t *inverter)
 {
-	int seconds;
-
+	int i,seconds;
+	char temp[2] = {'\0'};
 	inverter->it = (((data[0] & 0x0F) * 256 + data[1]) * 330 - 245760) / 4096;
 	if((0==data[2])&&(0==data[3]))//·ÀÖ¹¿ÕÊı¾İ´«¹ıÀ´µ¼ÖÂÖ÷³ÌĞò³ö´í
 		inverter->gf = 0;
@@ -443,7 +160,8 @@ int resolvedata_1000(char *data, struct inverter_info_t *inverter)
 	if(inverter->opd>260)
 		inverter->opd = (int)(inverter->dvd*inverter->did/100.0);
 
-
+	for(i=0;i<37;i++)
+			inverter->status_web[i] = 0x30;
 
 	inverter->status_web[0]=(data[6]&0x01)+0x30;			//AC Frequency exceeding Range 1bit
 	inverter->status_web[1]=((data[6]>>1)&0x01)+0x30;		//AC Frequency under Range 1bit
@@ -519,16 +237,22 @@ int resolvedata_1000(char *data, struct inverter_info_t *inverter)
 		inverter->gvc=0;
 	}
 
-	if(inverter->last_gfdi_flag != inverter->status_web[17])
-		inverter->gfdi_changed_flag = 1;
+	temp[0] = inverter->status_web[17];
+	temp[1] = '\0';
+	if(inverter->inverterstatus.last_gfdi_flag != atoi(temp))
+		inverter->inverterstatus.gfdi_changed_flag = 1;
 	else
-		inverter->gfdi_changed_flag = 0;
-	inverter->last_gfdi_flag = inverter->status_web[17];
-	if(inverter->last_turn_on_off_flag != inverter->status_web[18])
-		inverter->turn_on_off_changed_flag = 1;
+		inverter->inverterstatus.gfdi_changed_flag = 0;
+	inverter->inverterstatus.last_gfdi_flag = (inverter->status_web[17]=='1')?1:0;
+	
+	temp[0] = inverter->status_web[18];
+	temp[1] = '\0';
+	if(inverter->inverterstatus.last_turn_on_off_flag != atoi(temp))
+		inverter->inverterstatus.turn_on_off_changed_flag = 1;
 	else
-		inverter->turn_on_off_changed_flag = 0;
-	inverter->last_turn_on_off_flag = inverter->status_web[18];
+		inverter->inverterstatus.turn_on_off_changed_flag = 0;
+	
+	inverter->inverterstatus.last_turn_on_off_flag = (inverter->status_web[18]=='1')?1:0;
 
 
 	check_yc1000(inverter);				//ZK
@@ -546,6 +270,7 @@ int resolvedata_600(char *data, struct inverter_info_t *inverter)
 	int i, seconds=0;
 	float factor1 = 0;
 	float factor2 = 0;
+	char temp[2] = {'\0'};
 	if(data[37]==0x1F)
 	{
 		factor1 = 1;
@@ -642,192 +367,6 @@ int resolvedata_600(char *data, struct inverter_info_t *inverter)
 	printf("prtm=%d\n",inverter->preacctime);
 #endif
 #endif
-	for(i=0;i<25;i++)
-		inverter->status_web[i] = 0x30;
-	inverter->status_web[0]=((data[25]>>6)&0x01)+0x30;		//AC Frequency exceeding Range 1bit"½»Á÷ÆµÂÊÌ«¸ß"
-	inverter->status_web[1]=((data[25]>>7)&0x01)+0x30;			//AC Frequency under Range 1bit"½»Á÷ÆµÂÊÌ«µÍ";
-	inverter->status_web[2]='0';//((data[25]>>5)&0x01)+0x30;		//AC-A Voltage exceeding Range 1bit"AÂ·½»Á÷µçÑ¹Ì«¸ß
-	inverter->status_web[3]='0';//((data[25]>>4)&0x01)+0x30;		//AC-A Voltage under Range 1bit"AÂ·½»Á÷µçÑ¹Ì«µÍ
-	inverter->status_web[4]='0';//((data[25]>>5)&0x01)+0x30;		//BÂ·½»Á÷µçÑ¹Ì«¸ß
-	inverter->status_web[5]='0';//((data[25]>>4)&0x01)+0x30;		//BÂ·½»Á÷µçÑ¹Ì«µÍ"
-	inverter->status_web[6]='0';//((data[25]>>5)&0x01)+0x30;		//"CÂ·½»Á÷µçÑ¹Ì«¸ß"
-	inverter->status_web[7]='0';//((data[25]>>4)&0x01)+0x30;		//"CÂ·½»Á÷µçÑ¹Ì«µÍ"
-
-	inverter->status_web[8]=((data[25]>>1)&0x01)+0x30;			//DC-A Voltage Too High 1bitAÂ·Ö±Á÷µçÑ¹Ì«¸ß
-	inverter->status_web[9]=((data[26]>>7)&0x01)+0x30;		//DC-A Voltage Too Low 1bitAÂ·Ö±Á÷µçÑ¹Ì«µÍ
-	inverter->status_web[10]=((data[26]>>6)&0x01)+0x30;		//DC-B Voltage Too High 1bitBÂ·Ö±Á÷µçÑ¹Ì«¸ß
-	inverter->status_web[11]=((data[26]>>5)&0x01)+0x30;		//DC-B Voltage Too Low 1bitBÂ·Ö±Á÷µçÑ¹Ì«µÍ
-//	inverter->status_web[12]=((data[24]>>4)&0x01)+0x30;		//
-//	inverter->status_web[13]=((data[24]>>5)&0x01)+0x30;		//
-//	inverter->status_web[14]=((data[24]>>6)&0x01)+0x30;		//
-//	inverter->status_web[15]=data[48]+0x30;				//gfdi×´Ì¬
-	inverter->status_web[16]=((data[25])&0x01)+0x30;			//Over Critical Temperature 1bit³¬³öÎÂ¶È·¶Î§
-	inverter->status_web[17]=((data[26]>>4)&0x01)+0x30;		//GFDI"GFDIËø×¡"
-	inverter->status_web[18]=((data[26]>>3)&0x01)+0x30;		//Remote-shut"Ô¶³Ì¹Ø±Õ"
-	inverter->status_web[19]=((data[26])&0x01)+0x30;		//AC-Disconnect"½»Á÷¶Ï¿ª
-	inverter->status_web[21]=((data[25]>>3)&0x01)+0x30;		//"Ö÷¶¯¹Âµº±£»¤
-	inverter->status_web[22]=((data[25]>>2)&0x01)+0x30;		//"CP±£»¤
-	inverter->status_web[23]=((data[25]>>5)&0x01)+0x30;		//½»Á÷µçÑ¹Ì«¸ß
-	inverter->status_web[24]=((data[25]>>4)&0x01)+0x30;		//½»Á÷µçÑ¹Ì«µÍ
-
-
-	inverter->status[0]=inverter->status_web[1];			//½»Á÷¶ËÆµÂÊÇ·Æµ
-	inverter->status[1]=inverter->status_web[0];			//½»Á÷¶ËÆµÂÊ¹ıÆµ
-	inverter->status[2]=inverter->status_web[2];			//½»Á÷¶ËµçÑ¹¹ıÑ¹
-	inverter->status[3]=inverter->status_web[3];			//½»Á÷¶ËµçÑ¹Ç·Ñ¹
-	inverter->status[4]=inverter->status_web[8];			//Ö±Á÷¶ËAÂ·¹ıÑ¹
-	inverter->status[5]=inverter->status_web[9];			//Ö±Á÷¶ËAÂ·Ç·Ñ¹
-	inverter->status[6]=inverter->status_web[16];			//ÎÂ¶È¹ı¸ß
-	inverter->status[7]=inverter->status_web[17];			//GFDI
-	inverter->status[8]=inverter->status_web[18];			//Ô¶³Ì¹Ø±Õ
-	inverter->status[9]=inverter->status_web[19];			//½»Á÷¹Ø±Õ
-	inverter->status[10] = '0';
-
-	inverter->statusb[0]=inverter->status_web[1];			//½»Á÷¶ËÆµÂÊÇ·Æµ
-	inverter->statusb[1]=inverter->status_web[0];			//½»Á÷¶ËÆµÂÊ¹ıÆµ
-	inverter->statusb[2]=inverter->status_web[2];			//½»Á÷¶ËµçÑ¹¹ıÑ¹
-	inverter->statusb[3]=inverter->status_web[3];			//½»Á÷¶ËµçÑ¹Ç·Ñ¹
-	inverter->statusb[4]=inverter->status_web[10];			//Ö±Á÷¶ËBÂ·¹ıÑ¹
-	inverter->statusb[5]=inverter->status_web[11];			//Ö±Á÷¶ËBÂ·Ç·Ñ¹
-	inverter->statusb[6]=inverter->status_web[16];			//ÎÂ¶È¹ı¸ß
-	inverter->statusb[7]=inverter->status_web[17];		//GFDI
-	inverter->statusb[8]=inverter->status_web[18];			//Ô¶³Ì¹Ø±Õ
-	inverter->statusb[9]=inverter->status_web[19];			//½»Á÷¹Ø±Õ
-	inverter->statusb[10] = '0';
-
-	if('1'==inverter->status_web[17])
-	{
-		if(3==inverter->model)
-			inverter->gf = 50.0;
-		if(4==inverter->model)
-			inverter->gf = 60.0;
-
-		inverter->gv=0;
-	}
-
-	if(inverter->last_gfdi_flag != inverter->status_web[17])
-		inverter->gfdi_changed_flag = 1;
-	else
-		inverter->gfdi_changed_flag = 0;
-	inverter->last_gfdi_flag = inverter->status_web[17];
-	if(inverter->last_turn_on_off_flag != inverter->status_web[18])
-		inverter->turn_on_off_changed_flag = 1;
-	else
-		inverter->turn_on_off_changed_flag = 0;
-	inverter->last_turn_on_off_flag = inverter->status_web[18];
-
-
-	check_yc500(inverter);				//ZK
-
-	yc600_status(inverter);
-
-	strcpy(inverter->last_report_time , ecu.broadcast_time);
-
-	return 1;
-
-}
-
-int resolvedata_600_new(char *data, struct inverter_info_t *inverter)
-{
-
-
-	int i, seconds=0;
-	float factor1 = 0;
-	float factor2 = 0;
-	if(data[37]==0x1F)
-	{
-		factor1 = 1;
-		factor2 = 0;
-	}
-	else if((data[37]>=11)&&(data[37]<=20))
-	{
-		factor1 = (data[37]-11)/10.0;
-		factor2 = sqrt(1-(factor1*factor1));
-	}
-	else if((data[37]>0)&&(data[37]<11))
-	{
-		factor2 = (data[37]-1)/10.0;
-		factor1 = sqrt(1-(factor2*factor2));
-	}
-	inverter->it = ((data[0]*256+data[1])*3300/4092-757)/2.85;
-	if((0==data[2])&&(0==data[3])&&(0==data[4]))								//·ÀÖ¹¿ÕÊı¾İ´«¹ıÀ´µ¼ÖÂÖ÷³ÌĞò³ö´í
-		inverter->gf = 0;
-	else
-	{
-		inverter->gf =50000000.0/(data[2]*256*256+data[3]*256+data[4]);
-	}
-	inverter->curacctime = data[7]*256 + data[8];
-
-
-	inverter->dv = ((data[16] & 0x0F) * 256 + data[17]) * 82.5 / 4096.0;
-	inverter->dvb = ((data[13] & 0x0F) * 256 + data[14]) * 82.5 / 4096.0;
-	inverter->di = ((data[15]<<4) + (data[16] & 0xF0)>>4) * 27.5 / 4096.0;
-	inverter->dib = ((data[12]<<4) + (data[13] & 0xF0)>>4) * 27.5 / 4096.0;
-	inverter->gv = (data[18]*256+data[19])/1.3277;
-	inverter->curaccgen = ((data[27]*256*10.095)*220+(data[28]*10.095)*220+(data[29]*256*256+data[30]*256+data[31])/1661900.0*220.0)/3600.0/1000.0;
-	//inverter->curaccgen = (data[27]*256*10.095)*220+(data[28]*10.095)+(data[29]/1661900*220*256*256)+(data[30]/1661900*220*256)+(data[31]/1661900*220);
-
-	inverter->curaccgenb = ((data[32]*256*10.095)*220+(data[33]*10.095)*220+(data[34]*256*256+data[35]*256+data[36])/1661900.0*220.0)/3600.0/1000.0;
-	inverter->reactive_power = (factor2)*0.94*(inverter->dv*inverter->di+inverter->dvb*inverter->dib);
-	inverter->active_power = (factor1)*0.94*(inverter->dv*inverter->di+inverter->dvb*inverter->dib);
-	inverter->cur_output_energy = (inverter->curaccgen+inverter->curaccgenb)*0.94*data[37];
-
-
-	if((inverter->cur_output_energy >= inverter->pre_output_energy)&&(inverter->curacctime >= inverter->preacctime))
-	{
-		inverter->output_energy=inverter->cur_output_energy-inverter->pre_output_energy;
-	}
-	else
-	{
-		inverter->output_energy=inverter->cur_output_energy;
-	}
-	inverter->pre_output_energy=inverter->cur_output_energy;
-
-	if((inverter->curaccgen >= inverter->preaccgen)&&(inverter->curaccgenb >= inverter->preaccgenb)&&(inverter->curacctime >= inverter->preacctime))
-	{	
-		seconds = inverter->curacctime - inverter->preacctime;
-		inverter->curgeneration = inverter->curaccgen - inverter->preaccgen;
-		inverter->curgenerationb = inverter->curaccgenb - inverter->preaccgenb;
-	}
-	else
-	{
-		seconds = inverter->curacctime;
-		inverter->curgeneration = inverter->curaccgen;
-		inverter->curgenerationb = inverter->curaccgenb;
-	}
-
-	inverter->preacctime = inverter->curacctime;
-	inverter->preaccgen = inverter->curaccgen;
-	inverter->preaccgenb = inverter->curaccgenb;
-
-	if(0==seconds)//·ÀÖ¹¿ÕÊı¾İ´«¹ıÀ´µ¼ÖÂÖ÷³ÌĞò³ö´í
-	{
-		inverter->op = 0;
-		inverter->opb = 0;
-	}
-
-
-	if(inverter->curacctime > 600)		//·ÀÖ¹ÔçÉÏÆğÀ´¹¦ÂÊ±¬µã£¬ËùÒÔÔÚÆô¶¯10·ÖÖÓºó²Å²ÉÓÃÊ±¼ä²îµÄ¹¦ÂÊ¼ÆËãÄ£Ê½£¬ZK
-	{
-		inverter->op = inverter->curgeneration * 1000.0 * 3600.0 / seconds;
-		inverter->opb = inverter->curgenerationb * 1000.0 * 3600.0 / seconds;
-	}
-	else
-	{
-		inverter->op = (int)(inverter->dv*inverter->di);
-		inverter->opb = (int)(inverter->dvb*inverter->dib);
-	}
-
-
-	if(inverter->op>360)
-		inverter->op = (int)(inverter->dv*inverter->di);
-	if(inverter->opb>360)
-		inverter->opb = (int)(inverter->dvb*inverter->dib);
-
-	printf("tm=%d dv=%f  di=%f  op=%d  gv=%d curaccgen=%f reactive_power=%f active_power=%f cur_output_energy=%f\n",inverter->curacctime,inverter->dv,inverter->di,inverter->op,inverter->gv,inverter->curaccgen,inverter->reactive_power,inverter->active_power,inverter->cur_output_energy);
-	printf("sm=%d dvb=%f dib=%f opb=%d gv=%d curaccgenb=%f reactive_power=%f active_power=%f cur_output_energy=%f\n",seconds,inverter->dvb,inverter->dib,inverter->opb,inverter->gv,inverter->curaccgenb,inverter->reactive_power,inverter->active_power,inverter->cur_output_energy);
-	printf("prtm=%d\n",inverter->preacctime);
-
 	for(i=0;i<37;i++)
 		inverter->status_web[i] = 0x30;
 	inverter->status_web[0]=((data[25]>>6)&0x01)+0x30;		//AC Frequency exceeding Range 1bit"½»Á÷ÆµÂÊÌ«¸ß"
@@ -856,19 +395,6 @@ int resolvedata_600_new(char *data, struct inverter_info_t *inverter)
 	inverter->status_web[23]=((data[25]>>5)&0x01)+0x30;		//½»Á÷µçÑ¹Ì«¸ß
 	inverter->status_web[24]=((data[25]>>4)&0x01)+0x30;		//½»Á÷µçÑ¹Ì«µÍ
 
-	inverter->status_web[25]=((data[24]>>2)&0x01)+0x30;		//Ê®·ÖÖÓÆ½¾ù±£»¤
-	inverter->status_web[26]=((data[24]>>1)&0x01)+0x30;		//Ä¸ÏßÇ·Ñ¹±£»¤
-	inverter->status_web[27]=((data[24])&0x01)+0x30;		//Ä¸Ïß¹ıÑ¹±£»¤
-	inverter->status_web[28]=((data[26]>>1)&0x01)+0x30;		//¼ÌµçÆ÷¹ÊÕÏ±£»¤
-	inverter->status_web[29]='0';							//Ô¤Áô
-	inverter->status_web[30]='0';
-	inverter->status_web[31]='0';
-	inverter->status_web[32]='0';
-	inverter->status_web[33]='0';
-	inverter->status_web[34]='0';
-	inverter->status_web[35]='0';
-	inverter->status_web[36]='0';
-
 
 	inverter->status[0]=inverter->status_web[1];			//½»Á÷¶ËÆµÂÊÇ·Æµ
 	inverter->status[1]=inverter->status_web[0];			//½»Á÷¶ËÆµÂÊ¹ıÆµ
@@ -894,26 +420,250 @@ int resolvedata_600_new(char *data, struct inverter_info_t *inverter)
 	inverter->statusb[9]=inverter->status_web[19];			//½»Á÷¹Ø±Õ
 	inverter->statusb[10] = '0';
 
-	if('1'==inverter->status_web[17])
+	if('1'==inverter->status_web[19])
 	{
 		if(3==inverter->model)
 			inverter->gf = 50.0;
 		if(4==inverter->model)
 			inverter->gf = 60.0;
+		if(7==inverter->model)
+		{
+			if(ecu_type==1)
+				inverter->gf = 50;
+			else
+				inverter->gf = 60;
+		}
+	
+		inverter->gv=0;
+	}
+
+	temp[0] = inverter->status_web[17];
+	temp[1] = '\0';
+	if(inverter->inverterstatus.last_gfdi_flag != atoi(temp))
+		inverter->inverterstatus.gfdi_changed_flag = 1;
+	else
+		inverter->inverterstatus.gfdi_changed_flag = 0;
+	inverter->inverterstatus.last_gfdi_flag = (inverter->status_web[17]=='1')?1:0;
+	
+	temp[0] = inverter->status_web[18];
+	temp[1] = '\0';
+	if(inverter->inverterstatus.last_turn_on_off_flag != atoi(temp))
+		inverter->inverterstatus.turn_on_off_changed_flag = 1;
+	else
+		inverter->inverterstatus.turn_on_off_changed_flag = 0;
+	
+	inverter->inverterstatus.last_turn_on_off_flag = (inverter->status_web[18]=='1')?1:0;
+
+
+	check_yc500(inverter);				//ZK
+
+	yc600_status(inverter);
+
+	strcpy(inverter->last_report_time , ecu.broadcast_time);
+
+	return 1;
+
+}
+
+int resolvedata_600_new(char *data, struct inverter_info_t *inverter)
+{
+	char temp[2] = {'\0'};
+	int i, seconds=0;
+	float factor1 = 0;
+	float factor2 = 0;
+	if(data[37]==0x1F)
+	{
+		factor1 = 1;
+		factor2 = 0;
+	}
+	else if((data[37]>=11)&&(data[37]<=20))
+	{
+		factor1 = (data[37]-11)/10.0;
+		factor2 = sqrt(1-(factor1*factor1));
+	}
+	else if((data[37]>0)&&(data[37]<11))
+	{
+		factor2 = (data[37]-1)/10.0;
+		factor1 = sqrt(1-(factor2*factor2));
+	}
+	inverter->it = ((data[0]*256+data[1])*3300/4092-757)/2.85;
+	if((0==data[2])&&(0==data[3])&&(0==data[4]))								//é˜²æ­¢ç©ºæ•°æ®ä¼ è¿‡æ¥å¯¼è‡´ä¸»ç¨‹åºå‡ºé”?
+		inverter->gf = 0;
+	else
+	{
+		inverter->gf =50000000.0/(data[2]*256*256+data[3]*256+data[4]);
+	}
+	inverter->curacctime = data[7]*256 + data[8];
+
+
+	inverter->dvb = ((data[17]<<4) + (data[16] & 0xF0)) * 82.5 / 4096.0;
+	inverter->dv = ((data[14]<<4) + (data[13] & 0xF0)) * 82.5 / 4096.0;
+	inverter->dib = ((data[16] & 0x0F) * 256 + data[15]) * 27.5 / 4096.0;
+	inverter->di = ((data[13] & 0x0F) * 256 + data[12]) * 27.5 / 4096.0;
+	inverter->gv = (data[18]*256+data[19])/1.33;
+	inverter->curaccgenb = ((data[27]*256*10.095)*220+(data[28]*10.095)*220+(data[29]*256*256+data[30]*256+data[31])/1661900.0*220.0)/3600.0/1000.0;
+	//inverter->curaccgen = (data[27]*256*10.095)*220+(data[28]*10.095)+(data[29]/1661900*220*256*256)+(data[30]/1661900*220*256)+(data[31]/1661900*220);
+
+	inverter->curaccgen = ((data[32]*256*10.095)*220+(data[33]*10.095)*220+(data[34]*256*256+data[35]*256+data[36])/1661900.0*220.0)/3600.0/1000.0;
+	inverter->reactive_power = (factor2)*0.94*(inverter->dv*inverter->di+inverter->dvb*inverter->dib);
+	inverter->active_power = (factor1)*0.94*(inverter->dv*inverter->di+inverter->dvb*inverter->dib);
+	inverter->cur_output_energy = (inverter->curaccgen+inverter->curaccgenb)*0.94*data[37];
+
+
+	if((inverter->cur_output_energy >= inverter->pre_output_energy)&&(inverter->curacctime >= inverter->preacctime))
+	{
+		inverter->output_energy=inverter->cur_output_energy-inverter->pre_output_energy;
+	}
+	else
+	{
+		inverter->output_energy=inverter->cur_output_energy;
+	}
+	inverter->pre_output_energy=inverter->cur_output_energy;
+
+	if((inverter->curaccgen >= inverter->preaccgen)&&(inverter->curaccgenb >= inverter->preaccgenb)&&(inverter->curacctime >= inverter->preacctime))
+	{
+		seconds = inverter->curacctime - inverter->preacctime;
+		inverter->curgeneration = inverter->curaccgen - inverter->preaccgen;
+		inverter->curgenerationb = inverter->curaccgenb - inverter->preaccgenb;
+	}
+	else
+	{
+		seconds = inverter->curacctime;
+		inverter->curgeneration = inverter->curaccgen;
+		inverter->curgenerationb = inverter->curaccgenb;
+	}
+
+	inverter->preacctime = inverter->curacctime;
+	inverter->preaccgen = inverter->curaccgen;
+	inverter->preaccgenb = inverter->curaccgenb;
+
+	if(0==seconds)//é˜²æ­¢ç©ºæ•°æ®ä¼ è¿‡æ¥å¯¼è‡´ä¸»ç¨‹åºå‡ºé”?
+	{
+		inverter->op = 0;
+		inverter->opb = 0;
+	}
+
+
+	if(inverter->curacctime > 600)		//é˜²æ­¢æ—©ä¸Šèµ·æ¥åŠŸç‡çˆ†ç‚¹ï¼Œæ‰€ä»¥åœ¨å¯åŠ¨10åˆ†é’Ÿåæ‰é‡‡ç”¨æ—¶é—´å·®çš„åŠŸç‡è®¡ç®—æ¨¡å¼ï¼ŒZK
+	{
+		inverter->op = inverter->curgeneration * 1000.0 * 3600.0 / seconds;
+		inverter->opb = inverter->curgenerationb * 1000.0 * 3600.0 / seconds;
+	}
+	else
+	{
+		inverter->op = (int)(inverter->dv*inverter->di);
+		inverter->opb = (int)(inverter->dvb*inverter->dib);
+	}
+
+
+	if(inverter->op>360)
+		inverter->op = (int)(inverter->dv*inverter->di);
+	if(inverter->opb>360)
+		inverter->opb = (int)(inverter->dvb*inverter->dib);
+
+	printf("tm=%d dv=%f  di=%f  op=%d  gv=%d curaccgen=%f reactive_power=%f active_power=%f cur_output_energy=%f\n",inverter->curacctime,inverter->dv,inverter->di,inverter->op,inverter->gv,inverter->curaccgen,inverter->reactive_power,inverter->active_power,inverter->cur_output_energy);
+	printf("sm=%d dvb=%f dib=%f opb=%d gv=%d curaccgenb=%f reactive_power=%f active_power=%f cur_output_energy=%f\n",seconds,inverter->dvb,inverter->dib,inverter->opb,inverter->gv,inverter->curaccgenb,inverter->reactive_power,inverter->active_power,inverter->cur_output_energy);
+	printf("prtm=%d\n",inverter->preacctime);
+
+	for(i=0;i<37;i++)
+		inverter->status_web[i] = 0x30;
+	inverter->status_web[0]=((data[25]>>6)&0x01)+0x30;		//AC Frequency exceeding Range 1bit"äº¤æµé¢‘ç‡å¤ªé«˜"
+	inverter->status_web[1]=((data[25]>>7)&0x01)+0x30;			//AC Frequency under Range 1bit"äº¤æµé¢‘ç‡å¤ªä½";
+	inverter->status_web[2]='0';//((data[25]>>5)&0x01)+0x30;		//AC-A Voltage exceeding Range 1bit"Aè·¯äº¤æµç”µå‹å¤ªé«?
+	inverter->status_web[3]='0';//((data[25]>>4)&0x01)+0x30;		//AC-A Voltage under Range 1bit"Aè·¯äº¤æµç”µå‹å¤ªä½?
+	inverter->status_web[4]='0';//((data[25]>>5)&0x01)+0x30;		//Bè·¯äº¤æµç”µå‹å¤ªé«?
+	inverter->status_web[5]='0';//((data[25]>>4)&0x01)+0x30;		//Bè·¯äº¤æµç”µå‹å¤ªä½?
+	inverter->status_web[6]='0';//((data[25]>>5)&0x01)+0x30;		//"Cè·¯äº¤æµç”µå‹å¤ªé«?
+	inverter->status_web[7]='0';//((data[25]>>4)&0x01)+0x30;		//"Cè·¯äº¤æµç”µå‹å¤ªä½?
+
+	inverter->status_web[8]=((data[25]>>1)&0x01)+0x30;			//DC-A Voltage Too High 1bitAè·¯ç›´æµç”µå‹å¤ªé«?
+	inverter->status_web[9]=((data[26]>>7)&0x01)+0x30;		//DC-A Voltage Too Low 1bitAè·¯ç›´æµç”µå‹å¤ªä½?
+	inverter->status_web[10]=((data[26]>>6)&0x01)+0x30;		//DC-B Voltage Too High 1bitBè·¯ç›´æµç”µå‹å¤ªé«?
+	inverter->status_web[11]=((data[26]>>5)&0x01)+0x30;		//DC-B Voltage Too Low 1bitBè·¯ç›´æµç”µå‹å¤ªä½?
+//	inverter->status_web[12]=((data[24]>>4)&0x01)+0x30;		//
+//	inverter->status_web[13]=((data[24]>>5)&0x01)+0x30;		//
+//	inverter->status_web[14]=((data[24]>>6)&0x01)+0x30;		//
+//	inverter->status_web[15]=data[48]+0x30;				//gfdiçŠ¶æ€?
+	inverter->status_web[16]=((data[25])&0x01)+0x30;			//Over Critical Temperature 1bitè¶…å‡ºæ¸©åº¦èŒƒå›´
+	inverter->status_web[17]=((data[26]>>4)&0x01)+0x30;		//GFDI"GFDIé”ä½"
+	inverter->status_web[18]=((data[26]>>3)&0x01)+0x30;		//Remote-shut"è¿œç¨‹å…³é—­"
+	inverter->status_web[19]=((data[26])&0x01)+0x30;		//AC-Disconnect"äº¤æµæ–­å¼€
+	inverter->status_web[21]=((data[25]>>3)&0x01)+0x30;		//"ä¸»åŠ¨å­¤å²›ä¿æŠ¤
+	inverter->status_web[22]=((data[25]>>2)&0x01)+0x30;		//"CPä¿æŠ¤
+	inverter->status_web[23]=((data[25]>>5)&0x01)+0x30;		//äº¤æµç”µå‹å¤ªé«˜
+	inverter->status_web[24]=((data[25]>>4)&0x01)+0x30;		//äº¤æµç”µå‹å¤ªä½
+
+	inverter->status_web[25]=((data[24]>>2)&0x01)+0x30;		//ååˆ†é’Ÿå¹³å‡ä¿æŠ?
+	inverter->status_web[26]=((data[24]>>1)&0x01)+0x30;		//æ¯çº¿æ¬ å‹ä¿æŠ¤
+	inverter->status_web[27]=((data[24])&0x01)+0x30;		//æ¯çº¿è¿‡å‹ä¿æŠ¤
+	inverter->status_web[28]=((data[26]>>1)&0x01)+0x30;		//ç»§ç”µå™¨æ•…éšœä¿æŠ?
+	inverter->status_web[29]='0';							//é¢„ç•™
+	inverter->status_web[30]='0';
+	inverter->status_web[31]='0';
+	inverter->status_web[32]='0';
+	inverter->status_web[33]='0';
+	inverter->status_web[34]='0';
+	inverter->status_web[35]='0';
+	inverter->status_web[36]='0';
+
+
+	inverter->status[0]=inverter->status_web[1];			//äº¤æµç«¯é¢‘ç‡æ¬ é¢?
+	inverter->status[1]=inverter->status_web[0];			//äº¤æµç«¯é¢‘ç‡è¿‡é¢?
+	inverter->status[2]=inverter->status_web[23];			//äº¤æµç«¯ç”µå‹è¿‡å?
+	inverter->status[3]=inverter->status_web[24];			//äº¤æµç«¯ç”µå‹æ¬ å?
+	inverter->status[4]=inverter->status_web[8];			//ç›´æµç«¯Aè·¯è¿‡å?
+	inverter->status[5]=inverter->status_web[9];			//ç›´æµç«¯Aè·¯æ¬ å?
+	inverter->status[6]=inverter->status_web[16];			//æ¸©åº¦è¿‡é«˜
+	inverter->status[7]=inverter->status_web[17];			//GFDI
+	inverter->status[8]=inverter->status_web[18];			//è¿œç¨‹å…³é—­
+	inverter->status[9]=inverter->status_web[19];			//äº¤æµå…³é—­
+	inverter->status[10] = '0';
+
+	inverter->statusb[0]=inverter->status_web[1];			//äº¤æµç«¯é¢‘ç‡æ¬ é¢?
+	inverter->statusb[1]=inverter->status_web[0];			//äº¤æµç«¯é¢‘ç‡è¿‡é¢?
+	inverter->statusb[2]=inverter->status_web[23];			//äº¤æµç«¯ç”µå‹è¿‡å?
+	inverter->statusb[3]=inverter->status_web[24];			//äº¤æµç«¯ç”µå‹æ¬ å?
+	inverter->statusb[4]=inverter->status_web[10];			//ç›´æµç«¯Bè·¯è¿‡å?
+	inverter->statusb[5]=inverter->status_web[11];			//ç›´æµç«¯Bè·¯æ¬ å?
+	inverter->statusb[6]=inverter->status_web[16];			//æ¸©åº¦è¿‡é«˜
+	inverter->statusb[7]=inverter->status_web[17];		//GFDI
+	inverter->statusb[8]=inverter->status_web[18];			//è¿œç¨‹å…³é—­
+	inverter->statusb[9]=inverter->status_web[19];			//äº¤æµå…³é—­
+	inverter->statusb[10] = '0';
+
+	if('1'==inverter->status_web[19])
+	{
+		if(3==inverter->model)
+			inverter->gf = 50.0;
+		if(4==inverter->model)
+			inverter->gf = 60.0;
+		if(7==inverter->model)
+		{
+			if(ecu_type==1)
+				inverter->gf = 50;
+			else
+				inverter->gf = 60;
+		}
 
 		inverter->gv=0;
 	}
 
-	if(inverter->last_gfdi_flag != inverter->status_web[17])
-		inverter->gfdi_changed_flag = 1;
+	temp[0] = inverter->status_web[17];
+	temp[1] = '\0';
+	if(inverter->inverterstatus.last_gfdi_flag != atoi(temp))
+		inverter->inverterstatus.gfdi_changed_flag = 1;
 	else
-		inverter->gfdi_changed_flag = 0;
-	inverter->last_gfdi_flag = inverter->status_web[17];
-	if(inverter->last_turn_on_off_flag != inverter->status_web[18])
-		inverter->turn_on_off_changed_flag = 1;
+		inverter->inverterstatus.gfdi_changed_flag = 0;
+	inverter->inverterstatus.last_gfdi_flag = (inverter->status_web[17]=='1')?1:0;
+	
+	temp[0] = inverter->status_web[18];
+	temp[1] = '\0';
+	if(inverter->inverterstatus.last_turn_on_off_flag != atoi(temp))
+		inverter->inverterstatus.turn_on_off_changed_flag = 1;
 	else
-		inverter->turn_on_off_changed_flag = 0;
-	inverter->last_turn_on_off_flag = inverter->status_web[18];
+		inverter->inverterstatus.turn_on_off_changed_flag = 0;
+	
+	inverter->inverterstatus.last_turn_on_off_flag = (inverter->status_web[18]=='1')?1:0;
 
 
 	check_yc500(inverter);				//ZK
@@ -932,28 +682,27 @@ int yc600_status(struct inverter_info_t *inverter)
 	memset(inverter->status_ema, '\0', sizeof(inverter->status_ema));
 	inverter->status_send_flag=0;
 
-	if(('1' == inverter->status_web[0]) || ('1' == inverter->status_web[1]) || ('1' == inverter->status_web[2]) ||
-			('1' == inverter->status_web[3]) || ('1' == inverter->status_web[4]) || ('1' == inverter->status_web[5]) ||
-			('1' == inverter->status_web[6]) || ('1' == inverter->status_web[7]) || ('1' == inverter->status_web[16]) ||
-			('1' == inverter->status_web[17]) || ('1' == inverter->status_web[18])|| ('1' == inverter->status_web[19]) ||
-			('1' == inverter->status_web[21]) || ('1' == inverter->status_web[22]) || ('1' == inverter->status_web[25]) ||
-			('1' == inverter->status_web[26]) || ('1' == inverter->status_web[27])){
+	if(('1' == inverter->status_web[0]) || ('1' == inverter->status_web[1]) || ('1' == inverter->status_web[16]) ||
+			('1' == inverter->status_web[17]) || ('1' == inverter->status_web[18]) || ('1' == inverter->status_web[19]) ||
+			('1' == inverter->status_web[21]) || ('1' == inverter->status_web[22]) ||
+			('1' == inverter->status_web[23]) || ('1' == inverter->status_web[24]) || ('1' == inverter->status_web[25]) ||
+			('1' == inverter->status_web[26]) || ('1' == inverter->status_web[27]) || ('1' == inverter->status_web[28])){
 		strcat(inverter->status_ema, inverter->id);
-		strcat(inverter->status_ema, "06");
+		strcat(inverter->status_ema, "07");
 		if(('1' == inverter->status_web[0]) || ('1' == inverter->status_web[1]) ||  ('1' == inverter->status_web[19]) ||
 			('1' == inverter->status_web[21]) || ('1' == inverter->status_web[22]) || ('1' == inverter->status_web[23]) || ('1' == inverter->status_web[24]))
-			strcat(inverter->status_ema, "1");		//AC±£»¤
+			strcat(inverter->status_ema, "1");		//ACä¿æŠ¤
 		else
 			strcat(inverter->status_ema, "0");
-		if('1' == inverter->status_web[16])			//ÎÂ¶È±£»¤
+		if('1' == inverter->status_web[16])			//æ¸©åº¦ä¿æŠ¤
 			strcat(inverter->status_ema, "1");
 		else
-			strcat(inverter->status_ema, "0");		//×é¼ş½ÓµØ¹ÊÕÏ±£»¤
+			strcat(inverter->status_ema, "0");		//ç»„ä»¶æ¥åœ°æ•…éšœä¿æŠ¤
 		if(('1' == inverter->status_web[17])||('1' == inverter->status_web[28]))
 			strcat(inverter->status_ema, "1");
 		else
 			strcat(inverter->status_ema, "0");
-		if('1' == inverter->status_web[18])			//¿ØÖÆ×´Ì¬±£»¤
+		if('1' == inverter->status_web[18])			//æ§åˆ¶çŠ¶æ€ä¿æŠ?
 			strcat(inverter->status_ema, "1");
 		else
 			strcat(inverter->status_ema, "0");
@@ -989,6 +738,7 @@ int yc600_status(struct inverter_info_t *inverter)
 	return 0;
 }
 
+
 int yc1000_status(struct inverter_info_t *inverter)
 {
 	memset(inverter->status_ema, '\0', sizeof(inverter->status_ema));
@@ -1005,18 +755,18 @@ int yc1000_status(struct inverter_info_t *inverter)
 				('1' == inverter->status_web[3]) || ('1' == inverter->status_web[4]) || ('1' == inverter->status_web[5]) ||
 				('1' == inverter->status_web[6]) || ('1' == inverter->status_web[7]) || ('1' == inverter->status_web[19]) ||
 				('1' == inverter->status_web[21]) || ('1' == inverter->status_web[22]))
-			strcat(inverter->status_ema, "1");		//AC±£»¤
+			strcat(inverter->status_ema, "1");		//ACä¿æŠ¤
 		else
 			strcat(inverter->status_ema, "0");
-		if('1' == inverter->status_web[16])			//ÎÂ¶È±£»¤
+		if('1' == inverter->status_web[16])			//æ¸©åº¦ä¿æŠ¤
 			strcat(inverter->status_ema, "1");
 		else
-			strcat(inverter->status_ema, "0");		//×é¼ş½ÓµØ¹ÊÕÏ±£»¤
+			strcat(inverter->status_ema, "0");		//ç»„ä»¶æ¥åœ°æ•…éšœä¿æŠ¤
 		if('1' == inverter->status_web[17])
 			strcat(inverter->status_ema, "1");
 		else
 			strcat(inverter->status_ema, "0");
-		if('1' == inverter->status_web[18])			//¿ØÖÆ×´Ì¬±£»¤
+		if('1' == inverter->status_web[18])			//æ§åˆ¶çŠ¶æ€ä¿æŠ¤
 			strcat(inverter->status_ema, "1");
 		else
 			strcat(inverter->status_ema, "0");
@@ -1045,7 +795,4 @@ int yc1000_status(struct inverter_info_t *inverter)
 	}
 	return 0;
 }
-
-
-
 

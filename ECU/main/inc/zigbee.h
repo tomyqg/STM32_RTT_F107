@@ -69,7 +69,7 @@ int process_turn_on_off(inverter_info *firstinverter);
 int process_quick_boot(inverter_info *firstinverter);
 int process_ipp(inverter_info *firstinverter);
 int process_all(inverter_info *firstinverter);
-int getalldata(inverter_info *firstinverter);		//获取每个逆变器的数据
+int getalldata(inverter_info *firstinverter,int time_linux);		//获取每个逆变器的数据
 int get_inverter_shortaddress(inverter_info *firstinverter);		//获取没有数据的逆变器的短地址
 int bind_nodata_inverter(inverter_info *firstinverter);		//绑定没有数据的逆变器,并且获取短地址
 int zb_change_inverter_channel_one(char *inverter_id, int channel);

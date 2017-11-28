@@ -37,7 +37,13 @@ int write_gfdi_status(inverter_info *firstinverter)
 		//if('0' != inverter->flag)
 		//{
 			strcat(write_buff, inverter->id);
-			write_buff[strlen(write_buff)] = inverter->last_gfdi_flag;
+			if(inverter->inverterstatus.last_gfdi_flag == 0)
+			{
+				write_buff[strlen(write_buff)] = '0';
+			}else{
+				write_buff[strlen(write_buff)] = '1';
+			}
+			
 			strcat(write_buff, "END\n");
 		//}
 	}
@@ -64,7 +70,13 @@ int write_turn_on_off_status(inverter_info *firstinverter)
 		//if('0' != inverter->flag)
 		//{
 			strcat(write_buff, inverter->id);
-			write_buff[strlen(write_buff)] = inverter->last_turn_on_off_flag;
+			if(inverter->inverterstatus.last_turn_on_off_flag == 0)
+			{
+				write_buff[strlen(write_buff)] = '0';
+			}else{
+				write_buff[strlen(write_buff)] = '1';
+			}
+			
 			strcat(write_buff, "END\n");
 		//}
 	}
@@ -88,8 +100,8 @@ int read_gfdi_turn_on_off_status(inverter_info *firstinverter)
 
 	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->id)); i++, inverter++)
 	{
-		inverter->last_gfdi_flag = '0';
-		inverter->last_turn_on_off_flag = '0';
+		inverter->inverterstatus.last_gfdi_flag = 0;
+		inverter->inverterstatus.last_turn_on_off_flag = 0;
 	}
 
 	fp = fopen("/YUNENG/LASTGFDI.TXT", "r");
@@ -109,9 +121,9 @@ int read_gfdi_turn_on_off_status(inverter_info *firstinverter)
 					if(!strncmp(inverter->id, buff, 12))
 					{
 						if('1' == buff[12])
-							inverter->last_gfdi_flag = '1';
+							inverter->inverterstatus.last_gfdi_flag = 1;
 						else
-							inverter->last_gfdi_flag = '0';
+							inverter->inverterstatus.last_gfdi_flag = 0;
 						break;
 					}
 				}
@@ -124,7 +136,7 @@ int read_gfdi_turn_on_off_status(inverter_info *firstinverter)
 		inverter = firstinverter;
 		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->id)); i++, inverter++)
 		{
-			inverter->last_gfdi_flag = '0';
+			inverter->inverterstatus.last_gfdi_flag = 0;
 		}
 	}
 
@@ -146,9 +158,9 @@ int read_gfdi_turn_on_off_status(inverter_info *firstinverter)
 					if(!strncmp(inverter->id, buff, 12))
 					{
 						if('1' == buff[12])
-							inverter->last_turn_on_off_flag = '1';
+							inverter->inverterstatus.last_turn_on_off_flag = 1;
 						else
-							inverter->last_turn_on_off_flag = '0';
+							inverter->inverterstatus.last_turn_on_off_flag = 0;
 						break;
 					}
 				}
@@ -161,7 +173,7 @@ int read_gfdi_turn_on_off_status(inverter_info *firstinverter)
 		inverter = firstinverter;
 		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->id)); i++, inverter++)
 		{
-			inverter->last_turn_on_off_flag = '0';
+			inverter->inverterstatus.last_turn_on_off_flag = 0;
 		}
 	}
 
@@ -191,10 +203,15 @@ int save_gfdi_changed_result(inverter_info *firstinverter)
 
 	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->id)); i++, inverter++)
 	{
-		if(1 == inverter->gfdi_changed_flag)
+		if(1 == inverter->inverterstatus.gfdi_changed_flag)
 		{
 			strcat(gfdi_changed_result, inverter->id);
-			gfdi_changed_result[strlen(gfdi_changed_result)] = inverter->last_gfdi_flag;
+			if(inverter->inverterstatus.last_gfdi_flag == 0)
+			{
+				gfdi_changed_result[strlen(gfdi_changed_result)] = '0';
+			}else{
+				gfdi_changed_result[strlen(gfdi_changed_result)] = '1';
+			}
 			strcat(gfdi_changed_result, "END");
 			count++;
 		}
@@ -249,10 +266,16 @@ int save_turn_on_off_changed_result(inverter_info *firstinverter)
 
 	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->id)); i++, inverter++)
 	{
-		if(1 == inverter->turn_on_off_changed_flag)
+		if(1 == inverter->inverterstatus.turn_on_off_changed_flag)
 		{
 			strcat(turn_on_off_changed_result, inverter->id);
-			turn_on_off_changed_result[strlen(turn_on_off_changed_result)] = inverter->last_turn_on_off_flag;
+			if(inverter->inverterstatus.last_turn_on_off_flag == 0)
+			{
+				turn_on_off_changed_result[strlen(turn_on_off_changed_result)] = '0';
+			}else{
+				turn_on_off_changed_result[strlen(turn_on_off_changed_result)] = '1';
+			}
+			
 			strcat(turn_on_off_changed_result, "END");
 			count++;
 		}

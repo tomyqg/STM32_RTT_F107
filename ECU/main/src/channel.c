@@ -165,7 +165,7 @@ void changeChannelOfInverters(int oldChannel, int newChannel)
 	//获取逆变器ID
 	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++)			//有效逆变器轮训
 	{
-		curinverter->flag = 1;
+		curinverter->inverterstatus.flag = 1;
 			num++;
 	}
 
@@ -180,7 +180,7 @@ void changeChannelOfInverters(int oldChannel, int newChannel)
 			curinverter = inverter;
 			for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++)			//有效逆变器轮训
 			{
-				if(curinverter->flag == 1)
+				if(curinverter->inverterstatus.flag == 1)
 				{
 					rateOfProgress = 5+35*(i+1)/num;
 					zb_change_inverter_channel_one(curinverter->id, newChannel);
@@ -196,7 +196,7 @@ void changeChannelOfInverters(int oldChannel, int newChannel)
 				curinverter = inverter;
 				for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++)			//有效逆变器轮训
 				{
-					if(curinverter->flag == 1)
+					if(curinverter->inverterstatus.flag == 1)
 					{
 						zb_change_inverter_channel_one(curinverter->id, newChannel);
 					}	

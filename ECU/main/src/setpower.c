@@ -568,8 +568,12 @@ int process_max_power(inverter_info *firstinverter)
 				if(!strncmp(splitdata[0], curinverter->id, 12))
 				{
 					updatemaxflag(curinverter);
+					if(curinverter->model==0)		//读不到机型码不去设置
+							continue;
 					limitedpower = atoi(splitdata[1]);
 					limitedvalue = (limitedpower * 7395) >> 14;
+					if(curinverter->model==7)
+							limitedvalue = limitedvalue/4;
 					for(m=0; m<3; m++)
 					{
 						setlimitedpowerone(curinverter, limitedvalue);
@@ -580,6 +584,8 @@ int process_max_power(inverter_info *firstinverter)
 						if(1 == res)
 						{
 							limitedresult = (readpresetdata[5] << 14) / 7395;
+							if(curinverter->model==7)
+									limitedresult=limitedresult*4;
 							updatemaxpower(curinverter, limitedresult);
 							save_max_power_result_one(curinverter, limitedresult);
 							break;
@@ -625,6 +631,8 @@ int read_max_power(inverter_info *firstinverter)
 				if(1 == res)
 				{
 					limitedresult = (readpresetdata[5] << 14) / 7395;					//读取成功
+					if(curinverter->model==7)
+						limitedresult = limitedresult*4;
 					updatemaxpower(curinverter, limitedresult);
 					//updatemaxflag(curinverter);
 					save_max_power_result_one(curinverter, limitedresult);

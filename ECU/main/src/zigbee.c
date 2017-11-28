@@ -500,8 +500,7 @@ int zb_get_inverter_shortaddress_single(inverter_info *inverter)			//»ñÈ¡µ¥Ì¨Ö¸¶
 	if((11 == ret)&&(0xFF == data[2])&&(0==rt_strcmp(inverter->id,inverterid)))
 	{
 		inverter->shortaddr = data[0]*256 + data[1];
-		//updateID();
-//		update_inverter_addr(inverter->inverterid,inverter->shortaddr);
+		updateID();
 		return 1;
 	}
 	else
@@ -896,6 +895,18 @@ int zb_query_inverter_info(inverter_info *inverter)		//ÇëÇóÄæ±äÆ÷µÄ»úĞÍÂë
 			&& (0xFE == recvbuff[15])) {
 		inverter->model = recvbuff[4];
 		inverter->version = (recvbuff[5]*256 + recvbuff[6])*1000+(recvbuff[8]*256+recvbuff[9]);
+		/*
+		if(turn_on_flag==1)
+		{
+			if(recvbuff[7]==1)
+				inverter->inverterstatus.fill_up_data_flag=1;
+			else if(recvbuff[7]==0)
+				inverter->inverterstatus.fill_up_data_flag=2;
+			else
+				inverter->inverterstatus.fill_up_data_flag=3;
+			save_inverter_replacement_model(inverter->id,(inverter->inverterstatus.fill_up_data_flag%3));
+		}
+		*/
 		return 1;
 	}
 
@@ -930,29 +941,39 @@ int zb_query_data(inverter_info *inverter)		//ÇëÇóÄæ±äÆ÷ÊµÊ±Êı¾İ
 	if((88 == ret)&&(0xFB == data[0])&&(0xFB == data[1])&&(0xFE == data[86])&&(0xFE == data[87]))
 	{
 		inverter->no_getdata_num = 0;	//Ò»µ©½ÓÊÕµ½Êı¾İ¾ÍÇå0,ZK
-		inverter->dataflag = 1;	//½ÓÊÕµ½Êı¾İÖÃÎª1
-
+		inverter->inverterstatus.dataflag = 1;	//½ÓÊÕµ½Êı¾İÖÃÎª1
 		if(7==inverter->model)
-			resolvedata_600(&data[4], inverter);
-		else if(5==inverter->model)
+		{
+			if(0xBB == data[3])
+			{
+				resolvedata_600(&data[4], inverter);
+				inverter->inverterstatus.deputy_model = 1;
+			}
+			else if(0xB1 == data[3])
+			{
+				resolvedata_600_new(&data[4], inverter);
+				inverter->inverterstatus.deputy_model = 2;
+			}
+			else ;
+		}else if(5==inverter->model)
 			resolvedata_1000(&data[4], inverter);
 		else if(6==inverter->model)
 			resolvedata_1000(&data[4], inverter);
 		else
 			{;}
-		
+	
 		return 1;
 	}else if((68 == ret)&&(0xFB == data[0])&&(0xFB == data[1])&&(0xFE == data[86])&&(0xFE == data[87]))
 	{
 		inverter->no_getdata_num = 0;	//Ò»µ©½ÓÊÕµ½Êı¾İ¾ÍÇå0£¬ZK
-		inverter->dataflag = 1;	//½ÓÊÜµ½Êı¾İ¾ÍÖÃÎª1
+		inverter->inverterstatus.dataflag = 1;	//½ÓÊÜµ½Êı¾İ¾ÍÖÃÎª1
 
 		resolvedata_600_new(&data[4], inverter);
 		return 1;
 	}
 	else
 	{
-		inverter->dataflag = 0;		//Ã»ÓĞ½ÓÊÕµ½Êı¾İ¾ÍÖÃÎª0
+		inverter->inverterstatus.dataflag = 0;		//Ã»ÓĞ½ÓÊÕµ½Êı¾İ¾ÍÖÃÎª0
 		return -1;
 	}
 
@@ -1845,18 +1866,17 @@ int process_all(inverter_info *firstinverter)
 	return 0;
 }
 
-int getalldata(inverter_info *firstinverter)		//»ñÈ¡Ã¿¸öÄæ±äÆ÷µÄÊı¾İ
+int getalldata(inverter_info *firstinverter,int time_linux)		//»ñÈ¡Ã¿¸öÄæ±äÆ÷µÄÊı¾İ
 {
 	int i, j,dataflag_clear = 0;
 	inverter_info *curinverter = firstinverter;
 	int count=0, syspower=0;
 	float curenergy=0;
+	int out_flag = 0;	//Ìø³ö²éÑ¯±êÖ¾
 #if 0
 	char buff[50] = {'\0'};
 	int fd;
 #endif 
-	
-	int out_flag = 0;	//Ìø³ö²éÑ¯±êÖ¾
 
 	for(i=0;i<3;i++)
 	{
@@ -1865,6 +1885,7 @@ int getalldata(inverter_info *firstinverter)		//»ñÈ¡Ã¿¸öÄæ±äÆ÷µÄÊı¾İ
 		else
 			break;
 	}
+	//calibration_time_broadcast(firstinverter, time_linux); 	//YC1000²¹±¨£º¹ã²¥Ğ£×¼Ê±¼ä
 	for(j=0; j<5; j++)
 	{
 		out_flag = 0;
@@ -1874,7 +1895,7 @@ int getalldata(inverter_info *firstinverter)		//»ñÈ¡Ã¿¸öÄæ±äÆ÷µÄÊı¾İ
 		{
 			if(dataflag_clear == 0)
 			{
-				curinverter->dataflag = 0;		//Ã»ÓĞ½ÓÊÕµ½Êı¾İ¾ÍÖÃÎª0
+				curinverter->inverterstatus.dataflag = 0;		//Ã»ÓĞ½ÓÊÕµ½Êı¾İ¾ÍÖÃÎª0
 				curinverter->dv=0;
 				curinverter->di=0;
 				curinverter->op=0;
@@ -1895,20 +1916,20 @@ int getalldata(inverter_info *firstinverter)		//»ñÈ¡Ã¿¸öÄæ±äÆ÷µÄÊı¾İ
 				rt_memset(curinverter->statusb, '\0', sizeof(curinverter->statusb));
 			}
 			process_all(firstinverter);
-			if((0 == curinverter->dataflag) && (0 != curinverter->shortaddr))
+			if((0 == curinverter->inverterstatus.dataflag) && (0 != curinverter->shortaddr))
 			{
-				if(1 != curinverter->bindflag)
+				if(1 != curinverter->inverterstatus.bindflag)
 				{
 					if(1 == zb_turnoff_limited_rptid(curinverter->shortaddr,curinverter))
 					{
-						curinverter->bindflag = 1;			//°ó¶¨Äæ±äÆ÷±êÖ¾Î»1
+						curinverter->inverterstatus.bindflag = 1;			//°ó¶¨Äæ±äÆ÷±êÖ¾Î»1
 						updateID();	
 					}else
 						out_flag = 1;
 					
 				}
 				
-				if((0 == curinverter->model) )//&& (1 == curinverter->bindflag))
+				if((0 == curinverter->model) )//&& (1 == curinverter->inverterstatus.bindflag))
 				{
 					if(1 == zb_query_inverter_info(curinverter))
 						updateID();
@@ -1918,13 +1939,12 @@ int getalldata(inverter_info *firstinverter)		//»ñÈ¡Ã¿¸öÄæ±äÆ÷µÄÊı¾İ
 				}
 				
 
-				if((0 != curinverter->model) )//&& (1 == curinverter->bindflag))
-				//if(1)
+				if((0 != curinverter->model) )//&& (1 == curinverter->inverterstatus.bindflag))
 				{
 					//print2msg(ECU_DBG_MAIN,"querydata",curinverter->id);
 					if(-1 == zb_query_data(curinverter))
 						out_flag = 1;
-				//rt_hw_us_delay(200000);
+				rt_hw_us_delay(200000);
 				}
 			}
 			curinverter++;
@@ -1939,13 +1959,17 @@ int getalldata(inverter_info *firstinverter)		//»ñÈ¡Ã¿¸öÄæ±äÆ÷µÄÊı¾İ
 		curinverter = firstinverter;
 		for(i=0; i<MAXINVERTERCOUNT; i++, curinverter++)						//Í³¼Æµ±Ç°Ò»ÌìÄæ±äÆ÷ÓëECUÃ»Í¨Ñ¶ÉÏµÄ×Ü´ÎÊı, ZK
 		{
-			if((0 == curinverter->dataflag)&&(12 == strlen(curinverter->id)))
+			if((0 == curinverter->inverterstatus.dataflag)&&(12 == strlen(curinverter->id)))
 			{
 				curinverter->disconnect_times++;
+				if(curinverter->disconnect_times > 254)
+				{
+					curinverter->disconnect_times= 254;
+				}
 				sprintf(buff, "%s-%d-%d\n", curinverter->id,curinverter->disconnect_times,ecu.polling_total_times);
 				write(fd, buff, strlen(buff));
 			}
-			else if((1 == curinverter->dataflag)&&(12 == strlen(curinverter->id)))
+			else if((1 == curinverter->inverterstatus.dataflag)&&(12 == strlen(curinverter->id)))
 			{
 				sprintf(buff, "%s-%d-%d\n", curinverter->id,curinverter->disconnect_times,ecu.polling_total_times);
 				write(fd, buff, strlen(buff));
@@ -1957,20 +1981,26 @@ int getalldata(inverter_info *firstinverter)		//»ñÈ¡Ã¿¸öÄæ±äÆ÷µÄÊı¾İ
 	curinverter = firstinverter;
 	for(i=0; i<MAXINVERTERCOUNT; i++, curinverter++)		//Í³¼ÆÁ¬ĞøÃ»ÓĞ»ñÈ¡µ½Êı¾İµÄÄæ±äÆ÷ ZK,Ò»µ©½ÓÊÕµ½Êı¾İ£¬´Ë±äÁ¿ÇåÁã
 	{
-		if((0 == curinverter->dataflag)&&(12 == strlen(curinverter->id)))
+		if((0 == curinverter->inverterstatus.dataflag)&&(12 == strlen(curinverter->id)))
+		{
 			curinverter->no_getdata_num++;
+			if(curinverter->no_getdata_num>254)
+			{
+				curinverter->no_getdata_num = 254;
+			}
+		}
 	}
 
 	curinverter = firstinverter;
 	for(i=0; i<MAXINVERTERCOUNT; i++, curinverter++){							//Í³¼Æµ±Ç°¶àÉÙ¸öÄæ±äÆ÷
-		if((1 == curinverter->dataflag)&&(12 == strlen(curinverter->id)))
+		if((1 == curinverter->inverterstatus.dataflag)&&(12 == strlen(curinverter->id)))
 			count++;
 	}
 	ecu.count = count;
 
 	curinverter = firstinverter;
 	for(syspower=0, i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++){		//¼ÆËãµ±Ç°Ò»ÂÖÏµÍ³¹¦ÂÊ
-		if(1 == curinverter->dataflag){
+		if(1 == curinverter->inverterstatus.dataflag){
 			syspower += curinverter->op;
 			syspower += curinverter->opb;
 			syspower += curinverter->opc;
@@ -1981,7 +2011,7 @@ int getalldata(inverter_info *firstinverter)		//»ñÈ¡Ã¿¸öÄæ±äÆ÷µÄÊı¾İ
 
 	curinverter = firstinverter;
 	for(curenergy=0, i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++){		//¼ÆËãµ±Ç°Ò»ÂÖ·¢µçÁ¿
-		if(1 == curinverter->dataflag){
+		if(1 == curinverter->inverterstatus.dataflag){
 			if((curinverter->model==5) || (curinverter->model==6) || (curinverter->model==7))
 				{
 					curenergy += curinverter->curgeneration;
@@ -2007,7 +2037,7 @@ int getalldata(inverter_info *firstinverter)		//»ñÈ¡Ã¿¸öÄæ±äÆ÷µÄÊı¾İ
 		curinverter = firstinverter;
 		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++)
 		{
-			if((1!=curinverter->bindflag)&&(0!=curinverter->shortaddr))
+			if((1!=curinverter->inverterstatus.bindflag)&&(0!=curinverter->shortaddr))
 			{
 				memset(buff,0,50);
 				sprintf(buff,"%s\n",curinverter->id);
@@ -2043,11 +2073,10 @@ int getalldata(inverter_info *firstinverter)		//»ñÈ¡Ã¿¸öÄæ±äÆ÷µÄÊı¾İ
 		}
 		close(fd);
 	}
+#endif
 
 	write_gfdi_status(firstinverter);
 	write_turn_on_off_status(firstinverter);
-#endif
-
 	save_turn_on_off_changed_result(firstinverter);
 	save_gfdi_changed_result(firstinverter);
 

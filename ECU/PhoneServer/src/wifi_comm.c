@@ -180,7 +180,7 @@ void APP_Response_PowerGeneration(char mapping,unsigned char *ID,inverter_info *
 		SendData[packlength++] = ((curinverter->id[8]-'0') << 4) + (curinverter->id[9]-'0');
 		SendData[packlength++] = ((curinverter->id[10]-'0') << 4)+ (curinverter->id[11]-'0');
 
-		SendData[packlength++] = (curinverter->dataflag & 0x01);
+		SendData[packlength++] = (curinverter->inverterstatus.dataflag & 0x01);
 		
 		//µçÍøÆµÂÊ
 		SendData[packlength++] = (int)(curinverter->gf * 10) / 256;

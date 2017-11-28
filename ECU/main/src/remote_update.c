@@ -443,11 +443,11 @@ int remote_update(inverter_info *firstinverter)
 			if(1 == atoi(splitdata[3]))
 			{
 				printmsg(ECU_DBG_MAIN,curinverter->id);
-				if(curinverter->updating==0)
+				if(curinverter->inverterstatus.updating==0)
 				{
 					if(1 == zb_shutdown_single(curinverter))
 					{
-						curinverter->updating=1;
+						curinverter->inverterstatus.updating=1;
 						curinverter->updating_time=acquire_time();
 					}
 					continue;
@@ -456,7 +456,7 @@ int remote_update(inverter_info *firstinverter)
 				{	
 					if(compareTime(acquire_time() ,curinverter->updating_time,1800))
 						continue;
-					else curinverter->updating=0;
+					else curinverter->inverterstatus.updating=0;
 				}
 				update_result = remote_update_single(curinverter);
 				//É¾³ıIDËùÔÚĞĞ

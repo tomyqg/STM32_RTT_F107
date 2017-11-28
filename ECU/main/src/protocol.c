@@ -60,7 +60,7 @@ float calsystemgeneration(struct inverter_info_t *inverter)		//è®¡ç®—å½“å‰ä¸€è½
 	float temp=0.0;
 	
 	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->id)); i++){
-		if('1'==inverter->dataflag)
+		if('1'==inverter->inverterstatus.dataflag)
 			temp = temp + inverter->curgeneration + inverter->curgenerationb;
 		inverter++;
 	}
@@ -354,20 +354,20 @@ int transsyspower(char *buff, int syspower)			//å¢åŠ ç³»ç»ŸåŠŸç‡
 
 
 
-//æŠŠæ‰€æœ‰é€†å˜å™¨çš„æ•°æ®æŒ‰ç…§ECUå’ŒEMAçš„é€šä¿¡åè®®è½¬æ¢ï¼Œè§åè®®
+//°ÑËùÓĞÄæ±äÆ÷µÄÊı¾İ°´ÕÕECUºÍEMAµÄÍ¨ĞÅĞ­Òé×ª»»£¬¼ûĞ­Òé
 int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatetime)
 {
 	int i;
 	char wendu[4]={'\0'};
 	char temp[50] = {'\0'};
 	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL]={'\0'};
-	struct inverter_info_t *inverter = firstinverter;
+	struct inverter_info_t *inverter = firstinverter;//printf("protocal1\n");
 	strcat(buff, "APS1800000AAAAAAA1");
-	strcat(buff, ecu.id);
-	transsyspower(buff, ecu.system_power);
-	transsyscurgen(buff, ecu.current_energy);
-	transltgen(buff, ecu.life_energy*10.0);
-	strcat(buff, sendcommanddatetime);
+	strcat(buff, ecu.id);//printf("protocal3 ");
+	transsyspower(buff, ecu.system_power);//printf("protocal4 ");
+	transsyscurgen(buff, ecu.current_energy);//printf("protocal5 ");
+	transltgen(buff, ecu.life_energy*10.0);//printf("protocal6 ");
+	strcat(buff, sendcommanddatetime);//printf("protocal7\n");
 
 	sprintf(temp, "%d", ecu.count);
 	for(i=0; i<(3-strlen(temp)); i++)
@@ -381,10 +381,10 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 	strcat(buff, "00000END");
 	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->id)); i++)
 	{
-		if(1 == inverter->dataflag)
+		if(1 == inverter->inverterstatus.dataflag)
 		{
 			//printdecmsg("inverter->model",inverter->model);
-			if((1 == inverter->model)||(2 == inverter->model))	//YC250æœºå‹
+			if((1 == inverter->model)||(2 == inverter->model))	//YC250»úĞÍ
 			{
 				strcat(buff, inverter->id);
 				strcat(buff, "05");
@@ -403,7 +403,7 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 				transstatus(buff, inverter->status);
 				strcat(buff, "END");
 			}
-			else if((3 == inverter->model)||(4 == inverter->model))	//YC500æœºå‹
+			else if((3 == inverter->model)||(4 == inverter->model))	//YC500»úĞÍ
 			{
 				strcat(buff, inverter->id);
 				strcat(buff, "03");
@@ -430,16 +430,16 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 				strcat(buff, "END");
 
 			}
-			else if((5 == inverter->model)||(6 == inverter->model))		//YC1000CNæœºå‹
+			else if((5 == inverter->model)||(6 == inverter->model))		//YC1000CN»úĞÍ
 			{
 				strcat(buff, inverter->id);
 				strcat(buff, "04");
-				transdv(buff, inverter->dv*10.0);
+				transdv(buff, inverter->dv);	//YC600ÒÔÇ°µÄdvºÍdiÒÔ10±¶±£´æ
 				transfrequency(buff, inverter->gf*10.0);
 				sprintf(wendu,"%03d",inverter->it+100);
 				strcat(buff,wendu);
 				strcat(buff, "1");
-				transdi(buff, inverter->di*10.0);
+				transdi(buff, inverter->di);
 				transgridvolt(buff, inverter->gv);
 				transreactivepower(buff, inverter->reactive_power);
 				transactivepower(buff, inverter->active_power);
@@ -447,9 +447,9 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 			//	transcurgen(buff, inverter->curaccgen*1000000.0);
 				transcurgen(buff, inverter->curgeneration*1000000.0);
 				transpower(buff, inverter->op);
-				//transstatus(buff, inverter->status);   //APS18å¼€å§‹ä¸å‘ï¼Œä¹‹å‰å‘ï¼Œä½†emaä¸è§£æ
+				//transstatus(buff, inverter->status);   //APS18¿ªÊ¼²»·¢£¬Ö®Ç°·¢£¬µ«ema²»½âÎö
 				strcat(buff, "2");
-				transdi(buff, inverter->dib*10.0);
+				transdi(buff, inverter->dib);
 				transgridvolt(buff, inverter->gvb);
 				transreactivepower(buff, inverter->reactive_powerb);
 				transactivepower(buff, inverter->active_powerb);
@@ -459,7 +459,7 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 				transpower(buff, inverter->opb);
 				//transstatus(buff, inverter->statusb);
 				strcat(buff, "3");
-				transdi(buff, inverter->dic*10.0);
+				transdi(buff, inverter->dic);
 				transgridvolt(buff, inverter->gvc);
 				transreactivepower(buff, inverter->reactive_powerc);
 				transactivepower(buff, inverter->active_powerc);
@@ -469,13 +469,13 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 				transpower(buff, inverter->opc);
 				//transstatus(buff, inverter->statusc);
 				strcat(buff, "4");
-				transdi(buff, inverter->did*10.0);
+				transdi(buff, inverter->did);
 				transcurgen(buff, inverter->curgenerationd*1000000.0);
 			//	transcurgen(buff, inverter->curaccgend*1000000.0);
 				transpower(buff, inverter->opd);
 				strcat(buff, "END");
 			}
-			else //if((7 == inverter->model))	//YC550æœºå‹
+			else //if((7 == inverter->model))	//YC550»úĞÍ
 			{
 				strcat(buff, inverter->id);
 				strcat(buff, "07");
@@ -507,7 +507,7 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 		}
 		inverter++;
 	}
-	//print2msg("Record", buff);
+	print2msg(ECU_DBG_MAIN,"Record", buff);
 	memset(temp, '\0', 50);
 	sprintf(temp, "%d", strlen(buff));
 
@@ -518,13 +518,13 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 		buff[5+5-strlen(temp)+i] = temp[i];
 
 	//strcat(buff, "\n");
-	save_record(buff,sendcommanddatetime);			//æŠŠå‘é€ç»™EMAçš„è®°å½•ä¿å­˜åœ¨æ•°æ®åº“ä¸­
+	save_record(buff,sendcommanddatetime);			//°Ñ·¢ËÍ¸øEMAµÄ¼ÇÂ¼±£´æÔÚÊı¾İ¿âÖĞ
 	print2msg(ECU_DBG_MAIN,"Record", buff);
 
 	return 0;
 }
 
-/* é€†å˜å™¨å¼‚å¸¸çŠ¶æ€A123 */
+/* Äæ±äÆ÷Òì³£×´Ì¬A123 */
 int protocol_status(struct inverter_info_t *firstinverter, char *datetime)
 {
 	int i, count=0;
@@ -561,7 +561,7 @@ int saveevent(inverter_info *inverter, char *sendcommanddatatime)			//ä¿å­˜ç³»ç
 	char event_buff[200]={'\0'};
 
 	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->id)); i++){
-		if(1 == inverter->dataflag)
+		if(1 == inverter->inverterstatus.dataflag)
 		{
 			if(0 != strcmp(inverter->status_web, "000000000000000000000000"))
 			{

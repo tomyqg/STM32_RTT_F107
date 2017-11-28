@@ -21,8 +21,6 @@
 /*****************************************************************************/
 /*  Function Declarations                                                    */
 /*****************************************************************************/
-int resolvedata_250(char *inverter_data, struct inverter_info_t *inverter);
-int resolvedata_500(char *data, struct inverter_info_t *inverter);
 int resolvedata_1000(char *data, struct inverter_info_t *inverter);
 int resolvedata_600(char *data, struct inverter_info_t *inverter);
 int resolvedata_600_new(char *data, struct inverter_info_t *inverter);

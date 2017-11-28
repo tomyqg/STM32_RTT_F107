@@ -18,13 +18,108 @@
 #include <rtthread.h>
 #include "debug.h"
 
+
+typedef struct{  
+       unsigned char second;  
+       unsigned char minute;  
+       unsigned char hour;  
+       unsigned char day;    
+       unsigned char month;  
+       unsigned char year;  
+       unsigned char century;  
+}DATETIME;  
+
+
+
 /*****************************************************************************/
 /*  Function Implementations                                                 */
 /*****************************************************************************/
-int get_time(char *sendcommanddatetime, char *sendcommandtime)		//·¢¸øEMA¼ÇÂ¼Ê±»ñÈ¡µÄÊ±¼ä£¬¸ñÊ½£ºÄêÔÂÈÕÊ±·ÖÃë£¬Èç20120902142835
+//Ê±¼ä×ª»» TimeÎªµ±Ç°µÄÊ±¼ä×Ö·û´®  14×Ö½Ú
+DATETIME timeSwitch(char *Time)
+{
+	DATETIME tmpdatetime;
+	tmpdatetime.century = (Time[0]-'0')*10+(Time[1]-'0');
+	
+	tmpdatetime.year = (Time[2]-'0')*10+(Time[3]-'0');
+	tmpdatetime.month = (Time[4]-'0')*10+(Time[5]-'0');
+	tmpdatetime.day = (Time[6]-'0')*10+(Time[7]-'0');
+	tmpdatetime.hour = (Time[8]-'0')*10+(Time[9]-'0');
+	tmpdatetime.minute = (Time[10]-'0')*10+(Time[11]-'0');
+	tmpdatetime.second = (Time[12]-'0')*10+(Time[13]-'0');
+	return tmpdatetime;
+}
+
+/******************************************************************* 
+ *  º¯Êı¹¦ÄÜ:½«µ±Ç°Ê±¼ä(Èç:2017-09-7 21:28:25)×ª»»Îª¸ñÁÖÄáÖÎÊ±¼ä  ¸ñÁÖÄáÖÎÊ±¼ä:´Ó1970Äê1ÔÂ1ÈÕ¿ªÊ¼µ½ÏÖÔÚµÄÃëÊı 
+ *  º¯ÊıÊäÈë:curData µ±Ç°Ê±¼ä 
+ *  º¯ÊıÊä³ö:¸ñÁÖÄáÖÎÊ±¼ä(µ¥Î»:S) 
+ */  
+long GreenTimeSwitch( DATETIME curData)  
+{  
+       unsigned short curyear;         // µ±Ç°Äê·İ 16Î»  
+       int cyear = 0;                  // µ±Ç°ÄêºÍ1970ÄêµÄ²îÖµ 
+       int cday = 0;                   // ²îÖµÄê×ª»»ÎªÌìÊı  
+       int curmonthday = 0;            // µ±Ç°ÔÂ·İ×ª»»ÎªÌìÊı
+   
+       //µ±Ç°Äê·İ  
+       curyear= curData.century*100+curData.year;  
+       //ÎŞĞ§Äê·İÅĞ¶Ï 
+       if(curyear < 1970 || curyear > 9000 )  
+              return 0;  
+       //¼ÆËã²îÖµ²¢¼ÆËãµ±Ç°Äê·İ²îÖµ¶ÔÓ¦µÄÌìÊı 
+       cyear= curyear - 1970;  
+       cday= cyear/4*(365*3+366);  
+       //¼ÆËãÆ½ÄêºÍÈòÄê ¶ÔÓ¦µÄÏàÓ¦²îÖµÄê¶ÔÓ¦µÄÌìÊı 1970-Æ½ 1971-Æ½ 1972-Èò 1973-Æ½  
+       if(cyear%4 >= 3 )  
+              cday += (cyear%4-1)*365 + 366;  
+       else  
+              cday += (cyear%4)*365;  
+   
+       //µ±Ç°ÔÂ·İ¶ÔÓ¦µÄÌìÊı  µ±ÔÂµÄÌìÊı²»Ëã  
+       switch(curData.month )  
+       {  
+              case 2:  curmonthday = 31;  break;  
+              case 3:  curmonthday = 59;  break;  
+              case 4:  curmonthday = 90;  break;  
+              case 5:  curmonthday = 120; break;  
+              case 6:  curmonthday = 151; break;  
+              case 7:  curmonthday = 181; break;  
+              case 8:  curmonthday = 212; break;  
+              case 9:  curmonthday = 243; break;  
+              case 10: curmonthday = 273; break;  
+              case 11: curmonthday = 304; break;  
+              case 12: curmonthday = 334; break;  
+              default:curmonthday = 0;   break;  
+       }  
+       //Æ½ÄêºÍÈòÄê¶ÔÓ¦ÌìÊı Èç¹ûÈòÄê+1  
+       if((curyear%4 == 0) && (curData.month >= 3) )  
+              curmonthday+= 1;  
+       //×ÜÌìÊı¼ÓÉÏÔÂ·İ¶ÔÓ¦µÄÌìÊı ¼ÓÉÏµ±Ç°ÌìÊı-1 µ±Ç°ÌìÊı²»Ëã  
+       cday += curmonthday;  
+       cday += (curData.day-1);  
+   
+       //·µ»Ø¸ñÁÖÄáÖÎÊ±¼äÃëÊı 
+       return(long)(((cday*24+curData.hour)*60+curData.minute)*60+curData.second);   
+}
+
+int Time_difference(char *curTime,char *lastTime)
+{
+	DATETIME curDateTime,lastDateTime;
+	
+	curDateTime = timeSwitch(curTime);
+
+	lastDateTime = timeSwitch(lastTime);
+	
+	return (GreenTimeSwitch(curDateTime) - GreenTimeSwitch(lastDateTime));
+}
+
+long get_time(char *sendcommanddatetime, char *sendcommandtime)		//·¢¸øEMA¼ÇÂ¼Ê±»ñÈ¡µÄÊ±¼ä£¬¸ñÊ½£ºÄêÔÂÈÕÊ±·ÖÃë£¬Èç20120902142835
 {
 	char datetime[15] = {'\0'};
 	unsigned hour, minute;
+	long time_linux;
+	DATETIME curDateTime;
+	
 	apstime(datetime);
 	rt_memcpy(sendcommanddatetime,datetime,14);
 	sendcommanddatetime[14] = '\0';
@@ -35,9 +130,12 @@ int get_time(char *sendcommanddatetime, char *sendcommandtime)		//·¢¸øEMA¼ÇÂ¼Ê±»
 	sendcommandtime[1] = minute;
     
 	//print2msg(ECU_DBG_OTHER,"Broadcast time", sendcommanddatetime);
+	
+	curDateTime = timeSwitch(datetime);
+	GreenTimeSwitch(curDateTime);
 
 
-	return hour;
+	return time_linux;
 }
 
 
@@ -118,3 +216,19 @@ void getcurrenttime(char db_time[])
 	apstime(db_time);
 	db_time[14] = '\0';
 }
+
+#ifdef RT_USING_FINSH
+#include <finsh.h>
+#include <stdio.h>
+void greenTime(char *time)
+{
+	DATETIME curDateTime;
+	curDateTime = timeSwitch(time);
+	printf("Greentime:%ld\n",GreenTimeSwitch(curDateTime));
+}
+FINSH_FUNCTION_EXPORT(greenTime, get green time. e.g: greenTime("20170908084018"))
+
+
+#endif
+
+

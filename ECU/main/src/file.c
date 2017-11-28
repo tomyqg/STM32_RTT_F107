@@ -304,7 +304,7 @@ void updateID(void)
 		curinverter = inverter;
 		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++)			//有效逆变器轮训
 		{
-			fprintf(fp,"%s,%d,%d,%d,%d,%d,%d\n",curinverter->id,curinverter->shortaddr,curinverter->model,curinverter->version,curinverter->bindflag,curinverter->zigbee_version,curinverter->flag);
+			fprintf(fp,"%s,%d,%d,%d,%d,%d,%d\n",curinverter->id,curinverter->shortaddr,curinverter->model,curinverter->version,curinverter->inverterstatus.bindflag,curinverter->zigbee_version,curinverter->inverterstatus.flag);
 			
 		}
 		fclose(fp);
@@ -320,7 +320,7 @@ int update_tmpdb(inverter_info *firstinverter)
 	fd = fileopen("/home/data/collect.con",O_WRONLY | O_APPEND | O_CREAT|O_TRUNC,0);
 	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); i++, curinverter++)
 	{
-		if(curinverter->dataflag == 1)
+		if(curinverter->inverterstatus.dataflag == 1)
 		{
 			sprintf(str,"%s,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%d\n",curinverter->id,curinverter->preaccgen,curinverter->preaccgenb,curinverter->preaccgenc,curinverter->preaccgend,curinverter->pre_output_energy,curinverter->pre_output_energyb,curinverter->pre_output_energyc,curinverter->preacctime);
 			fileWrite(fd,str,strlen(str));
@@ -415,11 +415,11 @@ int get_id_from_file(inverter_info *firstinverter)
 			
 			if(0==strlen(list[4]))
 			{
-				inverter->bindflag = 0;		//未绑定的逆变器把标志位赋值为0.ZK
+				inverter->inverterstatus.bindflag = 0;		//未绑定的逆变器把标志位赋值为0.ZK
 			}
 			else
 			{
-				inverter->bindflag = atoi(list[4]);
+				inverter->inverterstatus.bindflag = atoi(list[4]);
 			}
 
 			if(0==strlen(list[5]))
@@ -432,11 +432,11 @@ int get_id_from_file(inverter_info *firstinverter)
 			}
 			if(0==strlen(list[6]))
 			{
-				inverter->flag = 0;		
+				inverter->inverterstatus.flag = 0;		
 			}
 			else
 			{
-				inverter->flag = atoi(list[6]);
+				inverter->inverterstatus.flag = atoi(list[6]);
 			}
 			
 			inverter++;

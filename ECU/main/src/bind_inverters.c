@@ -142,7 +142,7 @@ int getaddrOldOrNew(char *id)
 		{
 			if(!strcmp(curinverter->id,inverterid))
 			{
-				curinverter->bindflag = 1;
+				curinverter->inverterstatus.bindflag = 1;
 				break;
 			}
 		}
@@ -232,7 +232,7 @@ void bind_inverters()
 	curinverter = inverter;
 	for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
 	{
-		if((curinverter->shortaddr != 0)&&(curinverter->bindflag == 0))
+		if((curinverter->shortaddr != 0)&&(curinverter->inverterstatus.bindflag == 0))
 		{
 			if (!zb_off_report_id_and_bind(curinverter->shortaddr)) {
 				//绑定失败,重置短地址
@@ -264,7 +264,7 @@ void bind_inverters()
 			num = 0;
 			for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
 			{
-				if((curinverter->shortaddr == 0) && (curinverter->bindflag == 0))
+				if((curinverter->shortaddr == 0) && (curinverter->inverterstatus.bindflag == 0))
 					num++;
 			}
 
@@ -274,7 +274,7 @@ void bind_inverters()
 			curinverter = inverter;
 			for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
 			{
-				if((curinverter->shortaddr == 0) && (curinverter->bindflag == 0))
+				if((curinverter->shortaddr == 0) && (curinverter->inverterstatus.bindflag == 0))
 				{
 					zb_change_inverter_channel_one(curinverter->id,ecu.channel);//所有逆变器设置成0xFFFF
 					rt_hw_s_delay(3);//zigbeeRecvMsg(recvbuff,5);
@@ -284,7 +284,7 @@ void bind_inverters()
 			curinverter = inverter;
 			for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
 			{
-				if((curinverter->shortaddr == 0) && (curinverter->bindflag == 0))
+				if((curinverter->shortaddr == 0) && (curinverter->inverterstatus.bindflag == 0))
 				{
 					for(k=0;k<3;k++){
 						if(1==getaddrOldOrNew(curinverter->id))
@@ -332,7 +332,7 @@ void bind_inverters()
 		curinverter = inverter;
 		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
 		{
-			if(curinverter->bindflag == 0)
+			if(curinverter->inverterstatus.bindflag == 0)
 			{
 				for(i=0;i<3;i++)
 					zb_change_inverter_channel_one(curinverter->id,ecu.channel);
@@ -341,7 +341,7 @@ void bind_inverters()
 		curinverter = inverter;
 		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
 		{
-			curinverter->bindflag=0;
+			curinverter->inverterstatus.bindflag=0;
 		}			
 		
 		ecu.panid=0xFFFF;
