@@ -97,38 +97,38 @@ typedef struct IPConfig
 //Init device thread priority
 #define THREAD_PRIORITY_INIT							10
 //LAN8720A Monitor thread priority
-#define THREAD_PRIORITY_LAN8720_RST				11
+#define THREAD_PRIORITY_LAN8720_RST						11
 //LED thread priority
-#define THREAD_PRIORITY_LED               12
+#define THREAD_PRIORITY_LED               				12
 
 //phone Server thread priority
-#define THREAD_PRIORITY_PHONE_SERVER			19
+#define THREAD_PRIORITY_PHONE_SERVER					19
 
 //Update thread priority
-#define THREAD_PRIORITY_UPDATE						20
+#define THREAD_PRIORITY_UPDATE							20
 //NTP thread priority
-//#define THREAD_PRIORITY_NTP								21
+//#define THREAD_PRIORITY_NTP							21
 //ID Writethread priority
-#define THREAD_PRIORITY_IDWRITE						22
+#define THREAD_PRIORITY_IDWRITE							22
 //DRM Connect thread priority
 #define THREAD_PRIORITY_DRM								23
 //data collection thread priority
-#define THREAD_PRIORITY_MAIN	            24
+#define THREAD_PRIORITY_MAIN	            			24
 //control client thread priority
-#define THREAD_PRIORITY_CONTROL_CLIENT		26
+#define THREAD_PRIORITY_CONTROL_CLIENT					26
 //data uploading thread priority
-#define THREAD_PRIORITY_CLIENT						27
+#define THREAD_PRIORITY_CLIENT							27
 
 
 
 //thread start time
-#define START_TIME_UPDATE									15
+#define START_TIME_UPDATE									10
 #define START_TIME_NTP										10
-#define START_TIME_IDWRITE								5
+#define START_TIME_IDWRITE									5
 #define START_TIME_MAIN										0			//90
-#define START_TIME_CONTROL_CLIENT					20			//120
+#define START_TIME_CONTROL_CLIENT							20			//120
 #define START_TIME_CLIENT									60			//180
-#define START_TIME_PHONE_SERVER						20
+#define START_TIME_PHONE_SERVER								20
 
 /*****************************************************************************/
 /*  Function Declarations                                                    */

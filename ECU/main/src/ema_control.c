@@ -21,6 +21,7 @@
 #include "file.h"
 
 //extern int caltype;		//计算方式，NA版和非NA版的区别
+extern ecu_info ecu;
 
 /*****************************************************************************/
 /*  Function Implementations                                                 */
@@ -30,8 +31,8 @@ int write_gfdi_status(inverter_info *firstinverter)
 	FILE *fp;
 	int i;
 	inverter_info *inverter = firstinverter;
-	char write_buff[300] = {'\0'};
-
+	char *write_buff = NULL;
+	write_buff = malloc(MAXINVERTERCOUNT*INVARTER_STATUS_PER_LEN+INVARTER_STATUS_PER_OTHER);	//ÿ̨16���ֽ�  20���ֽ���ΪԤ��
 	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->id)); i++, inverter++)
 	{
 		//if('0' != inverter->flag)
@@ -54,7 +55,8 @@ int write_gfdi_status(inverter_info *firstinverter)
 		fputs(write_buff, fp);
 		fclose(fp);
 	}
-
+	free(write_buff);
+	write_buff = NULL;
 	return 0;
 }
 
@@ -63,8 +65,9 @@ int write_turn_on_off_status(inverter_info *firstinverter)
 	FILE *fp;
 	int i;
 	inverter_info *inverter = firstinverter;
-	char write_buff[300] = {'\0'};
-
+	char *write_buff = NULL;
+	write_buff = malloc(MAXINVERTERCOUNT*INVARTER_STATUS_PER_LEN+INVARTER_STATUS_PER_OTHER);	//ÿ̨16���ֽ�  20���ֽ���ΪԤ��
+	
 	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->id)); i++, inverter++)
 	{
 		//if('0' != inverter->flag)
@@ -87,7 +90,8 @@ int write_turn_on_off_status(inverter_info *firstinverter)
 		fputs(write_buff, fp);
 		fclose(fp);
 	}
-
+	free(write_buff);
+	write_buff = NULL;
 	return 0;
 }
 
@@ -182,21 +186,15 @@ int read_gfdi_turn_on_off_status(inverter_info *firstinverter)
 
 int save_gfdi_changed_result(inverter_info *firstinverter)
 {
-	char ecu_id[16];
-	FILE *fp;
 	inverter_info *inverter = firstinverter;
 	int i, count=0;
-	char gfdi_changed_result[600]={'\0'};
+	char *gfdi_changed_result = NULL;
 
+	gfdi_changed_result = malloc(PROCESS_RESULT_HEAD + PROCESS_RESULT_RECORD_LEN * MAXINVERTERCOUNT);
+	
 	strcpy(gfdi_changed_result, "APS13AAAAAA115AAA1");
-	fp = fopen("/yuneng/ecuid.con", "r");		//读取ECU的ID
-	if(fp)
-	{
-		fgets(ecu_id, 13, fp);
-		fclose(fp);
-	}
 
-	strcat(gfdi_changed_result, ecu_id);					//ECU的ID
+	strcat(gfdi_changed_result, ecu.id);					//ECU的ID
 	strcat(gfdi_changed_result, "0000");					//逆变器个数
 	strcat(gfdi_changed_result, "00000000000000");		//时间戳，设置逆变器后返回的结果中时间戳为0
 	strcat(gfdi_changed_result, "END");					//固定格式
@@ -238,28 +236,22 @@ int save_gfdi_changed_result(inverter_info *firstinverter)
 
 	if(count >0)
 		save_process_result(115, gfdi_changed_result);
-
+	free(gfdi_changed_result);
+	gfdi_changed_result = NULL;
 	return 0;
 }
 
 int save_turn_on_off_changed_result(inverter_info *firstinverter)
 {
-	char ecu_id[16];
-	FILE *fp;
 	inverter_info *inverter = firstinverter;
 	int i, count=0;
-	char turn_on_off_changed_result[600]={'\0'};
-	//char inverter_result[64];
+	char *turn_on_off_changed_result = NULL;
+	turn_on_off_changed_result = malloc(PROCESS_RESULT_HEAD + PROCESS_RESULT_RECORD_LEN * MAXINVERTERCOUNT);
+	memset(turn_on_off_changed_result,'\0',PROCESS_RESULT_HEAD + PROCESS_RESULT_RECORD_LEN * MAXINVERTERCOUNT);
 
 	strcpy(turn_on_off_changed_result, "APS13AAAAAA116AAA1");
-	fp = fopen("/yuneng/ecuid.con", "r");		//读取ECU的ID
-	if(fp)
-	{
-		fgets(ecu_id, 13, fp);
-		fclose(fp);
-	}
 
-	strcat(turn_on_off_changed_result, ecu_id);					//ECU的ID
+	strcat(turn_on_off_changed_result, ecu.id);					//ECU的ID
 	strcat(turn_on_off_changed_result, "0000");					//逆变器个数
 	strcat(turn_on_off_changed_result, "00000000000000");		//时间戳，设置逆变器后返回的结果中时间戳为0
 	strcat(turn_on_off_changed_result, "END");					//固定格式
@@ -301,78 +293,9 @@ int save_turn_on_off_changed_result(inverter_info *firstinverter)
 
 	if(count >0)
 		save_process_result(116, turn_on_off_changed_result);
+	free(turn_on_off_changed_result);
+	turn_on_off_changed_result = NULL;
 
 	return 0;
 }
 
-
-int save_protect_result(inverter_info *firstinverter)
-{
-	inverter_info *inverter = firstinverter;
-	int i, count=0;
-	char protect_result[65535] = {'\0'};
-	char inverter_result[64];
-	char ecu_id[16];
-	FILE *fp;
-	//int max_voltage, min_voltage, max_frequency, min_frequency, boot_time;
-
-	strcpy(protect_result, "APS13AAAAAA114AAA1");
-
-	fp = fopen("/yuneng/ecuid.con", "r");		//读取ECU的ID
-	if(fp)
-	{
-		fgets(ecu_id, 13, fp);
-		fclose(fp);
-	}
-
-	strcat(protect_result, ecu_id);					//ECU的ID
-	strcat(protect_result, "0000");					//逆变器个数
-	strcat(protect_result, "00000000000000");		//时间戳，设置逆变器后返回的结果中时间戳为0
-	strcat(protect_result, "END");					//固定格式
-
-	//get_protect_parameters(&max_voltage, &min_voltage, &max_frequency, &min_frequency, &boot_time);
-
-	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->id)); i++, inverter++)
-	{
-	//	if((-1 != inverter->protect_voltage_min) || (-1 != inverter->protect_voltage_max))
-		{
-			memset(inverter_result, '\0', sizeof(inverter_result));
-			sprintf(inverter_result, "%s%03d%03d%03d%03d%05d", inverter->id, inverter->protect_voltage_min, inverter->protect_voltage_max, (int)(inverter->protect_frequency_min*10), (int)(inverter->protect_frequency_max*10), inverter->recovery_time);
-
-		//	if(2 == caltype)
-		//		strcat(inverter_result, "082118124155551600600649");
-		//	else if(1 == caltype)
-		//		strcat(inverter_result, "181239221298551600600649");
-		//	else
-				strcat(inverter_result, "149217221278451500500549");
-			strcat(protect_result, inverter_result);
-			strcat(protect_result, "END");
-			count++;
-		}
-	}
-
-	if(count>9999)
-		count = 9999;
-
-	protect_result[30] = count/1000 + 0x30;
-	protect_result[31] = (count/100)%10 + 0x30;
-	protect_result[32] = (count/10)%10 + 0x30;
-	protect_result[33] = count%10 + 0x30;
-
-	if(strlen(protect_result) > 10000)
-		protect_result[5] = strlen(protect_result)/10000 + 0x30;
-	if(strlen(protect_result) > 1000)
-		protect_result[6] = (strlen(protect_result)/1000)%10 + 0x30;
-	if(strlen(protect_result) > 100)
-		protect_result[7] = (strlen(protect_result)/100)%10 + 0x30;
-	if(strlen(protect_result) > 10)
-		protect_result[8] = (strlen(protect_result)/10)%10 + 0x30;
-	if(strlen(protect_result) > 0)
-		protect_result[9] = strlen(protect_result)%10 + 0x30;
-
-	//strcat(protect_result, "\n");
-
-	save_process_result(114,protect_result);
-
-	return 0;
-}

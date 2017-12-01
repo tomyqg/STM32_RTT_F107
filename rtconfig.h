@@ -123,8 +123,8 @@
 /* ip address of target*/
 #define RT_LWIP_IPADDR0	192
 #define RT_LWIP_IPADDR1	168
-#define RT_LWIP_IPADDR2	1
-#define RT_LWIP_IPADDR3	30
+#define RT_LWIP_IPADDR2	131
+#define RT_LWIP_IPADDR3	168
 
 /* gateway address of target*/
 #define RT_LWIP_GWADDR0	192

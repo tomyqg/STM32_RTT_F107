@@ -11,11 +11,11 @@
 
 
 /*
-powerè¡¨æ ¼å­—æ®µï¼š
+power±í¸ñ×Ö¶Î£º
 id,limitedpower,limitedresult,stationarypower,stationaryresult,flag
 */
 /*
-powerè¡¨æ ¼å­—æ®µï¼š
+power±í¸ñ×Ö¶Î£º
 maxpower,fixedpower,sysmaxpower
 */
 
@@ -36,21 +36,21 @@ maxpower,fixedpower,sysmaxpower
 /*  Variable Declarations                                                    */
 /*****************************************************************************/
 extern rt_mutex_t record_data_lock ;
-
+extern ecu_info ecu;
 /*****************************************************************************/
 /*  Function Implementations                                                 */
 /*****************************************************************************/
-int getpower(inverter_info *inverter, int *limitedpower, int *stationarypower)	//è¯»å–é€†å˜å™¨çš„æœ€å¤§åŠŸç‡å’Œå›ºå®šåŠŸç‡
+int getpower(inverter_info *inverter, int *limitedpower, int *stationarypower)	//¶ÁÈ¡Äæ±äÆ÷µÄ×î´ó¹¦ÂÊºÍ¹Ì¶¨¹¦ÂÊ
 {
 	char linedata[100] = "\0";
 	char splitdata[6][32];
 	int ret;
 	
-	//è¯»å–æ‰€åœ¨IDè¡Œ
+	//¶ÁÈ¡ËùÔÚIDĞĞ
 	ret = read_line("/home/data/power",linedata,inverter->id,12);
 	if(1 == ret)
 	{
-		//å°†æ‰€åœ¨è¡Œåˆ†è£‚
+		//½«ËùÔÚĞĞ·ÖÁÑ
 		splitString(linedata,splitdata);
 		*limitedpower = atoi(splitdata[1]);
 		*stationarypower = atoi(splitdata[3]);
@@ -69,11 +69,11 @@ int get_maximum_power(inverter_info *inverter)
 	int ret;
 	int power;
 
-	//è¯»å–æ‰€åœ¨IDè¡Œ
+	//¶ÁÈ¡ËùÔÚIDĞĞ
 	ret = read_line("/home/data/power",linedata,inverter->id,12);
 	if(1 == ret)
 	{
-		//å°†æ‰€åœ¨è¡Œåˆ†è£‚
+		//½«ËùÔÚĞĞ·ÖÁÑ
 		splitString(linedata,splitdata);
 		if(0 !=  atoi(splitdata[1]))
 		{
@@ -93,10 +93,10 @@ int get_fixed_power(inverter_info *inverter)
 	char linedata[100] = "\0";
 	char splitdata[6][32];
 	int power;
-	//è¯»å–æ‰€åœ¨IDè¡Œ
+	//¶ÁÈ¡ËùÔÚIDĞĞ
 	if(1 == read_line("/home/data/power",linedata,inverter->id,12))
 	{
-		//å°†æ‰€åœ¨è¡Œåˆ†è£‚
+		//½«ËùÔÚĞĞ·ÖÁÑ
 		splitString(linedata,splitdata);
 		power = atoi(splitdata[3]);
 
@@ -108,16 +108,16 @@ int get_fixed_power(inverter_info *inverter)
 	return power;
 }
 
-int getsyspower()		//è¯»å–ç³»ç»Ÿæœ€å¤§æ€»åŠŸç‡
+int getsyspower()		//¶ÁÈ¡ÏµÍ³×î´ó×Ü¹¦ÂÊ
 {
 	char linedata[100] = "\0";
 	char splitdata[3][32];
 	int syspower;
 	
-	//è¯»å–ä¸€è¡Œæ•°æ®
+	//¶ÁÈ¡Ò»ĞĞÊı¾İ
 	file_get_one(linedata, 100, "/home/data/powerall");
 	
-	//å°†æ‰€åœ¨è¡Œåˆ†è£‚
+	//½«ËùÔÚĞĞ·ÖÁÑ
 	splitString(linedata,splitdata);
 
 	syspower = atoi(splitdata[2]);
@@ -127,23 +127,23 @@ int getsyspower()		//è¯»å–ç³»ç»Ÿæœ€å¤§æ€»åŠŸç‡
 	return syspower;
 }
 
-int updatemaxpower(inverter_info *inverter, int limitedresult)//æ›´æ–°é€†å˜å™¨çš„æœ€å¤§åŠŸç‡ç»“æœ
+int updatemaxpower(inverter_info *inverter, int limitedresult)//¸üĞÂÄæ±äÆ÷µÄ×î´ó¹¦ÂÊ½á¹û
 {	
 	char linedata[100] = "\0";
 	char splitdata[6][32];
 	int i;
 	
-	//è¯»å–æ‰€åœ¨IDè¡Œ
+	//¶ÁÈ¡ËùÔÚIDĞĞ
 	if(1 == read_line("/home/data/power",linedata,inverter->id,12))
 	{
-		//å°†æ‰€åœ¨è¡Œåˆ†è£‚
+		//½«ËùÔÚĞĞ·ÖÁÑ
 		splitString(linedata,splitdata);
 		memset(linedata,0x00,100);
 		sprintf(linedata,"%s,%d,%d,%d,%d,0\n",inverter->id,limitedresult,atoi(splitdata[2]),atoi(splitdata[3]),atoi(splitdata[4]));
-		//åˆ é™¤idæ‰€åœ¨è¡Œ
+		//É¾³ıidËùÔÚĞĞ
 		delete_line("/home/data/power","/home/data/_power",inverter->id,12);
 
-		//æ›´æ–°æ‰€åœ¨è¡Œ
+		//¸üĞÂËùÔÚĞĞ
 		for(i=0; i<3; i++)
 		{
 			if(1 == insert_line("/home/data/power",linedata))
@@ -161,21 +161,21 @@ int updatemaxpower(inverter_info *inverter, int limitedresult)//æ›´æ–°é€†å˜å™¨ç
 	return 0;
 }
 
-int updatemaxflag(inverter_info *inverter)			//æ›´æ–°é€†å˜å™¨ä¸ºæœ€å¤§åŠŸç‡æ¨¡å¼
+int updatemaxflag(inverter_info *inverter)			//¸üĞÂÄæ±äÆ÷Îª×î´ó¹¦ÂÊÄ£Ê½
 {
 	char linedata[100] = "\0";
 	char splitdata[6][32];
 	int i;
 
 	
-	//è¯»å–æ‰€åœ¨IDè¡Œ
+	//¶ÁÈ¡ËùÔÚIDĞĞ
 	if(1 == read_line("/home/data/power",linedata,inverter->id,12))
 	{
-		//å°†æ‰€åœ¨è¡Œåˆ†è£‚
+		//½«ËùÔÚĞĞ·ÖÁÑ
 		splitString(linedata,splitdata);
 		memset(linedata,0x00,100);
 		sprintf(linedata,"%s,%d,%d,%d,%d,0\n",inverter->id,atoi(splitdata[1]),atoi(splitdata[2]),atoi(splitdata[3]),atoi(splitdata[4]));
-		//åˆ é™¤idæ‰€åœ¨è¡Œ
+		//É¾³ıidËùÔÚĞĞ
 		delete_line("/home/data/power","/home/data/_power",inverter->id,12);
 		
 		for(i=0; i<3; i++)
@@ -200,14 +200,14 @@ int updatefixedpower(inverter_info *inverter, int stationaryresult)
 	char splitdata[6][32];
 	int i;
 	
-	//è¯»å–æ‰€åœ¨IDè¡Œ
+	//¶ÁÈ¡ËùÔÚIDĞĞ
 	if(1 == read_line("/home/data/power",linedata,inverter->id,12))
 	{
-		//å°†æ‰€åœ¨è¡Œåˆ†è£‚
+		//½«ËùÔÚĞĞ·ÖÁÑ
 		splitString(linedata,splitdata);
 		memset(linedata,0x00,100);
 		sprintf(linedata,"%s,%d,%d,%d,%d,0\n",inverter->id,atoi(splitdata[1]),atoi(splitdata[2]),atoi(splitdata[3]),stationaryresult);
-		//åˆ é™¤idæ‰€åœ¨è¡Œ
+		//É¾³ıidËùÔÚĞĞ
 		delete_line("/home/data/power","/home/data/_power",inverter->id,12);
 
 		for(i=0; i<3; i++)
@@ -233,14 +233,14 @@ int updatefixedflag(inverter_info *inverter)
 	char splitdata[6][32];
 	int i;
 	
-	//è¯»å–æ‰€åœ¨IDè¡Œ
+	//¶ÁÈ¡ËùÔÚIDĞĞ
 	if (1 == read_line("/home/data/power",linedata,inverter->id,12))
 	{	
-		//å°†æ‰€åœ¨è¡Œåˆ†è£‚
+		//½«ËùÔÚĞĞ·ÖÁÑ
 		splitString(linedata,splitdata);
 		memset(linedata,0x00,100);
 		sprintf(linedata,"%s,%d,%d,%d,%d,1\n",inverter->id,atoi(splitdata[1]),atoi(splitdata[2]),atoi(splitdata[3]),atoi(splitdata[4]));
-		//åˆ é™¤idæ‰€åœ¨è¡Œ
+		//É¾³ıidËùÔÚĞĞ
 		delete_line("/home/data/power","/home/data/_power",inverter->id,12);
 
 
@@ -279,7 +279,7 @@ int calcount(inverter_info *firstinverter)
 	return panelcount;
 }
 
-int setfixedpowerone(inverter_info *inverter, char power)//å›ºå®šåŠŸç‡é™å®šå•æ’­ zb_constpower_single
+int setfixedpowerone(inverter_info *inverter, char power)//¹Ì¶¨¹¦ÂÊÏŞ¶¨µ¥²¥ zb_constpower_single
 {
 	int i = 0, ret;
 	char sendbuff[256] = { '\0' };
@@ -327,7 +327,7 @@ int setfixedpowerone(inverter_info *inverter, char power)//å›ºå®šåŠŸç‡é™å®šå•
 	}
 }
 
-int setfixedpowerall(char power)	//å›ºå®šåŠŸç‡é™å®šå¹¿æ’­ï¼Œzb_constpower_broadcast
+int setfixedpowerall(char power)	//¹Ì¶¨¹¦ÂÊÏŞ¶¨¹ã²¥£¬zb_constpower_broadcast
 {
 	int i = 0;
 	char sendbuff[256] = { '\0' };
@@ -352,11 +352,12 @@ int setfixedpowerall(char power)	//å›ºå®šåŠŸç‡é™å®šå¹¿æ’­ï¼Œzb_constpower_broa
 
 }
 
-int setlimitedpowerone(inverter_info *inverter, char power)	//å‘é€å‘½ä»¤ï¼Œè®¾ç½®å•ä¸ªé€†å˜å™¨é™å®šåŠŸç‡
+int setlimitedpowerone(inverter_info *inverter, char power)	//·¢ËÍÃüÁî£¬ÉèÖÃµ¥¸öÄæ±äÆ÷ÏŞ¶¨¹¦ÂÊ
 {
 	int i = 0, ret;
 	char sendbuff[256] = { '\0' };
 	char data[256] = { '\0' };
+	int check=0,j;
 
 	sendbuff[i++] = 0xFB;
 	sendbuff[i++] = 0xFB;
@@ -371,6 +372,10 @@ int setlimitedpowerone(inverter_info *inverter, char power)	//å‘é€å‘½ä»¤ï¼Œè®¾
 	sendbuff[i++] = 0x00;
 	sendbuff[i++] = 0xFE;
 	sendbuff[i++] = 0xFE;
+	for(j=2;j<9;j++)
+		check=check+sendbuff[j];
+	sendbuff[9]=check/256;
+	sendbuff[10]=check%256;
 
 	zb_send_cmd(inverter, sendbuff, i);
 	printmsg(ECU_DBG_MAIN,"Set max power single");
@@ -400,10 +405,11 @@ int setlimitedpowerone(inverter_info *inverter, char power)	//å‘é€å‘½ä»¤ï¼Œè®¾
 	}
 }
 
-int setlimitedpowerall(char power)	//æœ€å¤§åŠŸç‡é™å®šå¹¿æ’­ï¼Œzb_powerlimited_broadcast
+int setlimitedpowerall(char power)	//×î´ó¹¦ÂÊÏŞ¶¨¹ã²¥£¬zb_powerlimited_broadcast
 {
 	int i = 0;
 	char sendbuff[256] = { '\0' };
+	int check=0,j;
 
 	sendbuff[i++] = 0xFB;
 	sendbuff[i++] = 0xFB;
@@ -418,35 +424,34 @@ int setlimitedpowerall(char power)	//æœ€å¤§åŠŸç‡é™å®šå¹¿æ’­ï¼Œzb_powerlimited_
 	sendbuff[i++] = 0x00;
 	sendbuff[i++] = 0xFE;
 	sendbuff[i++] = 0xFE;
-
+	for(j=2;j<9;j++)
+		check=check+sendbuff[j];
+	sendbuff[9]=check/256;
+	sendbuff[10]=check%256;
+	
 	zb_broadcast_cmd(sendbuff, i);
 	printmsg(ECU_DBG_MAIN,"Set max power broadcast");
 	return 0;
 }
 
 
-int save_max_power_result_all(void)			//è®¾ç½®æ‰€æœ‰é€†å˜å™¨åŠŸç‡çš„ç»“æœ
+int save_max_power_result_all(void)			//ÉèÖÃËùÓĞÄæ±äÆ÷¹¦ÂÊµÄ½á¹û
 {
-	char ecu_id[16];
 	FILE *fp;
-	char set_max_power_result[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};
+	char *set_max_power_result = NULL;	//[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};
 	char inverter_result[64];
 	char data[200];
 	char splitdata[6][32];
 	int num = 0;
+	set_max_power_result = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
+	memset(set_max_power_result,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 
 	strcpy(set_max_power_result, "APS13AAAAAA117AAA1");
-	fp = fopen("/yuneng/ecuid.con", "r");		//è¯»å–ECUçš„ID
-	if(fp)
-	{
-		fgets(ecu_id, 13, fp);
-		fclose(fp);
-	}
 
-	strcat(set_max_power_result, ecu_id);					//ECUçš„ID
-	strcat(set_max_power_result, "0000");					//é€†å˜å™¨ä¸ªæ•°
-	strcat(set_max_power_result, "00000000000000");		//æ—¶é—´æˆ³ï¼Œè®¾ç½®é€†å˜å™¨åè¿”å›çš„ç»“æœä¸­æ—¶é—´æˆ³ä¸º0
-	strcat(set_max_power_result, "END");					//å›ºå®šæ ¼å¼
+	strcat(set_max_power_result, ecu.id);					//ECUµÄID
+	strcat(set_max_power_result, "0000");					//Äæ±äÆ÷¸öÊı
+	strcat(set_max_power_result, "00000000000000");		//Ê±¼ä´Á£¬ÉèÖÃÄæ±äÆ÷ºó·µ»ØµÄ½á¹ûÖĞÊ±¼ä´ÁÎª0
+	strcat(set_max_power_result, "END");					//¹Ì¶¨¸ñÊ½
 
 	fp = fopen("/home/data/power", "r");
 	if(fp)
@@ -485,61 +490,24 @@ int save_max_power_result_all(void)			//è®¾ç½®æ‰€æœ‰é€†å˜å™¨åŠŸç‡çš„ç»“æœ
 		set_max_power_result[9] = (strlen(set_max_power_result)-1)%10 + 0x30;
 
 	save_process_result(117, set_max_power_result);
-
+	free(set_max_power_result);
+	set_max_power_result = NULL;
 	return 0;
 }
 
-#if 0
-int save_max_power_result_one(char *inverterid, int power)		//è®¾ç½®ä¸€ä¸ªé€†å˜å™¨æœ€å¤§åŠŸç‡çš„ç»“æœ
+
+
+int save_max_power_result_one(inverter_info *inverter, int power)		//ÉèÖÃÒ»¸öÄæ±äÆ÷×î´ó¹¦ÂÊµÄ½á¹û
 {
-	char ecu_id[16];
-	FILE *fp;
-	char set_max_power_result[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};
-	char inverter_result[64] = {'\0'};
-
-	strcpy(set_max_power_result, "APS13AAAAAA117AAA1");
-	fp = fopen("/etc/yuneng/ecuid.con", "r");		//è¯»å–ECUçš„ID
-	if(fp)
-	{
-		fgets(ecu_id, 13, fp);
-		fclose(fp);
-	}
-
-	strcat(set_max_power_result, ecu_id);					//ECUçš„ID
-	strcat(set_max_power_result, "0000");					//é€†å˜å™¨ä¸ªæ•°
-	strcat(set_max_power_result, "00000000000000");		//æ—¶é—´æˆ³ï¼Œè®¾ç½®é€†å˜å™¨åè¿”å›çš„ç»“æœä¸­æ—¶é—´æˆ³ä¸º0
-	strcat(set_max_power_result, "END");					//å›ºå®šæ ¼å¼
-
-	sprintf(inverter_result, "%s%03d020250END\n", inverterid, power);
-	strcat(set_max_power_result, inverter_result);
-
-	set_max_power_result[33] = '1';
-
-	if(strlen(set_max_power_result) > 10000)
-		set_max_power_result[5] = (strlen(set_max_power_result)-1)/10000 + 0x30;
-	if(strlen(set_max_power_result) > 1000)
-		set_max_power_result[6] = ((strlen(set_max_power_result)-1)/1000)%10 + 0x30;
-	if(strlen(set_max_power_result) > 100)
-		set_max_power_result[7] = ((strlen(set_max_power_result)-1)/100)%10 + 0x30;
-	if(strlen(set_max_power_result) > 10)
-		set_max_power_result[8] = ((strlen(set_max_power_result)-1)/10)%10 + 0x30;
-	if(strlen(set_max_power_result) > 0)
-		set_max_power_result[9] = (strlen(set_max_power_result)-1)%10 + 0x30;
-
-	save_process_result(117, set_max_power_result);
-
-	return 0;
-}
-#endif
-
-int save_max_power_result_one(inverter_info *inverter, int power)		//è®¾ç½®ä¸€ä¸ªé€†å˜å™¨æœ€å¤§åŠŸç‡çš„ç»“æœ
-{
-	char inverter_result[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};
-
+	char *inverter_result = NULL;	//[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL] = {'\0'};
+	inverter_result = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
+	memset(inverter_result,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
+	
 	memset(inverter_result, '\0', sizeof(inverter_result));
 	sprintf(inverter_result, "%s%03d020300END", inverter->id, power);
 	save_inverter_parameters_result(inverter, 117, inverter_result);
-
+	free(inverter_result);
+	inverter_result = NULL;
 	return 0;
 }
 
@@ -568,7 +536,7 @@ int process_max_power(inverter_info *firstinverter)
 				if(!strncmp(splitdata[0], curinverter->id, 12))
 				{
 					updatemaxflag(curinverter);
-					if(curinverter->model==0)		//è¯»ä¸åˆ°æœºå‹ç ä¸å»è®¾ç½®
+					if(curinverter->model==0)		//¶Á²»µ½»úĞÍÂë²»È¥ÉèÖÃ
 							continue;
 					limitedpower = atoi(splitdata[1]);
 					limitedvalue = (limitedpower * 7395) >> 14;
@@ -630,7 +598,7 @@ int read_max_power(inverter_info *firstinverter)
 				res = zb_query_protect_parameter(curinverter, readpresetdata);
 				if(1 == res)
 				{
-					limitedresult = (readpresetdata[5] << 14) / 7395;					//è¯»å–æˆåŠŸ
+					limitedresult = (readpresetdata[5] << 14) / 7395;					//¶ÁÈ¡³É¹¦
 					if(curinverter->model==7)
 						limitedresult = limitedresult*4;
 					updatemaxpower(curinverter, limitedresult);

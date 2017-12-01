@@ -31,20 +31,18 @@ extern ecu_info ecu;
 /* 【A104】ECU上报本地时区 */
 int response_time_zone(const char *recvbuffer, char *sendbuffer)
 {
-	char ecuid[13] = {'\0'};	  //ECU号码
 	char local_time[15] = {'\0'}; //ECU本地时间
 	char timestamp[15] = {'\0'};  //时间戳
 	char timezone[64] = {'\0'};  //时区
 
 	//获取参数
-	memcpy(ecuid,ecu.id,13);
 	getcurrenttime(local_time);
 	strncpy(timestamp, &recvbuffer[34], 14);
 	file_get_one(timezone, sizeof(timezone), "/yuneng/timezone.con");
 
 	//拼接信息
 	msg_Header(sendbuffer, "A104");
-	msgcat_s(sendbuffer, 12, ecuid);
+	msgcat_s(sendbuffer, 12, ecu.id);
 	msgcat_s(sendbuffer, 14, local_time);
 	msgcat_s(sendbuffer, 14, timestamp);
 	strcat(sendbuffer, timezone);

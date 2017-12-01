@@ -139,18 +139,19 @@ int send_socket(int sockfd, char *sendbuffer, int size)
 			return send_count;
 		}
 	}
-	printmsg(ECU_DBG_CONTROL_CLIENT,"Send failed:");
+	printmsg(ECU_DBG_CONTROL_CLIENT,"Send failed");
 	return -1;
 }
 
 /* 接收数据 */
 int recv_socket(int sockfd, char *recvbuffer, int size, int timeout_s)
-{
+{	
 	fd_set rd;
 	struct timeval timeout = {10,0};
 	int recv_each = 0, recv_count = 0,res = 0;
-	char recv_buffer[4096] = {'\0'};
-
+	char *recv_buffer = NULL;	//[4096] = {'\0'};
+	recv_buffer = malloc(4096);
+	memset(recv_buffer,'\0',4096);
 	memset(recvbuffer, '\0', size);
 	while(1)
 	{
@@ -165,6 +166,8 @@ int recv_socket(int sockfd, char *recvbuffer, int size, int timeout_s)
 				printmsg(ECU_DBG_CONTROL_CLIENT,"Receive date from EMA timeout");
 				closesocket(sockfd);
 				printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
+				free(recv_buffer);
+				recv_buffer = NULL;
 				return -1;
 			default:
 				if(FD_ISSET(sockfd, &rd)){
@@ -174,13 +177,18 @@ int recv_socket(int sockfd, char *recvbuffer, int size, int timeout_s)
 					if(recv_each <= 0){
 						
 						printdecmsg(ECU_DBG_CONTROL_CLIENT,"Communication over", recv_each);
+						free(recv_buffer);
+						recv_buffer = NULL;
 						return -1;
 					}
-					printdecmsg(ECU_DBG_CONTROL_CLIENT,"Received each time", recv_each);
+					//printdecmsg(ECU_DBG_CONTROL_CLIENT,"Received each time", recv_each);
 					recv_count += recv_each;
 //					debug_msg("Received Total:%d", recv_count);
-					print2msg(ECU_DBG_CONTROL_CLIENT,"Received", recvbuffer);
+					
 					if(msg_is_complete(recvbuffer)){
+						print2msg(ECU_DBG_CONTROL_CLIENT,"Received", recvbuffer);
+						free(recv_buffer);
+						recv_buffer = NULL;
 						return recv_count;
 					}
 				}

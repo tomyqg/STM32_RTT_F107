@@ -994,7 +994,7 @@ int set_start_time_yc1000_one(int shortaddr, char *value)				//直流启动时间
 
 int set_active_antiisland_time_yc1000_one(int shortaddr, char *value)				//直流启动时间
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;

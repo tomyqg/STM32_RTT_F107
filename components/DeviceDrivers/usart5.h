@@ -90,7 +90,7 @@ int WIFI_QueryStatus(eSocketType Type);
 int SendToSocketA(char *data ,int length,unsigned char ID[8]);
 int SendToSocketB(char *data ,int length);
 int SendToSocketC(char *data ,int length);
-
+int TestSocketCConnect(void);
 int AT(void);
 int AT_ENTM(void);
 int AT_WAP(char *ECUID12);

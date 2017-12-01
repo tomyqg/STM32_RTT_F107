@@ -240,11 +240,9 @@ int set_inverter_ac_protection_5(const char *recvbuffer, char *sendbuffer)
 /*【A113】ECU上报(ECU级别的)交流保护参数（5项）*/
 int response_ecu_ac_protection_5(const char *recvbuffer, char *sendbuffer)
 {
-	char ecuid[13] = {'\0'};
 	char timestamp[15] = {'\0'};
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	//获取参数
-	memcpy(ecuid,ecu.id,13);
 	strncpy(timestamp, &recvbuffer[34], 14);
 	memset(pro_value, 0, sizeof(pro_value));
 	memset(pro_flag, 0, sizeof(pro_flag));
@@ -252,7 +250,7 @@ int response_ecu_ac_protection_5(const char *recvbuffer, char *sendbuffer)
 
 	//拼接信息
 	msg_Header(sendbuffer, "A113");
-	msgcat_s(sendbuffer, 12, ecuid);
+	msgcat_s(sendbuffer, 12, ecu.id);
 	msgcat_s(sendbuffer, 14, timestamp);
 	msgcat_s(sendbuffer, 3, "END");
 	msgcat_d(sendbuffer, 3, format_ecu_ac_protection("under_voltage_slow", 0));
@@ -356,11 +354,9 @@ int set_inverter_ac_protection_13(const char *recvbuffer, char *sendbuffer)
 /*【A120】ECU上报(ECU级别的)交流保护参数（13项）*/
 int response_ecu_ac_protection_13(const char *recvbuffer, char *sendbuffer)
 {
-	char ecuid[13] = {'\0'};
 	char timestamp[15] = {'\0'};
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	//获取参数
-	file_get_one(ecuid, sizeof(ecuid), "/yuneng/ecuid.con");
 	strncpy(timestamp, &recvbuffer[34], 14);
 	memset(pro_value, 0, sizeof(pro_value));
 	memset(pro_flag, 0, sizeof(pro_flag));
@@ -368,7 +364,7 @@ int response_ecu_ac_protection_13(const char *recvbuffer, char *sendbuffer)
 
 	//拼接信息
 	msg_Header(sendbuffer, "A120");
-	msgcat_s(sendbuffer, 12, ecuid);
+	msgcat_s(sendbuffer, 12, ecu.id);
 	msgcat_s(sendbuffer, 14, timestamp);
 	msgcat_s(sendbuffer, 3, "END");
 	msgcat_d(sendbuffer, 3, format_ecu_ac_protection("under_voltage_slow", 0));
@@ -414,11 +410,9 @@ int read_inverter_ac_protection_13(const char *recvbuffer, char *sendbuffer)
 /*【A130】ECU上报(ECU级别的)交流保护参数（17项）*/
 int response_ecu_ac_protection_17(const char *recvbuffer, char *sendbuffer)
 {
-	char ecuid[13] = {'\0'};
 	char timestamp[15] = {'\0'};
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	//获取参数
-	file_get_one(ecuid, sizeof(ecuid), "/yuneng/ecuid.con");
 	strncpy(timestamp, &recvbuffer[34], 14);
 	memset(pro_value, 0, sizeof(pro_value));
 	memset(pro_flag, 0, sizeof(pro_flag));
@@ -426,7 +420,7 @@ int response_ecu_ac_protection_17(const char *recvbuffer, char *sendbuffer)
 
 	//拼接信息
 	msg_Header(sendbuffer, "A130");
-	msgcat_s(sendbuffer, 12, ecuid);
+	msgcat_s(sendbuffer, 12, ecu.id);
 	msgcat_s(sendbuffer, 14, timestamp);
 	msgcat_s(sendbuffer, 3, "END");
 	msgcat_d(sendbuffer, 3, format_ecu_ac_protection("under_voltage_slow", 0));

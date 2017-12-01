@@ -49,6 +49,7 @@
 #include "time_zone.h"
 #include "custom_command.h"
 #include "usart5.h"
+#include "power_factor.h"
 
 /*****************************************************************************/
 /*  Definitions                                                              */
@@ -62,8 +63,7 @@
 /*****************************************************************************/
 extern rt_mutex_t record_data_lock;
 extern rt_mutex_t usr_wifi_lock;
-
-char ecuid[13] = {'\0'};
+extern ecu_info ecu;
 
 typedef struct socket_config
 {
@@ -92,28 +92,29 @@ Socket_Cfg sockcfg = {'\0'};
 
 void add_functions()
 {
+	
 	pfun[A102] = response_inverter_id; 			//上报逆变器ID  										OK
 	pfun[A103] = set_inverter_id; 				//设置逆变器ID												OK
 	pfun[A104] = response_time_zone; 			//上报ECU本地时区
 	pfun[A105] = set_time_zone; 				//设置ECU本地时区
-	pfun[A106] = response_comm_config;			//上报ECU通讯配置参数								OK
-	pfun[A107] = set_comm_config;				//设置ECU通讯配置参数										OK
+	pfun[A106] = response_comm_config;			//上报ECU的通信配置参数
+	pfun[A107] = set_comm_config;				//设置ECU的通信配置参数
 	pfun[A108] = custom_command;				//向ECU发送自定义命令
-	pfun[A109] = set_inverter_ac_protection_5; 	//设置逆变器交流保护参数(5项)
-	pfun[A110] = set_inverter_maxpower;			//设置逆变器最大功率								OK
-	pfun[A111] = set_inverter_onoff;			//设置逆变器开关机										OK
-	pfun[A112] = clear_inverter_gfdi;			//设置逆变器GFDI											OK
+	pfun[A109] = set_inverter_ac_protection_5; 	//设置逆变器的交流保护参数(5项)
+	pfun[A110] = set_inverter_maxpower;			//设置逆变器最大功率
+	pfun[A111] = set_inverter_onoff;			//设置逆变器开关机
+	pfun[A112] = clear_inverter_gfdi;			//设置逆变器GFDI
 	pfun[A113] = response_ecu_ac_protection_5;	//上报ECU级别交流保护参数(5项)
 	pfun[A114] = read_inverter_ac_protection_5; //读取逆变器的交流保护参数(5项)
-	pfun[A117] = response_inverter_maxpower;	//上报逆变器最大功率及范围				OK
-	pfun[A119] = set_ecu_flag;					//设置ECU与EMA的通讯开关								OK
+	pfun[A117] = response_inverter_maxpower;	//上报逆变器最大功率及范围
+	pfun[A119] = set_ecu_flag;					//设置ECU与EMA的通信开关
 	pfun[A120] = response_ecu_ac_protection_13;	//上报ECU级别交流保护参数(13项)
 	pfun[A121] = read_inverter_ac_protection_13;//读取逆变器的交流保护参数(13项)
 	pfun[A122] = set_inverter_ac_protection_13;	//设置逆变器的交流保护参数(13项)
-	pfun[A124] = read_inverter_grid_environment;//读取逆变器电网环境						OK
-	pfun[A125] = set_inverter_grid_environment;	//设置逆变器电网环境						OK	
-	pfun[A126] = read_inverter_ird;				//读取逆变器的IRD选项									OK
-	pfun[A127] = set_inverter_ird;				//设置逆变器的IRD选项									OK
+	pfun[A124] = read_inverter_grid_environment;//读取逆变器的电网环境
+	pfun[A125] = set_inverter_grid_environment;	//设置逆变器的电网环境
+	pfun[A126] = read_inverter_ird;				//读取逆变器的IRD选项
+	pfun[A127] = set_inverter_ird;				//设置逆变器的IRD选项
 	pfun[A128] = read_inverter_signal_strength;	//读取逆变器的信号强度
 	pfun[A129] = response_grid_quality;			//上报系统的电网质量
 	pfun[A130] = response_ecu_ac_protection_17;	//上报ECU级别交流保护参数(17项)
@@ -122,8 +123,11 @@ void add_functions()
 	pfun[A134] = set_inverter_restore;			//设置逆变器的还原标志							OK
 	pfun[A136] = set_inverter_update;			//设置逆变器的升级标志								OK
 	pfun[A138] = set_autoflag_report;			//设置ECU自动上报功能									OK
+	pfun[A145] = response_inverter_power_factor;//上报逆变器级别功率因数
+	pfun[A146] = set_all_inverter_power_factor; //设置ecu级别功率因数
 	pfun[A148] = read_wrong_id;					//读取异常的3501uid											OK
 	pfun[A150] = set_unnormal_id;				//设置3501正确的id
+	
 }
 
 /* [A118] ECU初次连接EMA需要执行的打包命令 */
@@ -134,8 +138,8 @@ int first_time_info(const char *recvbuffer, char *sendbuffer)
 			A102, A104, A106, A113, A114, A117,
 			A120, A121, A124, A126, A130, A131,
 	};
-	printdecmsg(ECU_DBG_CONTROL_CLIENT,"first_time_info",(command_id+1));
-	printdecmsg(ECU_DBG_CONTROL_CLIENT,"first_time_info A",functions[(command_id+1)]+100);
+	printdecmsg(ECU_DBG_CONTROL_CLIENT,"first_time_info",(command_id));
+	printdecmsg(ECU_DBG_CONTROL_CLIENT,"first_time_info A",functions[(command_id)]+100);
 	
 	//调用函数
 	(*pfun[functions[command_id++]%100])(recvbuffer, sendbuffer);
@@ -144,8 +148,11 @@ int first_time_info(const char *recvbuffer, char *sendbuffer)
 
 	if(command_id < FIRST_TIME_CMD_NUM)
 		return 118;
-	else
+	else{
+		command_id = 0;
 		return 0;
+	}
+		
 }
 /* 将从文件中读取的键值对保存到socket配置结构体中 */
 int get_socket_config(Socket_Cfg *cfg, MyArray *array)
@@ -915,7 +922,7 @@ int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)
 		dirp = opendir("/home/data/proc_res");
 		if(dirp == RT_NULL)
 		{
-			printmsg(ECU_DBG_CLIENT,"search_pro_result_flag open directory error");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"search_pro_result_flag open directory error");
 		}
 		else
 		{
@@ -940,8 +947,8 @@ int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)
 										memcpy(item,&buff[strlen(buff)-6],3);				//获取每条记录的item
 										memcpy(data,buff,(strlen(buff)-7));
 										data[strlen(buff)-7] = '\n';
-										//print2msg(ECU_DBG_CLIENT,"search_readflag time",time);
-										//print2msg(ECU_DBG_CLIENT,"search_readflag data",data);
+										//print2msg(ECU_DBG_CONTROL_CLIENT,"search_readflag time",time);
+										//print2msg(ECU_DBG_CONTROL_CLIENT,"search_readflag data",data);
 										rt_hw_s_delay(1);
 										while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))	
 										{
@@ -1031,7 +1038,7 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 		dirp = opendir("/home/data/iprocres");
 		if(dirp == RT_NULL)
 		{
-			printmsg(ECU_DBG_CLIENT,"search_readflag open directory error");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"search_readflag open directory error");
 		}
 		else
 		{
@@ -1057,8 +1064,8 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 										memcpy(inverterid,&buff[strlen(buff)-19],12);
 										memcpy(data,buff,(strlen(buff)-20));
 										data[strlen(buff)-20] = '\n';
-										//print2msg(ECU_DBG_CLIENT,"search_readflag time",time);
-										//print2msg(ECU_DBG_CLIENT,"search_readflag data",data);
+										//print2msg(ECU_DBG_CONTROL_CLIENT,"search_readflag time",time);
+										//print2msg(ECU_DBG_CONTROL_CLIENT,"search_readflag data",data);
 										rt_hw_s_delay(1);
 										while(NULL != fgets(buff,(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18),fp))
 										{
@@ -1159,7 +1166,7 @@ int check_inverter_abnormal_status_sent(int hour)
 		{
 			int j = 0,flag_failed = 0,ret = 0;
 			strcpy(send_buffer, "APS13AAA51A123AAA0");
-			strcat(send_buffer, ecuid);
+			strcat(send_buffer, ecu.id);
 			strcat(send_buffer, "000000000000000000END\n");
 			rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
 			ret = SendToSocketC(send_buffer, strlen(send_buffer));
@@ -1230,7 +1237,7 @@ int check_inverter_abnormal_status_sent(int hour)
 	}else
 	{
 		strcpy(send_buffer, "APS13AAA51A123AAA0");
-		strcat(send_buffer, ecuid);
+		strcat(send_buffer, ecu.id);
 		strcat(send_buffer, "000000000000000000END\n");
 		send_socket(sockfd, send_buffer, strlen(send_buffer));
 		//接收EMA应答
@@ -1644,7 +1651,7 @@ int communication_with_EMA(int next_cmd_id)
 					next_cmd_id = 0;
 					memset(recv_buffer, 0, sizeof(recv_buffer));
 					snprintf(recv_buffer, 51+1, "APS13AAA51A101AAA0%.12sA%3d%.14sEND",
-							ecuid, cmd_id, timestamp);
+							ecu.id, cmd_id, timestamp);
 				}
 				//ECU注册后初次和EMA通讯
 				if(cmd_id == 118){
@@ -1658,6 +1665,7 @@ int communication_with_EMA(int next_cmd_id)
 					next_cmd_id = first_time_info(recv_buffer, send_buffer);
 					if(next_cmd_id == 0){
 						strncpy(timestamp, "00000000000000", 14);
+						//break;
 					}
 				}
 				//根据命令号调用函数
@@ -1673,7 +1681,7 @@ int communication_with_EMA(int next_cmd_id)
 					//若命令号不存在,则发送设置失败应答(每条设置协议的时间戳位置不统一,返回时间戳是个问题...)
 					memset(send_buffer, 0, sizeof(send_buffer));
 					snprintf(send_buffer, 52+1, "APS13AAA52A100AAA0%sA%3d000000000000002END\n",
-							ecuid, cmd_id);
+							ecu.id, cmd_id);
 				}
 				//将消息发送给EMA(自动计算长度,补上回车)
 				SendToSocketC(send_buffer, strlen(send_buffer));
@@ -1721,7 +1729,7 @@ int communication_with_EMA(int next_cmd_id)
 				next_cmd_id = 0;
 				memset(recv_buffer, 0, sizeof(recv_buffer));
 				snprintf(recv_buffer, 51+1, "APS13AAA51A101AAA0%.12sA%3d%.14sEND",
-						ecuid, cmd_id, timestamp);
+						ecu.id, cmd_id, timestamp);
 			}
 
 			//ECU注册后初次和EMA通讯
@@ -1752,7 +1760,7 @@ int communication_with_EMA(int next_cmd_id)
 				//若命令号不存在,则发送设置失败应答(每条设置协议的时间戳位置不统一,返回时间戳是个问题...)
 				memset(send_buffer, 0, sizeof(send_buffer));
 				snprintf(send_buffer, 52+1, "APS13AAA52A100AAA0%sA%3d000000000000002END",
-						ecuid, cmd_id);
+						ecu.id, cmd_id);
 			}
 			//将消息发送给EMA(自动计算长度,补上回车)
 			send_socket(sockfd, send_buffer, strlen(send_buffer));
@@ -1838,7 +1846,7 @@ int response_process_result()
 			//拼接数据
 			
 			memset(sendbuffer, 0, sizeof(sendbuffer));
-			sprintf(sendbuffer, "APS1300000A%03dAAA0%.12s%04d00000000000000END", atoi(item), ecuid, 1);
+			sprintf(sendbuffer, "APS1300000A%03dAAA0%.12s%04d00000000000000END", atoi(item), ecu.id, 1);
 			strcat(sendbuffer, data);
 
 			if(sendbuffer[strlen(sendbuffer)-1] == '\n'){
@@ -1896,9 +1904,10 @@ void control_client_thread_entry(void* parameter)
 	char buffer[16] = {'\0'};
 	MyArray array[ARRAYNUM] = {'\0'};
 	FILE *fp;
+	int socketfd = -1;
 	rt_thread_delay(RT_TICK_PER_SECOND*START_TIME_CONTROL_CLIENT);
 	//添加功能函数
-  add_functions();
+  	add_functions();
 
 	
 	//获取ECU的通讯开关flag
@@ -1907,8 +1916,6 @@ void control_client_thread_entry(void* parameter)
 	}
 
 	printdecmsg(ECU_DBG_CONTROL_CLIENT,"ecu_flag", ecu_flag);
-	file_get_one(ecuid, sizeof(ecuid), "/yuneng/ecuid.con");
-
 
 	//从配置文件中获取socket通讯参数
 	if(file_get_array(array, ARRAYNUM, "/yuneng/control.con") == 0){
@@ -1924,16 +1931,23 @@ void control_client_thread_entry(void* parameter)
 		{
 			char c='0';
 			c=fgetc(fp);
-			if(c=='1')
-				result = communication_with_EMA(118);
 			fclose(fp);
-			unlink("/yuneng/A118.con");
+			if(((socketfd = client_socket_init(randport(sockcfg), sockcfg.ip, sockcfg.domain))>=0)||(TestSocketCConnect() == 0))
+			{
+				if(socketfd >= 0)
+				{
+					closesocket(socketfd);
+				}
+				if(c=='1')
+					result = communication_with_EMA(118);
+				unlink("/yuneng/A118.con");
+			}	
 		}
 		
 		if(exist_inverter_abnormal_status() && ecu_flag){
 			ecu_time =  acquire_time();
 			result = response_inverter_abnormal_status();
-			printdecmsg(ECU_DBG_CLIENT,"result",result);
+			printdecmsg(ECU_DBG_CONTROL_CLIENT,"result",result);
 			response_process_result();
 		}
 		else if(compareTime(acquire_time() ,ecu_time,60*sockcfg.report_interval)){
@@ -1947,7 +1961,7 @@ void control_client_thread_entry(void* parameter)
 		if(result < 0){
 			result = 0;
 			printmsg(ECU_DBG_CONTROL_CLIENT,"Quit control_client");
-			rt_thread_delay(5 * RT_TICK_PER_SECOND);
+			rt_thread_delay(300 * RT_TICK_PER_SECOND);
 			continue;
 		}
 		rt_thread_delay(RT_TICK_PER_SECOND*sockcfg.report_interval*60/3);

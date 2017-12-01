@@ -382,10 +382,9 @@ void main_thread_entry(void* parameter)
 				saveevent(inverter, ecu.broadcast_time);							//保存当前一轮逆变器事件
 			}
 
-			//reset_inverter(inverter);											//重置每个逆变器
-			
+			//reset_inverter(inverter);											//重置每个逆变器		
 			//remote_update(inverter);
-			
+			printmsg(ECU_DBG_MAIN,"1---------------------------->");
 			if((cur_time_hour>9)&&(1 == ecu.flag_ten_clock_getshortaddr))
 			{
 				get_inverter_shortaddress(inverter);
@@ -394,10 +393,15 @@ void main_thread_entry(void* parameter)
 					ecu.flag_ten_clock_getshortaddr = 0;							//每天10点执行完重新获取短地址后标志位置为0
 				}
 			}
+			printmsg(ECU_DBG_MAIN,"2---------------------------->");
 
 			//对于轮训没有数据的逆变器进行重新获取短地址操作
 			bind_nodata_inverter(inverter);
+			printmsg(ECU_DBG_MAIN,"3---------------------------->");
+			printmsg(ECU_DBG_MAIN,"PROCESS_ALL START");
 			process_all(inverter);
+			printmsg(ECU_DBG_MAIN,"PROCESS_ALL OVER");
+			printmsg(ECU_DBG_MAIN,"****************************************");
 		}
 		
 		rt_thread_delay(RT_TICK_PER_SECOND);

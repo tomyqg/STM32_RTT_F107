@@ -38,7 +38,7 @@ extern inverter_info inverter[MAXINVERTERCOUNT];
 /*****************************************************************************/
 int send_ird_command_single(int shortaddr, char value)		//单台设置逆变器ird
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 
@@ -71,7 +71,7 @@ int send_ird_command_single(int shortaddr, char value)		//单台设置逆变器i
 
 int send_ird_command_all(char value)		//广播设置逆变器ird
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	
@@ -104,11 +104,13 @@ int send_ird_command_all(char value)		//广播设置逆变器ird
 
 int resolve_ird(char *id, char *readbuff)		//解析并保存IRD设置结果
 {
-	char inverter_result[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL]={'\0'};
+	char *inverter_result = NULL;	//[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL]={'\0'};
 	int i, mode;
 	char data[200];
 	char splitdata[4][32];
 	mode = ((readbuff[3+1] >> 1) & 0x03);
+	inverter_result = malloc(200);
+	memset(inverter_result,'\0',200);
 	
 	//读取所在ID行
 	if(1 == read_line("/home/data/ird",data,id,12))
@@ -154,18 +156,20 @@ int resolve_ird(char *id, char *readbuff)		//解析并保存IRD设置结果
 		sprintf(inverter_result, "%s%01dEND", id, mode);				//这里先注释掉
 		save_inverter_parameters_result2(id, 126, inverter_result);		//把结果保存到数据库，通过远程控制程序上传给EMA
 	}
-
+	free(inverter_result);
+	inverter_result = NULL;
 
 	return 0;
 }
 
 int resolve_ird_DD(char *id, char *readbuff)		//解析并保存IRD设置结果
 {
-	char inverter_result[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL]={'\0'};
+	char *inverter_result = NULL;	//[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL]={'\0'};
 	char data[200];
 	char splitdata[4][32];
 	int i, mode;
-	
+	inverter_result = malloc(200);
+	memset(inverter_result,'\0',200);
 	mode = (int)readbuff[3+19];
 //读取所在ID行
 	if(1 == read_line("/home/data/ird",data,id,12))
@@ -214,6 +218,8 @@ int resolve_ird_DD(char *id, char *readbuff)		//解析并保存IRD设置结果
 		sprintf(inverter_result, "%s%01dEND", id, mode);				//这里先注释掉
 		save_inverter_parameters_result2(id, 126, inverter_result);		//把结果保存到数据库，通过远程控制程序上传给EMA
 	}
+	free(inverter_result);
+	inverter_result = NULL;
 
 	return 0;
 }
@@ -388,10 +394,9 @@ int set_ird_single()		//设置单台逆变器IRD
 		shortaddr= get_ird_id_value(id, value);
 		if(-1 == shortaddr)		//从数据库中获取一台要设置电网的逆变器的ID和IRD，没有就退出
 			break;
-		else if(0 == shortaddr)
-			clear_ird_flag_single(id);
-		else{
-			clear_ird_flag_single(id);
+
+		clear_ird_flag_single(id);
+		if(shortaddr > 0){
 			send_ird_command_single(shortaddr, atoi(value));	//设置一台逆变器IRD
 			for(index=0; index<3; index++){
 				if(!get_ird_single(shortaddr,id))	//读取逆变器的设置结果

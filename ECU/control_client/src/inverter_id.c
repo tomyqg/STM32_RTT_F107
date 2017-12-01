@@ -39,7 +39,6 @@ extern ecu_info ecu;
 /* 协议的ECU部分 */
 int ecu_msg(char *sendbuffer, int num, const char *recvbuffer)
 {
-	char ecuid[13] = {'\0'};		//ECU号码
 	char version_msg[16] = {'\0'};	//版本信息（包括：长度+版本号+数字版本号）
 	char version[16] = {'\0'};		//版本号
 	char area[16] = {'\0'};
@@ -47,7 +46,6 @@ int ecu_msg(char *sendbuffer, int num, const char *recvbuffer)
 	char timestamp[16] = {'\0'};	//时间戳
 
 	/* 处理数据 */
-	memcpy(ecuid,ecu.id,13);
 	sprintf(version,"%s_%s.%s",ECU_EMA_VERSION,MAJORVERSION,MINORVERSION);
 	file_get_one(version_number, sizeof(version_number),
 			"/yuneng/vernum.con");
@@ -67,7 +65,7 @@ int ecu_msg(char *sendbuffer, int num, const char *recvbuffer)
 	strncpy(timestamp, &recvbuffer[34], 14);
 
 	/* 拼接ECU信息 */
-	msgcat_s(sendbuffer, 12, ecuid);
+	msgcat_s(sendbuffer, 12, ecu.id);
 	strcat(sendbuffer, version_msg);
 	msgcat_d(sendbuffer, 3, num);
 	msgcat_s(sendbuffer, 14, timestamp);

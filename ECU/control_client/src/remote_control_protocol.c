@@ -27,8 +27,7 @@
 /*****************************************************************************/
 /*  Variable Declarations                                                    */
 /*****************************************************************************/
-extern char ecuid[13] ;
-
+extern ecu_info ecu;
 /*****************************************************************************/
 /*  Function Implementations                                                 */
 /*****************************************************************************/
@@ -50,7 +49,7 @@ int msg_REQ(char *sendbuffer)
 {
 	char msg_length[6] = {'\0'};
 	msg_Header(sendbuffer, "A101");
-	strcat(sendbuffer, ecuid);
+	strcat(sendbuffer, ecu.id);
 	strcat(sendbuffer, "A10100000000000000END\n");
 	
 	sprintf(msg_length, "%05d", strlen(sendbuffer)-1);
@@ -75,7 +74,7 @@ int msg_ACK(char *sendbuffer,
 	char msg_length[6] = {'\0'};
 
 	msg_Header(sendbuffer, "A100");
-	sprintf(msg_body, "%.12s%.4s%.14s%1dEND\n", ecuid, cmd_id, timestamp, ack_flag);
+	sprintf(msg_body, "%.12s%.4s%.14s%1dEND\n", ecu.id, cmd_id, timestamp, ack_flag);
 	strcat(sendbuffer, msg_body);
 	sprintf(msg_length, "%05d", strlen(sendbuffer)-1);
 	strncpy(&sendbuffer[5], msg_length, 5);
@@ -163,7 +162,7 @@ int msg_format_check(const char *msg)
 	}
 
 	//ECU_ID
-	if(strncmp(&msg[18], ecuid, 12)){
+	if(strncmp(&msg[18], ecu.id, 12)){
 		if(msg_get_int(&msg[10], 4) != 123){ //A123应答没有ECU_ID
 			printmsg(ECU_DBG_CONTROL_CLIENT,"Format Error: ecu_id");
 			return -1;

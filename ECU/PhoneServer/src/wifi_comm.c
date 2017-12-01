@@ -10,7 +10,7 @@
 #include "threadlist.h"
 
 extern ecu_info ecu;
-static char SendData[4096] = {'\0'};
+static char SendData[MAXINVERTERCOUNT * INVERTER_PHONE_PER_LEN + INVERTER_PHONE_PER_OTHER] = {'\0'};
 extern unsigned char rateOfProgress;
 
 int phone_add_inverter(int num,const char *uidstring)
@@ -61,7 +61,7 @@ int Resolve_RecvData(char *RecvData,int* Data_Len,int* Command_Id)
 void APP_Response_BaseInfo(unsigned char *ID,stBaseInfo baseInfo)
 {
 	int packlength = 0;
-	memset(SendData,'\0',4096);	
+	memset(SendData,'\0',MAXINVERTERCOUNT * INVERTER_PHONE_PER_LEN + INVERTER_PHONE_PER_OTHER);	
 	//拼接需要发送的报文
 	sprintf(SendData,"APS1100000001%s",baseInfo.ECUID);
 	packlength = 25;
@@ -132,7 +132,7 @@ void APP_Response_PowerGeneration(char mapping,unsigned char *ID,inverter_info *
 {
 	int packlength = 0,index = 0;
 	inverter_info *curinverter = inverter;
-	memset(SendData,'\0',4096);	
+	memset(SendData,'\0',MAXINVERTERCOUNT * INVERTER_PHONE_PER_LEN + INVERTER_PHONE_PER_OTHER);	
 	
 	//匹配不成功
 	if(mapping == 0x01)
@@ -172,39 +172,115 @@ void APP_Response_PowerGeneration(char mapping,unsigned char *ID,inverter_info *
 		
 	for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)
 	{
-		//UID
-		SendData[packlength++] = ((curinverter->id[0]-'0') << 4) + (curinverter->id[1]-'0');
-		SendData[packlength++] = ((curinverter->id[2]-'0') << 4) + (curinverter->id[3]-'0');
-		SendData[packlength++] = ((curinverter->id[4]-'0') << 4) + (curinverter->id[5]-'0');
-		SendData[packlength++] = ((curinverter->id[6]-'0') << 4) + (curinverter->id[7]-'0');
-		SendData[packlength++] = ((curinverter->id[8]-'0') << 4) + (curinverter->id[9]-'0');
-		SendData[packlength++] = ((curinverter->id[10]-'0') << 4)+ (curinverter->id[11]-'0');
+		if((curinverter->model == 7))
+		{
+			//UID
+			SendData[packlength++] = ((curinverter->id[0]-'0') << 4) + (curinverter->id[1]-'0');
+			SendData[packlength++] = ((curinverter->id[2]-'0') << 4) + (curinverter->id[3]-'0');
+			SendData[packlength++] = ((curinverter->id[4]-'0') << 4) + (curinverter->id[5]-'0');
+			SendData[packlength++] = ((curinverter->id[6]-'0') << 4) + (curinverter->id[7]-'0');
+			SendData[packlength++] = ((curinverter->id[8]-'0') << 4) + (curinverter->id[9]-'0');
+			SendData[packlength++] = ((curinverter->id[10]-'0') << 4)+ (curinverter->id[11]-'0');
 
-		SendData[packlength++] = (curinverter->inverterstatus.dataflag & 0x01);
-		
-		//电网频率
-		SendData[packlength++] = (int)(curinverter->gf * 10) / 256;
-		SendData[packlength++] = (int)(curinverter->gf * 10) % 256;
+			SendData[packlength++] = (curinverter->inverterstatus.dataflag & 0x01);
 
-		//机内温度
-		SendData[packlength++] = (curinverter->it + 100) /256;
-		SendData[packlength++] = (curinverter->it + 100) %256;		
-		
-		//逆变器功率  A 
-		SendData[packlength++] = curinverter->op / 256;
-		SendData[packlength++] = curinverter->op % 256;;
+			//逆变器类型
+			SendData[packlength++] = '0';
+			SendData[packlength++] = '1';
 			
-		//电网电压    A
-		SendData[packlength++] = curinverter->gv / 256;
-		SendData[packlength++] = curinverter->gv % 256;
-		
-		//逆变器功率  B 
-		SendData[packlength++] = curinverter->opb / 256;
-		SendData[packlength++] = curinverter->opb % 256;
+			//电网频率
+			SendData[packlength++] = (int)(curinverter->gf * 10) / 256;
+			SendData[packlength++] = (int)(curinverter->gf * 10) % 256;
+
+			//机内温度
+			SendData[packlength++] = (curinverter->it + 100) /256;
+			SendData[packlength++] = (curinverter->it + 100) %256;		
 			
-		//电网电压    B
-		SendData[packlength++] = curinverter->gvb / 256;
-		SendData[packlength++] = curinverter->gvb % 256;
+			//逆变器功率  A 
+			SendData[packlength++] = curinverter->op / 256;
+			SendData[packlength++] = curinverter->op % 256;;
+				
+			//电网电压    A
+			SendData[packlength++] = curinverter->gv / 256;
+			SendData[packlength++] = curinverter->gv % 256;
+			
+			//逆变器功率  B 
+			SendData[packlength++] = curinverter->opb / 256;
+			SendData[packlength++] = curinverter->opb % 256;
+				
+			//电网电压    B
+			SendData[packlength++] = curinverter->gv / 256;
+			SendData[packlength++] = curinverter->gv % 256;
+		}else if((curinverter->model == 5) || (curinverter->model == 6))
+		{
+			//UID
+			SendData[packlength++] = ((curinverter->id[0]-'0') << 4) + (curinverter->id[1]-'0');
+			SendData[packlength++] = ((curinverter->id[2]-'0') << 4) + (curinverter->id[3]-'0');
+			SendData[packlength++] = ((curinverter->id[4]-'0') << 4) + (curinverter->id[5]-'0');
+			SendData[packlength++] = ((curinverter->id[6]-'0') << 4) + (curinverter->id[7]-'0');
+			SendData[packlength++] = ((curinverter->id[8]-'0') << 4) + (curinverter->id[9]-'0');
+			SendData[packlength++] = ((curinverter->id[10]-'0') << 4)+ (curinverter->id[11]-'0');
+
+			SendData[packlength++] = (curinverter->inverterstatus.dataflag & 0x01);
+
+			//逆变器类型
+			SendData[packlength++] = '0';
+			SendData[packlength++] = '2';
+			
+			//电网频率
+			SendData[packlength++] = (int)(curinverter->gf * 10) / 256;
+			SendData[packlength++] = (int)(curinverter->gf * 10) % 256;
+
+			//机内温度
+			SendData[packlength++] = (curinverter->it + 100) /256;
+			SendData[packlength++] = (curinverter->it + 100) %256;		
+			
+			//逆变器功率  A 
+			SendData[packlength++] = curinverter->op / 256;
+			SendData[packlength++] = curinverter->op % 256;;
+				
+			//电网电压    A
+			SendData[packlength++] = curinverter->gv / 256;
+			SendData[packlength++] = curinverter->gv % 256;
+			
+			//逆变器功率  B 
+			SendData[packlength++] = curinverter->opb / 256;
+			SendData[packlength++] = curinverter->opb % 256;
+				
+			//电网电压    B
+			SendData[packlength++] = curinverter->gvb / 256;
+			SendData[packlength++] = curinverter->gvb % 256;
+
+
+			//逆变器功率  C 
+			SendData[packlength++] = curinverter->opc / 256;
+			SendData[packlength++] = curinverter->opc % 256;
+				
+			//电网电压    C
+			SendData[packlength++] = curinverter->gvc / 256;
+			SendData[packlength++] = curinverter->gvc % 256;
+
+			//逆变器功率  D 
+			SendData[packlength++] = curinverter->opd / 256;
+			SendData[packlength++] = curinverter->opd % 256;
+				
+		}else
+		{
+			//UID
+			SendData[packlength++] = ((curinverter->id[0]-'0') << 4) + (curinverter->id[1]-'0');
+			SendData[packlength++] = ((curinverter->id[2]-'0') << 4) + (curinverter->id[3]-'0');
+			SendData[packlength++] = ((curinverter->id[4]-'0') << 4) + (curinverter->id[5]-'0');
+			SendData[packlength++] = ((curinverter->id[6]-'0') << 4) + (curinverter->id[7]-'0');
+			SendData[packlength++] = ((curinverter->id[8]-'0') << 4) + (curinverter->id[9]-'0');
+			SendData[packlength++] = ((curinverter->id[10]-'0') << 4)+ (curinverter->id[11]-'0');
+
+			SendData[packlength++] = 0;
+			
+			//逆变器类型
+			SendData[packlength++] = '0';
+			SendData[packlength++] = '0';
+		}
+		
 		
 	}
 	
@@ -224,7 +300,7 @@ void APP_Response_PowerGeneration(char mapping,unsigned char *ID,inverter_info *
 void APP_Response_PowerCurve(char mapping,unsigned char *ID,char * date)
 {
 	int packlength = 0,length = 0;
-	memset(SendData,'\0',4096);	
+	memset(SendData,'\0',MAXINVERTERCOUNT * INVERTER_PHONE_PER_LEN + INVERTER_PHONE_PER_OTHER);	
 	
 	//匹配不成功
 	if(mapping == 0x01)
@@ -260,7 +336,7 @@ void APP_Response_GenerationCurve(char mapping,unsigned char *ID,char request_ty
 {
 	int packlength = 0,len_body = 0;
 	char date_time[15] = { '\0' };
-	memset(SendData,'\0',4096);	
+	memset(SendData,'\0',MAXINVERTERCOUNT * INVERTER_PHONE_PER_LEN + INVERTER_PHONE_PER_OTHER);	
 	apstime(date_time);
 	//匹配不成功
 	if(mapping == 0x01)
@@ -315,7 +391,7 @@ void APP_Response_GenerationCurve(char mapping,unsigned char *ID,char request_ty
 void APP_Response_RegisterID(char mapping,unsigned char *ID)
 {
 	int packlength = 0;
-	memset(SendData,'\0',4096);	
+	memset(SendData,'\0',MAXINVERTERCOUNT * INVERTER_PHONE_PER_LEN + INVERTER_PHONE_PER_OTHER);	
 	
 	//拼接需要发送的报文
 	sprintf(SendData,"APS1100150005%02d\n",mapping);
@@ -328,7 +404,7 @@ void APP_Response_RegisterID(char mapping,unsigned char *ID)
 void APP_Response_SetTime(char mapping,unsigned char *ID)
 {
 	int packlength = 0;
-	memset(SendData,'\0',4096);	
+	memset(SendData,'\0',MAXINVERTERCOUNT * INVERTER_PHONE_PER_LEN + INVERTER_PHONE_PER_OTHER);	
 	
 	//拼接需要发送的报文
 	sprintf(SendData,"APS1100150006%02d\n",mapping);
@@ -341,7 +417,7 @@ void APP_Response_SetTime(char mapping,unsigned char *ID)
 void APP_Response_SetWiredNetwork(char mapping,unsigned char *ID)
 {
 	int packlength = 0;
-	memset(SendData,'\0',4096);	
+	memset(SendData,'\0',MAXINVERTERCOUNT * INVERTER_PHONE_PER_LEN + INVERTER_PHONE_PER_OTHER);	
 	
 	//拼接需要发送的报文
 	sprintf(SendData,"APS1100150007%02d\n",mapping);
@@ -379,7 +455,7 @@ void APP_Response_GetECUHardwareStatus(char mapping,unsigned char *ID)
 void APP_Response_SetWifiPasswd(char mapping,unsigned char *ID)
 {
 	int packlength = 0;
-	memset(SendData,'\0',4096);	
+	memset(SendData,'\0',MAXINVERTERCOUNT * INVERTER_PHONE_PER_LEN + INVERTER_PHONE_PER_OTHER);	
 	
 	//拼接需要发送的报文
 	sprintf(SendData,"APS1100150010%02d\n",mapping);
@@ -394,7 +470,7 @@ void APP_Response_GetIDInfo(char mapping,unsigned char *ID,inverter_info *invert
 	int packlength = 0,index = 0;
 	inverter_info *curinverter = inverter;
 	char uid[7];
-	memset(SendData,'\0',4096);	
+	memset(SendData,'\0',MAXINVERTERCOUNT * INVERTER_PHONE_PER_LEN + INVERTER_PHONE_PER_OTHER);	
 
 	if(mapping == 0x00)
 	{
@@ -437,7 +513,7 @@ void APP_Response_GetIDInfo(char mapping,unsigned char *ID,inverter_info *invert
 void APP_Response_GetTime(char mapping,unsigned char *ID,char *Time)
 {
 	int packlength = 0;
-	memset(SendData,'\0',4096);	
+	memset(SendData,'\0',MAXINVERTERCOUNT * INVERTER_PHONE_PER_LEN + INVERTER_PHONE_PER_OTHER);	
 	if(mapping == 0x00)
 	{
 		sprintf(SendData,"APS110032001200%sEND\n",Time);
@@ -456,7 +532,7 @@ void APP_Response_GetTime(char mapping,unsigned char *ID,char *Time)
 void APP_Response_FlashSize(char mapping,unsigned char *ID,unsigned int Flashsize)
 {
 	int packlength = 0;
-	memset(SendData,'\0',4096);	
+	memset(SendData,'\0',MAXINVERTERCOUNT * INVERTER_PHONE_PER_LEN + INVERTER_PHONE_PER_OTHER);	
 	if(mapping == 0x00)
 	{
 		sprintf(SendData,"APS110000001300");
@@ -493,7 +569,7 @@ void APP_Response_GetWiredNetwork(char mapping,unsigned char *ID,char dhcpStatus
 {
 	int packlength = 0;
 	char MAC[13] = {'\0'};
-	memset(SendData,'\0',4096);	
+	memset(SendData,'\0',MAXINVERTERCOUNT * INVERTER_PHONE_PER_LEN + INVERTER_PHONE_PER_OTHER);	
 	if(mapping == 0x00)
 	{
 		//拼接需要发送的报文
@@ -559,7 +635,7 @@ void APP_Response_GetWiredNetwork(char mapping,unsigned char *ID,char dhcpStatus
 void APP_Response_SetChannel(unsigned char *ID,unsigned char mapflag,char SIGNAL_CHANNEL,char SIGNAL_LEVEL)
 {
 	//char SendData[22] = {'\0'};
-	memset(SendData,'\0',4096);
+	memset(SendData,'\0',MAXINVERTERCOUNT * INVERTER_PHONE_PER_LEN + INVERTER_PHONE_PER_OTHER);
 	if(mapflag == 1)
 	{
 		sprintf(SendData,"APS110015001501\n");
@@ -575,7 +651,7 @@ void APP_Response_GetShortAddrInfo(char mapping,unsigned char *ID,inverter_info 
 	int packlength = 0,index = 0;
 	inverter_info *curinverter = inverter;
 	char uid[7];
-	memset(SendData,'\0',4096);
+	memset(SendData,'\0',MAXINVERTERCOUNT * INVERTER_PHONE_PER_LEN + INVERTER_PHONE_PER_OTHER);
 
 	if(mapping == 0x00)
 	{

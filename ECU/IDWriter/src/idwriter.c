@@ -44,7 +44,7 @@
 /*****************************************************************************/
 
 extern rt_mutex_t record_data_lock;
-
+extern ecu_info ecu;
 
 /*****************************************************************************/
 /*  Function Implementations                                                 */
@@ -238,7 +238,6 @@ void idwrite_thread_entry(void* parameter)
 	char recvbuff[200] = {'\0'};
 	int sockfd,clientfd;
 	FILE *fp;
-	char ecuid[13] = {'\0'};
 	char mac[32] = {'\0'};
 	char version[50] = {'\0'};
 	char area[8] = {'\0'};
@@ -264,24 +263,24 @@ void idwrite_thread_entry(void* parameter)
 		rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 		//烧写和读取ECU的ID
 		if(!strncmp(recvbuff, "set_ecu_id", 10)){
-			strncpy(ecuid, &recvbuff[11], 12);
-			print2msg(ECU_DBG_IDWRITE,"ECU id",ecuid);
-			printdecmsg(ECU_DBG_IDWRITE,"length",strlen(ecuid));
-			ecuid[12] = '\0';
-			setECUID(ecuid);
+			strncpy(ecu.id, &recvbuff[11], 12);
+			print2msg(ECU_DBG_IDWRITE,"ECU id",ecu.id);
+			printdecmsg(ECU_DBG_IDWRITE,"length",strlen(ecu.id));
+			ecu.id[12] = '\0';
+			setECUID(ecu.id);
 			
 			fp=fopen("/yuneng/ecuid.con","r");
-			fgets(ecuid,13,fp);
+			fgets(ecu.id,13,fp);
 			fclose(fp);
 			restartThread(TYPE_MAIN);
-			printdecmsg(ECU_DBG_IDWRITE,"Send",send(clientfd,ecuid,strlen(ecuid),0));
+			printdecmsg(ECU_DBG_IDWRITE,"Send",send(clientfd,ecu.id,strlen(ecu.id),0));
 		}
 		if(!strncmp(recvbuff, "get_ecu_id", 10)){
-			memset(ecuid,'\0',sizeof(ecuid));
+			memset(ecu.id,'\0',sizeof(ecu.id));
 			fp=fopen("/yuneng/ecuid.con","r");
-			fgets(ecuid,13,fp);
+			fgets(ecu.id,13,fp);
 			fclose(fp);
-			printdecmsg(ECU_DBG_IDWRITE,"Send",send(clientfd,ecuid,strlen(ecuid),0));
+			printdecmsg(ECU_DBG_IDWRITE,"Send",send(clientfd,ecu.id,strlen(ecu.id),0));
 		}
 
 		//烧写和读取ECU有线网络的MAC

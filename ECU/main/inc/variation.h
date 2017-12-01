@@ -1,8 +1,8 @@
 #ifndef __VARIATION_H__
 #define __VARIATION_H__
 
-#define MAXINVERTERCOUNT 50	//最大的逆变器数
-#define RECORDLENGTH 100		//子记录的长度
+#define MAXINVERTERCOUNT 100	//最大的逆变器数
+#define RECORDLENGTH 150		//子记录的长度
 #define RECORDTAIL 100			//大记录的结尾，包括发电量、时间等信息
 #define TNUIDLENGTH 7			//逆变器3501ID的长度
 #define idLEN 13		//逆变器ID的长度
@@ -19,6 +19,16 @@
 #define SYSTEMPOWERLEN 10		//系统功率，EMA通信协议中使用
 #define CURSYSGENLEN 10			//系统当前发电量，EMA通信协议中使用
 #define LIFETIMEGENLEN 10		//历史发电量，EMA通信协议中使用
+
+#define PROCESS_RESULT_HEAD			51		
+#define PROCESS_RESULT_RECORD_LEN			16
+#define STATUS_PER_LEN				64
+
+#define INVARTER_STATUS_PER_LEN			16
+#define INVARTER_STATUS_PER_OTHER			16
+
+#define INVERTER_PHONE_PER_LEN			27
+#define INVERTER_PHONE_PER_OTHER			100
 
 
 //Client 相关通信参数
@@ -53,7 +63,7 @@ typedef struct inverter_info_t{
 	char id[13];		//逆变器的ID
 	unsigned short shortaddr;			//Zigbee的短地址
 	
-	unsigned char model;					//机型：1是YC250CN,2是YC250NA，3是YC500CN，4是YC500NA，5是YC900CN，6是YC900NA
+	unsigned char model;					//机型：1是YC250CN,2是YC250NA，3是YC500CN，4是YC500NA，5是YC900CN，6是YC900NA 7是YC600
 	status_t inverterstatus;		//位域的各种状态
 	int version;				//软件版本号(见zigbee  zb_query_inverter_info函数)	
 	unsigned char signalstrength;			//逆变器Zigbee信号强度

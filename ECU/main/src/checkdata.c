@@ -23,71 +23,6 @@ extern int ecu_type;	//1:SAA; 2:NA; 3:MX
 /*****************************************************************************/
 /*  Function Implementations                                                 */
 /*****************************************************************************/
-int check_yc200_yc250(struct inverter_info_t *inverter)		//在解析函数的最后调用
-{
-	if(inverter->dv > 1500)
-		inverter->dv = 1500;
-	if(inverter->dv < 0)
-		inverter->dv = 0;
-	if(inverter->di > 150)
-		inverter->di = 150;
-	if(inverter->di < 0)
-		inverter->di = 0;
-	if(inverter->op > 300)
-		inverter->op = 300;
-	if(inverter->op < 0)
-		inverter->op = 0;
-
-	
-	if(1 == ecu_type)	//SAA,45-55Hz
-	{
-		if(inverter->gf > 55)
-			inverter->gf = 55;
-		if(inverter->gf < 0)
-			inverter->gf = 0;
-	}
-	else		//NA/MX,55-65Hz
-	{
-		if(inverter->gf > 65)
-			inverter->gf = 65;
-		if(inverter->gf < 0)
-			inverter->gf = 0;
-	}
-	
-	if(3 == ecu_type)		//MX,82-155V
-	{
-		if(inverter->gv > 155)
-			inverter->gv = 155;
-		if(inverter->gv < 0)
-			inverter->gv = 0;
-	}
-	else if(2 == ecu_type)	//NA,181-298V
-	{
-		if(inverter->gv > 298)
-			inverter->gv = 298;
-		if(inverter->gv < 0)
-			inverter->gv = 0;
-	}
-	else					//SAA,149-278V
-	{
-		if(inverter->gv > 278)
-			inverter->gv = 278;
-		if(inverter->gv < 0)
-			inverter->gv = 0;
-	}
-	
-	if(inverter->it > 150)
-		inverter->it = 150;
-	if(inverter->it < -50)
-		inverter->it = -50;
-	
-	if(inverter->curgeneration > 0.999999)
-		inverter->curgeneration = 0.999999;
-	if(inverter->curgeneration < 0)
-		inverter->curgeneration = 0;
-	
-	return 0;
-}
 
 int check_yc500(struct inverter_info_t *inverter)		//在解析函数的最后调用
 {
@@ -276,32 +211,4 @@ int check_yc1000(struct inverter_info_t *inverter)		//在解析函数的最后调用
 
 	return 0;
 }
-
-/*void modify_data(struct inverter_info_t *inverter)	//构造错误的数据用于测试
-{
-//	inverter->dv = -1;
-//	inverter->di = -1;
-	inverter->op = -1;
-//	inverter->np = 64.9;
-//	inverter->nv = 81;
-	inverter->it = -51;
-//	inverter->curgeneration = -1;
-
-}
-
-void modify_data_yc500(struct inverter_info_t *inverter)	//构造错误的数据用于测试
-{
-//	inverter->dv = -1;
-//	inverter->dvb = -1;
-//	inverter->di = -1;
-//	inverter->dib = -1;
-	inverter->op = -1;
-	inverter->opb = -1;
-//	inverter->np = 64.9;
-//	inverter->nv = 81;
-	inverter->it = -51;
-//	inverter->curgeneration = -1;
-//	inverter->curgenerationb = -1;
-
-}*/
 

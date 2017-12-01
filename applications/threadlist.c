@@ -73,21 +73,21 @@ static struct rt_thread DRM_thread;
 #ifdef THREAD_PRIORITY_MAIN
 #include "main-thread.h"
 ALIGN(RT_ALIGN_SIZE)
-rt_uint8_t main_stack[ 16384 ];
+rt_uint8_t main_stack[ 4096 ];
 struct rt_thread main_thread;
 #endif
 
 #ifdef THREAD_PRIORITY_CLIENT
 #include "client.h"
 ALIGN(RT_ALIGN_SIZE)
-rt_uint8_t client_stack[ 8192 ];
+rt_uint8_t client_stack[ 4096 ];
 struct rt_thread client_thread;
 #endif
 
 #ifdef THREAD_PRIORITY_CONTROL_CLIENT
 #include "control_client.h"
 ALIGN(RT_ALIGN_SIZE)
-rt_uint8_t control_client_stack[ 16384 ];
+rt_uint8_t control_client_stack[ 4096 ];
 struct rt_thread control_client_thread;
 #endif
 

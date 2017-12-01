@@ -35,6 +35,7 @@
 /*  Variable Declarations                                                    */
 /*****************************************************************************/
 extern rt_mutex_t record_data_lock; 
+extern ecu_info ecu;
 
 /*****************************************************************************/
 /*  Function Implementations                                                 */
@@ -84,7 +85,6 @@ int updateECUByID(void)
 	char domain[100]={'\0'};
 	char IPFTPadd[50] = {'\0'};
 	char remote_path[100] = {'\0'};
-	char ecuID[13] = {'\0'};
 	int port = 0;
 	char user[20]={'\0'};
 	char password[20]={'\0'};
@@ -95,12 +95,9 @@ int updateECUByID(void)
 	print2msg(ECU_DBG_UPDATE,"FTPIP",IPFTPadd);
 	printdecmsg(ECU_DBG_UPDATE,"port",port);
 	print2msg(ECU_DBG_UPDATE,"user",user);
-	print2msg(ECU_DBG_UPDATE,"password",password);
-	//获取ECU的ID
-	get_ecuid(ecuID);
-	
+	print2msg(ECU_DBG_UPDATE,"password",password);	
 	//获取服务器IP地址
-	sprintf(remote_path,"/ECU_R_M3/%s/%s",ecuID,UPDATE_PATH_SUFFIX);
+	sprintf(remote_path,"/ECU_R_M3/%s/%s",ecu.id,UPDATE_PATH_SUFFIX);
 	print2msg(ECU_DBG_UPDATE,"ID Path",remote_path);
 	rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	ret=ftpgetfile(domain,IPFTPadd, port, user, password,remote_path,UPDATE_PATH);

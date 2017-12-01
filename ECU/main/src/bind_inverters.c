@@ -54,31 +54,7 @@ void saveraduistostruct(char *id,int raduis)
 		fclose(fp);
 	}
 }
-/*
-void savezbversion(char *id,int zbversion)
-{
-    char *zErrMsg = 0;
-	char sql[1024]={'\0'};
-	sprintf(sql,"UPDATE id SET turned_off_rpt_flag=%d where id='%s'",zbversion,id);
-	sqlite3_exec(db, sql, 0, 0, &zErrMsg);perror(zErrMsg);
-}
 
-void clear_bind_flag()
-{
-    char *zErrMsg = 0;
-	char sql[1024]={'\0'};
-	sprintf(sql,"UPDATE id SET bind_zigbee_flag=NULL");
-	sqlite3_exec(db, sql, 0, 0, &zErrMsg);perror(zErrMsg);
-
-}
-void change_bind_zigbee_flag(char *id)
-{
-	char *zErrMsg = 0;
-	char sql[1024]={'\0'};
-	sprintf(sql,"UPDATE id SET bind_zigbee_flag=1 WHERE id='%s'",id);
-	sqlite3_exec(db, sql, 0, 0, &zErrMsg);perror(zErrMsg);
-}
-*/
 int getaddrOldOrNew(char *id)
 {
 	int  ret,index;
@@ -95,7 +71,7 @@ int getaddrOldOrNew(char *id)
 	command[19]=((id[8]-0x30)*16+(id[9]-0x30));
 	command[20]=((id[10]-0x30)*16+(id[11]-0x30));
 
-	//发送上报单台逆变器ID的命令
+	//发送上报单台逆变器ID的命�?
 	clear_zbmodem();
 	ZIGBEE_SERIAL.write(&ZIGBEE_SERIAL, 0,command, 21);
 	print2msg(ECU_DBG_MAIN,"Get each inverter's short address", id);
@@ -112,7 +88,7 @@ int getaddrOldOrNew(char *id)
 		//获取短地址成功
 		short_addr = recvMsg[0]*256 + recvMsg[1];
 		curinverter = inverter;
-		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮�?
 		{
 			if(!strcmp(curinverter->id,id))
 			{
@@ -127,7 +103,7 @@ int getaddrOldOrNew(char *id)
 		&& (0 == strcmp(id, inverterid))) {
 		saveraduistostruct(inverterid,recvMsg[2]);	//保存路由深度到结构体
 		curinverter = inverter;
-		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮�?
 		{
 			if(!strcmp(curinverter->id,inverterid))
 			{
@@ -138,7 +114,7 @@ int getaddrOldOrNew(char *id)
 
 		//暂存绑定标志
 			curinverter = inverter;
-		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮�?
 		{
 			if(!strcmp(curinverter->id,inverterid))
 			{
@@ -204,7 +180,7 @@ void getshortadd(char *recvbuff)
 	char curinverterid[13];
 	sprintf(curinverterid,"%02x%02x%02x%02x%02x%02x",recvbuff[4],recvbuff[5],recvbuff[6],recvbuff[7],recvbuff[8],recvbuff[9]);
 	curinverter = inverter;
-	for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+	for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮�?
 	{
 		if(!strcmp(curinverter->id,curinverterid))
 		{
@@ -214,7 +190,7 @@ void getshortadd(char *recvbuff)
 }
 
 
-//绑定逆变器
+//绑定逆变�?
 void bind_inverters()
 {
   int num = 0,i = 0,index = 0;
@@ -227,10 +203,10 @@ void bind_inverters()
    rateOfProgress = 40;
    zb_change_ecu_panid(); //将ECU的PANID和信道设置成配置文件中的
 
-	//1.绑定已经有短地址的逆变器,如绑定失败，则需要重新获取短地址	
-	//对每个逆变器进行绑定
+	//1.绑定已经有短地址的逆变�?如绑定失败，则需要重新获取短地址	
+	//对每个逆变器进行绑�?
 	curinverter = inverter;
-	for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+	for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮�?
 	{
 		if((curinverter->shortaddr != 0)&&(curinverter->inverterstatus.bindflag == 0))
 		{
@@ -245,7 +221,7 @@ void bind_inverters()
 	rateOfProgress = 41;
 	curinverter = inverter;
 	num = 0;
-	for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+	for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮�?
 	{
 		if(curinverter->shortaddr == 0)
 			num++;
@@ -262,7 +238,7 @@ void bind_inverters()
 			
 			curinverter = inverter;
 			num = 0;
-			for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+			for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮�?
 			{
 				if((curinverter->shortaddr == 0) && (curinverter->inverterstatus.bindflag == 0))
 					num++;
@@ -272,7 +248,7 @@ void bind_inverters()
 			if(num==0)
 				break;
 			curinverter = inverter;
-			for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+			for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮�?
 			{
 				if((curinverter->shortaddr == 0) && (curinverter->inverterstatus.bindflag == 0))
 				{
@@ -282,7 +258,7 @@ void bind_inverters()
 			}
 			
 			curinverter = inverter;
-			for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+			for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮�?
 			{
 				if((curinverter->shortaddr == 0) && (curinverter->inverterstatus.bindflag == 0))
 				{
@@ -302,10 +278,10 @@ void bind_inverters()
 			}
 		}
 		rateOfProgress=65;
-		for(i=0;i<3;i++)			//新组网
+		for(i=0;i<3;i++)			//新组�?
 		{
 			curinverter = inverter;
-			for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+			for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮�?
 			{
 				if(curinverter->shortaddr == 0)
 				{
@@ -314,7 +290,7 @@ void bind_inverters()
 			}
 			ecu.panid=temppanid;
 			curinverter = inverter;
-			for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+			for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮�?
 			{
 				if(curinverter->shortaddr == 0)
 				{
@@ -326,11 +302,11 @@ void bind_inverters()
 				}
 			}
 		}
-		//旧组网
+		//旧组�?
 		rateOfProgress=90;
 		ecu.panid=temppanid;
 		curinverter = inverter;
-		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮�?
 		{
 			if(curinverter->inverterstatus.bindflag == 0)
 			{
@@ -339,7 +315,7 @@ void bind_inverters()
 			}
 		}
 		curinverter = inverter;
-		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮训
+		for(index=0; (index<MAXINVERTERCOUNT)&&(12==strlen(curinverter->id)); index++, curinverter++)			//有效逆变器轮�?
 		{
 			curinverter->inverterstatus.bindflag=0;
 		}			

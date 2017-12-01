@@ -360,8 +360,11 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 	int i;
 	char wendu[4]={'\0'};
 	char temp[50] = {'\0'};
-	char buff[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL]={'\0'};
+	char *buff = NULL;			//[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL]={'\0'};
 	struct inverter_info_t *inverter = firstinverter;//printf("protocal1\n");
+	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
+	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
+	
 	strcat(buff, "APS1800000AAAAAAA1");
 	strcat(buff, ecu.id);//printf("protocal3 ");
 	transsyspower(buff, ecu.system_power);//printf("protocal4 ");
@@ -507,7 +510,7 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 		}
 		inverter++;
 	}
-	print2msg(ECU_DBG_MAIN,"Record", buff);
+	//print2msg(ECU_DBG_MAIN,"Record", buff);
 	memset(temp, '\0', 50);
 	sprintf(temp, "%d", strlen(buff));
 
@@ -520,7 +523,8 @@ int protocol_APS18(struct inverter_info_t *firstinverter, char *sendcommanddatet
 	//strcat(buff, "\n");
 	save_record(buff,sendcommanddatetime);			//把发送给EMA的记录保存在数据库中
 	print2msg(ECU_DBG_MAIN,"Record", buff);
-
+	free(buff);
+	buff = NULL;
 	return 0;
 }
 
@@ -529,29 +533,36 @@ int protocol_status(struct inverter_info_t *firstinverter, char *datetime)
 {
 	int i, count=0;
 	struct inverter_info_t *inverter = firstinverter;
-	char sendbuff[MAXINVERTERCOUNT*64+RECORDTAIL]={'\0'};
-	char temp[MAXINVERTERCOUNT*64+RECORDTAIL]={'\0'};
+	char *sendbuff = NULL;	//[MAXINVERTERCOUNT*64+RECORDTAIL]={'\0'};
 	char length[16]={'\0'};
-
+	sendbuff = malloc(MAXINVERTERCOUNT*STATUS_PER_LEN+RECORDTAIL);
+	memset(sendbuff,'\0',MAXINVERTERCOUNT*STATUS_PER_LEN+RECORDTAIL);
 
 	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->id)); i++, inverter++){
 		if(1 == inverter->status_send_flag){
-			strcat(temp, inverter->status_ema);
 			count++;
 		}
 	}
 
 	if(count > 0){
-		sprintf(sendbuff, "APS1500000A123AAA1%s%04d%sEND%s", ecu.id, count, datetime, temp);
+		inverter = firstinverter;
+		sprintf(sendbuff, "APS1500000A123AAA1%s%04d%sEND", ecu.id, count, datetime);
+		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->id)); i++, inverter++){
+			if(1 == inverter->status_send_flag){
+				strcat(sendbuff, inverter->status_ema);
+			}
+		}
 		sprintf(length, "%05d", strlen(sendbuff));
 		for(i=5; i<10; i++)
 			sendbuff[i] = length[i-5];
 		//strcat(sendbuff, "\n");
 
-		print2msg(ECU_DBG_MAIN,"status", sendbuff);
+		//print2msg(ECU_DBG_MAIN,"status", sendbuff);
 
 		save_status(sendbuff, datetime);
 	}
+	free(sendbuff);
+	sendbuff = NULL;
 	return 0;
 }
 //  device,eve,data\n

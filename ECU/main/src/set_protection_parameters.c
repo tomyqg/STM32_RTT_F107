@@ -172,7 +172,6 @@ int get_under_voltage_slow_yc1000(inverter_info *firstinverter)
 
 int get_over_voltage_slow_yc1000(inverter_info *firstinverter)
 {
-
 	int over_voltage_slow=0xFFFF;
 
 	float temp;
@@ -404,7 +403,7 @@ int set_regulated_dc_working_point_yc1000(char *value)  			//直流稳压设置
 
 int set_undervoltage_slow_yc1000(char *value)  //内围电压下限值
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;
@@ -443,7 +442,7 @@ int set_undervoltage_slow_yc1000(char *value)  //内围电压下限值
 
 int set_overvoltage_slow_yc1000(char *value)  //内围电压上限值
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;
@@ -481,7 +480,7 @@ int set_overvoltage_slow_yc1000(char *value)  //内围电压上限值
 
 int set_overvoltage_fast_yc1000(char *value)		//外围电压上限值
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;
@@ -518,7 +517,7 @@ int set_overvoltage_fast_yc1000(char *value)		//外围电压上限值
 
 int set_undervoltage_fast_yc1000(char *value)		//外围电压下限值
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;
@@ -556,7 +555,7 @@ int set_undervoltage_fast_yc1000(char *value)		//外围电压下限值
 
 int set_underfrequency_fast_yc1000(char *value)				//外围频率下限
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;
@@ -594,7 +593,7 @@ int set_underfrequency_fast_yc1000(char *value)				//外围频率下限
 
 int set_overfrequency_fast_yc1000(char *value)				//外围频率上限
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;
@@ -632,7 +631,7 @@ int set_overfrequency_fast_yc1000(char *value)				//外围频率上限
 
 int set_underfrequency_slow_yc1000(char *value)				//内围频率下限
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;
@@ -670,7 +669,7 @@ int set_underfrequency_slow_yc1000(char *value)				//内围频率下限
 
 int set_overfrequency_slow_yc1000(char *value)				//内围频率上限
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;
@@ -709,7 +708,7 @@ int set_overfrequency_slow_yc1000(char *value)				//内围频率上限
 
 int set_voltage_triptime_fast_yc1000(char *value)				//外围电压延迟保护时间
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;
@@ -747,7 +746,7 @@ int set_voltage_triptime_fast_yc1000(char *value)				//外围电压延迟保护时间
 
 int set_voltage_triptime_slow_yc1000(char *value)				//内围电压延迟保护时间
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;
@@ -786,7 +785,7 @@ int set_voltage_triptime_slow_yc1000(char *value)				//内围电压延迟保护时间
 
 int set_frequency_triptime_fast_yc1000(char *value)				//外围频率延迟保护时间
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;
@@ -825,7 +824,7 @@ int set_frequency_triptime_fast_yc1000(char *value)				//外围频率延迟保护时间
 
 int set_frequency_triptime_slow_yc1000(char *value)				//内围频率延迟保护时间
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;
@@ -864,7 +863,7 @@ int set_frequency_triptime_slow_yc1000(char *value)				//内围频率延迟保护时间
 
 int set_grid_recovery_time_yc1000(char *value)						//并网恢复时间设置
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;
@@ -903,7 +902,7 @@ int set_grid_recovery_time_yc1000(char *value)						//并网恢复时间设置
 
 int set_under_voltage_stage_2_yc1000(char *value)  			//内内围电压设置
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;
@@ -942,7 +941,7 @@ int set_under_voltage_stage_2_yc1000(char *value)  			//内内围电压设置
 
 int set_voltage_3_clearance_time_yc1000(char *value)				//内内围电压延迟保护时间
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;
@@ -979,7 +978,7 @@ int set_voltage_3_clearance_time_yc1000(char *value)				//内内围电压延迟保护时间
 
 int set_start_time_yc1000(char *value)				//直流启动时间
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;
@@ -1016,7 +1015,7 @@ int set_start_time_yc1000(char *value)				//直流启动时间
 
 int set_active_antiisland_time_yc1000(char *value)				//直流启动时间
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;
@@ -1429,10 +1428,9 @@ int set_protection_paras(inverter_info *firstinverter)
 /*解析参数，并保存到数据库中*/
 int resolve_protection_paras_YC600(inverter_info *inverter, char *readbuff, int size)
 {
-	char inverter_result[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL]={'\0'};
+	char *inverter_result = NULL;	//[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL]={'\0'};
 	int i;
 	char data[400];
-	
 	int under_voltage_fast;
 	int over_voltage_fast;
 	int under_voltage_slow;
@@ -1454,6 +1452,8 @@ int resolve_protection_paras_YC600(inverter_info *inverter, char *readbuff, int 
 	int power_factor;
 	float relay_protect;
 	float temp;
+	inverter_result = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
+	memset(inverter_result,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 
 
 	if(58 == size)								//17项参数
@@ -1563,18 +1563,23 @@ int resolve_protection_paras_YC600(inverter_info *inverter, char *readbuff, int 
 		else
 			sprintf(inverter_result,"%sB%03dEND",inverter->id,(power_factor-1)*10);
 		save_inverter_parameters_result(inverter, 145, inverter_result);
-
+		free(inverter_result);
+		inverter_result = NULL;
 		return 0;
 	}
-	else
+	else{
+		free(inverter_result);
+		inverter_result = NULL;
 		return -1;
+	}
+		
 
 }
 
 /*解析参数，并保存到数据库中*/
 int resolve_protection_paras_YC1000(inverter_info *inverter, char *readbuff, int size)
 {
-	char inverter_result[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL]={'\0'};
+	char *inverter_result = NULL;	//[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL]={'\0'};
 	int i;
 	char data[400];
 	
@@ -1597,6 +1602,8 @@ int resolve_protection_paras_YC1000(inverter_info *inverter, char *readbuff, int
 	int start_time;
 	float active_antiisland_time;
 	float temp;
+	inverter_result = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
+	memset(inverter_result,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 
 
 	if(58 == size)								//17项参数
@@ -1693,18 +1700,22 @@ int resolve_protection_paras_YC1000(inverter_info *inverter, char *readbuff, int
 				(int)(voltage_3_clearance_time*100),
 				(int)(start_time));
 		save_inverter_parameters_result(inverter, 131, inverter_result);
+		free(inverter_result);
+		inverter_result = NULL;
 		return 0;
 	}
-	else
+	else{
+		free(inverter_result);
+		inverter_result = NULL;
 		return -1;
-
+	}
 }
 
 
 /*解析参数，并保存到数据库中*/
 int resolve_protection_paras5(inverter_info *inverter, char *readbuff, int size)
 {
-	char inverter_result[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL]={'\0'};
+	char *inverter_result = NULL;	//[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL]={'\0'};
 	char data[300];
 	int i;
 
@@ -1714,6 +1725,8 @@ int resolve_protection_paras5(inverter_info *inverter, char *readbuff, int size)
 	float over_frequency_slow;
 	int grid_recovery_time;
 	float temp;
+	inverter_result = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
+	memset(inverter_result,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 
 	if(33 == size)
 	{
@@ -1753,18 +1766,22 @@ int resolve_protection_paras5(inverter_info *inverter, char *readbuff, int size)
 				(int)(over_frequency_slow*10),
 				grid_recovery_time);
 		save_inverter_parameters_result(inverter, 131, inverter_result);
+		free(inverter_result);
+		inverter_result = NULL;
 		return 0;
 	}
-	else
+	else{
+		free(inverter_result);
+		inverter_result = NULL;
 		return -1;
-
+	}
 }
 
 //向逆变器读取交流保护参数的值
 int get_parameters_from_inverter(inverter_info *inverter)
 {
-	unsigned char sendbuff[512] = {'\0'};
-	unsigned char readbuff[512] = {'\0'};
+	unsigned char sendbuff[256] = {'\0'};
+	unsigned char readbuff[256] = {'\0'};
 	unsigned short check = 0x00;
 	int i, res;
 
@@ -1826,11 +1843,10 @@ int get_parameters_from_inverter(inverter_info *inverter)
 int read_protection_parameters(inverter_info *firstinverter)
 {
 	int i, j;
-	char set_result[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL];
+	char *set_result = NULL;		//[MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL];
 	inverter_info *inverter = firstinverter;
-
+	set_result = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 	memset(set_result, '\0', sizeof(set_result));
-
 	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->id)); i++, inverter++)
 	{
 		for(j=0; j<3; j++)
@@ -1839,7 +1855,8 @@ int read_protection_parameters(inverter_info *firstinverter)
 				break;
 		}
 	}
-
+	free(set_result);
+	set_result= NULL;
 	return 0;
 }
 
@@ -1855,7 +1872,6 @@ int set_protection_parameters(inverter_info *firstinverter)
 		read_protection_parameters(firstinverter);
 	}
 		
-
 	fp = fopen("/tmp/presdata.con", "r");
 	if(fp)
 	{
@@ -1957,7 +1973,7 @@ int read_protection_parameters_5(char *data)
 //内内围电压下限值(5项)
 int set_undervoltage_slow_yc1000_5(char *value)
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int under_voltage_slow;
@@ -2006,7 +2022,7 @@ int set_undervoltage_slow_yc1000_5(char *value)
 //内围电压上限值(5项)
 int set_overvoltage_slow_yc1000_5(char *value)
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int over_voltage_slow;
@@ -2055,7 +2071,7 @@ int set_overvoltage_slow_yc1000_5(char *value)
 //内围频率下限(5项)
 int set_underfrequency_slow_yc1000_5(char *value)
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int under_frequency_slow;
@@ -2104,7 +2120,7 @@ int set_underfrequency_slow_yc1000_5(char *value)
 //内围频率上限(5项)
 int set_overfrequency_slow_yc1000_5(char *value)
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int over_frequency_slow;
@@ -2153,7 +2169,7 @@ int set_overfrequency_slow_yc1000_5(char *value)
 //并网恢复时间设置(5项)
 int set_grid_recovery_time_yc1000_5(char *value)
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int grid_recovery_time;
@@ -2202,7 +2218,7 @@ int set_grid_recovery_time_yc1000_5(char *value)
 //欠压门限3阶设置
 int set_under_voltage_stage_3_yc1000(char *value)
 {
-	unsigned char sendbuff[512]={'\0'};
+	unsigned char sendbuff[256]={'\0'};
 	unsigned short check=0x00;
 	int i;
 	int data;

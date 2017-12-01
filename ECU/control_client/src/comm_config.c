@@ -134,15 +134,11 @@ int response_comm_config(const char *recvbuffer, char *sendbuffer)
 {
 	int comm_cfg_num = 0;
 	int comm_cfg_type[3] = {0};
-	char ecuid[13] = {'\0'};	 //ECU号码
 	char timestamp[15] = {'\0'}; //时间戳
 	MyArray array[NUM] = {'\0'}; //通信配置参数结构体数组
 	Comm_Cfg cfg1 = {'\0'};
 	Comm_Cfg cfg2 = {'\0'};
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
-
-	//ecu_id
-	memcpy(ecuid,ecu.id,13);
 
 	//时间戳
 	strncpy(timestamp, &recvbuffer[34], 14);
@@ -170,7 +166,7 @@ int response_comm_config(const char *recvbuffer, char *sendbuffer)
 
 	/* 拼接协议 */
 	msg_Header(sendbuffer, "A106");
-	msgcat_s(sendbuffer, 12, ecuid);
+	msgcat_s(sendbuffer, 12, ecu.id);
 	msgcat_d(sendbuffer, 1, comm_cfg_num);
 	msgcat_s(sendbuffer, 14, timestamp);
 	strcat(sendbuffer, "END");

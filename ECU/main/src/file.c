@@ -1282,7 +1282,7 @@ int save_status(char *result, char *date_time)
 	{	
 		write(fd,"\n",1);
 		sprintf(result,"%s,%s,1\n",result,date_time);
-		print2msg(ECU_DBG_MAIN,"result",result);
+		print2msg(ECU_DBG_MAIN,"Status",result);
 		write(fd,result,strlen(result));
 		close(fd);
 	}

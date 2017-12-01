@@ -3075,6 +3075,27 @@ int SendToSocketC(char *data ,int length)
 	return -1;
 }
 
+
+int TestSocketCConnect(void)
+{
+	rt_mutex_take(usr_wifi_lock, RT_WAITING_FOREVER);
+	if(1 == WIFI_QueryStatus(SOCKET_C))
+	{
+		WIFI_Close(SOCKET_C);
+	}
+	
+	if((0 == WIFI_Create(SOCKET_C)))
+	{
+		rt_mutex_release(usr_wifi_lock);
+		return 0;
+	}else{
+		rt_mutex_release(usr_wifi_lock);
+		return -1;
+	}
+	
+
+}
+
 /*
 int WIFI_ChangeSSID(char *SSID,char Auth,char Encry,char *Passwd,int passWDLen)
 {
@@ -3181,6 +3202,7 @@ FINSH_FUNCTION_EXPORT(InitWorkMode , Init Work Mode.)
 FINSH_FUNCTION_EXPORT(InitTestMode , Init Test Mode.)
 
 FINSH_FUNCTION_EXPORT(WIFI_Factory , Set WIFI ID .)
+FINSH_FUNCTION_EXPORT(WIFI_Reset , Reset WIFI Module .)
 
 FINSH_FUNCTION_EXPORT(SendToSocketB , Send SOCKET B.)
 FINSH_FUNCTION_EXPORT(SendToSocketC , Send SOCKET C.)
