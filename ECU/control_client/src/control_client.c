@@ -247,6 +247,7 @@ int detection_statusflag(char flag)		//¼ì²â/home/record/inverstaÄ¿Â¼ÏÂÊÇ·ñ´æÔÚfl
 								return 1;
 							}
 						}
+						memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 					}
 					fclose(fp);
 				}
@@ -311,7 +312,7 @@ int change_statusflag1()  //¸Ä±ä³É¹¦·µ»Ø1
 								return 1;
 							}
 						}
-						
+						memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 					}
 					fclose(fp);
 				}
@@ -378,7 +379,7 @@ void delete_statusflag0()		//Çå¿ÕÊý¾Ýflag±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 								}
 							}
 						}
-						
+						memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 					}
 					fclose(fp);
 					if(flag == 0)
@@ -458,6 +459,7 @@ int change_statusflag(char *time,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ±¼äµã·µ»Ø
 								}
 							}
 						}
+						memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 					}
 					fclose(fp);
 				}
@@ -492,6 +494,7 @@ int search_statusflag(char *data,char * time, int *flag,char sendflag)
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(data,'\0',sizeof(data)/sizeof(data[0]));
 	*flag = 0;
 	if(result == RT_EOK)
 	{
@@ -546,6 +549,7 @@ int search_statusflag(char *data,char * time, int *flag,char sendflag)
 													}
 												}
 											}
+											memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 										}
 
 										nextfileflag = 1;
@@ -554,6 +558,7 @@ int search_statusflag(char *data,char * time, int *flag,char sendflag)
 									}
 								}
 							}
+							memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 						}
 					}else
 					{
@@ -575,6 +580,7 @@ int search_statusflag(char *data,char * time, int *flag,char sendflag)
 									}
 								}
 							}
+							memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 						}
 					}
 					
@@ -646,6 +652,7 @@ void delete_pro_result_flag0()		//Çå¿ÕÊý¾Ýflag±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 								}
 							}
 						}
+						memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 						
 					}
 					fclose(fp);
@@ -721,7 +728,7 @@ void delete_inv_pro_result_flag0()		//Çå¿ÕÊý¾Ýflag±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 								}
 							}
 						}
-						
+						memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 					}
 					fclose(fp);
 					if(flag == 0)
@@ -804,6 +811,7 @@ int change_pro_result_flag(char *item,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ±¼äµ
 								}
 							}
 						}
+						memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 						
 					}
 					fclose(fp);
@@ -880,7 +888,7 @@ int change_inv_pro_result_flag(char *item,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ
 								}
 							}
 						}
-						
+						memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 					}
 					fclose(fp);
 				}
@@ -916,6 +924,7 @@ int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(data,'\0',sizeof(data)/sizeof(data[0]));
 	*flag = 0;
 	if(result == RT_EOK)
 	{
@@ -968,6 +977,7 @@ int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)
 													}
 												}
 											}
+											memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 										}
 
 										nextfileflag = 1;
@@ -975,6 +985,7 @@ int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)
 									}
 								}
 							}
+							memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 						}
 					}else
 					{
@@ -996,6 +1007,7 @@ int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)
 									}
 								}
 							}
+							memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 						}
 					}
 					
@@ -1032,6 +1044,7 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(data,'\0',sizeof(data)/sizeof(data[0]));
 	*flag = 0;
 	if(result == RT_EOK)
 	{
@@ -1085,6 +1098,7 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 													}
 												}
 											}
+											memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 										}
 
 										nextfileflag = 1;
@@ -1093,6 +1107,7 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 									}
 								}
 							}	
+							memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 						}
 					}else
 					{
@@ -1114,6 +1129,7 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 									}
 								}
 							}
+							memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 						}
 					}
 					
@@ -1438,7 +1454,7 @@ int response_inverter_abnormal_status()
 						}
 					}
 				}
-				
+				memset(data,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 			}
 			//Çå¿ÕinverstaµÄflag±êÖ¾Î»Îª0µÄ±êÖ¾
 			delete_statusflag0();
@@ -1468,7 +1484,7 @@ int response_inverter_abnormal_status()
 	{
 		//ÖðÌõ·¢ËÍÄæ±äÆ÷Òì³£×´Ì¬
 		while(search_statusflag(data,time,&havaflag,'1'))		//	»ñÈ¡Ò»ÌõresendflagÎª1µÄÊý¾Ý
-		{	
+		{
 			//·¢ËÍÒ»ÌõÄæ±äÆ÷Òì³£×´Ì¬ÐÅÏ¢
 			if(send_socket(sockfd, data, strlen(data)) < 0){
 				continue;
@@ -1559,7 +1575,7 @@ int response_inverter_abnormal_status()
 					}
 				}
 			}
-			
+			memset(data,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 		}
 		//Çå¿ÕinverstaµÄflag±êÖ¾Î»Îª0µÄ±êÖ¾
 		delete_statusflag0();
@@ -1837,6 +1853,7 @@ int response_process_result()
 				closesocket(sockfd);
 				printmsg(ECU_DBG_CONTROL_CLIENT,">>End");
 			}
+			memset(data,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 		}				
 		delete_pro_result_flag0();
 		
@@ -1886,7 +1903,7 @@ int response_process_result()
 				change_inv_pro_result_flag(item,'0');
 				closesocket(sockfd);
 			}
-
+			memset(data,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);
 		}
 		delete_inv_pro_result_flag0();
 

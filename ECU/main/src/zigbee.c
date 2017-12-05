@@ -108,7 +108,7 @@ int openzigbee(void)
 	rt_device_t new;
 
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC,ENABLE);
-	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_OD;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_7;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
@@ -1772,9 +1772,7 @@ int getalldata(inverter_info *firstinverter,int time_linux)		//»ñÈ¡Ã¿¸öÄæ±äÆ÷µÄÊ
 	{
 		if(-1==zb_test_communication())
 		{
-			printf("11111\n");
-			zigbee_reset();
-			
+			zigbee_reset();	
 		}	
 		else
 			break;
@@ -2289,5 +2287,11 @@ void Zbgetdata(char *inverter_id)	//»ñÈ¡Êý¾Ý
 }
 FINSH_FUNCTION_EXPORT(Zbgetdata,zb_query_data inverter_id[char *12].)
 #endif
+#endif
+
+#ifdef RT_USING_FINSH
+#include <finsh.h>
+
+FINSH_FUNCTION_EXPORT(zigbee_reset , zigbee_reset.)
 #endif
 

@@ -21,6 +21,8 @@
 #include "file.h"
 #include "myfile.h"
 
+#include "dfs_posix.h"
+
 /*****************************************************************************/
 /*  Variable Declarations                                                    */
 /*****************************************************************************/
@@ -570,6 +572,7 @@ int saveevent(inverter_info *inverter, char *sendcommanddatatime)			//保存系�
 {
 	int i=0,j =0;
 	char event_buff[200]={'\0'};
+	int fd = open("/home/record/event", O_WRONLY | O_CREAT | O_TRUNC, 0);
 
 	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->id)); i++){
 		if(1 == inverter->inverterstatus.dataflag)
@@ -580,11 +583,8 @@ int saveevent(inverter_info *inverter, char *sendcommanddatatime)			//保存系�
 			
 				for(j=1; j<=3; j++)
 				{
-				
-					delete_line("/home/record/event","/home/record/event.t",inverter->id,12);
 					sprintf(event_buff,"%s,%s,%s\n", inverter->id, inverter->status_web, sendcommanddatatime);
-
-					if(-1 != insert_line("/home/record/event",event_buff))
+					if(-1 != write(fd,event_buff,strlen(event_buff)))
 					{
 						break;
 					}
@@ -594,6 +594,7 @@ int saveevent(inverter_info *inverter, char *sendcommanddatatime)			//保存系�
 		}
 		inverter++;
 	}
+	close(fd);
 
 	return 0;
 }

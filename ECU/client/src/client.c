@@ -158,6 +158,7 @@ int detection_resendflag2()		//存在返回1，不存在返回0
 								}		
 							}
 						}
+						memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 					}
 					fclose(fp);
 				}
@@ -229,6 +230,7 @@ int change_resendflag(char *time,char flag)  //改变成功返回1，未找到该时间点返回
 								}
 							}
 						}
+						memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 					}
 					fclose(fp);
 				}
@@ -263,6 +265,7 @@ int search_readflag(char *data,char * time, int *flag,char sendflag)
 	rt_err_t result = rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	buff = malloc(MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 	memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
+	memset(data,'\0',sizeof(data)/sizeof(data[0]));
 	*flag = 0;
 	if(result == RT_EOK)
 	{
@@ -317,6 +320,7 @@ int search_readflag(char *data,char * time, int *flag,char sendflag)
 													}
 												}	
 											}
+											memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 													
 										}
 
@@ -332,7 +336,7 @@ int search_readflag(char *data,char * time, int *flag,char sendflag)
 									}
 								}
 							}
-								
+							memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);	
 						}
 					}else
 					{
@@ -354,6 +358,7 @@ int search_readflag(char *data,char * time, int *flag,char sendflag)
 									}
 								}
 							}
+							memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 						}
 					}
 					
@@ -424,7 +429,7 @@ void delete_file_resendflag0()		//清空数据resend标志全部为0的目录
 								}
 							}
 						}
-						
+						memset(buff,'\0',MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18);
 					}
 					fclose(fp);
 					if(flag == 0)
@@ -536,10 +541,12 @@ int resend_record()
 	{
 		//if(1 == flag)		// 还存在需要上传的数据
 		//		data[78] = '1';
-		//printmsg(ECU_DBG_CLIENT,data);
+		printmsg(ECU_DBG_CLIENT,data);
 		res = send_record(data, time);
 		if(-1 == res)
 			break;
+		memset(data,0,(CLIENT_RECORD_HEAD+CLIENT_RECORD_ECU_HEAD+CLIENT_RECORD_INVERTER_LENGTH*MAXINVERTERCOUNT+CLIENT_RECORD_OTHER));
+		memset(time,0,15);
 	}
 
 	free(data);
@@ -564,7 +571,7 @@ void client_thread_entry(void* parameter)
 	while(1)
 	{
 		thistime = lasttime = acquire_time();
-		
+		printmsg(ECU_DBG_CLIENT,"Client Start****************************************");
 		if((2 == get_hour())||(1 == get_hour()))
 		//if(1)
 		{
@@ -584,7 +591,7 @@ void client_thread_entry(void* parameter)
 			}
 			//if(1 == flag)		// 还存在需要上传的数据
 				//data[78] = '1';
-			//printmsg(ECU_DBG_CLIENT,data);
+			printmsg(ECU_DBG_CLIENT,data);
 			res = send_record( data, time);
 			if(-1 == res)
 				break;
@@ -593,7 +600,7 @@ void client_thread_entry(void* parameter)
 			memset(time,0,15);
 		}
 		delete_file_resendflag0();		//清空数据resend标志全部为0的目录
-		
+		printmsg(ECU_DBG_CLIENT,"Client End****************************************");
 		if((thistime < 300) && (lasttime > 300))
 		{
 			if((thistime+(24*60*60+1)-lasttime) < 300)
