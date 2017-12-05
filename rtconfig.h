@@ -129,7 +129,7 @@
 /* gateway address of target*/
 #define RT_LWIP_GWADDR0	192
 #define RT_LWIP_GWADDR1	168
-#define RT_LWIP_GWADDR2	1
+#define RT_LWIP_GWADDR2	131
 #define RT_LWIP_GWADDR3	1
 
 /* mask address of target*/
