@@ -56,7 +56,7 @@
 /*****************************************************************************/
 #define ARRAYNUM 6
 #define MAXBUFFER (MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL+18)
-#define FIRST_TIME_CMD_NUM 12
+#define FIRST_TIME_CMD_NUM 11
 
 /*****************************************************************************/
 /*  Variable Declarations                                                    */
@@ -95,8 +95,8 @@ void add_functions()
 	
 	pfun[A102] = response_inverter_id; 			//上报逆变器ID  										OK
 	pfun[A103] = set_inverter_id; 				//设置逆变器ID												OK
-	pfun[A104] = response_time_zone; 			//上报ECU本地时区
-	pfun[A105] = set_time_zone; 				//设置ECU本地时区
+	//pfun[A104] = response_time_zone; 			//上报ECU本地时区
+	//pfun[A105] = set_time_zone; 				//设置ECU本地时区
 	pfun[A106] = response_comm_config;			//上报ECU的通信配置参数
 	pfun[A107] = set_comm_config;				//设置ECU的通信配置参数
 	pfun[A108] = custom_command;				//向ECU发送自定义命令
@@ -135,7 +135,7 @@ int first_time_info(const char *recvbuffer, char *sendbuffer)
 {
 	static int command_id = 0;
 	int functions[FIRST_TIME_CMD_NUM] = {
-			A102, A104, A106, A113, A114, A117,
+			A102, A106, A113, A114, A117,
 			A120, A121, A124, A126, A130, A131,
 	};
 	printdecmsg(ECU_DBG_CONTROL_CLIENT,"first_time_info",(command_id));
