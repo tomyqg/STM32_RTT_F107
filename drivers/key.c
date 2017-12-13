@@ -17,6 +17,7 @@
 #include <stm32f10x.h>
 #include "file.h"
 #include "rthw.h"
+#include "usart5.h"
 
 
 /*****************************************************************************/
@@ -61,17 +62,17 @@ void EXTIX_Init(void)
 		
 }
 
+signed char KEY_FormatWIFI_Event = 0;
 //外部中断9_5服务程序
 void EXTI9_5_IRQHandler(void)
 {
 	rt_hw_ms_delay(20);
-	if(KEY_Reset==0)	 	 
+	if(KEY_Reset==0)
 	{
-		//将配置文件恢复到出厂设置
-		//initPath();
-		rt_kprintf("EXTI9_5_IRQHandler\n");  //添加恢复出厂设置的功能
-		reboot();
-		//for(;;);
-	}  
-	EXTI_ClearITPendingBit(EXTI_Line9); //清除LINE9上的中断标志位z  
+		printf("KEY_FormatWIFI_Event\n");
+		KEY_FormatWIFI_Event = 1;
+
+	}
+	EXTI_ClearITPendingBit(EXTI_Line9); //清除LINE9上的中断标志位 
 }
+

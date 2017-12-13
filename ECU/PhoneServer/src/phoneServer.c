@@ -39,6 +39,8 @@
 #include "lwip/ip_addr.h"
 #include "lwip/dns.h"
 #include "channel.h"
+#include "key.h"
+#include "timer.h"
 
 #define MIN_FUNCTION_ID 0
 #define MAX_FUNCTION_ID 14
@@ -649,6 +651,46 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 }
 
 
+//按键初始化密码事件处理
+void process_KEYEvent(void)
+{
+	int ret =0,i = 0;
+	printf("KEY_FormatWIFI_Event Start\n");
+
+	for(i = 0;i<3;i++)
+	{
+		
+		ret = WIFI_Factory_Passwd();
+		if(ret == 0) break;
+	}
+	
+	if(ret == 0) 	//写入WIFI密码
+	{
+		key_init();
+		set_Passwd("88888888",8);	//WIFI密码	
+	}
+		
+	
+	printf("KEY_FormatWIFI_Event End\n");
+}
+
+
+//无线复位处理
+int process_WIFI_RST(void)
+{
+	int ret =1,i = 0;
+	printf("process_WIFI_RST Start\n");
+	for(i = 0;i<3;i++)
+	{
+		ret = WIFI_SoftReset();
+		if(ret == 0) break;
+	}
+	printf("process_WIFI_RST End\n");
+	return ret;
+}
+
+
+
 /*****************************************************************************/
 /*  Function Implementations                                                 */
 /*****************************************************************************/
@@ -668,6 +710,7 @@ void process_WIFI(unsigned char * ID,char *WIFI_RecvData)
 /*****************************************************************************/
 void phone_server_thread_entry(void* parameter)
 {
+	int ret = 0;
 	MyArray array[5];
 	int fileflag = 0; 
 	IPConfig_t IPconfig;
@@ -700,8 +743,22 @@ void phone_server_thread_entry(void* parameter)
 		{
 			//print2msg(ECU_DBG_WIFI,"phone_server",(char *)WIFI_RecvSocketAData);
 			WIFI_Recv_SocketA_Event = 0;
-	
 			process_WIFI(ID_A,(char *)WIFI_RecvSocketAData);
+		}
+
+		//检测按键事件
+		if(KEY_FormatWIFI_Event == 1)
+		{
+			process_KEYEvent();
+			KEY_FormatWIFI_Event = 0;
+		}
+
+		//WIFI复位事件
+		if(WIFI_RST_Event == 1)
+		{
+			ret = process_WIFI_RST();
+			if(ret == 0)
+				WIFI_RST_Event = 0;
 		}
 		
 		rt_thread_delay(RT_TICK_PER_SECOND/100);

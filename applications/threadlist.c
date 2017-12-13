@@ -30,6 +30,7 @@
 #include "mcp1316.h"
 #include "rtc.h"
 #include "watchdog.h"
+#include "timer.h"
 
 #ifdef RT_USING_DFS
 #include <dfs_fs.h>
@@ -248,7 +249,7 @@ void rt_init_thread_entry(void* parameter)
 		wifi_uart_lock = rt_mutex_create("wifi_uart_lock", RT_IPC_FLAG_FIFO);
 	}
 	
-	
+	TIM2_Int_Init(14999,7199);    //心跳包超时事件定时器初始化
 	cpu_usage_init();
 	
 }

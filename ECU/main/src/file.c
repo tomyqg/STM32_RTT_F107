@@ -26,6 +26,7 @@
 #include "myfile.h"
 #include "variation.h"
 #include "usart5.h"
+#include "arch/sys_arch.h"
 
 
 /*****************************************************************************/
@@ -1373,6 +1374,21 @@ void addInverter(char *inverter_id)
 	}
 	echo("/yuneng/limiteid.con","1");
 }
+
+void key_init(void)
+{
+	echo("/yuneng/control.con","Timeout=10\nReport_Interval=15\nDomain=ecu.apsema.com\nIP=60.190.131.190\nPort1=8997\nPort2=8997\n");
+	rt_hw_ms_delay(20);
+	echo("/yuneng/ftpadd.con", "Domain=ecu.apsema.com\nIP=60.190.131.190\nPort=9219\nuser=zhyf\npassword=yuneng\n");
+	rt_hw_ms_delay(20);
+	echo("/yuneng/datacent.con","Domain=ecu.apsema.com\nIP=60.190.131.190\nPort1=8995\nPort2=8996\n");
+	rt_hw_ms_delay(20);
+
+	unlink("/yuneng/staticIP.con");
+	dhcp_reset();
+
+}
+
 
 void initPath(void)
 {
