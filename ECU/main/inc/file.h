@@ -33,6 +33,7 @@ void splitSpace(char *data,char *sourcePath,char *destPath);
 int setECUID(char *ECUID);
 int get_DHCP_Status(void);
 void rm_dir(char* dir);
+void initPath(void);
 int update_tmpdb(inverter_info *firstinverter);
 void key_init(void);
 //读取DRM开关函数   返回值为1：表示功能打开   返回值为-1表示功能关闭

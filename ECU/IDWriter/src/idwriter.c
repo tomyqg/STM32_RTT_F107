@@ -31,6 +31,7 @@
 #include "version.h"
 #include "debug.h"
 #include "usart5.h"
+#include "file.h"
 
 /*****************************************************************************/
 /*  Definitions                                                              */
@@ -241,7 +242,6 @@ void idwrite_thread_entry(void* parameter)
 	char mac[32] = {'\0'};
 	char version[50] = {'\0'};
 	char area[8] = {'\0'};
-	char timezone[20] = {'\0'};
 	char *record;
 	char *eve;
 	int row;
@@ -261,12 +261,20 @@ void idwrite_thread_entry(void* parameter)
 		recv_cmd(clientfd, recvbuff);
 		print2msg(ECU_DBG_IDWRITE,"recvbuff",recvbuff);
 		rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+		if(!strncmp(recvbuff, "mkfs", 4))
+		{
+			dfs_mkfs("elm","flash");
+			initPath();
+			printdecmsg(ECU_DBG_IDWRITE,"Send",send(clientfd,"mkfs OK\n",8,0));
+		}
+		
 		//烧写和读取ECU的ID
 		if(!strncmp(recvbuff, "set_ecu_id", 10)){
 			strncpy(ecu.id, &recvbuff[11], 12);
 			print2msg(ECU_DBG_IDWRITE,"ECU id",ecu.id);
 			printdecmsg(ECU_DBG_IDWRITE,"length",strlen(ecu.id));
 			ecu.id[12] = '\0';
+			InitWorkMode();
 			setECUID(ecu.id);
 			
 			fp=fopen("/yuneng/ecuid.con","r");
@@ -440,27 +448,6 @@ void idwrite_thread_entry(void* parameter)
 			rt_hw_led_on();		//LED亮
 			rt_hw_us_delay(500000);
 			rt_hw_led_off();		//LED熄灭
-		}
-
-		
-		//更改时区
-		if(!strncmp(recvbuff, "set_zone", 8)){
-			strncpy(timezone, &recvbuff[9], sizeof(timezone));
-
-
-			fp=fopen("/yuneng/timezone.con", "w");
-			fputs(timezone,fp);
-			fclose(fp);
-			restartThread(TYPE_NTP);
-
-			memset(timezone,'\0',sizeof(timezone));
-			rt_thread_delay(RT_TICK_PER_SECOND);
-			fp=fopen("/yuneng/timezone.con","r");
-			if(fp){
-				fgets(timezone, sizeof(timezone), fp);
-				fclose(fp);
-			}
-			send(clientfd,timezone,strlen(timezone),0);
 		}
 		rt_mutex_release(record_data_lock);
 		closesocket(clientfd);
