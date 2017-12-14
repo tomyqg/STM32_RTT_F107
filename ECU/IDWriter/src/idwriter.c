@@ -206,18 +206,12 @@ int getevent(char *eve)
 
 int clearrecord()
 {
-	FILE *fp;
-	fp = fopen("/etc/yuneng/connect_time.conf", "w");
-	fclose(fp);
-	
-	fp = fopen("/etc/yuneng/autoflag.conf", "w");
-	fputs("0", fp);
-	fclose(fp);
+	unlink("/home/data/COLLECT.CON");
+	unlink("/yuneng/AUTOFLAG.CON");
 
 	clear_id();
 
-	fp = fopen("/home/record/event", "w");
-	fclose(fp);
+	unlink("/home/record/event");
 
 	echo("/home/data/ltpower","0.000000");	
 
@@ -334,6 +328,7 @@ void idwrite_thread_entry(void* parameter)
 		if(!strncmp(recvbuff, "set_time", 8)){
 			settime(&recvbuff[9]);
 			send(clientfd, &recvbuff[9], 14, 0);
+			restartThread(TYPE_MAIN);
 		}
 
 		//设置逆变器的ID
@@ -347,6 +342,7 @@ void idwrite_thread_entry(void* parameter)
 			row = insertinverter(&recvbuff[16]);
 			snprintf(sendbuff, sizeof(sendbuff), "%02d", row);
 			send(clientfd, sendbuff, 3, 0);
+			restartThread(TYPE_MAIN);
 		}
 
 		//读取PLC的测试结果

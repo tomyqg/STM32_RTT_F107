@@ -109,7 +109,7 @@ typedef struct IPConfig
 //NTP thread priority
 //#define THREAD_PRIORITY_NTP							21
 //ID Writethread priority
-#define THREAD_PRIORITY_IDWRITE							22
+#define THREAD_PRIORITY_IDWRITE							17
 //DRM Connect thread priority
 #define THREAD_PRIORITY_DRM								23
 //data collection thread priority
