@@ -82,7 +82,7 @@ int connect_client_socket(int fd_sock)				//通过有线的方式连接服务器
 	struct hostent * host;
 	char buff[512] = {'\0'};
 	FILE *fp;
-	
+	unsigned char index = 0;
 	//不存在有线连接，直接关闭socket
 	if(rt_hw_GetWiredNetConnect() == 0)
 	{
@@ -133,7 +133,10 @@ int connect_client_socket(int fd_sock)				//通过有线的方式连接服务器
 
 	memset(&serv_addr,0,sizeof(struct sockaddr_in));
 	serv_addr.sin_family=AF_INET;
-	serv_addr.sin_port=htons(port[0]);
+	srand((unsigned)acquire_time());
+	index = rand()%2;
+	printdecmsg(ECU_DBG_CLIENT,"client port:", port[index]);
+	serv_addr.sin_port=htons(port[index]);
 	serv_addr.sin_addr.s_addr=inet_addr(ip);
 	memset(&(serv_addr.sin_zero),0,8);
 

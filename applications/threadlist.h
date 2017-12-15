@@ -69,7 +69,7 @@ typedef struct IPConfig
 #define CLIENT_SERVER_DOMAIN			"ecu.apsema.com"
 #define CLIENT_SERVER_IP					"60.190.131.190"
 #define CLIENT_SERVER_PORT1				8995
-#define CLIENT_SERVER_PORT2				8995
+#define CLIENT_SERVER_PORT2				8996
 
 #define CONTROL_SERVER_DOMAIN			"ecu.apsema.com"
 #define CONTROL_SERVER_IP					"60.190.131.190"

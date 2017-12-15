@@ -1553,6 +1553,7 @@ int optimizeFileSystem(int capsize)
 
 int setECUID(char *ECUID)
 {
+	int ret = 0;
 	char ecuid[13] = {'\0'};
 	FILE *fp = fopen("/yuneng/ecuid.con","w");
 	memcpy(ecuid,ECUID,12);
@@ -1560,7 +1561,11 @@ int setECUID(char *ECUID)
 	fputs(ecuid,fp);
 	fclose(fp);
 	
-	WIFI_Factory(ecuid);
+	ret = WIFI_Factory(ecuid);
+	if(ret == -1)
+	{
+		return -1;
+	}
 	printf("set_Passwd(\"88888888\",8);\n");
 	set_Passwd("88888888",8);
 	return 0;

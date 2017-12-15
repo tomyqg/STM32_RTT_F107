@@ -241,7 +241,9 @@ void idwrite_thread_entry(void* parameter)
 	int row;
 	char sendbuff[3];
 	char gettime[14]={'\0'};
-
+	char strportflag[2]={'\0'};
+	int portflag = 0;
+	int ret = 0;
 	
 	rt_thread_delay(START_TIME_IDWRITE * RT_TICK_PER_SECOND);
 	sockfd=create_socket_idwrite();
@@ -268,14 +270,34 @@ void idwrite_thread_entry(void* parameter)
 			print2msg(ECU_DBG_IDWRITE,"ECU id",ecu.id);
 			printdecmsg(ECU_DBG_IDWRITE,"length",strlen(ecu.id));
 			ecu.id[12] = '\0';
-			InitWorkMode();
-			setECUID(ecu.id);
+			memcpy(strportflag,&ecu.id[11],1);
+			strportflag[1] = '\0';
+			portflag = atoi(strportflag)%2;
+			printf("portflag:%d\n",portflag);
+			
+			ret = 0;
+			if(InitWorkMode(portflag) < 0){
+				ret = -1;
+			}
+			if(setECUID(ecu.id) < 0){
+				ret = -2;
+			}
 			
 			fp=fopen("/yuneng/ecuid.con","r");
 			fgets(ecu.id,13,fp);
 			fclose(fp);
 			restartThread(TYPE_MAIN);
-			printdecmsg(ECU_DBG_IDWRITE,"Send",send(clientfd,ecu.id,strlen(ecu.id),0));
+			if(ret == 0)
+			{
+				printdecmsg(ECU_DBG_IDWRITE,"Send",send(clientfd,ecu.id,strlen(ecu.id),0));
+			}else if (ret == -1)
+			{
+				printdecmsg(ECU_DBG_IDWRITE,"Send",send(clientfd,"error code: -1",14,0));
+			}else if (ret == -2)
+			{
+				printdecmsg(ECU_DBG_IDWRITE,"Send",send(clientfd,"error code: -2",14,0));
+			}
+			
 		}
 		if(!strncmp(recvbuff, "get_ecu_id", 10)){
 			memset(ecu.id,'\0',sizeof(ecu.id));

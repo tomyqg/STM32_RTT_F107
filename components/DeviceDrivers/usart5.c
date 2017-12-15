@@ -1612,7 +1612,7 @@ int InitTestMode(void)
 
 }
 
-int InitWorkMode(void)
+int InitWorkMode(int portflag)
 {
 	int i = 0,res = 0;
 	//进入AT模式
@@ -1669,7 +1669,7 @@ int InitWorkMode(void)
 	//配置SOCKET B的服务器IP地址
 	for(i = 0;i<3;i++)
 	{
-		if(0 == AT_TCPADDB("60.190.131.190"))
+		if(0 == AT_TCPADDB(CLIENT_SERVER_IP))
 		{
 			res = 0;
 			break;
@@ -1677,17 +1677,32 @@ int InitWorkMode(void)
 			res = -1;
 	}
 	if(res == -1) return -1;
-	
-	//配置SOCKET B的服务器端口号
-	for(i = 0;i<3;i++)
+	if(portflag == 0)
 	{
-		if(0 == AT_TCPPTB(8995))
+		//配置SOCKET B的服务器端口号
+		for(i = 0;i<3;i++)
 		{
-			res = 0;
-			break;
-		}else
-			res = -1;
+			if(0 == AT_TCPPTB(CLIENT_SERVER_PORT1))
+			{
+				res = 0;
+				break;
+			}else
+				res = -1;
+		}
+	}else
+	{
+		//配置SOCKET B的服务器端口号
+		for(i = 0;i<3;i++)
+		{
+			if(0 == AT_TCPPTB(CLIENT_SERVER_PORT2))
+			{
+				res = 0;
+				break;
+			}else
+				res = -1;
+		}
 	}
+	
 	if(res == -1) return -1;
 	
 	//打开SOCKET C功能
@@ -1705,7 +1720,7 @@ int InitWorkMode(void)
 	//配置SOCKET C的服务器IP地址
 	for(i = 0;i<3;i++)
 	{
-		if(0 == AT_TCPADDC("60.190.131.190"))
+		if(0 == AT_TCPADDC(CONTROL_SERVER_IP))
 		{
 			res = 0;
 			break;
@@ -1716,7 +1731,7 @@ int InitWorkMode(void)
 	//配置SOCKET C的服务器端口号
 	for(i = 0;i<3;i++)
 	{
-		if(0 == AT_TCPPTC(8997))
+		if(0 == AT_TCPPTC(CONTROL_SERVER_PORT1))
 		{
 			res = 0;
 			break;
@@ -2494,7 +2509,7 @@ int InitTestMode(void)
 
 }
 
-int InitWorkMode(void)
+int InitWorkMode(int portflag)
 {
 	int i = 0,res = 0;
 	//进入AT模式
@@ -2539,16 +2554,32 @@ int InitWorkMode(void)
 	}
 	if(res == -1) return -1;
 	
-	//配置SOCKET B端口
-	for(i = 0;i<3;i++)
+	if(portflag == 0)
 	{
-		if(0 == AT_TCPPTB(CLIENT_SERVER_PORT1))
+		//配置SOCKET B的服务器端口号
+		for(i = 0;i<3;i++)
 		{
-			res = 0;
-			break;
-		}else
+			if(0 == AT_TCPPTB(CLIENT_SERVER_PORT1))
+			{
+				res = 0;
+				break;
+			}else
 			res = -1;
+		}
+	}else
+	{
+		//配置SOCKET B的服务器端口号
+		for(i = 0;i<3;i++)
+		{
+			if(0 == AT_TCPPTB(CLIENT_SERVER_PORT2))
+			{
+				res = 0;
+				break;
+			}else
+			res = -1;
+		}
 	}
+
 	if(res == -1) return -1;
 	
 	//配置SOCKET C  IP地址
