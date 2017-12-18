@@ -399,7 +399,7 @@ void main_thread_entry(void* parameter)
 			printmsg(ECU_DBG_MAIN,"****************************************");
 		}
 		
-		rt_thread_delay(RT_TICK_PER_SECOND);
+		rt_thread_delay(RT_TICK_PER_SECOND/10);
 		durabletime = acquire_time();				//如果轮训一边的时间不到5分钟,那么一直等到5分钟再轮训下一遍,超过5分钟则等待10分钟。。。5分钟起跳
 
 		if((durabletime-thistime)<=305)
