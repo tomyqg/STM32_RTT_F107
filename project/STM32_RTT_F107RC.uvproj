@@ -1172,34 +1172,9 @@
               <FilePath>..\ECU\control_client\src\ecu_flag.c</FilePath>
             </File>
             <File>
-              <FileName>inverter_grid_environment.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\ECU\control_client\src\inverter_grid_environment.c</FilePath>
-            </File>
-            <File>
               <FileName>inverter_ird.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\ECU\control_client\src\inverter_ird.c</FilePath>
-            </File>
-            <File>
-              <FileName>inverter_signal_strength.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\ECU\control_client\src\inverter_signal_strength.c</FilePath>
-            </File>
-            <File>
-              <FileName>3501uid.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\ECU\control_client\src\3501uid.c</FilePath>
-            </File>
-            <File>
-              <FileName>grid_quality.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\ECU\control_client\src\grid_quality.c</FilePath>
-            </File>
-            <File>
-              <FileName>inverter_restore.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\ECU\control_client\src\inverter_restore.c</FilePath>
             </File>
             <File>
               <FileName>inverter_update.c</FileName>
@@ -1207,19 +1182,9 @@
               <FilePath>..\ECU\control_client\src\inverter_update.c</FilePath>
             </File>
             <File>
-              <FileName>set_autoflag_report.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\ECU\control_client\src\set_autoflag_report.c</FilePath>
-            </File>
-            <File>
               <FileName>inverter_ac_protection.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\ECU\control_client\src\inverter_ac_protection.c</FilePath>
-            </File>
-            <File>
-              <FileName>time_zone.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\ECU\control_client\src\time_zone.c</FilePath>
             </File>
             <File>
               <FileName>custom_command.c</FileName>

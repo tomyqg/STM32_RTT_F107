@@ -29,6 +29,8 @@ int fileWrite(int fd,char* buf,int len);
 int fileRead(int fd,char* buf,int len);
 int get_Passwd(char *PassWD);
 int set_Passwd(char *PassWD,int length);
+void dirDetection(char *path);
+void sysDirDetection(void);
 void splitSpace(char *data,char *sourcePath,char *destPath);
 int setECUID(char *ECUID);
 int get_DHCP_Status(void);

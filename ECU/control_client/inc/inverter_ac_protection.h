@@ -14,12 +14,6 @@
 /*****************************************************************************/
 /*  Function Declarations                                                    */
 /*****************************************************************************/
-int set_inverter_ac_protection_5(const char *recvbuffer, char *sendbuffer);
-int response_ecu_ac_protection_5(const char *recvbuffer, char *sendbuffer);
-int read_inverter_ac_protection_5(const char *recvbuffer, char *sendbuffer);
-int set_inverter_ac_protection_13(const char *recvbuffer, char *sendbuffer);
-int response_ecu_ac_protection_13(const char *recvbuffer, char *sendbuffer);
-int read_inverter_ac_protection_13(const char *recvbuffer, char *sendbuffer);
 int set_inverter_ac_protection_17(const char *recvbuffer, char *sendbuffer);
 int response_ecu_ac_protection_17(const char *recvbuffer, char *sendbuffer);
 int read_inverter_ac_protection_17(const char *recvbuffer, char *sendbuffer);

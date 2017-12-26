@@ -233,10 +233,11 @@ int resolvedata_1000(char *data, struct inverter_info_t *inverter)
 
 	if('1'==inverter->status_web[19])
 	{
-		if(5==inverter->model)
+		if(1==ecu_type)
 			inverter->gf = 50.0;
-		if(6==inverter->model)
+		else
 			inverter->gf = 60.0;
+
 
 		inverter->gv=0;
 		inverter->gvb=0;

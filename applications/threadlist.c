@@ -251,6 +251,8 @@ void rt_init_thread_entry(void* parameter)
 	
 	TIM2_Int_Init(14999,7199);    //心跳包超时事件定时器初始化
 	cpu_usage_init();
+
+	sysDirDetection();
 	
 }
 

@@ -280,7 +280,7 @@ int init_all(inverter_info *inverter)
 	init_inverter(inverter);
 	rateOfProgress = 100;
 	init_tmpdb(inverter);
-	read_gfdi_turn_on_off_status(inverter);
+	//read_gfdi_turn_on_off_status(inverter);
 	return 0;
 }
 
@@ -341,9 +341,7 @@ void main_thread_entry(void* parameter)
 	{
 		if(compareTime(durabletime ,thistime,reportinterval)){
 		//if(compareTime(durabletime ,thistime,60)){
-			//printf("******1-----------main acquire_time:\n");
 			thistime = acquire_time();
-		
 			rt_memset(ecu.broadcast_time, '\0', sizeof(ecu.broadcast_time));				//清空本次广播时间
 
 			cur_time_hour = get_hour();				
@@ -363,7 +361,6 @@ void main_thread_entry(void* parameter)
 			ecu.life_energy = ecu.life_energy + ecu.current_energy;				//计算系统历史发电量
 			printfloatmsg(ECU_DBG_MAIN,"ecu.life_energy",ecu.life_energy);
 			update_life_energy(ecu.life_energy);								//设置系统历史发电量
-		
 			
 			if(ecu.count>0)
 			{

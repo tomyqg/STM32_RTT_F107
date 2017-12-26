@@ -37,16 +37,9 @@
 #include "inverter_onoff.h"
 #include "inverter_gfdi.h"
 #include "ecu_flag.h"
-#include "inverter_grid_environment.h"
 #include "inverter_ird.h"
-#include "inverter_signal_strength.h"
-#include "3501uid.h"
-#include "grid_quality.h"
-#include "inverter_restore.h"
 #include "inverter_update.h"
-#include "set_autoflag_report.h"
 #include "inverter_ac_protection.h"
-#include "time_zone.h"
 #include "custom_command.h"
 #include "usart5.h"
 #include "power_factor.h"
@@ -95,38 +88,22 @@ void add_functions()
 	
 	pfun[A102] = response_inverter_id; 			//ÉÏ±¨Äæ±äÆ÷ID  										OK
 	pfun[A103] = set_inverter_id; 				//ÉèÖÃÄæ±äÆ÷ID												OK
-	//pfun[A104] = response_time_zone; 			//ÉÏ±¨ECU±¾µØÊ±Çø
-	//pfun[A105] = set_time_zone; 				//ÉèÖÃECU±¾µØÊ±Çø
 	pfun[A106] = response_comm_config;			//ÉÏ±¨ECUµÄÍ¨ĞÅÅäÖÃ²ÎÊı
 	pfun[A107] = set_comm_config;				//ÉèÖÃECUµÄÍ¨ĞÅÅäÖÃ²ÎÊı
 	pfun[A108] = custom_command;				//ÏòECU·¢ËÍ×Ô¶¨ÒåÃüÁî
-	pfun[A109] = set_inverter_ac_protection_5; 	//ÉèÖÃÄæ±äÆ÷µÄ½»Á÷±£»¤²ÎÊı(5Ïî)
 	pfun[A110] = set_inverter_maxpower;			//ÉèÖÃÄæ±äÆ÷×î´ó¹¦ÂÊ
 	pfun[A111] = set_inverter_onoff;			//ÉèÖÃÄæ±äÆ÷¿ª¹Ø»ú
 	pfun[A112] = clear_inverter_gfdi;			//ÉèÖÃÄæ±äÆ÷GFDI
-	pfun[A113] = response_ecu_ac_protection_5;	//ÉÏ±¨ECU¼¶±ğ½»Á÷±£»¤²ÎÊı(5Ïî)
-	pfun[A114] = read_inverter_ac_protection_5; //¶ÁÈ¡Äæ±äÆ÷µÄ½»Á÷±£»¤²ÎÊı(5Ïî)
 	pfun[A117] = response_inverter_maxpower;	//ÉÏ±¨Äæ±äÆ÷×î´ó¹¦ÂÊ¼°·¶Î§
 	pfun[A119] = set_ecu_flag;					//ÉèÖÃECUÓëEMAµÄÍ¨ĞÅ¿ª¹Ø
-	pfun[A120] = response_ecu_ac_protection_13;	//ÉÏ±¨ECU¼¶±ğ½»Á÷±£»¤²ÎÊı(13Ïî)
-	pfun[A121] = read_inverter_ac_protection_13;//¶ÁÈ¡Äæ±äÆ÷µÄ½»Á÷±£»¤²ÎÊı(13Ïî)
-	pfun[A122] = set_inverter_ac_protection_13;	//ÉèÖÃÄæ±äÆ÷µÄ½»Á÷±£»¤²ÎÊı(13Ïî)
-	pfun[A124] = read_inverter_grid_environment;//¶ÁÈ¡Äæ±äÆ÷µÄµçÍø»·¾³
-	pfun[A125] = set_inverter_grid_environment;	//ÉèÖÃÄæ±äÆ÷µÄµçÍø»·¾³
 	pfun[A126] = read_inverter_ird;				//¶ÁÈ¡Äæ±äÆ÷µÄIRDÑ¡Ïî
 	pfun[A127] = set_inverter_ird;				//ÉèÖÃÄæ±äÆ÷µÄIRDÑ¡Ïî
-	pfun[A128] = read_inverter_signal_strength;	//¶ÁÈ¡Äæ±äÆ÷µÄĞÅºÅÇ¿¶È
-	pfun[A129] = response_grid_quality;			//ÉÏ±¨ÏµÍ³µÄµçÍøÖÊÁ¿
 	pfun[A130] = response_ecu_ac_protection_17;	//ÉÏ±¨ECU¼¶±ğ½»Á÷±£»¤²ÎÊı(17Ïî)
 	pfun[A131] = read_inverter_ac_protection_17;//¶ÁÈ¡Äæ±äÆ÷µÄ½»Á÷±£»¤²ÎÊı(17Ïî)
-	pfun[A132] = set_inverter_ac_protection_17;	//ÉèÖÃÄæ±äÆ÷µÄ½»Á÷±£»¤²ÎÊı(17Ïî)
-	pfun[A134] = set_inverter_restore;			//ÉèÖÃÄæ±äÆ÷µÄ»¹Ô­±êÖ¾							OK
-	pfun[A136] = set_inverter_update;			//ÉèÖÃÄæ±äÆ÷µÄÉı¼¶±êÖ¾								OK
-	pfun[A138] = set_autoflag_report;			//ÉèÖÃECU×Ô¶¯ÉÏ±¨¹¦ÄÜ									OK
+	pfun[A132] = set_inverter_ac_protection_17;	//ÉèÖÃÄæ±äÆ÷µÄ½»Á÷±£»¤²ÎÊı(17Ïî)						
+	pfun[A136] = set_inverter_update;			//ÉèÖÃÄæ±äÆ÷µÄÉı¼¶±êÖ¾																	
 	pfun[A145] = response_inverter_power_factor;//ÉÏ±¨Äæ±äÆ÷¼¶±ğ¹¦ÂÊÒòÊı
 	pfun[A146] = set_all_inverter_power_factor; //ÉèÖÃecu¼¶±ğ¹¦ÂÊÒòÊı
-	pfun[A148] = read_wrong_id;					//¶ÁÈ¡Òì³£µÄ3501uid											OK
-	pfun[A150] = set_unnormal_id;				//ÉèÖÃ3501ÕıÈ·µÄid
 	
 }
 
@@ -219,6 +196,7 @@ int detection_statusflag(char flag)		//¼ì²â/home/record/inverstaÄ¿Â¼ÏÂÊÇ·ñ´æÔÚfl
 		if(dirp == RT_NULL)
 		{
 			printmsg(ECU_DBG_CONTROL_CLIENT,"detection_statusflag open directory error");
+			mkdir("/home/record/inversta",0);
 		}
 		else
 		{
@@ -283,6 +261,7 @@ int change_statusflag1()  //¸Ä±ä³É¹¦·µ»Ø1
 		if(dirp == RT_NULL)
 		{
 			printmsg(ECU_DBG_CONTROL_CLIENT,"change_statusflag1 open directory error");
+			mkdir("/home/record/inversta",0);
 		}
 		else
 		{
@@ -346,7 +325,8 @@ void delete_statusflag0()		//Çå¿ÕÊı¾İflag±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 		
 		if(dirp == RT_NULL)
 		{
-			printmsg(ECU_DBG_CONTROL_CLIENT,"delete_file_resendflag0 open directory error");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"delete_statusflag0 open directory error");
+			mkdir("/home/record/inversta",0);
 		}
 		else
 		{
@@ -422,7 +402,8 @@ int change_statusflag(char *time,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ±¼äµã·µ»Ø
 		
 		if(dirp == RT_NULL)
 		{
-			printmsg(ECU_DBG_CONTROL_CLIENT,"change_resendflag open directory error");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"change_statusflag open directory error");
+			mkdir("/home/record/inversta",0);
 		}
 		else
 		{
@@ -502,7 +483,8 @@ int search_statusflag(char *data,char * time, int *flag,char sendflag)
 		dirp = opendir("/home/record/inversta");
 		if(dirp == RT_NULL)
 		{
-			printmsg(ECU_DBG_CONTROL_CLIENT,"search_readflag open directory error");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"search_statusflag open directory error");
+			mkdir("/home/record/inversta",0);
 		}
 		else
 		{
@@ -620,6 +602,7 @@ void delete_pro_result_flag0()		//Çå¿ÕÊı¾İflag±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 		if(dirp == RT_NULL)
 		{
 			printmsg(ECU_DBG_CONTROL_CLIENT,"delete_pro_result_flag0 open directory error");
+			mkdir("/home/data/proc_res",0);
 		}
 		else
 		{
@@ -696,6 +679,7 @@ void delete_inv_pro_result_flag0()		//Çå¿ÕÊı¾İflag±êÖ¾È«²¿Îª0µÄÄ¿Â¼
 		if(dirp == RT_NULL)
 		{
 			printmsg(ECU_DBG_CONTROL_CLIENT,"delete_inv_pro_result_flag0 open directory error");
+			mkdir("/home/data/iprocres",0);
 		}
 		else
 		{
@@ -772,6 +756,7 @@ int change_pro_result_flag(char *item,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ±¼äµ
 		if(dirp == RT_NULL)
 		{
 			printmsg(ECU_DBG_CONTROL_CLIENT,"change_pro_result_flag open directory error");
+			mkdir("/home/data/proc_res",0);
 		}
 		else
 		{
@@ -849,6 +834,7 @@ int change_inv_pro_result_flag(char *item,char flag)  //¸Ä±ä³É¹¦·µ»Ø1£¬Î´ÕÒµ½¸ÃÊ
 		if(dirp == RT_NULL)
 		{
 			printmsg(ECU_DBG_CONTROL_CLIENT,"change_inv_pro_result_flag open directory error");
+			mkdir("/home/data/iprocres",0);
 		}
 		else
 		{
@@ -932,6 +918,7 @@ int search_pro_result_flag(char *data,char * item, int *flag,char sendflag)
 		if(dirp == RT_NULL)
 		{
 			printmsg(ECU_DBG_CONTROL_CLIENT,"search_pro_result_flag open directory error");
+			mkdir("/home/data/proc_res",0);
 		}
 		else
 		{
@@ -1051,7 +1038,8 @@ int search_inv_pro_result_flag(char *data,char * item,char *inverterid, int *fla
 		dirp = opendir("/home/data/iprocres");
 		if(dirp == RT_NULL)
 		{
-			printmsg(ECU_DBG_CONTROL_CLIENT,"search_readflag open directory error");
+			printmsg(ECU_DBG_CONTROL_CLIENT,"search_inv_pro_result_flag open directory error");
+			mkdir("/home/data/iprocres",0);
 		}
 		else
 		{

@@ -91,14 +91,6 @@ typedef struct inverter_info_t{
 	int opd;					//输出功率
 	int gvd;					//电网电压
 
-
-	/***********保护参数**************/
-	int protect_voltage_min;			//内围电压保护下限
-	int protect_voltage_max;			//内围电压保护上限
-	float protect_frequency_min;		//频率保护下限
-	float protect_frequency_max;		//频率保护上限
-	int recovery_time;					//并网恢复时间/开机时间
-
 	float reactive_power;		//无功功率
 	float reactive_powerb;		//B路无功功率
 	float reactive_powerc;		//C路无功功率

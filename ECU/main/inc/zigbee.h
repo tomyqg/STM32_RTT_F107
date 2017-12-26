@@ -63,7 +63,6 @@ int zb_voltage_protectime_broadcast(void);		//欠压保护时间广播
 int zb_voltage_protectime_single(inverter_info *inverter);		//欠压保护时间单播
 int process_gfdi(inverter_info *firstinverter);
 int compare_protect_data(char *set_protect_data, char *actual_protect_data);				//比较逆变器返回的预设值和页面上输入的预设值
-int resolve_presetdata(inverter_info *inverter, char * protect_data_result);	//?????????????
 int process_protect_data(inverter_info *firstinverter);
 int process_turn_on_off(inverter_info *firstinverter);
 int process_quick_boot(inverter_info *firstinverter);

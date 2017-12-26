@@ -66,6 +66,39 @@ int fileRead(int fd,char* buf,int len)
 	return read( fd, buf, len );
 }
 
+//目录检测，如果不存在就创建对于的目录
+void dirDetection(char *path)
+{
+	DIR *dirp;
+
+	//先判断是否存在这个目录，如果不存在则创建该目录
+	dirp = opendir(path);
+	if(dirp == RT_NULL){	//打开目录失败，需要创建该目录
+		mkdir(path,0);
+	}else{					//打开目录成功，关闭目录继续操作
+		closedir(dirp);
+	}
+}
+
+void sysDirDetection(void)
+{
+	rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
+	dirDetection("/home");
+	dirDetection("/tmp");
+	dirDetection("/ftp");
+	dirDetection("/yuneng");
+	dirDetection("/home/data");
+	dirDetection("/home/record");
+	dirDetection("/home/data/proc_res");
+	dirDetection("/home/data/IPROCRES");
+	dirDetection("/home/record/data");
+	dirDetection("/home/record/inversta");
+	dirDetection("/home/record/power");
+	dirDetection("/home/record/energy");
+	rt_mutex_release(record_data_lock);
+}
+
+
 int get_Passwd(char *PassWD)
 {
 	int fd;
@@ -562,7 +595,7 @@ void save_system_power(int system_power, char *date_time)
 	char date_time_tmp[14] = {'\0'};
 	rt_err_t result;
 	int fd;
-	if(system_power == 0) return;
+	//if(system_power == 0) return;
 	
 	memcpy(date_time_tmp,date_time,14);
 	memcpy(file,&date_time[0],6);
@@ -638,10 +671,12 @@ void delete_system_power_2_month_ago(char *date_time)
 	char fileTime[20] = {'\0'};
 
 	/* 打开dir目录*/
+	rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 	dirp = opendir("/home/record/power");
 	if(dirp == RT_NULL)
 	{
 		printmsg(ECU_DBG_CLIENT,"delete_system_power_2_month_ago open directory error");
+		mkdir("/home/data/power",0);
 	}
 	else
 	{
@@ -666,6 +701,7 @@ void delete_system_power_2_month_ago(char *date_time)
 		/* 关闭目录 */
 		closedir(dirp);
 	}
+	rt_mutex_release(record_data_lock);
 
 
 }
@@ -765,7 +801,7 @@ void update_daily_energy(float current_energy, char *date_time)
 	float energy_tmp = current_energy;
 	int fd;
 	//当前一轮发电量为0 不更新发电量
-	if(current_energy <= EPSILON && current_energy >= -EPSILON) return;
+	//if(current_energy <= EPSILON && current_energy >= -EPSILON) return;
 	
 	memcpy(date_time_tmp,date_time,14);
 	memcpy(file,&date_time[0],6);
@@ -1208,7 +1244,7 @@ void update_monthly_energy(float current_energy, char *date_time)
 	float energy_tmp = current_energy;
 	int fd;
 	//当前一轮发电量为0 不更新发电量
-	if(current_energy <= EPSILON && current_energy >= -EPSILON) return;
+	//if(current_energy <= EPSILON && current_energy >= -EPSILON) return;
 	
 	memcpy(date_time_tmp,date_time,14);
 	memcpy(file,&date_time[0],4);
@@ -1463,6 +1499,7 @@ static int checkOldFile(char *dir,char *oldFile)
 		if(dirp == RT_NULL)
 		{
 			printmsg(ECU_DBG_OTHER,"check Old File open directory error");
+			mkdir(dir,0);
 		}
 		else
 		{
@@ -1517,6 +1554,7 @@ int optimizeFileSystem(int capsize)
 	//当flash芯片所剩下的容量小于40KB的时候进行一些必要的文件删除操作。
 	if (cap < capsize) 
 	{
+		rt_mutex_take(record_data_lock, RT_WAITING_FOREVER);
 		//删除最前面一天的ECU级别处理结果数据    如果该目录下存在文件的话
 		if(1 == checkOldFile("/home/data/proc_res",oldFile))
 		{
@@ -1543,7 +1581,7 @@ int optimizeFileSystem(int capsize)
 		{
 			unlink(oldFile);
 		}	
-		
+		rt_mutex_release(record_data_lock);
 	}
 	
 	return 0;
@@ -1687,5 +1725,8 @@ void changdatacent(char * IP,char *Domain,int port1,int port2)
 FINSH_FUNCTION_EXPORT(changdatacent, eg:changdatacent("139.168.200.158","111.apsema.com",8093,8093));
 
 FINSH_FUNCTION_EXPORT(addInverter, eg:addInverter("201703150001"));
+
+FINSH_FUNCTION_EXPORT(sysDirDetection, eg:sysDirDetection());
+
 
 #endif

@@ -126,6 +126,7 @@ int detection_resendflag2()		//存在返回1，不存在返回0
 		if(dirp == RT_NULL)
 		{
 			printmsg(ECU_DBG_CLIENT,"detection_resendflag2 open directory error");
+			mkdir("/home/record/data",0);
 		}
 		else
 		{
@@ -194,6 +195,7 @@ int change_resendflag(char *time,char flag)  //改变成功返回1，未找到该时间点返回
 		if(dirp == RT_NULL)
 		{
 			printmsg(ECU_DBG_CLIENT,"change_resendflag open directory error");
+			mkdir("/home/record/data",0);
 		}
 		else
 		{
@@ -274,6 +276,7 @@ int search_readflag(char *data,char * time, int *flag,char sendflag)
 		if(dirp == RT_NULL)
 		{
 			printmsg(ECU_DBG_CLIENT,"search_readflag open directory error");
+			mkdir("/home/record/data",0);
 		}
 		else
 		{
@@ -397,6 +400,7 @@ void delete_file_resendflag0()		//清空数据resend标志全部为0的目录
 		if(dirp == RT_NULL)
 		{
 			printmsg(ECU_DBG_CLIENT,"delete_file_resendflag0 open directory error");
+			mkdir("/home/record/data",0);
 		}
 		else
 		{
